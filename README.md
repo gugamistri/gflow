@@ -1,5 +1,9 @@
 # GuiaFlow
 
+![Editor do GuiaFlow](docs/editor.png)
+
+![Tour de exemplo](docs/tour.gif)
+
 Editor e player de tours com capturas de tela, destaque, clique simulado e narração. Inclui uma extensão Chrome para gravar o produto e um app desktop (Electron) com captura embutida.
 
 ## Começar no navegador
