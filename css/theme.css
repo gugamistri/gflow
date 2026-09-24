@@ -1,0 +1,239 @@
+:root {
+  color-scheme: light;
+  --ns-accent: #2a9d8f;
+  --ns-accent-dark: #1f6b62;
+  --ns-overlay: #0f3248;
+  --ns-overlay-alpha: 0.55;
+  --ns-popover-bg: #ffffff;
+  --ns-popover-title: #1a4d6d;
+  --ns-popover-text: #3f3f46;
+  --ns-button: #1a4d6d;
+  --ns-button-text: #ffffff;
+  --ns-hotspot: #2a9d8f;
+  --ns-surface: #f4f4f5;
+  --ns-panel: #ffffff;
+  --ns-input-bg: #ffffff;
+  --ns-canvas: #dbe0e8;
+  --ns-thumb: #e4e4e7;
+  --ns-hover: color-mix(in srgb, var(--ns-accent) 12%, var(--ns-panel));
+  --ns-danger-bg: color-mix(in srgb, var(--ns-danger) 10%, var(--ns-panel));
+  --ns-border: #e4e4e7;
+  --ns-ink: #1a1a1a;
+  --ns-muted: #71717a;
+  --ns-danger: #dc2626;
+  --ns-font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ns-font-display: Georgia, "Times New Roman", serif;
+  --ns-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --ns-theme-color: #1a4d6d;
+  --ns-topbar: #0f3248;
+  --ns-topbar-muted: #a8c5d4;
+  /* Demo tour defaults (overridden by applyTheme → --demo-*) */
+  --demo-accent: #2a9d8f;
+  --demo-accent-dark: #1f6b62;
+  --demo-overlay: #0f3248;
+  --demo-popover-bg: #ffffff;
+  --demo-popover-title: #1a4d6d;
+  --demo-popover-text: #3f3f46;
+  --demo-button: #1a4d6d;
+  --demo-hotspot: #2a9d8f;
+  --demo-font-display: Georgia, "Times New Roman", serif;
+}
+
+[data-appearance="social"] {
+  color-scheme: dark;
+  --ns-accent: #2a9d8f;
+  --ns-accent-dark: #1f6b62;
+  --ns-overlay: #101010;
+  --ns-popover-bg: #303030;
+  --ns-popover-title: #f5f5f5;
+  --ns-popover-text: #a1a1aa;
+  --ns-button: #2a9d8f;
+  --ns-button-text: #ffffff;
+  --ns-hotspot: #2a9d8f;
+  --ns-surface: #101010;
+  --ns-panel: #303030;
+  --ns-input-bg: #1a1a1a;
+  --ns-canvas: #181818;
+  --ns-thumb: #2a2a2a;
+  --ns-hover: color-mix(in srgb, var(--ns-accent) 18%, var(--ns-panel));
+  --ns-danger-bg: color-mix(in srgb, var(--ns-danger) 18%, var(--ns-panel));
+  --ns-border: #2a2a2a;
+  --ns-ink: #f5f5f5;
+  --ns-muted: #a1a1aa;
+  --ns-danger: #f87171;
+  --ns-font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ns-font-display: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ns-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --ns-theme-color: #101010;
+  --ns-topbar: #101010;
+  --ns-topbar-muted: #a1a1aa;
+}
+
+.driver-popover.demo-popover {
+  background: var(--demo-popover-bg) !important;
+  color: var(--demo-popover-text) !important;
+  border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  max-width: 360px;
+  font-family: var(--ns-font);
+}
+
+.driver-popover.demo-popover .driver-popover-title {
+  color: var(--demo-popover-title) !important;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.driver-popover.demo-popover .driver-popover-description {
+  color: var(--demo-popover-text) !important;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.driver-popover.demo-popover .driver-popover-footer {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+  margin-top: 14px;
+  min-height: 36px;
+}
+
+.driver-popover.demo-popover .driver-popover-progress-text {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  text-align: center;
+  color: var(--ns-muted);
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  width: 100%;
+}
+
+.driver-popover.demo-popover .driver-popover-navigation-btns {
+  display: contents;
+}
+
+.driver-popover.demo-popover .driver-popover-footer button {
+  text-shadow: none;
+  border: none;
+  font-weight: 600;
+}
+
+.driver-popover.demo-popover .driver-popover-prev-btn {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  align-self: center;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  color: var(--ns-ink) !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 0;
+  border-radius: 0;
+}
+
+.driver-popover.demo-popover .driver-popover-prev-btn svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.driver-popover.demo-popover .driver-popover-prev-btn:hover {
+  background: transparent !important;
+  color: var(--demo-accent) !important;
+}
+
+.driver-popover.demo-popover .driver-popover-prev-btn:disabled,
+.driver-popover.demo-popover .driver-popover-prev-btn.driver-popover-btn-disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.driver-popover.demo-popover .driver-popover-next-btn {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  background: var(--demo-button) !important;
+  color: var(--ns-button-text) !important;
+  border: none !important;
+  border-radius: 4px;
+  padding: 8px 16px !important;
+  min-width: auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.driver-popover.demo-popover .driver-popover-next-btn:hover {
+  background: var(--demo-accent-dark) !important;
+  color: var(--ns-button-text) !important;
+}
+
+.driver-popover.demo-popover button {
+  background: var(--demo-button);
+  color: var(--ns-button-text);
+  border: none;
+  text-shadow: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-weight: 600;
+}
+
+.driver-popover.demo-popover button:hover {
+  background: var(--demo-accent-dark);
+  color: var(--ns-button-text);
+}
+
+.driver-popover.demo-popover .driver-popover-close-btn {
+  all: unset;
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent !important;
+  color: var(--ns-muted) !important;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.driver-popover.demo-popover .driver-popover-close-btn:hover {
+  background: transparent !important;
+  color: var(--ns-ink) !important;
+}
+
+.driver-popover.demo-popover .driver-popover-arrow-side-left {
+  border-left-color: var(--demo-popover-bg);
+}
+
+.driver-popover.demo-popover .driver-popover-arrow-side-right {
+  border-right-color: var(--demo-popover-bg);
+}
+
+.driver-popover.demo-popover .driver-popover-arrow-side-top {
+  border-top-color: var(--demo-popover-bg);
+}
+
+.driver-popover.demo-popover .driver-popover-arrow-side-bottom {
+  border-bottom-color: var(--demo-popover-bg);
+}

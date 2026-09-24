@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GuiaFlow — Editor</title>
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="vendor/driver/driver.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="logo">Guia<span>Flow</span></span>
+      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
+      <span class="topbar-project" id="topbar-project" hidden title="Clique para renomear"></span>
+      <button type="button" class="btn btn-ghost" id="btn-help" aria-pressed="false">Como usar</button>
+    </div>
+    <div class="topbar-appearance">
+      <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
+        <svg class="btn-ico" aria-hidden="true"><use id="btn-appearance-icon" href="#i-appearance"></use></svg>
+      </button>
+    </div>
+    <div class="topbar-actions" id="topbar-actions-editor" hidden>
+      <button type="button" class="btn btn-ghost" id="btn-projects">
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+        Projetos
+      </button>
+      <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+        Capturar
+      </button>
+      <details class="theme-panel" id="narration-panel">
+        <summary>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
+          Narração
+        </summary>
+        <div class="theme-panel-body theme-panel-wide">
+          <label class="checkbox">
+            <input type="checkbox" id="narration-enabled" checked />
+            Falar legenda no avanço automático
+          </label>
+          <label>Voz
+            <select id="narration-voice"></select>
+          </label>
+          <p class="props-meta">Português do Brasil ou de Portugal, via Cartesia.</p>
+          <label>Velocidade
+            <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
+            <span id="narration-rate-label">1.0×</span>
+          </label>
+          <label>Tempo padrão por passo (s)
+            <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
+          </label>
+          <hr class="theme-divider" />
+          <p class="theme-section-label">Áudio de fundo</p>
+          <div class="narration-bg-row">
+            <button type="button" class="btn btn-sm" id="btn-narration-bg">
+              Escolher arquivo…
+            </button>
+            <button type="button" class="btn btn-sm" id="btn-narration-bg-clear" hidden>
+              Remover
+            </button>
+            <input type="file" id="narration-bg-file" accept="audio/*,.mp3,.ogg,.wav,.m4a" hidden />
+          </div>
+          <p class="props-meta" id="narration-bg-name">Nenhum arquivo</p>
+          <hr class="theme-divider" />
+          <p class="theme-section-label">Chave Cartesia</p>
+          <p class="props-meta" id="cartesia-status">A chave fica neste navegador, fora do projeto.</p>
+          <label>Chave da API
+            <input type="password" id="cartesia-key" autocomplete="off" spellcheck="false" placeholder="sk_car_…" />
+          </label>
+          <div class="narration-bg-row">
+            <button type="button" class="btn btn-sm" id="btn-cartesia-save">Salvar no sistema</button>
+            <button type="button" class="btn btn-sm" id="btn-cartesia-clear" hidden>Remover</button>
+            <a class="btn btn-sm" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer">Obter chave</a>
+          </div>
+          <p class="props-meta">A chave fica neste navegador e não entra no projeto.</p>
+        </div>
+      </details>
+      <details class="theme-panel" id="theme-panel">
+        <summary>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
+          Tema
+        </summary>
+        <div class="theme-panel-body theme-panel-wide">
+          <p class="theme-section-label">Presets</p>
+          <div class="theme-presets" id="theme-presets"></div>
+          <p class="theme-section-label">Meus temas</p>
+          <div class="theme-customs" id="theme-customs"></div>
+          <div class="theme-custom-actions">
+            <button type="button" class="btn btn-sm" id="btn-save-theme">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+              Salvar tema
+            </button>
+            <button type="button" class="btn btn-sm" id="btn-dup-theme">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+              Duplicar selecionado
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+              Excluir tema
+            </button>
+          </div>
+          <hr class="theme-divider" />
+          <p class="theme-section-label">Cores</p>
+          <label>Accent <input type="color" id="theme-accent" data-theme-key="accent" /></label>
+          <label>Overlay <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
+          <label>Popover BG <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
+          <label>Título <input type="color" id="theme-title" data-theme-key="title" /></label>
+          <label>Texto <input type="color" id="theme-text" data-theme-key="text" /></label>
+          <label>Botão <input type="color" id="theme-button" data-theme-key="button" /></label>
+          <label>Hotspot <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+        </div>
+      </details>
+      <details class="export-panel">
+        <summary>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
+          Exportar
+        </summary>
+        <div class="export-panel-body">
+          <button type="button" class="export-option" id="btn-export-html">
+            <strong>HTML navegável</strong>
+            <span>Um arquivo só. A pessoa abre no navegador, percorre ou assiste.</span>
+          </button>
+          <button type="button" class="export-option" id="btn-export-video">
+            <strong>Vídeo MP4</strong>
+            <span>MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
+          </button>
+          <button type="button" class="export-option" id="btn-export-json">
+            <strong>JSON</strong>
+            <span>Backup para reimportar neste editor.</span>
+          </button>
+        </div>
+      </details>
+      <button type="button" class="btn btn-ghost btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" disabled>
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
+      </button>
+      <button type="button" class="btn btn-ghost btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" disabled>
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
+      </button>
+    </div>
+    <div class="topbar-actions" id="topbar-actions-library">
+      <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+        Capturar
+      </button>
+      <button type="button" class="btn btn-ghost" id="btn-import-library">
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+        Importar
+      </button>
+      <button type="button" class="btn btn-primary" id="btn-new-project">
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+        Novo projeto
+      </button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden />
+    </div>
+  </header>
+
+  <main id="view-help" class="view view-help" hidden>
+    <iframe id="help-frame" title="Como usar"></iframe>
+  </main>
+
+  <main id="view-library" class="view view-library">
+    <div class="library-header">
+      <div>
+        <h1>Projetos</h1>
+        <p>Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
+      </div>
+    </div>
+    <div class="library-grid" id="library-grid"></div>
+    <p class="library-empty" id="library-empty" hidden>Nenhum guia ainda. Crie o primeiro ou importe um arquivo.</p>
+  </main>
+
+  <main id="view-editor" class="view view-editor" hidden>
+    <aside class="filmstrip" id="filmstrip" aria-label="Passos do demo"></aside>
+
+    <section class="canvas-wrap">
+      <div class="canvas-toolbar">
+        <button type="button" class="btn btn-sm" id="btn-add-scene">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
+          Cena
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-add-step">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+          Passo
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-add-slide">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
+          Slide
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-dup-step" title="Duplicar (⌘D)">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+          Duplicar
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-add-images">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
+          Imagens
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-play-from">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-eye"></use></svg>
+          Preview
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-watch-from">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
+          Preview automático
+        </button>
+      </div>
+      <p class="present-hint" id="present-chrome" hidden>Pressione Esc para sair</p>
+      <input type="file" id="images-file" accept="image/*" multiple hidden />
+      <div class="canvas-stage" id="canvas-stage">
+        <div class="canvas-empty" id="canvas-empty" hidden>
+          <h2>Projeto vazio</h2>
+          <p>Envie capturas de tela ou adicione um passo/slide para começar.</p>
+          <div class="canvas-empty-actions">
+            <button type="button" class="btn btn-primary" id="btn-empty-images">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
+              Enviar capturas
+            </button>
+            <button type="button" class="btn" id="btn-empty-step">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+              Passo
+            </button>
+            <button type="button" class="btn" id="btn-empty-slide">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
+              Slide
+            </button>
+          </div>
+        </div>
+        <div class="canvas-frame" id="canvas-frame">
+          <img id="canvas-image" alt="Captura da tela" hidden />
+          <div class="image-missing" id="canvas-missing" hidden>Tela sem imagem — escolha outra no painel à direita.</div>
+          <div class="slide-card" id="canvas-slide" hidden>
+            <button type="button" class="slide-card-close" id="canvas-slide-close" aria-label="Fechar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <p class="slide-kicker" id="canvas-slide-kicker"></p>
+            <h2 id="canvas-slide-title"></h2>
+            <p id="canvas-slide-body"></p>
+            <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            </button>
+          </div>
+          <div class="hotspot" id="hotspot" hidden>
+            <span class="hotspot-label">destaque</span>
+            <i class="hotspot-handle nw" data-handle="nw"></i>
+            <i class="hotspot-handle ne" data-handle="ne"></i>
+            <i class="hotspot-handle sw" data-handle="sw"></i>
+            <i class="hotspot-handle se" data-handle="se"></i>
+          </div>
+          <div class="click-point" id="click-point" hidden title="Ponto do clique simulado — arraste">
+            <span class="click-point-ring"></span>
+            <span class="click-point-dot"></span>
+            <span class="click-point-label">click</span>
+          </div>
+          <div class="click-fx" id="editor-click-fx" hidden aria-hidden="true">
+            <span class="click-fx-ring"></span>
+            <span class="click-fx-ring click-fx-ring-2"></span>
+            <span class="click-fx-burst"></span>
+          </div>
+          <div class="sim-cursor" id="editor-sim-cursor" hidden></div>
+          <div class="caption-bar" id="canvas-caption" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="props" id="props-panel">
+      <h2>Passo</h2>
+      <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo">
+        <button type="button" class="mode-btn" data-value="slide" aria-pressed="false">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
+          Slide
+        </button>
+        <button type="button" class="mode-btn" data-value="screen" aria-pressed="false">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-screen"></use></svg>
+          Tela
+        </button>
+      </div>
+      <div id="wrap-image" class="image-picker-field">
+        <span class="field-label">Imagem</span>
+        <button type="button" class="image-pick-btn" id="btn-pick-image">
+          <img id="prop-image-thumb" alt="" hidden />
+          <span id="prop-image-name">Escolher imagem…</span>
+        </button>
+        <select id="prop-image" hidden></select>
+      </div>
+      <label>Título
+        <input type="text" id="prop-title" />
+      </label>
+      <label>Descrição
+        <textarea id="prop-description" rows="3"></textarea>
+      </label>
+      <div class="caption-block">
+        <label>Narração
+          <textarea id="prop-caption" rows="3" placeholder="Texto da narração (opcional no slide)"></textarea>
+        </label>
+        <label class="checkbox" id="wrap-show-caption" hidden>
+          <input type="checkbox" id="prop-show-caption" checked />
+          Mostrar texto no slide
+        </label>
+        <div class="caption-audio-actions" id="caption-audio-actions" hidden>
+          <button type="button" class="btn btn-sm" id="btn-generate-caption" hidden>Gerar áudio</button>
+          <button type="button" class="btn btn-sm" id="btn-upload-caption" hidden>Enviar áudio</button>
+          <button type="button" class="btn btn-sm" id="btn-clear-caption-audio" hidden>Remover</button>
+          <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
+        </div>
+        <div class="caption-player" id="caption-player" hidden>
+          <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" aria-pressed="false" disabled>
+            <svg class="caption-player-icon caption-player-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            <svg class="caption-player-icon caption-player-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" fill="currentColor"/></svg>
+          </button>
+          <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" disabled />
+          <button type="button" class="caption-player-rate" id="btn-caption-rate" aria-label="Velocidade de reprodução, 1×">1×</button>
+          <div class="caption-player-times">
+            <span id="caption-time">0:00</span>
+            <span id="caption-duration">0:00</span>
+          </div>
+        </div>
+        <p class="props-meta" id="caption-audio-status" hidden>Sem áudio neste passo.</p>
+      </div>
+      <div class="hold-field">
+        <label>Temporizador (s)
+          <input type="number" id="prop-hold" min="1" max="120" step="1" placeholder="padrão" />
+        </label>
+        <p class="props-meta" id="prop-hold-hint" hidden></p>
+      </div>
+      <div class="choice-field" id="wrap-side">
+        <span class="field-label" id="label-side">Lado</span>
+        <div class="icon-choices" id="prop-side" role="radiogroup" aria-label="Lado">
+          <button type="button" class="icon-choice" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-side-top"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-side-right"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-side-bottom"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-side-left"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" aria-pressed="false" hidden>
+            <svg aria-hidden="true"><use href="#i-valign-top"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" aria-pressed="false" hidden>
+            <svg aria-hidden="true"><use href="#i-valign-center"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" aria-pressed="false" hidden>
+            <svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg>
+          </button>
+        </div>
+      </div>
+      <div class="choice-field" id="wrap-align">
+        <span class="field-label" id="label-align">Alinhamento</span>
+        <div class="icon-choices" id="prop-align" role="radiogroup" aria-label="Alinhamento">
+          <button type="button" class="icon-choice" data-value="start" title="Início" aria-label="Início" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-align-start"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-value="center" title="Centro" aria-label="Centro" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-align-center"></use></svg>
+          </button>
+          <button type="button" class="icon-choice" data-value="end" title="Fim" aria-label="Fim" aria-pressed="false">
+            <svg aria-hidden="true"><use href="#i-align-end"></use></svg>
+          </button>
+        </div>
+      </div>
+      <label class="checkbox" id="wrap-simulate">
+        <input type="checkbox" id="prop-simulate-click" checked />
+        Simular clique ao avançar
+      </label>
+    </aside>
+  </main>
+
+  <dialog class="studio-modal" id="modal-delete-project">
+    <form method="dialog" id="form-delete-project" class="studio-modal-body">
+      <h3>Excluir projeto</h3>
+      <p class="delete-project-lead">
+        Isto apaga <strong id="delete-project-name-label"></strong> deste navegador.
+        Não dá para desfazer.
+      </p>
+      <label class="checkbox delete-project-backup">
+        <input type="checkbox" id="delete-project-backup" checked />
+        Baixar backup JSON antes de excluir
+      </label>
+      <label>Digite o nome do projeto para confirmar
+        <input type="text" id="delete-project-confirm" required autocomplete="off" spellcheck="false" />
+      </label>
+      <p class="props-meta delete-project-hint" id="delete-project-hint" hidden>
+        O nome não confere.
+      </p>
+      <input type="hidden" id="delete-project-id" />
+      <input type="hidden" id="delete-project-expected" />
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-cancel-delete-project">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-danger" id="btn-confirm-delete-project" disabled>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+          Excluir
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="studio-modal" id="modal-new-project">
+    <form method="dialog" id="form-new-project" class="studio-modal-body">
+      <h3>Novo projeto</h3>
+      <label>Nome
+        <input type="text" id="new-project-name" placeholder="Ex.: Demo onboarding" required maxlength="80" />
+      </label>
+      <p class="theme-section-label">Tema inicial</p>
+      <div class="theme-presets" id="new-project-themes"></div>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-cancel-new-project" value="cancel">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" id="btn-confirm-new-project">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+          Criar
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="studio-modal" id="modal-save-theme">
+    <form method="dialog" id="form-save-theme" class="studio-modal-body">
+      <h3>Salvar tema</h3>
+      <label>Nome
+        <input type="text" id="save-theme-name" placeholder="Ex.: Marca cliente X" required maxlength="60" />
+      </label>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-cancel-save-theme">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+          Salvar
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="studio-modal" id="modal-scene">
+    <form method="dialog" id="form-scene" class="studio-modal-body">
+      <h3 id="modal-scene-title">Cena</h3>
+      <label>Nome
+        <input type="text" id="scene-name" required maxlength="60" placeholder="Ex.: Editor" />
+      </label>
+      <input type="hidden" id="scene-mode" value="create" />
+      <input type="hidden" id="scene-number" value="" />
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-cancel-scene">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-scene">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+          Salvar
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <dialog class="image-modal" id="image-modal">
+    <div class="image-modal-header">
+      <h3>Escolher imagem</h3>
+      <button type="button" class="btn btn-sm" id="btn-close-image-modal">
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        Fechar
+      </button>
+    </div>
+    <div class="image-modal-actions">
+      <button type="button" class="btn btn-primary" id="btn-upload-in-modal">
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+        Enviar do computador
+      </button>
+      <input type="search" id="image-search" placeholder="Filtrar por nome…" />
+    </div>
+    <p class="image-drop-hint">Arraste imagens para esta janela ou cole</p>
+    <div class="image-grid" id="image-grid"></div>
+  </dialog>
+
+  <div class="export-overlay" id="export-overlay" hidden>
+    <div class="export-overlay-card">
+      <p class="export-overlay-title" id="export-overlay-title">Exportando…</p>
+      <p class="export-overlay-status" id="export-overlay-status"></p>
+      <canvas class="export-preview" id="export-preview" width="1920" height="1080" hidden></canvas>
+      <button type="button" class="btn btn-ghost" id="btn-export-cancel" hidden>
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" hidden aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="i-import" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+    </symbol>
+    <symbol id="i-export" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>
+    </symbol>
+    <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>
+    </symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    </symbol>
+    <symbol id="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>
+    </symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/>
+    </symbol>
+    <symbol id="i-appearance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 3v18"/>
+      <path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none" opacity="0.35"/>
+    </symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a10 10 0 1 0 10 10c0-1.5-1.2-2-2.5-2H16a2 2 0 0 0-2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 4 4 0 0 1 4-4h.5"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="14" cy="7" r="1"/>
+    </symbol>
+    <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+    </symbol>
+    <symbol id="i-slide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 18v3"/>
+    </symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/>
+    </symbol>
+    <symbol id="i-side-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 4h8"/><rect x="5" y="8" width="14" height="11" rx="1.5"/>
+    </symbol>
+    <symbol id="i-side-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="5" width="12" height="14" rx="1.5"/><path d="M20 8v8"/>
+    </symbol>
+    <symbol id="i-side-bottom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="5" width="14" height="11" rx="1.5"/><path d="M8 20h8"/>
+    </symbol>
+    <symbol id="i-side-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 8v8"/><rect x="8" y="5" width="12" height="14" rx="1.5"/>
+    </symbol>
+    <symbol id="i-valign-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7 7h10M7 11h7"/>
+    </symbol>
+    <symbol id="i-valign-center" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7 10h10M7 14h7"/>
+    </symbol>
+    <symbol id="i-valign-bottom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7 13h10M7 17h7"/>
+    </symbol>
+    <symbol id="i-align-start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M4 6h10M4 12h16M4 18h8"/>
+    </symbol>
+    <symbol id="i-align-center" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M7 6h10M4 12h16M8 18h8"/>
+    </symbol>
+    <symbol id="i-align-end" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M10 6h10M4 12h16M12 18h8"/>
+    </symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>
+    </symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/>
+    </symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m7 4 12 8-12 8z"/>
+    </symbol>
+    <symbol id="i-watch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>
+    </symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
+    </symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="6" width="12" height="12" rx="1"/>
+    </symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+    </symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" />
+    </symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 14 5-5-5-5" />
+      <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" />
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6 6 18M6 6l12 12"/>
+    </symbol>
+  </svg>
+
+  <script src="vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

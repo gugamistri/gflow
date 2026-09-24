@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GuiaFlow">
+  <defs>
+    <linearGradient id="bg" x1="12" y1="4" x2="52" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A4D6D"/>
+      <stop offset="1" stop-color="#0F3248"/>
+    </linearGradient>
+  </defs>
+  <!-- app tile -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)"/>
+  <!-- screen -->
+  <rect x="12" y="14" width="40" height="28" rx="4" fill="#EEF5F8"/>
+  <!-- hotspot highlight -->
+  <rect x="28" y="22" width="14" height="10" rx="2" fill="none" stroke="#2A9D8F" stroke-width="2.5"/>
+  <!-- cursor -->
+  <path d="M36.5 34.5 L41 48 L43.2 42.8 L48.5 45.2 Z" fill="#1A1A1A"/>
+  <path d="M36.5 34.5 L41 48 L43.2 42.8 L48.5 45.2 Z" fill="none" stroke="#EEF5F8" stroke-width="1.2" stroke-linejoin="round"/>
+  <!-- step dots -->
+  <circle cx="20" cy="52" r="2.4" fill="#D6E8F0"/>
+  <circle cx="28" cy="52" r="2.4" fill="#D6E8F0" opacity="0.85"/>
+  <circle cx="36" cy="52" r="2.4" fill="#2A9D8F" opacity="0.95"/>
+  <circle cx="44" cy="52" r="2.4" fill="#D6E8F0" opacity="0.55"/>
+</svg>

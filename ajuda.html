@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Como usar — GuiaFlow</title>
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/ajuda.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-link" href="index.html">Guia<span>Flow</span></a>
+      <span class="topbar-title">Manual</span>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1>Como gravar um demo</h1>
+    <p class="lead">A extensão fotografa a tela do produto. O editor vira isso num tour com destaque, clique e narração.</p>
+
+    <section class="card" id="desktop">
+      <h2>App desktop</h2>
+      <p>No app Electron, use o botão <strong>Capturar</strong> no editor. Abre uma janela com a página do produto: fotografe, marque o clique e crie o projeto. Só captura o que estiver nessa janela. No navegador continue com a extensão abaixo.</p>
+    </section>
+
+    <section class="card" id="baixar">
+      <h2>1. Instalar a extensão</h2>
+      <p><a href="downloads/guiaflow-captura.zip">Baixar a extensão (zip)</a></p>
+      <ol>
+        <li>Descompacte o zip. A pasta precisa conter o arquivo <code>manifest.json</code>.</li>
+        <li>Abra <code>chrome://extensions</code>.</li>
+        <li>Ligue o <strong>Modo do desenvolvedor</strong>.</li>
+        <li>Clique em <strong>Carregar sem compactação</strong> e escolha essa pasta.</li>
+        <li>Quando sair uma versão nova, baixe de novo e clique em <strong>Recarregar</strong> no card da extensão.</li>
+      </ol>
+    </section>
+
+    <section class="card" id="gravar">
+      <h2>2. Gravar as telas</h2>
+      <p>Deixe o editor aberto neste endereço. No popup da extensão, o campo <strong>Editor</strong> tem que ser exatamente esta origem:</p>
+      <p class="origin" id="editor-origin"></p>
+      <ol>
+        <li>Abra a página do produto que você quer mostrar.</li>
+        <li>Clique no ícone da extensão e em <strong>Iniciar nesta aba</strong>.</li>
+        <li>Na barra de captura, <strong>Capturar</strong> congela a tela atual.</li>
+        <li>Clique no elemento que deve ser o destaque. Esse clique não tira outra foto.</li>
+        <li>Siga o fluxo do produto e repita capturar + clique.</li>
+        <li><strong>Criar projeto</strong> abre o editor com um projeto novo, já com as imagens e os pontos de clique.</li>
+      </ol>
+      <p><strong>Desfazer</strong> tira o último passo. <strong>Baixar JSON</strong> guarda um arquivo se o editor não estiver aberto. Atalhos: Option+Shift+C captura, Option+Shift+E cria o projeto.</p>
+      <p>Prefira <strong>Capturar</strong> e só então clicar. Um clique direto na página também gera um passo, mas a foto pode sair da tela já mudada.</p>
+    </section>
+
+    <section class="card" id="editor">
+      <h2>3. Montar o tour no editor</h2>
+      <ol>
+        <li>Ajuste o texto de cada passo no painel da direita.</li>
+        <li>Arraste o retângulo para mudar o destaque e o ponto para mudar o clique simulado.</li>
+        <li>Use <strong>Preview</strong> ou <strong>Preview automático</strong> para ver como o público vai ver; <strong>Esc</strong> volta à edição.</li>
+        <li>Em <strong>Exportar</strong>, escolha HTML navegável ou vídeo.</li>
+      </ol>
+      <p>Sem a extensão, dá para criar um projeto vazio e enviar prints com <strong>+ Imagens</strong>.</p>
+    </section>
+
+    <section class="card" id="privacidade">
+      <h2>Privacidade</h2>
+      <ul>
+        <li>A foto só é tirada quando você captura ou clica durante uma gravação.</li>
+        <li>As imagens ficam no Chrome até você criar o projeto, baixar o JSON ou cancelar.</li>
+        <li>Criar projeto envia as imagens apenas para o endereço do editor que está no popup, neste navegador.</li>
+        <li>A extensão não envia capturas para outro servidor e não vende esses dados.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="publicar">
+      <h2>Publicar na Chrome Web Store</h2>
+      <p>O zip desta página já distribui a extensão para o time. A loja do Chrome é o passo para quem não vai usar o modo do desenvolvedor.</p>
+      <ol>
+        <li>Entre no <a href="https://chrome.google.com/webstore/devconsole">Chrome Web Store Developer Dashboard</a>. A conta de desenvolvedor tem uma taxa única de US$ 5.</li>
+        <li>No projeto, rode <code>npm run pack:extension</code>. O arquivo <code>downloads/guiaflow-captura.zip</code> sai com o <code>manifest.json</code> na raiz.</li>
+        <li>Envie esse zip como um novo item.</li>
+        <li>Use esta página, com <code>#privacidade</code>, como política de privacidade.</li>
+        <li>Na justificativa de permissão, explique que a extensão precisa ler a aba do produto para fotografar a tela depois que a pessoa navega.</li>
+        <li>A revisão do Google costuma levar alguns dias. Até lá, o link de download acima continua válido.</li>
+      </ol>
+    </section>
+  </main>
+  <script>
+    document.getElementById("editor-origin").textContent = location.origin;
+  </script>
+</body>
+</html>

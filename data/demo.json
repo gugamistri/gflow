@@ -1,0 +1,126 @@
+{
+  "name": "Como usar o Guia",
+  "theme": {
+    "presetId": "documento",
+    "accent": "#2A9D8F",
+    "accentDark": "#1F6B62",
+    "overlay": "#0F3248",
+    "popoverBg": "#FFFFFF",
+    "title": "#1A4D6D",
+    "text": "#3F3F46",
+    "button": "#1A4D6D",
+    "hotspot": "#2A9D8F"
+  },
+  "sceneLabels": {
+    "1": "Abrir",
+    "2": "Editor",
+    "3": "Player",
+    "4": "Captura",
+    "5": "Exportar"
+  },
+  "customImages": {},
+  "steps": [
+    {
+      "id": "step-biblioteca",
+      "scene": 1,
+      "label": "Biblioteca",
+      "type": "screen",
+      "image": "demo/como-usar/01-biblioteca.png",
+      "hotspot": { "x": 70, "y": 22, "w": 18, "h": 10 },
+      "popover": {
+        "title": "Comece pela biblioteca",
+        "description": "Aqui ficam seus tours. Abra o projeto de exemplo ou crie um novo em branco.",
+        "side": "left",
+        "align": "start"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "clickPoint": { "x": 79, "y": 27 }
+    },
+    {
+      "id": "step-editor",
+      "scene": 2,
+      "label": "Editor",
+      "type": "screen",
+      "image": "demo/como-usar/02-editor.png",
+      "hotspot": { "x": 74, "y": 32, "w": 20, "h": 18 },
+      "popover": {
+        "title": "Monte o texto de cada passo",
+        "description": "No painel da direita você edita título, descrição e o rótulo do passo. A filmstrip embaixo troca entre as telas.",
+        "side": "left",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "clickPoint": { "x": 84, "y": 41 }
+    },
+    {
+      "id": "step-destaque",
+      "scene": 2,
+      "label": "Destaque",
+      "type": "screen",
+      "image": "demo/como-usar/03-destaque.png",
+      "hotspot": { "x": 30, "y": 40, "w": 16, "h": 14 },
+      "popover": {
+        "title": "Ajuste o destaque e o clique",
+        "description": "Arraste o retângulo de destaque para a área que importa. O pontinho define onde o cursor simulado clica no player.",
+        "side": "right",
+        "align": "start"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "clickPoint": { "x": 38, "y": 47 }
+    },
+    {
+      "id": "step-player",
+      "scene": 3,
+      "label": "Player",
+      "type": "screen",
+      "image": "demo/como-usar/04-player.png",
+      "hotspot": { "x": 46, "y": 8, "w": 14, "h": 8 },
+      "popover": {
+        "title": "Veja como o público assiste",
+        "description": "Troque para Player e use Percorrer ou Assistir. O avanço automático simula os cliques entre os passos.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "clickPoint": { "x": 53, "y": 12 }
+    },
+    {
+      "id": "step-captura",
+      "scene": 4,
+      "label": "Captura",
+      "type": "screen",
+      "image": "demo/como-usar/05-captura.png",
+      "hotspot": { "x": 78, "y": 74, "w": 16, "h": 12 },
+      "popover": {
+        "title": "Grave telas do seu produto",
+        "description": "No navegador use a extensão. No app desktop abra Capturar: fotografe a página, marque o clique e crie o projeto.",
+        "side": "left",
+        "align": "end"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "clickPoint": { "x": 86, "y": 80 }
+    },
+    {
+      "id": "step-exportar",
+      "scene": 5,
+      "label": "Exportar",
+      "type": "screen",
+      "image": "demo/como-usar/06-exportar.png",
+      "hotspot": { "x": 82, "y": 4, "w": 12, "h": 8 },
+      "popover": {
+        "title": "Compartilhe HTML ou MP4",
+        "description": "Exporte um HTML navegável ou um vídeo MP4 para quem só precisa assistir o tour.",
+        "side": "bottom",
+        "align": "end"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "clickPoint": { "x": 88, "y": 8 }
+    }
+  ]
+}

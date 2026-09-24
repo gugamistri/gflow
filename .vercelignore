@@ -1,0 +1,14 @@
+.DS_Store
+.cursor
+.tlc
+offline
+**/playwright-video*
+**/*.webm
+**/*.log.txt
+debug
+node_modules
+.git
+electron
+release
+dist
+package-lock.json

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Captura</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <strong>Captura</strong>
+      <span id="count">desligada</span>
+    </header>
+    <p id="help">
+      Congela a tela do produto, marca o clique e cria um projeto novo no editor.
+    </p>
+    <label class="field">
+      Nome do projeto
+      <input type="text" id="project-name" placeholder="Ex.: Tour RCV" autocomplete="off" />
+    </label>
+    <label class="field">
+      Editor
+      <input type="url" id="editor-origin" autocomplete="off" />
+    </label>
+    <div id="idle">
+      <button type="button" class="primary" id="start">Iniciar nesta aba</button>
+    </div>
+    <div id="live" hidden>
+      <button type="button" class="primary" id="shot">Capturar esta tela</button>
+      <button type="button" class="primary" id="create">Criar projeto</button>
+      <button type="button" id="download">Baixar JSON</button>
+      <button type="button" id="undo">Desfazer</button>
+      <button type="button" class="danger" id="cancel">Cancelar</button>
+    </div>
+    <p id="status"></p>
+    <p class="keys">Option+Shift+C captura · Option+Shift+E cria o projeto</p>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

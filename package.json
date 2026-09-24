@@ -1,0 +1,51 @@
+{
+  "name": "guiaflow",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Editor e player de tours com captura de tela",
+  "license": "MIT",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "npx --yes serve -l 4173 .",
+    "pack:extension": "node scripts/pack-extension.mjs",
+    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/playback.test.js js/history.test.js js/scenes.test.js js/cartesia.test.js electron/cartesia.test.js",
+    "desktop": "electron .",
+    "dist:desktop": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^36.4.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "app.guiaflow",
+    "productName": "GuiaFlow",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "ajuda.html",
+      "favicon.*",
+      "apple-touch-icon.png",
+      "css/**/*",
+      "js/**/*",
+      "data/**/*",
+      "demo/**/*",
+      "vendor/**/*",
+      "extension/content.js",
+      "extension/lib/demo-payload.js",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": ["dir"],
+      "identity": null
+    },
+    "linux": {
+      "target": ["dir"]
+    },
+    "win": {
+      "target": ["dir"]
+    }
+  }
+}

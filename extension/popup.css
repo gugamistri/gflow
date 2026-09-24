@@ -1,0 +1,92 @@
+:root {
+  color-scheme: light;
+  font: 13px/1.4 Inter, system-ui, sans-serif;
+  color: #1a1a1a;
+}
+
+body {
+  margin: 0;
+  width: 300px;
+  padding: 14px;
+  background: #eef5f8;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+header strong {
+  font-size: 15px;
+}
+
+#count {
+  color: #1a4d6d;
+  font-weight: 700;
+}
+
+#help,
+#status,
+.keys {
+  margin: 8px 0 0;
+  color: #3f3f46;
+}
+
+#status {
+  min-height: 1.4em;
+}
+
+#status.is-error {
+  color: #dc2626;
+}
+
+.keys {
+  color: #71717a;
+  font-size: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  color: #71717a;
+  font-size: 12px;
+}
+
+.field input {
+  font: inherit;
+  color: #1a1a1a;
+  border: 1px solid #e4e4e7;
+  border-radius: 4px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+#idle,
+#live {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+button {
+  font: inherit;
+  border-radius: 4px;
+  border: 1px solid #e4e4e7;
+  background: #fff;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.primary {
+  background: #1a4d6d;
+  border-color: #1a4d6d;
+  color: #fff;
+}
+
+button.danger {
+  color: #dc2626;
+}
