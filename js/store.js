@@ -258,7 +258,4 @@ export const IMAGE_CATALOG = [
   "demo/como-usar/01-biblioteca.png",
   "demo/como-usar/02-editor.png",
   "demo/como-usar/03-destaque.png",
-  "demo/como-usar/04-player.png",
-  "demo/como-usar/05-captura.png",
-  "demo/como-usar/06-exportar.png",
 ];
