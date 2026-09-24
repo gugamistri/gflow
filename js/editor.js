@@ -2109,8 +2109,8 @@ export function createEditor(ctx) {
       toast(t("toast.bgRemoved"));
     });
 
-    document.getElementById("btn-add-step").addEventListener("click", () => addStep(false));
-    document.getElementById("btn-add-slide").addEventListener("click", () => addStep(true));
+    document.getElementById("btn-add-step")?.addEventListener("click", () => addStep(false));
+    document.getElementById("btn-add-slide")?.addEventListener("click", () => addStep(true));
     document.getElementById("btn-add-scene")?.addEventListener("click", () => openSceneModal("create"));
     document.getElementById("btn-cancel-scene")?.addEventListener("click", () => {
       document.getElementById("modal-scene")?.close();
@@ -2119,7 +2119,7 @@ export function createEditor(ctx) {
       e.preventDefault();
       commitSceneModal();
     });
-    document.getElementById("btn-dup-step").addEventListener("click", duplicateStep);
+    document.getElementById("btn-dup-step")?.addEventListener("click", duplicateStep);
 
     window.addEventListener("keydown", (e) => {
       const editorView = document.getElementById("view-editor");
@@ -2177,11 +2177,11 @@ export function createEditor(ctx) {
       closeSlidePreview();
     });
 
-    document.getElementById("btn-add-images").addEventListener("click", () => {
+    document.getElementById("btn-add-images")?.addEventListener("click", () => {
       openImageModal("add");
     });
 
-    els.imagesFile.addEventListener("change", async (e) => {
+    els.imagesFile?.addEventListener("change", async (e) => {
       const files = e.target.files;
       if (!files?.length) return;
       const createSteps = pickMode === "createSteps" || pickMode === "add";
@@ -2190,21 +2190,21 @@ export function createEditor(ctx) {
       if (pickMode !== "add") pickMode = "replace";
     });
 
-    document.getElementById("btn-pick-image").addEventListener("click", () => {
+    document.getElementById("btn-pick-image")?.addEventListener("click", () => {
       openImageModal("replace");
     });
 
-    document.getElementById("btn-close-image-modal").addEventListener("click", () => {
+    document.getElementById("btn-close-image-modal")?.addEventListener("click", () => {
       els.imageModal.close();
     });
 
-    document.getElementById("btn-upload-in-modal").addEventListener("click", () => {
+    document.getElementById("btn-upload-in-modal")?.addEventListener("click", () => {
       els.imagesFile.click();
     });
 
-    els.imageSearch.addEventListener("input", renderImageGrid);
+    els.imageSearch?.addEventListener("input", renderImageGrid);
 
-    els.imageGrid.addEventListener("click", (e) => {
+    els.imageGrid?.addEventListener("click", (e) => {
       const remove = e.target.closest("[data-remove-image]");
       if (remove) {
         removeCustomImage(remove.dataset.removeImage);
@@ -2215,27 +2215,27 @@ export function createEditor(ctx) {
       applyImageRef(tile.dataset.ref);
     });
 
-    els.imageModal.addEventListener("click", (e) => {
+    els.imageModal?.addEventListener("click", (e) => {
       if (e.target === els.imageModal) els.imageModal.close();
     });
 
-    els.imageModal.addEventListener("dragover", (e) => {
+    els.imageModal?.addEventListener("dragover", (e) => {
       const items = e.dataTransfer?.items;
       const hasFile = items ? [...items].some((item) => item.kind === "file") : e.dataTransfer?.files?.length;
       if (!hasFile) return;
       e.preventDefault();
       els.imageModal.classList.add("is-drop");
     });
-    els.imageModal.addEventListener("dragleave", (e) => {
+    els.imageModal?.addEventListener("dragleave", (e) => {
       if (e.relatedTarget && els.imageModal.contains(e.relatedTarget)) return;
       els.imageModal.classList.remove("is-drop");
     });
-    els.imageModal.addEventListener("drop", async (e) => {
+    els.imageModal?.addEventListener("drop", async (e) => {
       e.preventDefault();
       els.imageModal.classList.remove("is-drop");
       await ingestDroppedImages(e.dataTransfer);
     });
-    els.imageModal.addEventListener("paste", (e) => {
+    els.imageModal?.addEventListener("paste", (e) => {
       const files = imageFilesFromTransfer(e.clipboardData);
       if (!files.length) return;
       e.preventDefault();

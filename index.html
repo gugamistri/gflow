@@ -43,9 +43,9 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="vendor/driver/driver.css" />
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="a/3/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/3/css/theme.css" />
+  <link rel="stylesheet" href="a/3/css/app.css" />
 </head>
 <body>
   <header class="topbar">
@@ -55,7 +55,6 @@
     </div>
     <div class="topbar-appearance">
       <label class="locale-select">
-        <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
         <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
           <option value="pt">PT</option>
           <option value="es">ES</option>
@@ -111,9 +110,11 @@
           <hr class="theme-divider" />
           <p class="theme-section-label" data-i18n="narration.cartesiaKey">Chave Cartesia</p>
           <p class="props-meta" id="cartesia-status" data-i18n="narration.cartesiaStatus">A chave fica neste navegador, fora do projeto.</p>
-          <label><span data-i18n="narration.apiKey">Chave da API</span>
-            <input type="password" id="cartesia-key" autocomplete="off" spellcheck="false" placeholder="sk_car_…" />
-          </label>
+          <form autocomplete="off" onsubmit="return false">
+            <label><span data-i18n="narration.apiKey">Chave da API</span>
+              <input type="password" id="cartesia-key" autocomplete="off" spellcheck="false" placeholder="sk_car_…" />
+            </label>
+          </form>
           <div class="narration-bg-row">
             <button type="button" class="btn btn-sm" id="btn-cartesia-save"><span data-i18n="narration.saveSystem">Salvar no sistema</span></button>
             <button type="button" class="btn btn-sm" id="btn-cartesia-clear" hidden><span data-i18n="narration.remove">Remover</span></button>
@@ -664,7 +665,7 @@
     </symbol>
   </svg>
 
-  <script src="vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="js/app.js"></script>
+  <script src="a/3/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/3/js/app.js"></script>
 </body>
 </html>

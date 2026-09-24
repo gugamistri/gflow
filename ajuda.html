@@ -44,9 +44,9 @@
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="css/app.css" />
-  <link rel="stylesheet" href="css/ajuda.css" />
+  <link rel="stylesheet" href="a/3/css/theme.css" />
+  <link rel="stylesheet" href="a/3/css/app.css" />
+  <link rel="stylesheet" href="a/3/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
@@ -56,7 +56,6 @@
     </div>
     <div class="topbar-appearance">
       <label class="locale-select">
-        <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
         <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
           <option value="pt">PT</option>
           <option value="es">ES</option>
@@ -139,7 +138,7 @@
     </section>
   </main>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/3/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

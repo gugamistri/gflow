@@ -66,14 +66,21 @@ textarea {
 .locale-select select {
   height: calc(1.2em + 0.9em + 2px);
   border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  border-radius: 7px;
+  background-color: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.45rem center;
+  background-size: 0.7rem;
   color: var(--ns-button-text);
+  color-scheme: dark;
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0 0.4rem;
+  padding: 0 1.5rem 0 0.7rem;
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .locale-select select:hover,

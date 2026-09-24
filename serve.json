@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/a/:version/:path*", "destination": "/:path*" }
+  ]
+}
