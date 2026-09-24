@@ -12,13 +12,13 @@ Editor e player de tours com capturas de tela, destaque, clique simulado e narra
 npm start
 ```
 
-Abre em `http://localhost:4173`. Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
+Abre em `http://localhost:4173`. O endereço publicado é [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app). Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
 
 ### Extensão de captura
 
 1. `npm run pack:extension` (ou use o zip em `downloads/`)
 2. Em `chrome://extensions`, ative o modo do desenvolvedor e carregue a pasta da extensão
-3. No popup, o campo Editor deve ser a mesma origem do site (`http://localhost:4173`)
+3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow-seven.vercel.app`, ou `http://localhost:4173` no desenvolvimento)
 4. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
 
 Manual completo: [`ajuda.html`](ajuda.html).

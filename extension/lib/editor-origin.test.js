@@ -7,8 +7,8 @@ import {
   tabMatchesOrigin,
 } from "./editor-origin.js";
 
-test("origem padrão é localhost:4173", () => {
-  assert.equal(DEFAULT_EDITOR_ORIGIN, "http://localhost:4173");
+test("origem padrão é guiaflow-seven.vercel.app", () => {
+  assert.equal(DEFAULT_EDITOR_ORIGIN, "https://guiaflow-seven.vercel.app");
 });
 
 test("normaliza URL com caminho e barra final", () => {

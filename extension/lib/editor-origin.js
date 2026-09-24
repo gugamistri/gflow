@@ -32,4 +32,4 @@ export function tabMatchesOrigin(tabUrl, origin) {
   }
 }
 
-export const DEFAULT_EDITOR_ORIGIN = "http://localhost:4173";
+export const DEFAULT_EDITOR_ORIGIN = "https://guiaflow-seven.vercel.app";

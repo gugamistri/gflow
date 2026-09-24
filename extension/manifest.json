@@ -5,7 +5,7 @@
   "description": "Captura telas e cliques e cria um projeto novo no editor do GuiaFlow.",
   "minimum_chrome_version": "120",
   "permissions": ["tabs", "scripting", "storage", "unlimitedStorage", "downloads"],
-  "host_permissions": ["<all_urls>", "http://localhost:4173/*", "http://127.0.0.1:4173/*"],
+  "host_permissions": ["<all_urls>", "https://guiaflow-seven.vercel.app/*", "http://localhost:4173/*", "http://127.0.0.1:4173/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
