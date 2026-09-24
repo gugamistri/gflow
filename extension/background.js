@@ -103,21 +103,6 @@ function isCapturable(url) {
   return /^https?:\/\//.test(url || "");
 }
 
-async function ensureRegistered() {
-  await loadSettings();
-  const exclude = originToMatchPattern(settings.editorOrigin);
-  await chrome.scripting.unregisterContentScripts({ ids: [SCRIPT_ID] }).catch(() => {});
-  const script = {
-    id: SCRIPT_ID,
-    js: ["content.js"],
-    matches: ["http://*/*", "https://*/*"],
-    runAt: "document_idle",
-    persistAcrossSessions: false,
-  };
-  if (exclude) script.excludeMatches = [exclude];
-  await chrome.scripting.registerContentScripts([script]);
-}
-
 async function ensureBridge(origin) {
   const pattern = originToMatchPattern(origin);
   if (!pattern) throw new Error("Origem do editor inválida.");
@@ -156,14 +141,6 @@ async function injectBridge(tabId) {
   });
 }
 
-async function injectTab(tabId) {
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  if (!tab?.url) return;
-  await loadSettings();
-  if (tabMatchesOrigin(tab.url, settings.editorOrigin)) return;
-  await inject(tabId).catch(() => {});
-}
-
 async function broadcast(state) {
   const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
   await Promise.all(
@@ -185,7 +162,6 @@ async function start(tab) {
   session.active = true;
   await saveSession();
   try {
-    await ensureRegistered();
     await inject(tab.id);
   } catch {
     return publicState({
@@ -354,7 +330,9 @@ async function downloadJson() {
 }
 
 async function findEditorTab(origin) {
-  const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
+  const pattern = originToMatchPattern(origin);
+  if (!pattern) return null;
+  const tabs = await chrome.tabs.query({ url: pattern });
   return tabs.find((tab) => tabMatchesOrigin(tab.url, origin)) || null;
 }
 
@@ -523,6 +501,7 @@ async function handle(msg, sender) {
       return start(await chrome.tabs.get(msg.tabId));
     case "CAPTURE_NOW": {
       const tab = await chrome.tabs.get(msg.tabId);
+      await inject(tab.id).catch(() => {});
       return captureShot(tab, { title: tab.title, url: tab.url }, { withClick: false });
     }
     case "CAPTURE_FROM_PAGE":
@@ -555,6 +534,7 @@ chrome.commands.onCommand.addListener(async (command) => {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   if (!tab) return;
   if (command === "capture-now") {
+    await inject(tab.id).catch(() => {});
     await captureShot(tab, { title: tab.title, url: tab.url }, { withClick: false });
   } else if (command === "finish-capture") {
     await createProject();
@@ -567,23 +547,8 @@ chrome.downloads.onChanged.addListener((delta) => {
   settleDownload(delta.id, state).catch(() => {});
 });
 
-chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-  const current = await loadSession();
-  if (!current.active) return;
-  await injectTab(tabId);
-});
-
 chrome.runtime.onStartup.addListener(async () => {
   session = await loadSession();
   settings = await loadSettings();
-  if (session.active) {
-    await ensureRegistered().catch(() => {});
-    const tabs = await chrome.tabs.query({ active: true, url: ["http://*/*", "https://*/*"] });
-    await Promise.all(
-      tabs
-        .filter((tab) => !tabMatchesOrigin(tab.url, settings.editorOrigin))
-        .map((tab) => injectTab(tab.id))
-    );
-  }
   await updateBadge();
 });

@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
   "name": "GuiaFlow — Captura",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Captura telas e cliques e cria um projeto novo no editor do GuiaFlow.",
   "minimum_chrome_version": "120",
-  "permissions": ["tabs", "scripting", "storage", "unlimitedStorage", "downloads"],
-  "host_permissions": ["<all_urls>", "https://guiaflow-seven.vercel.app/*", "http://localhost:4173/*", "http://127.0.0.1:4173/*"],
+  "permissions": ["activeTab", "tabs", "scripting", "storage", "unlimitedStorage", "downloads"],
+  "host_permissions": [
+    "https://guiaflow-seven.vercel.app/*",
+    "http://localhost:4173/*",
+    "http://127.0.0.1:4173/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
