@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, rmSync } from "node:fs";
+
+copyFileSync("js/i18n.js", "extension/lib/i18n.js");
 
 const out = "downloads/guiaflow-captura.zip";
 mkdirSync("downloads", { recursive: true });

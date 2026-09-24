@@ -13,6 +13,7 @@ import {
   BG_VOLUME,
   BG_DUCK_VOLUME,
 } from "./playback.js";
+import { t, getLocale, HTML_LANG, standaloneMessages } from "./i18n.js";
 
 const DRIVER_JS = "vendor/driver/driver.js.iife.js";
 const DRIVER_CSS = "vendor/driver/driver.css";
@@ -42,7 +43,7 @@ function blobToDataUrl(blob) {
 
 async function fetchText(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Falha ao carregar " + url);
+  if (!res.ok) throw new Error(t("err.loadFail", { url }));
   return res.text();
 }
 
@@ -72,7 +73,7 @@ export async function embedImagesInDemo(demo, onProgress) {
   const cache = new Map();
   for (let i = 0; i < refs.length; i++) {
     const ref = refs[i];
-    onProgress?.(`Empacotando imagem ${i + 1} de ${refs.length}`);
+    onProgress?.(t("export.packImage", { i: i + 1, n: refs.length }));
     if (ref.startsWith("custom:")) {
       const id = ref.slice(7);
       cache.set(ref, next.customImages[id]?.dataUrl || "");
@@ -101,7 +102,7 @@ function standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance }) 
   const mode = appearance === "social" ? "social" : "documento";
   const themeColor = mode === "social" ? "#101010" : "#1A4D6D";
   return `<!DOCTYPE html>
-<html lang="pt-BR" data-appearance="${mode}">
+<html lang="${HTML_LANG[getLocale()] || "en"}" data-appearance="${mode}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -115,36 +116,36 @@ ${css}
   <header class="topbar">
     <div class="topbar-brand">
       <span class="logo">Guia<span>Flow</span></span>
-      <span class="topbar-title">Tour navegável — abra este arquivo no Chrome ou Safari</span>
+      <span class="topbar-title">${t("player.standaloneTitle")}</span>
     </div>
   </header>
   <main id="view-player" class="view view-player">
     <div class="player-toolbar">
-      <button type="button" class="btn btn-ghost" id="btn-play">Percorrer daqui</button>
-      <button type="button" class="btn btn-primary" id="btn-watch">Assistir daqui</button>
-      <button type="button" class="btn btn-ghost" id="btn-restart">Desde o início</button>
-      <button type="button" class="btn btn-ghost" id="btn-stop">Parar</button>
+      <button type="button" class="btn btn-ghost" id="btn-play">${t("player.browse")}</button>
+      <button type="button" class="btn btn-primary" id="btn-watch">${t("player.watch")}</button>
+      <button type="button" class="btn btn-ghost" id="btn-restart">${t("player.restart")}</button>
+      <button type="button" class="btn btn-ghost" id="btn-stop">${t("player.stop")}</button>
       <label class="checkbox player-autoplay">
         <input type="checkbox" id="chk-autoplay" checked />
-        Avanço automático
+        ${t("player.autoplay")}
       </label>
-      <label class="player-autoplay">Começar em
+      <label class="player-autoplay">${t("player.startAt")}
         <select id="start-step"></select>
       </label>
-      <span class="player-progress" id="player-progress">Pronto</span>
+      <span class="player-progress" id="player-progress">${t("player.ready")}</span>
     </div>
     <div class="player-stage" id="player-stage">
       <div class="player-frame" id="player-frame">
         <img id="player-image" alt="Demo" hidden />
-        <div class="image-missing" id="player-missing" hidden>Tela sem imagem neste passo.</div>
+        <div class="image-missing" id="player-missing" hidden>${t("player.missing")}</div>
         <div class="slide-card player-slide" id="player-slide" hidden>
-          <button type="button" class="slide-card-close" id="player-slide-close" aria-label="Fechar">
+          <button type="button" class="slide-card-close" id="player-slide-close" aria-label="${t("canvas.close")}">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
           <p class="slide-kicker" id="player-slide-kicker"></p>
           <h2 id="player-slide-title"></h2>
           <p id="player-slide-body"></p>
-          <button type="button" class="slide-card-play" id="player-slide-play" aria-label="Reproduzir">
+          <button type="button" class="slide-card-play" id="player-slide-play" aria-label="${t("canvas.play")}">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
           </button>
         </div>
@@ -162,6 +163,7 @@ ${css}
   </main>
   <div class="toast" id="toast" hidden></div>
   <script>window.INTERACTIVE_DEMO = ${demoJson};</script>
+  <script>window.__GF_I18N = ${JSON.stringify(standaloneMessages())};</script>
   <script>${DRIVER_NOTICE}
 ${driverJs}</script>
   <script>${playerJs}</script>
@@ -171,7 +173,7 @@ ${driverJs}</script>
 }
 
 export async function exportStandaloneHtml(demo, { onProgress } = {}) {
-  onProgress?.("Lendo estilos e player…");
+  onProgress?.(t("export.readStyles"));
   const [themeCss, appCss, driverCss, driverJs, playerJs] = await Promise.all([
     fetchText("css/theme.css"),
     fetchText("css/app.css"),
@@ -181,7 +183,7 @@ export async function exportStandaloneHtml(demo, { onProgress } = {}) {
   ]);
 
   if (!driverJs) {
-    throw new Error("Não foi possível carregar vendor/driver/driver.js.iife.js.");
+    throw new Error(t("err.driverMissing"));
   }
 
   const embedded = await embedImagesInDemo(demo, onProgress);
@@ -243,7 +245,7 @@ function waitMs(ms, signal) {
       "abort",
       () => {
         clearTimeout(t);
-        reject(new DOMException("Exportação cancelada", "AbortError"));
+        reject(new DOMException(t("export.cancelled"), "AbortError"));
       },
       { once: true }
     );
@@ -252,7 +254,7 @@ function waitMs(ms, signal) {
 
 async function loadDemoImages(demo, onProgress) {
   const steps = demo.steps || [];
-  onProgress?.("Carregando telas…");
+  onProgress?.(t("export.loadScreens"));
   const images = [];
   for (let i = 0; i < steps.length; i++) {
     const src = resolveImageSrc(demo, steps[i].image);
@@ -264,7 +266,7 @@ async function loadDemoImages(demo, onProgress) {
 async function decodeExportClip(ctx, url, cache) {
   if (cache.has(url)) return cache.get(url);
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Falha ao ler o áudio da narração.");
+  if (!res.ok) throw new Error(t("err.audioRead"));
   const raw = await res.arrayBuffer();
   const audio = await ctx.decodeAudioData(raw.slice(0));
   cache.set(url, audio);
@@ -376,7 +378,7 @@ async function encodeAacTrack(muxer, audioBuffer, signal) {
     planes.push(audioBuffer.getChannelData(channel));
   }
   for (let offset = 0; offset < audioBuffer.length; offset += frameCount) {
-    if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
+    if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
     if (encodeError) throw encodeError;
     const planar = new Float32Array(channels * frameCount);
     const available = Math.min(frameCount, audioBuffer.length - offset);
@@ -469,7 +471,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   const theme = demo.theme || {};
 
   async function encodeCanvasFrame(keyFrame) {
-    if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
+    if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
     if (encodeError) throw encodeError;
     while (encoder.encodeQueueSize > 8) {
       await waitMs(8, signal);
@@ -485,11 +487,11 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   }
 
   for (let i = 0; i < steps.length; i++) {
-    if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
+    if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
     const step = steps[i];
     const span = exportStepFrames(step, demo, fps);
     const timing = span.timing;
-    onProgress?.(`Codificando passo ${i + 1} de ${steps.length}`);
+    onProgress?.(t("export.encodeStep", { i: i + 1, n: steps.length }));
     for (let frame = 0; frame < span.frames; frame += 1) {
       const t = frame * (1000 / fps);
       const scene = {
@@ -514,24 +516,24 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   encoder.close();
   if (encodeError) throw encodeError;
   if (audioBuffer) {
-    onProgress?.("Codificando narração…");
+    onProgress?.(t("export.encodeNarration"));
     await encodeAacTrack(muxer, audioBuffer, signal);
   }
   muxer.finalize();
 
   const blob = new Blob([target.buffer], { type: "video/mp4" });
-  if (!blob.size) throw new Error("A gravação saiu vazia.");
+  if (!blob.size) throw new Error(t("err.emptyRecording"));
   downloadBlob(blob, `${slugifyFilename(demo?.name, "demo")}.mp4`);
   return { size: blob.size, ext: "mp4" };
 }
 
 async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images, audioBuffer }) {
   if (typeof MediaRecorder === "undefined") {
-    throw new Error("Este navegador não grava vídeo. Use o HTML navegável.");
+    throw new Error(t("err.noVideoSupport"));
   }
   const mime = pickRecorderMime();
   if (!mime) {
-    throw new Error("Nenhum formato de vídeo suportado neste navegador.");
+    throw new Error(t("err.noVideoFormat"));
   }
 
   const steps = demo.steps || [];
@@ -590,7 +592,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
 
   try {
     for (let i = 0; i < steps.length; i++) {
-      if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
+      if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
       const step = steps[i];
       const span = exportStepFrames(step, demo, 30);
       const timing = span.timing;
@@ -602,10 +604,10 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
         t: 0,
         ...timing,
       };
-      onProgress?.(`Gravando passo ${i + 1} de ${steps.length}`);
+      onProgress?.(t("export.recordStep", { i: i + 1, n: steps.length }));
       const t0 = performance.now();
       while (performance.now() - t0 < span.seconds * 1000) {
-        if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
+        if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
         scene.t = performance.now() - t0;
         await waitMs(16, signal);
       }
@@ -621,17 +623,17 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   await stopped;
   const ext = mime.includes("mp4") ? "mp4" : "webm";
   const blob = new Blob(chunks, { type: mime.split(";")[0] });
-  if (!blob.size) throw new Error("A gravação saiu vazia.");
+  if (!blob.size) throw new Error(t("err.emptyRecording"));
   downloadBlob(blob, `${slugifyFilename(demo?.name, "demo")}.${ext}`);
   return { size: blob.size, ext };
 }
 
 export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
   const steps = demo.steps || [];
-  if (!steps.length) throw new Error("Nenhum passo para gravar.");
+  if (!steps.length) throw new Error(t("err.noStepsRecord"));
 
   const images = await loadDemoImages(demo, onProgress);
-  onProgress?.("Preparando narração…");
+  onProgress?.(t("export.prepNarration"));
   const audioBuffer = await renderExportAudio(demo);
   const W = 1920;
   const H = 1080;
@@ -640,12 +642,12 @@ export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
   const aac = await canEncodeAac(audioBuffer);
   if (codec && (!audioBuffer || aac)) {
     try {
-      onProgress?.("Codificando MP4…");
+      onProgress?.(t("export.encodeMp4"));
       return await exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer });
     } catch (err) {
       if (err?.name === "AbortError") throw err;
       console.warn("WebCodecs MP4 falhou, tentando MediaRecorder", err);
-      onProgress?.("Encoder MP4 indisponível — tentando reserva…");
+      onProgress?.(t("export.mp4Fallback"));
     }
   }
 
@@ -873,10 +875,10 @@ function drawPopover(ctx, theme, step, index, total, hs, bounds) {
   ctx.fillStyle = muted;
   ctx.font = "500 13px Segoe UI, Helvetica Neue, Arial, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(`${index + 1} de ${total}`, box.x + box.w / 2, fy + 12);
+  ctx.fillText(t("player.of", { current: index + 1, total }), box.x + box.w / 2, fy + 12);
   ctx.textAlign = "left";
 
-  const btnLabel = index >= total - 1 ? "Concluir" : "Próximo";
+  const btnLabel = index >= total - 1 ? t("player.done") : t("player.next");
   ctx.font = "700 13px Segoe UI, Helvetica Neue, Arial, sans-serif";
   const btnW = Math.max(88, ctx.measureText(btnLabel).width + 28);
   const btnH = 32;
@@ -910,7 +912,7 @@ function renderFrame(ctx, scene, theme) {
   ctx.fillText("Flow", 98, 38);
   ctx.font = "500 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
   ctx.fillStyle = "#9ca3af";
-  ctx.fillText("Tour narrado", 248, 38);
+  ctx.fillText(t("player.narratedTour"), 248, 38);
   ctx.textAlign = "right";
   ctx.fillStyle = "#e5e7eb";
   ctx.font = "600 16px Segoe UI, Helvetica Neue, Arial, sans-serif";

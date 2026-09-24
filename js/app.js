@@ -40,6 +40,13 @@ import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createHistory } from "./history.js";
 import { renumberScenes } from "./scenes.js";
+import {
+  initLocale,
+  applyI18n,
+  bindLocaleSelect,
+  t,
+  themePresetName,
+} from "./i18n.js";
 
 let project = null;
 let selectedIndex = 0;
@@ -50,11 +57,11 @@ let appearancePreference = getAppearancePreference();
 const toastEl = document.getElementById("toast");
 let toastTimer = null;
 
-const APPEARANCE_LABELS = {
-  system: "Sistema",
-  documento: "Claro",
-  social: "Escuro",
-};
+const APPEARANCE_LABELS = () => ({
+  system: t("appearance.system"),
+  documento: t("appearance.light"),
+  social: t("appearance.dark"),
+});
 
 const APPEARANCE_ICONS = {
   system: "#i-appearance",
@@ -68,8 +75,9 @@ function applyChromeAppearance(mode = resolveAppearanceMode(appearancePreference
   if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
   const btn = document.getElementById("btn-appearance");
   const icon = document.getElementById("btn-appearance-icon");
-  const prefLabel = APPEARANCE_LABELS[appearancePreference] || "Sistema";
-  const effective = APPEARANCE_LABELS[mode] || mode;
+  const labels = APPEARANCE_LABELS();
+  const prefLabel = labels[appearancePreference] || t("appearance.system");
+  const effective = labels[mode] || mode;
   if (icon) {
     const href = APPEARANCE_ICONS[appearancePreference] || APPEARANCE_ICONS.system;
     icon.setAttribute("href", href);
@@ -78,15 +86,19 @@ function applyChromeAppearance(mode = resolveAppearanceMode(appearancePreference
   if (btn) {
     btn.title =
       appearancePreference === "system"
-        ? `Seguindo o sistema (${effective}) — clique para ${cycleHint(appearancePreference)}`
-        : `Aparência: ${prefLabel} — clique para ${cycleHint(appearancePreference)}`;
-    btn.setAttribute("aria-label", `Aparência: ${prefLabel}`);
+        ? t("appearance.followSystem", { effective, next: cycleHint(appearancePreference) })
+        : t("appearance.fixed", { label: prefLabel, next: cycleHint(appearancePreference) });
+    btn.setAttribute("aria-label", t("appearance.aria", { label: prefLabel }));
   }
 }
 
 function cycleHint(current) {
-  const next = { system: "Claro", documento: "Escuro", social: "Sistema" };
-  return next[current] || "próximo modo";
+  const next = {
+    system: t("appearance.light"),
+    documento: t("appearance.dark"),
+    social: t("appearance.system"),
+  };
+  return next[current] || t("appearance.nextMode");
 }
 
 /** Aparência do site — não altera o tema do tour (slides/popover) */
@@ -103,7 +115,7 @@ function beginInlineEdit(host, { value, maxLength = 80, onSave }) {
   input.className = "inline-edit";
   input.value = current;
   input.maxLength = maxLength;
-  input.setAttribute("aria-label", "Renomear");
+  input.setAttribute("aria-label", t("toast.rename"));
   host.replaceChildren(input);
   if (host.id === "topbar-project") {
     input.style.width = "100%";
@@ -123,7 +135,7 @@ function beginInlineEdit(host, { value, maxLength = 80, onSave }) {
         return;
       } catch (err) {
         console.error(err);
-        toast(err?.message || "Não foi possível renomear");
+        toast(err?.message || t("toast.renameFail"));
       }
     }
     host.textContent = current;
@@ -148,13 +160,13 @@ function namesMatch(expected, typed) {
 async function openDeleteProjectModal(id) {
   const proj = await getProject(id);
   if (!proj) {
-    toast("Projeto não encontrado");
+    toast(t("toast.projectNotFound"));
     return;
   }
   const modal = document.getElementById("modal-delete-project");
   document.getElementById("delete-project-id").value = id;
   document.getElementById("delete-project-expected").value = proj.name || "";
-  document.getElementById("delete-project-name-label").textContent = proj.name || "este projeto";
+  document.getElementById("delete-project-name-label").textContent = proj.name || t("modal.thisProject");
   const confirmInput = document.getElementById("delete-project-confirm");
   confirmInput.value = "";
   document.getElementById("delete-project-backup").checked = true;
@@ -197,7 +209,7 @@ function bindDeleteProjectModal() {
     const proj = await getProject(id);
     if (!proj) {
       modal.close();
-      toast("Projeto não encontrado");
+      toast(t("toast.projectNotFound"));
       return;
     }
 
@@ -214,7 +226,7 @@ function bindDeleteProjectModal() {
       renderLibrary();
     }
     modal.close();
-    toast(wantBackup ? "Backup baixado e projeto excluído" : "Projeto excluído");
+    toast(wantBackup ? t("toast.deletedWithBackup") : t("toast.deleted"));
   });
 }
 
@@ -364,7 +376,7 @@ function flushAutosave() {
     .then(() => putProjectAndHistory(snapshot, history.exportStacks()))
     .catch((err) => {
       console.error(err);
-      toast("Não consegui salvar automaticamente");
+      toast(t("toast.autosaveFail"));
     });
   return saveChain;
 }
@@ -413,11 +425,11 @@ function paintChrome() {
 
   if (view === "library") {
     title.hidden = false;
-    title.textContent = "Crie tours com capturas e narração";
+    title.textContent = t("topbar.tagline");
     if (projectLabel) projectLabel.hidden = true;
   } else if (presenting) {
     title.hidden = false;
-    title.textContent = "Apresentação";
+    title.textContent = t("topbar.presenting");
     if (projectLabel) projectLabel.hidden = true;
   } else {
     title.hidden = true;
@@ -494,7 +506,9 @@ function renderThemeSwatches(container, items, { selectedId, onPick, customActio
     .map((item) => {
       const colors = item.colors || item;
       const id = item.id;
-      const name = item.name || id;
+      const name = item.id && THEME_PRESETS.some((p) => p.id === item.id)
+        ? themePresetName(item.id, item.name)
+        : item.name || id;
       const active = selectedId && id === selectedId ? "is-active" : "";
       return `
         <button type="button" class="theme-swatch ${active}" data-theme-id="${id}" title="${escapeAttr(name)}">
@@ -509,7 +523,7 @@ function renderThemeSwatches(container, items, { selectedId, onPick, customActio
     .join("");
 
   if (!items.length && customActions) {
-    container.innerHTML = `<p class="theme-empty">Nenhum tema próprio ainda.</p>`;
+    container.innerHTML = `<p class="theme-empty">${escapeHtml(t("theme.empty"))}</p>`;
   }
 
   container.querySelectorAll("[data-theme-id]").forEach((btn) => {
@@ -595,15 +609,15 @@ function renderLibrary() {
         .join("");
       const thumb = p.thumb
         ? `<img src="${escapeAttr(p.thumb)}" alt="" loading="lazy" />`
-        : `<div class="project-card-placeholder">Demo</div>`;
+        : `<div class="project-card-placeholder">${escapeHtml(t("library.demoPlaceholder"))}</div>`;
       return `
-        <article class="project-card" data-id="${escapeAttr(p.id)}" tabindex="0" aria-label="Abrir ${escapeAttr(p.name)}">
-          <button type="button" class="project-card-close" data-action="delete" title="Excluir projeto" aria-label="Excluir ${escapeAttr(p.name)}">
+        <article class="project-card" data-id="${escapeAttr(p.id)}" tabindex="0" aria-label="${escapeAttr(t("library.openAria", { name: p.name }))}">
+          <button type="button" class="project-card-close" data-action="delete" title="${escapeAttr(t("library.deleteTitle"))}" aria-label="${escapeAttr(t("library.deleteAria", { name: p.name }))}">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
           </button>
           <div class="project-card-thumb">${thumb}</div>
           <div class="project-card-body">
-            <h3 class="project-card-title" data-action="rename-inline" title="Clique para renomear">${escapeHtml(p.name)}</h3>
+            <h3 class="project-card-title" data-action="rename-inline" title="${escapeAttr(t("library.renameTitle"))}">${escapeHtml(p.name)}</h3>
             <p>${p.stepCount || 0} passo(s) · ${escapeHtml(formatDate(p.updatedAt))}</p>
             <div class="project-card-dots">${dots}</div>
             <div class="project-card-actions">
@@ -625,7 +639,7 @@ function renderLibrary() {
 async function openProject(id, { autoPreview = false } = {}) {
   const loaded = await getProject(id);
   if (!loaded) {
-    toast("Projeto não encontrado");
+    toast(t("toast.projectNotFound"));
     return;
   }
   if (!loaded.customImages) loaded.customImages = {};
@@ -644,9 +658,9 @@ async function openProject(id, { autoPreview = false } = {}) {
     requestAnimationFrame(() => {
       enterPresentation({ from: 0, autoplay: true });
     });
-    toast("Assista ao exemplo — Esc sai para o editor");
+    toast(t("toast.watchExample"));
   } else {
-    toast(`Aberto: ${loaded.name}`);
+    toast(t("toast.opened", { name: loaded.name }));
   }
 }
 
@@ -744,7 +758,7 @@ function bindChrome() {
         project.name = name;
         host.textContent = name;
         onChange();
-        toast("Projeto renomeado");
+        toast(t("toast.renamed"));
       },
     });
   });
@@ -768,7 +782,7 @@ function bindChrome() {
           await window.guiaDesktopApp.openCapture();
         } catch (err) {
           console.error(err);
-          toast(err?.message || "Não abri a janela de captura");
+          toast(err?.message || t("toast.captureWindowFail"));
         }
       });
     }
@@ -809,12 +823,12 @@ function bindChrome() {
     try {
       const data = await importDemoFile(file);
       await importCapturePayload(data, {
-        name: data.name || file.name.replace(/\.json$/i, "") || "Projeto importado",
+        name: data.name || file.name.replace(/\.json$/i, "") || t("default.importedProject"),
       });
-      toast("Projeto importado");
+      toast(t("toast.imported"));
     } catch (err) {
       console.error(err);
-      toast("Falha ao importar JSON");
+      toast(t("toast.importFail"));
     }
     e.target.value = "";
   });
@@ -835,7 +849,7 @@ function bindChrome() {
         onSave: async (name) => {
           await renameProject(id, name);
           title.textContent = name;
-          toast("Projeto renomeado");
+          toast(t("toast.renamed"));
         },
       });
       return;
@@ -848,13 +862,13 @@ function bindChrome() {
         const proj = await getProject(id);
         if (!proj) return;
         exportDemo(projectToDemoPayload(proj), { filename: proj.name });
-        toast("JSON exportado");
+        toast(t("toast.jsonExported"));
         return;
       }
       if (action === "duplicate") {
         const copy = await duplicateProject(id);
         renderLibrary();
-        toast(`Duplicado: ${copy.name}`);
+        toast(t("toast.duplicated", { name: copy.name }));
         return;
       }
       if (action === "delete") {
@@ -919,7 +933,7 @@ function bindChrome() {
     themeSelection = { kind: "custom", id };
     document.getElementById("modal-save-theme").close();
     syncThemeUi();
-    toast("Tema salvo");
+    toast(t("toast.themeSaved"));
   });
 
   document.getElementById("btn-dup-theme").addEventListener("click", () => {
@@ -927,20 +941,20 @@ function bindChrome() {
     project.theme = formToTheme(project.theme);
     const baseName =
       themeSelection.kind === "preset"
-        ? getPreset(themeSelection.id)?.name || "Tema"
-        : getCustomThemes().find((t) => t.id === themeSelection.id)?.name || "Tema";
-    document.getElementById("save-theme-name").value = `${baseName} (cópia)`;
+        ? themePresetName(themeSelection.id, getPreset(themeSelection.id)?.name) || t("theme.generic")
+        : getCustomThemes().find((th) => th.id === themeSelection.id)?.name || t("theme.generic");
+    document.getElementById("save-theme-name").value = t("theme.copySuffix", { name: baseName });
     document.getElementById("modal-save-theme").showModal();
   });
 
   document.getElementById("btn-del-theme").addEventListener("click", () => {
     if (themeSelection.kind !== "custom" || !themeSelection.id) return;
-    if (!confirm("Excluir este tema próprio?")) return;
-    const themes = getCustomThemes().filter((t) => t.id !== themeSelection.id);
+    if (!confirm(t("theme.confirmDelete"))) return;
+    const themes = getCustomThemes().filter((theme) => theme.id !== themeSelection.id);
     saveCustomThemes(themes);
     themeSelection = { kind: "custom", id: null };
     syncThemeUi();
-    toast("Tema excluído");
+    toast(t("toast.themeDeleted"));
   });
 
   // Export
@@ -980,14 +994,14 @@ function bindChrome() {
     if (!project) return;
     project.theme = formToTheme(project.theme);
     exportDemo(projectToDemoPayload(project), { filename: project.name });
-    toast("JSON exportado");
+    toast(t("toast.jsonExported"));
   });
 
   document.getElementById("btn-export-html").addEventListener("click", async () => {
     closeExportMenu();
     if (!project) return;
     project.theme = formToTheme(project.theme);
-    showExportOverlay("Gerando HTML navegável…");
+    showExportOverlay(t("export.overlayHtml"));
     try {
       const size = await exportStandaloneHtml(project, {
         onProgress: (msg) => {
@@ -996,11 +1010,11 @@ function bindChrome() {
       });
       hideExportOverlay();
       const mb = (size / (1024 * 1024)).toFixed(1);
-      toast(`HTML baixado (${mb} MB). Envie o arquivo — abre direto no navegador.`);
+      toast(t("toast.htmlDownloaded", { mb }));
     } catch (err) {
       console.error(err);
       hideExportOverlay();
-      toast(err?.message || "Falha ao exportar HTML");
+      toast(err?.message || t("toast.htmlFail"));
     }
   });
 
@@ -1009,8 +1023,8 @@ function bindChrome() {
     if (!project) return;
     project.theme = formToTheme(project.theme);
     exportAbort = new AbortController();
-    showExportOverlay("Gravando vídeo…", { cancelable: true, preview: true });
-    overlayStatus.textContent = "A gravação acompanha o tempo real do filme (~1–2 min).";
+    showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
+    overlayStatus.textContent = t("export.overlayVideoHint");
     try {
       const result = await exportVideo(project, {
         canvas: previewCanvas,
@@ -1021,17 +1035,17 @@ function bindChrome() {
       });
       hideExportOverlay();
       if (result.ext === "webm") {
-        toast("Vídeo .webm baixado (MP4 indisponível neste navegador).");
+        toast(t("toast.webmDownloaded"));
       } else {
-        toast(`Vídeo .${result.ext} baixado. Envie para quem só precisa assistir.`);
+        toast(t("toast.videoDownloaded", { ext: result.ext }));
       }
     } catch (err) {
       console.error(err);
       hideExportOverlay();
       if (err?.name === "AbortError") {
-        toast("Exportação de vídeo cancelada");
+        toast(t("toast.videoCancelled"));
       } else {
-        toast(err?.message || "Falha ao gravar vídeo");
+        toast(err?.message || t("toast.videoFail"));
       }
     }
   });
@@ -1039,10 +1053,10 @@ function bindChrome() {
 
 async function importCapturePayload(data, { name } = {}) {
   if (!data || !Array.isArray(data.steps)) {
-    throw new Error("Captura sem steps[]");
+    throw new Error(t("err.captureNoSteps"));
   }
   const created = demoPayloadToProject(data, {
-    name: name || data.name || "Projeto capturado",
+    name: name || data.name || t("default.capturedProject"),
   });
   if (!created.sceneLabels) created.sceneLabels = data.sceneLabels || {};
   await putProject(created);
@@ -1063,7 +1077,7 @@ function bindCaptureInbox() {
 
     try {
       if (!Array.isArray(data.payload?.steps)) {
-        throw new Error("Captura sem steps[]");
+        throw new Error(t("err.captureNoSteps"));
       }
       const created = await importCapturePayload(data.payload);
       window.postMessage(
@@ -1075,7 +1089,7 @@ function bindCaptureInbox() {
         },
         location.origin
       );
-      toast(`Projeto criado: ${created.name}`);
+      toast(t("toast.projectCreated", { name: created.name }));
     } catch (err) {
       console.error(err);
       window.postMessage(
@@ -1083,33 +1097,43 @@ function bindCaptureInbox() {
           source: "guia-capture",
           type: "import-ack",
           ok: false,
-          error: err?.message || "Falha ao criar projeto",
+          error: err?.message || t("err.createProjectFail"),
         },
         location.origin
       );
-      toast(err?.message || "Falha ao criar projeto da captura");
+      toast(err?.message || t("toast.captureCreateFail"));
     }
   });
 
   window.addEventListener("guia-desktop-import", async (event) => {
     try {
       const created = await importCapturePayload(event.detail);
-      toast(`Projeto criado: ${created.name}`);
+      toast(t("toast.projectCreated", { name: created.name }));
     } catch (err) {
       console.error(err);
-      toast(err?.message || "Falha ao criar projeto da captura");
+      toast(err?.message || t("toast.captureCreateFail"));
     }
   });
 }
 
 async function boot() {
+  initLocale();
+  applyI18n(document);
+  bindLocaleSelect(document.getElementById("locale-select"), () => {
+    applyChromeAppearance();
+    paintChrome();
+    renderLibrary();
+    syncThemeUi();
+    editor.refresh?.();
+  });
+
   let seeded = false;
   try {
     const migration = await ensureMigrated();
     seeded = Boolean(migration?.seeded);
   } catch (err) {
     console.error(err);
-    toast("Falha na migração de projetos");
+    toast(t("toast.migrationFail"));
   }
 
   appearancePreference = getAppearancePreference();

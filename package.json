@@ -8,7 +8,7 @@
   "scripts": {
     "start": "npx --yes serve -l 4173 .",
     "pack:extension": "node scripts/pack-extension.mjs",
-    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/playback.test.js js/history.test.js js/scenes.test.js js/cartesia.test.js electron/cartesia.test.js",
+    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/playback.test.js js/history.test.js js/scenes.test.js js/cartesia.test.js js/i18n.test.js electron/cartesia.test.js",
     "desktop": "electron .",
     "dist:desktop": "electron-builder --dir"
   },

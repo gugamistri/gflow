@@ -3,8 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Como usar — GuiaFlow</title>
+  <title data-i18n="doc.title.help">Como usar — GuiaFlow</title>
   <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
+      } catch (e) {}
+    })();
+  </script>
   <script>
     (function () {
       try {
@@ -35,83 +52,97 @@
   <header class="topbar">
     <div class="topbar-brand">
       <a class="logo logo-link" href="index.html">Guia<span>Flow</span></a>
-      <span class="topbar-title">Manual</span>
+      <span class="topbar-title" data-i18n="help.manual">Manual</span>
+    </div>
+    <div class="topbar-appearance">
+      <label class="locale-select">
+        <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+          <option value="pt">PT</option>
+          <option value="es">ES</option>
+          <option value="en">EN</option>
+        </select>
+      </label>
     </div>
   </header>
 
   <main class="page">
-    <h1>Como gravar um demo</h1>
-    <p class="lead">A extensão fotografa a tela do produto. O editor vira isso num tour com destaque, clique e narração.</p>
+    <h1 data-i18n="help.h1">Como gravar um demo</h1>
+    <p class="lead" data-i18n="help.lead">A extensão fotografa a tela do produto. O editor vira isso num tour com destaque, clique e narração.</p>
 
     <section class="card" id="desktop">
-      <h2>App desktop</h2>
-      <p>No app Electron, use o botão <strong>Capturar</strong> no editor. Abre uma janela com a página do produto: fotografe, marque o clique e crie o projeto. Só captura o que estiver nessa janela. No navegador continue com a extensão abaixo.</p>
+      <h2 data-i18n="help.desktopTitle">App desktop</h2>
+      <p data-i18n-html="help.desktopBody">No app Electron, use o botão <strong>Capturar</strong> no editor. Abre uma janela com a página do produto: fotografe, marque o clique e crie o projeto. Só captura o que estiver nessa janela. No navegador continue com a extensão abaixo.</p>
     </section>
 
     <section class="card" id="baixar">
-      <h2>1. Instalar a extensão</h2>
-      <p><a href="downloads/guiaflow-captura.zip">Baixar a extensão (zip)</a></p>
+      <h2 data-i18n="help.installTitle">1. Instalar a extensão</h2>
+      <p><a href="downloads/guiaflow-captura.zip"><span data-i18n="help.downloadZip">Baixar a extensão (zip)</span></a></p>
       <ol>
-        <li>Descompacte o zip. A pasta precisa conter o arquivo <code>manifest.json</code>.</li>
-        <li>Abra <code>chrome://extensions</code>.</li>
-        <li>Ligue o <strong>Modo do desenvolvedor</strong>.</li>
-        <li>Clique em <strong>Carregar sem compactação</strong> e escolha essa pasta.</li>
-        <li>Quando sair uma versão nova, baixe de novo e clique em <strong>Recarregar</strong> no card da extensão.</li>
+        <li data-i18n-html="help.install1">Descompacte o zip. A pasta precisa conter o arquivo <code>manifest.json</code>.</li>
+        <li data-i18n-html="help.install2">Abra <code>chrome://extensions</code>.</li>
+        <li data-i18n-html="help.install3">Ligue o <strong>Modo do desenvolvedor</strong>.</li>
+        <li data-i18n-html="help.install4">Clique em <strong>Carregar sem compactação</strong> e escolha essa pasta.</li>
+        <li data-i18n-html="help.install5">Quando sair uma versão nova, baixe de novo e clique em <strong>Recarregar</strong> no card da extensão.</li>
       </ol>
     </section>
 
     <section class="card" id="gravar">
-      <h2>2. Gravar as telas</h2>
-      <p>Deixe o editor aberto neste endereço. No popup da extensão, o campo <strong>Editor</strong> tem que ser exatamente esta origem:</p>
+      <h2 data-i18n="help.recordTitle">2. Gravar as telas</h2>
+      <p data-i18n-html="help.recordIntro">Deixe o editor aberto neste endereço. No popup da extensão, o campo <strong>Editor</strong> tem que ser exatamente esta origem:</p>
       <p class="origin" id="editor-origin"></p>
       <ol>
-        <li>Abra a página do produto que você quer mostrar.</li>
-        <li>Clique no ícone da extensão e em <strong>Iniciar nesta aba</strong>.</li>
-        <li>Na barra de captura, <strong>Capturar</strong> congela a tela atual.</li>
-        <li>Clique no elemento que deve ser o destaque. Esse clique não tira outra foto.</li>
-        <li>Siga o fluxo do produto e repita capturar + clique.</li>
-        <li><strong>Criar projeto</strong> abre o editor com um projeto novo, já com as imagens e os pontos de clique.</li>
+        <li data-i18n="help.record1">Abra a página do produto que você quer mostrar.</li>
+        <li data-i18n-html="help.record2">Clique no ícone da extensão e em <strong>Iniciar nesta aba</strong>.</li>
+        <li data-i18n-html="help.record3">Na barra de captura, <strong>Capturar</strong> congela a tela atual.</li>
+        <li data-i18n="help.record4">Clique no elemento que deve ser o destaque. Esse clique não tira outra foto.</li>
+        <li data-i18n="help.record5">Siga o fluxo do produto e repita capturar + clique.</li>
+        <li data-i18n-html="help.record6"><strong>Criar projeto</strong> abre o editor com um projeto novo, já com as imagens e os pontos de clique.</li>
       </ol>
-      <p><strong>Desfazer</strong> tira o último passo. <strong>Baixar JSON</strong> guarda um arquivo se o editor não estiver aberto. Atalhos: Option+Shift+C captura, Option+Shift+E cria o projeto.</p>
-      <p>Prefira <strong>Capturar</strong> e só então clicar. Um clique direto na página também gera um passo, mas a foto pode sair da tela já mudada.</p>
+      <p data-i18n-html="help.recordTips"><strong>Desfazer</strong> tira o último passo. <strong>Baixar JSON</strong> guarda um arquivo se o editor não estiver aberto. Atalhos: Option+Shift+C captura, Option+Shift+E cria o projeto.</p>
+      <p data-i18n-html="help.recordPrefer">Prefira <strong>Capturar</strong> e só então clicar. Um clique direto na página também gera um passo, mas a foto pode sair da tela já mudada.</p>
     </section>
 
     <section class="card" id="editor">
-      <h2>3. Montar o tour no editor</h2>
-      <p>Na primeira visita, o GuiaFlow abre o projeto de exemplo em <strong>Preview automático</strong>. <strong>Esc</strong> sai para o editor.</p>
+      <h2 data-i18n="help.editorTitle">3. Montar o tour no editor</h2>
+      <p data-i18n-html="help.editorIntro">Na primeira visita, o GuiaFlow abre o projeto de exemplo em <strong>Preview automático</strong>. <strong>Esc</strong> sai para o editor.</p>
       <ol>
-        <li>Ajuste o texto de cada passo no painel da direita.</li>
-        <li>Arraste o retângulo para mudar o destaque e o ponto para mudar o clique simulado.</li>
-        <li>Use <strong>Preview</strong> ou <strong>Preview automático</strong> para ver como o público vai ver; <strong>Esc</strong> volta à edição.</li>
-        <li>Em <strong>Exportar</strong>, escolha HTML navegável ou vídeo.</li>
+        <li data-i18n="help.editor1">Ajuste o texto de cada passo no painel da direita.</li>
+        <li data-i18n="help.editor2">Arraste o retângulo para mudar o destaque e o ponto para mudar o clique simulado.</li>
+        <li data-i18n-html="help.editor3">Use <strong>Preview</strong> ou <strong>Preview automático</strong> para ver como o público vai ver; <strong>Esc</strong> volta à edição.</li>
+        <li data-i18n-html="help.editor4">Em <strong>Exportar</strong>, escolha HTML navegável ou vídeo.</li>
       </ol>
-      <p>Sem a extensão, dá para criar um projeto vazio e enviar prints com <strong>+ Imagens</strong>.</p>
+      <p data-i18n-html="help.editorTip">Sem a extensão, dá para criar um projeto vazio e enviar prints com <strong>+ Imagens</strong>.</p>
     </section>
 
     <section class="card" id="privacidade">
-      <h2>Privacidade</h2>
+      <h2 data-i18n="help.privacyTitle">Privacidade</h2>
       <ul>
-        <li>A foto só é tirada quando você captura ou clica durante uma gravação.</li>
-        <li>As imagens ficam no Chrome até você criar o projeto, baixar o JSON ou cancelar.</li>
-        <li>Criar projeto envia as imagens apenas para o endereço do editor que está no popup, neste navegador.</li>
-        <li>A extensão não envia capturas para outro servidor e não vende esses dados.</li>
+        <li data-i18n="help.privacy1">A foto só é tirada quando você captura ou clica durante uma gravação.</li>
+        <li data-i18n="help.privacy2">As imagens ficam no Chrome até você criar o projeto, baixar o JSON ou cancelar.</li>
+        <li data-i18n="help.privacy3">Criar projeto envia as imagens apenas para o endereço do editor que está no popup, neste navegador.</li>
+        <li data-i18n="help.privacy4">A extensão não envia capturas para outro servidor e não vende esses dados.</li>
       </ul>
     </section>
 
     <section class="card" id="publicar">
-      <h2>Publicar na Chrome Web Store</h2>
-      <p>O zip desta página já distribui a extensão para o time. A loja do Chrome é o passo para quem não vai usar o modo do desenvolvedor.</p>
+      <h2 data-i18n="help.publishTitle">Publicar na Chrome Web Store</h2>
+      <p data-i18n="help.publishIntro">O zip desta página já distribui a extensão para o time. A loja do Chrome é o passo para quem não vai usar o modo do desenvolvedor.</p>
       <ol>
-        <li>Entre no <a href="https://chrome.google.com/webstore/devconsole">Chrome Web Store Developer Dashboard</a>. A conta de desenvolvedor tem uma taxa única de US$ 5.</li>
-        <li>No projeto, rode <code>npm run pack:extension</code>. O arquivo <code>downloads/guiaflow-captura.zip</code> sai com o <code>manifest.json</code> na raiz.</li>
-        <li>Envie esse zip como um novo item.</li>
-        <li>Use esta página, com <code>#privacidade</code>, como política de privacidade.</li>
-        <li>Na justificativa de host, explique que a extensão só acessa a aba ativa quando a pessoa inicia a captura, e que o endereço fixo é o do editor.</li>
-        <li>A revisão do Google costuma levar alguns dias. Até lá, o link de download acima continua válido.</li>
+        <li data-i18n-html="help.publish1">Entre no <a href="https://chrome.google.com/webstore/devconsole">Chrome Web Store Developer Dashboard</a>. A conta de desenvolvedor tem uma taxa única de US$ 5.</li>
+        <li data-i18n-html="help.publish2">No projeto, rode <code>npm run pack:extension</code>. O arquivo <code>downloads/guiaflow-captura.zip</code> sai com o <code>manifest.json</code> na raiz.</li>
+        <li data-i18n="help.publish3">Envie esse zip como um novo item.</li>
+        <li data-i18n-html="help.publish4">Use esta página, com <code>#privacidade</code>, como política de privacidade.</li>
+        <li data-i18n="help.publish5">Na justificativa de host, explique que a extensão só acessa a aba ativa quando a pessoa inicia a captura, e que o endereço fixo é o do editor.</li>
+        <li data-i18n="help.publish6">A revisão do Google costuma levar alguns dias. Até lá, o link de download acima continua válido.</li>
       </ol>
     </section>
   </main>
-  <script>
+  <script type="module">
+    import { initLocale, applyI18n, bindLocaleSelect } from "./js/i18n.js";
+    initLocale();
+    applyI18n(document);
+    bindLocaleSelect(document.getElementById("locale-select"));
     document.getElementById("editor-origin").textContent = location.origin;
   </script>
 </body>

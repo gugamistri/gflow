@@ -2,10 +2,10 @@
  * Temporizador e narração (TTS + áudio de fundo) do tour.
  */
 
-import { synthesizeCartesia } from "./cartesia.js";
+import { synthesizeCartesia, narrationLang } from "./cartesia.js";
 import { readCartesiaKey } from "./cartesia-store.js";
 
-export { CARTESIA_VOICES as NARRATION_VOICES } from "./cartesia.js";
+export { CARTESIA_VOICES as NARRATION_VOICES, defaultVoiceURI } from "./cartesia.js";
 
 export const DEFAULT_HOLD_SECONDS = 6;
 export const BG_VOLUME = 0.22;
@@ -105,9 +105,11 @@ export function pickVoice(voiceURI) {
     const exact = voices.find((v) => v.voiceURI === voiceURI);
     if (exact) return exact;
   }
+  const lang = narrationLang(voiceURI);
+  const primary = String(lang || "pt").split("-")[0].toLowerCase();
   return (
-    voices.find((v) => /^pt(-|$)/i.test(v.lang || "")) ||
-    voices.find((v) => /portugu/i.test(v.name || "")) ||
+    voices.find((v) => (v.lang || "").toLowerCase() === lang.toLowerCase()) ||
+    voices.find((v) => (v.lang || "").toLowerCase().startsWith(primary)) ||
     voices[0] ||
     null
   );
@@ -127,10 +129,6 @@ export function stopSpeech() {
   if (typeof window !== "undefined" && window.speechSynthesis) {
     window.speechSynthesis.cancel();
   }
-}
-
-function narrationLang(voiceURI) {
-  return voiceURI === "pt-PT" ? "pt-PT" : "pt-BR";
 }
 
 function splitForSpeech(text, max = 180) {
@@ -169,16 +167,16 @@ function playSpeechUrl(url, rate, token) {
   });
 }
 
-function speakWithBrowser(text, rate, token) {
+function speakWithBrowser(text, rate, token, lang = "pt-BR") {
   return new Promise((resolve) => {
     if (token !== speakToken || typeof window === "undefined" || !window.speechSynthesis) {
       resolve();
       return;
     }
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "pt-BR";
+    utterance.lang = lang;
     utterance.rate = Math.min(1.4, Math.max(0.7, Number(rate) || 1));
-    const voice = pickVoice("");
+    const voice = pickVoice(lang);
     if (voice) {
       utterance.voice = voice;
       if (voice.lang) utterance.lang = voice.lang;
@@ -328,7 +326,7 @@ export function speakText(text, { voiceURI, rate } = {}) {
       }
     } catch {
       if (token !== speakToken || played) return;
-      await speakWithBrowser(trimmed, rate, token);
+      await speakWithBrowser(trimmed, rate, token, lang);
     }
   })();
 }

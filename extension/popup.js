@@ -1,4 +1,5 @@
 import { DEFAULT_EDITOR_ORIGIN } from "./lib/editor-origin.js";
+import { initLocale, applyI18n, bindLocaleSelect, t, getLocale } from "./lib/i18n.js";
 
 const idle = document.getElementById("idle");
 const live = document.getElementById("live");
@@ -15,7 +16,11 @@ function paint(state) {
   idle.hidden = active;
   live.hidden = !active;
   const count = state?.count || 0;
-  countEl.textContent = active ? (count === 1 ? "1 passo" : `${count} passos`) : "desligada";
+  countEl.textContent = active
+    ? count === 1
+      ? t("ext.stepOne")
+      : t("ext.stepsN", { n: count })
+    : t("ext.off");
   statusEl.textContent = state?.error || state?.status || "";
   statusEl.classList.toggle("is-error", Boolean(state?.error));
 
@@ -35,10 +40,17 @@ function send(message) {
         resolve({ ok: false, error: chrome.runtime.lastError.message });
         return;
       }
-      resolve(state || { ok: false, error: "Sem resposta da extensão." });
+      resolve(state || { ok: false, error: t("ext.noResponse") });
     });
   });
 }
+
+initLocale();
+applyI18n(document);
+bindLocaleSelect(document.getElementById("locale-select"), (locale) => {
+  send({ type: "SET_LOCALE", locale }).then(paint);
+});
+send({ type: "SET_LOCALE", locale: getLocale() });
 
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -71,7 +83,7 @@ document.getElementById("start").addEventListener("click", async () => {
   await persistSettings();
   const tab = await activeTab();
   if (!tab?.id) {
-    paint({ ok: false, error: "Nenhuma aba ativa." });
+    paint({ ok: false, error: t("ext.noActiveTab") });
     return;
   }
   paint(await send({ type: "START", tabId: tab.id }));

@@ -106,3 +106,16 @@ button.primary:hover {
 button.danger {
   color: var(--danger);
 }
+
+header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.locale-select { margin-left: auto; }
+.locale-select select {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #d6e8f0;
+  border-radius: 4px;
+  padding: 2px 4px;
+  background: #fff;
+  color: #1a4d6d;
+}

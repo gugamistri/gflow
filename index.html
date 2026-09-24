@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GuiaFlow — Editor</title>
+  <title data-i18n="doc.title.editor">GuiaFlow — Editor</title>
   <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        var htmlLang = pick === "pt" ? "pt-BR" : pick;
+        document.documentElement.lang = htmlLang;
+      } catch (e) {}
+    })();
+  </script>
   <script>
     (function () {
       try {
@@ -36,6 +54,14 @@
       <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
     </div>
     <div class="topbar-appearance">
+      <label class="locale-select">
+        <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+          <option value="pt">PT</option>
+          <option value="es">ES</option>
+          <option value="en">EN</option>
+        </select>
+      </label>
       <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
         <svg class="btn-ico" aria-hidden="true"><use id="btn-appearance-icon" href="#i-appearance"></use></svg>
       </button>
@@ -43,235 +69,235 @@
     <div class="topbar-actions" id="topbar-actions-editor" hidden>
       <button type="button" class="btn btn-ghost" id="btn-projects">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-        Projetos
+        <span data-i18n="topbar.projects">Projetos</span>
       </button>
       <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
         <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-        Capturar
+        <span data-i18n="topbar.capture">Capturar</span>
       </button>
       <details class="theme-panel" id="narration-panel">
         <summary>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-          Narração
+          <span data-i18n="topbar.narration">Narração</span>
         </summary>
         <div class="theme-panel-body theme-panel-wide">
           <label class="checkbox">
             <input type="checkbox" id="narration-enabled" checked />
-            Falar legenda no avanço automático
+            <span data-i18n="narration.speakCaption">Falar legenda no avanço automático</span>
           </label>
-          <label>Voz
+          <label><span data-i18n="narration.voice">Voz</span>
             <select id="narration-voice"></select>
           </label>
-          <p class="props-meta">Português do Brasil ou de Portugal, via Cartesia.</p>
-          <label>Velocidade
+          <p class="props-meta" data-i18n="narration.voiceHint">Português, espanhol ou inglês, via Cartesia.</p>
+          <label><span data-i18n="narration.rate">Velocidade</span>
             <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
             <span id="narration-rate-label">1.0×</span>
           </label>
-          <label>Tempo padrão por passo (s)
+          <label><span data-i18n="narration.defaultHold">Tempo padrão por passo (s)</span>
             <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
           </label>
           <hr class="theme-divider" />
-          <p class="theme-section-label">Áudio de fundo</p>
+          <p class="theme-section-label" data-i18n="narration.bgAudio">Áudio de fundo</p>
           <div class="narration-bg-row">
             <button type="button" class="btn btn-sm" id="btn-narration-bg">
-              Escolher arquivo…
+              <span data-i18n="narration.chooseFile">Escolher arquivo…</span>
             </button>
             <button type="button" class="btn btn-sm" id="btn-narration-bg-clear" hidden>
-              Remover
+              <span data-i18n="narration.remove">Remover</span>
             </button>
             <input type="file" id="narration-bg-file" accept="audio/*,.mp3,.ogg,.wav,.m4a" hidden />
           </div>
-          <p class="props-meta" id="narration-bg-name">Nenhum arquivo</p>
+          <p class="props-meta" id="narration-bg-name" data-i18n="narration.noFile">Nenhum arquivo</p>
           <hr class="theme-divider" />
-          <p class="theme-section-label">Chave Cartesia</p>
-          <p class="props-meta" id="cartesia-status">A chave fica neste navegador, fora do projeto.</p>
-          <label>Chave da API
+          <p class="theme-section-label" data-i18n="narration.cartesiaKey">Chave Cartesia</p>
+          <p class="props-meta" id="cartesia-status" data-i18n="narration.cartesiaStatus">A chave fica neste navegador, fora do projeto.</p>
+          <label><span data-i18n="narration.apiKey">Chave da API</span>
             <input type="password" id="cartesia-key" autocomplete="off" spellcheck="false" placeholder="sk_car_…" />
           </label>
           <div class="narration-bg-row">
-            <button type="button" class="btn btn-sm" id="btn-cartesia-save">Salvar no sistema</button>
-            <button type="button" class="btn btn-sm" id="btn-cartesia-clear" hidden>Remover</button>
-            <a class="btn btn-sm" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer">Obter chave</a>
+            <button type="button" class="btn btn-sm" id="btn-cartesia-save"><span data-i18n="narration.saveSystem">Salvar no sistema</span></button>
+            <button type="button" class="btn btn-sm" id="btn-cartesia-clear" hidden><span data-i18n="narration.remove">Remover</span></button>
+            <a class="btn btn-sm" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer"><span data-i18n="narration.getKey">Obter chave</span></a>
           </div>
-          <p class="props-meta">A chave fica neste navegador e não entra no projeto.</p>
+          <p class="props-meta" data-i18n="narration.keyHint">A chave fica neste navegador e não entra no projeto.</p>
         </div>
       </details>
       <details class="theme-panel" id="theme-panel">
         <summary>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
-          Tema
+          <span data-i18n="topbar.theme">Tema</span>
         </summary>
         <div class="theme-panel-body theme-panel-wide">
-          <p class="theme-section-label">Presets</p>
+          <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
           <div class="theme-presets" id="theme-presets"></div>
-          <p class="theme-section-label">Meus temas</p>
+          <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
           <div class="theme-customs" id="theme-customs"></div>
           <div class="theme-custom-actions">
             <button type="button" class="btn btn-sm" id="btn-save-theme">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-              Salvar tema
+              <span data-i18n="theme.save">Salvar tema</span>
             </button>
             <button type="button" class="btn btn-sm" id="btn-dup-theme">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-              Duplicar selecionado
+              <span data-i18n="theme.duplicate">Duplicar selecionado</span>
             </button>
             <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-              Excluir tema
+              <span data-i18n="theme.delete">Excluir tema</span>
             </button>
           </div>
           <hr class="theme-divider" />
-          <p class="theme-section-label">Cores</p>
-          <label>Accent <input type="color" id="theme-accent" data-theme-key="accent" /></label>
-          <label>Overlay <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
-          <label>Popover BG <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
-          <label>Título <input type="color" id="theme-title" data-theme-key="title" /></label>
-          <label>Texto <input type="color" id="theme-text" data-theme-key="text" /></label>
-          <label>Botão <input type="color" id="theme-button" data-theme-key="button" /></label>
-          <label>Hotspot <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+          <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
+          <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
+          <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
+          <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
+          <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
+          <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
+          <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
+          <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
         </div>
       </details>
       <details class="export-panel">
         <summary>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
-          Exportar
+          <span data-i18n="topbar.export">Exportar</span>
         </summary>
         <div class="export-panel-body">
           <button type="button" class="export-option" id="btn-export-html">
-            <strong>HTML navegável</strong>
-            <span>Um arquivo só. A pessoa abre no navegador, percorre ou assiste.</span>
+            <strong data-i18n="export.htmlTitle">HTML navegável</strong>
+            <span data-i18n="export.htmlDesc">Um arquivo só. A pessoa abre no navegador, percorre ou assiste.</span>
           </button>
           <button type="button" class="export-option" id="btn-export-video">
-            <strong>Vídeo MP4</strong>
-            <span>MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
+            <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
+            <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
           </button>
           <button type="button" class="export-option" id="btn-export-json">
-            <strong>JSON</strong>
-            <span>Backup para reimportar neste editor.</span>
+            <strong data-i18n="export.jsonTitle">JSON</strong>
+            <span data-i18n="export.jsonDesc">Backup para reimportar neste editor.</span>
           </button>
         </div>
       </details>
-      <button type="button" class="btn btn-ghost btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" disabled>
+      <button type="button" class="btn btn-ghost btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
         <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
       </button>
-      <button type="button" class="btn btn-ghost btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" disabled>
+      <button type="button" class="btn btn-ghost btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
         <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
       </button>
     </div>
     <div class="topbar-actions" id="topbar-actions-library">
       <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
         <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-        Capturar
+        <span data-i18n="topbar.capture">Capturar</span>
       </button>
       <button type="button" class="btn btn-ghost" id="btn-import-library">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-        Importar
+        <span data-i18n="topbar.import">Importar</span>
       </button>
       <button type="button" class="btn btn-primary" id="btn-new-project">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-        Novo projeto
+        <span data-i18n="topbar.newProject">Novo projeto</span>
       </button>
       <input type="file" id="import-file" accept="application/json,.json" hidden />
     </div>
   </header>
 
   <main id="view-help" class="view view-help" hidden>
-    <iframe id="help-frame" title="Como usar"></iframe>
+    <iframe id="help-frame" title="Como usar" data-i18n-title="help.iframeTitle"></iframe>
   </main>
 
   <main id="view-library" class="view view-library">
     <div class="library-header">
       <div>
-        <h1>Projetos</h1>
-        <p>Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
+        <h1 data-i18n="library.title">Projetos</h1>
+        <p data-i18n="library.lead">Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
       </div>
     </div>
     <div class="library-grid" id="library-grid"></div>
-    <p class="library-empty" id="library-empty" hidden>Nenhum guia ainda. Crie o primeiro ou importe um arquivo.</p>
+    <p class="library-empty" id="library-empty" hidden data-i18n="library.empty">Nenhum guia ainda. Crie o primeiro ou importe um arquivo.</p>
   </main>
 
   <main id="view-editor" class="view view-editor" hidden>
     <aside class="filmstrip-panel" id="filmstrip-panel">
       <div class="filmstrip-header">
-        <span class="filmstrip-project" id="topbar-project" hidden title="Clique para renomear"></span>
+        <span class="filmstrip-project" id="topbar-project" hidden title="Clique para renomear" data-i18n-title="library.renameTitle"></span>
       </div>
-      <div class="filmstrip" id="filmstrip" aria-label="Passos do demo"></div>
+      <div class="filmstrip" id="filmstrip" aria-label="Passos do demo" data-i18n-aria="filmstrip.aria"></div>
     </aside>
 
     <section class="canvas-wrap">
       <div class="canvas-toolbar">
         <button type="button" class="btn btn-sm" id="btn-add-scene">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
-          Cena
+          <span data-i18n="toolbar.scene">Cena</span>
         </button>
         <button type="button" class="btn btn-sm" id="btn-add-step">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          Passo
+          <span data-i18n="toolbar.step">Passo</span>
         </button>
         <button type="button" class="btn btn-sm" id="btn-add-slide">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-          Slide
+          <span data-i18n="toolbar.slide">Slide</span>
         </button>
-        <button type="button" class="btn btn-sm" id="btn-dup-step" title="Duplicar (⌘D)">
+        <button type="button" class="btn btn-sm" id="btn-dup-step" title="Duplicar (⌘D)" data-i18n-title="toolbar.duplicateTitle">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-          Duplicar
+          <span data-i18n="toolbar.duplicate">Duplicar</span>
         </button>
         <button type="button" class="btn btn-sm" id="btn-add-images">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-          Imagens
+          <span data-i18n="toolbar.images">Imagens</span>
         </button>
         <button type="button" class="btn btn-sm" id="btn-play-from">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-eye"></use></svg>
-          Preview
+          <span data-i18n="toolbar.preview">Preview</span>
         </button>
         <button type="button" class="btn btn-sm" id="btn-watch-from">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-          Preview automático
+          <span data-i18n="toolbar.autoPreview">Preview automático</span>
         </button>
       </div>
-      <p class="present-hint" id="present-chrome" hidden>Pressione Esc para sair</p>
+      <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Pressione Esc para sair</p>
       <input type="file" id="images-file" accept="image/*" multiple hidden />
       <div class="canvas-stage" id="canvas-stage">
         <div class="canvas-empty" id="canvas-empty" hidden>
-          <h2>Projeto vazio</h2>
-          <p>Envie capturas de tela ou adicione um passo/slide para começar.</p>
+          <h2 data-i18n="canvas.emptyTitle">Projeto vazio</h2>
+          <p data-i18n="canvas.emptyLead">Envie capturas de tela ou adicione um passo/slide para começar.</p>
           <div class="canvas-empty-actions">
             <button type="button" class="btn btn-primary" id="btn-empty-images">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-              Enviar capturas
+              <span data-i18n="canvas.uploadShots">Enviar capturas</span>
             </button>
             <button type="button" class="btn" id="btn-empty-step">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-              Passo
+              <span data-i18n="toolbar.step">Passo</span>
             </button>
             <button type="button" class="btn" id="btn-empty-slide">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-              Slide
+              <span data-i18n="toolbar.slide">Slide</span>
             </button>
           </div>
         </div>
         <div class="canvas-frame" id="canvas-frame">
-          <img id="canvas-image" alt="Captura da tela" hidden />
-          <div class="image-missing" id="canvas-missing" hidden>Tela sem imagem — escolha outra no painel à direita.</div>
+          <img id="canvas-image" alt="Captura da tela" data-i18n-alt="canvas.imageAlt" hidden />
+          <div class="image-missing" id="canvas-missing" hidden data-i18n="canvas.missing">Tela sem imagem — escolha outra no painel à direita.</div>
           <div class="slide-card" id="canvas-slide" hidden>
-            <button type="button" class="slide-card-close" id="canvas-slide-close" aria-label="Fechar">
+            <button type="button" class="slide-card-close" id="canvas-slide-close" aria-label="Fechar" data-i18n-aria="canvas.close">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
             <p class="slide-kicker" id="canvas-slide-kicker"></p>
             <h2 id="canvas-slide-title"></h2>
             <p id="canvas-slide-body"></p>
-            <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir">
+            <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir" data-i18n-aria="canvas.play">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </button>
           </div>
           <div class="hotspot" id="hotspot" hidden>
-            <span class="hotspot-label">destaque</span>
+            <span class="hotspot-label" data-i18n="canvas.hotspot">destaque</span>
             <i class="hotspot-handle nw" data-handle="nw"></i>
             <i class="hotspot-handle ne" data-handle="ne"></i>
             <i class="hotspot-handle sw" data-handle="sw"></i>
             <i class="hotspot-handle se" data-handle="se"></i>
           </div>
-          <div class="click-point" id="click-point" hidden title="Ponto do clique simulado — arraste">
+          <div class="click-point" id="click-point" hidden title="Ponto do clique simulado — arraste" data-i18n-title="canvas.clickTitle">
             <span class="click-point-ring"></span>
             <span class="click-point-dot"></span>
             <span class="click-point-label">click</span>
@@ -288,105 +314,105 @@
     </section>
 
     <aside class="props" id="props-panel">
-      <h2>Passo</h2>
-      <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo">
+      <h2 data-i18n="props.step">Passo</h2>
+      <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
         <button type="button" class="mode-btn" data-value="slide" aria-pressed="false">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-          Slide
+          <span data-i18n="props.slide">Slide</span>
         </button>
         <button type="button" class="mode-btn" data-value="screen" aria-pressed="false">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-screen"></use></svg>
-          Tela
+          <span data-i18n="props.screen">Tela</span>
         </button>
       </div>
       <div id="wrap-image" class="image-picker-field">
-        <span class="field-label">Imagem</span>
+        <span class="field-label" data-i18n="props.image">Imagem</span>
         <button type="button" class="image-pick-btn" id="btn-pick-image">
           <img id="prop-image-thumb" alt="" hidden />
-          <span id="prop-image-name">Escolher imagem…</span>
+          <span id="prop-image-name" data-i18n="props.chooseImage">Escolher imagem…</span>
         </button>
         <select id="prop-image" hidden></select>
       </div>
-      <label>Título
+      <label><span data-i18n="props.title">Título</span>
         <input type="text" id="prop-title" />
       </label>
-      <label>Descrição
+      <label><span data-i18n="props.description">Descrição</span>
         <textarea id="prop-description" rows="3"></textarea>
       </label>
       <div class="caption-block">
-        <label>Narração
-          <textarea id="prop-caption" rows="3" placeholder="Texto da narração (opcional no slide)"></textarea>
+        <label><span data-i18n="props.caption">Narração</span>
+          <textarea id="prop-caption" rows="3" placeholder="Texto da narração (opcional no slide)" data-i18n-placeholder="props.captionPlaceholder"></textarea>
         </label>
         <label class="checkbox" id="wrap-show-caption" hidden>
           <input type="checkbox" id="prop-show-caption" checked />
-          Mostrar texto no slide
+          <span data-i18n="props.showCaption">Mostrar texto no slide</span>
         </label>
         <div class="caption-audio-actions" id="caption-audio-actions" hidden>
-          <button type="button" class="btn btn-sm" id="btn-generate-caption" hidden>Gerar áudio</button>
-          <button type="button" class="btn btn-sm" id="btn-upload-caption" hidden>Enviar áudio</button>
-          <button type="button" class="btn btn-sm" id="btn-clear-caption-audio" hidden>Remover</button>
+          <button type="button" class="btn btn-sm" id="btn-generate-caption" hidden data-i18n="props.generateAudio">Gerar áudio</button>
+          <button type="button" class="btn btn-sm" id="btn-upload-caption" hidden data-i18n="props.uploadAudio">Enviar áudio</button>
+          <button type="button" class="btn btn-sm" id="btn-clear-caption-audio" hidden data-i18n="props.removeAudio">Remover</button>
           <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
         </div>
         <div class="caption-player" id="caption-player" hidden>
-          <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" aria-pressed="false" disabled>
+          <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" data-i18n-aria="canvas.play" aria-pressed="false" disabled>
             <svg class="caption-player-icon caption-player-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             <svg class="caption-player-icon caption-player-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" fill="currentColor"/></svg>
           </button>
-          <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" disabled />
+          <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" data-i18n-aria="props.audioSeek" disabled />
           <button type="button" class="caption-player-rate" id="btn-caption-rate" aria-label="Velocidade de reprodução, 1×">1×</button>
           <div class="caption-player-times">
             <span id="caption-time">0:00</span>
             <span id="caption-duration">0:00</span>
           </div>
         </div>
-        <p class="props-meta" id="caption-audio-status" hidden>Sem áudio neste passo.</p>
+        <p class="props-meta" id="caption-audio-status" hidden data-i18n="props.noAudio">Sem áudio neste passo.</p>
       </div>
       <label class="checkbox" id="wrap-simulate">
         <input type="checkbox" id="prop-simulate-click" checked />
-        Simular clique ao avançar
+        <span data-i18n="props.simulateClick">Simular clique ao avançar</span>
       </label>
       <div class="hold-field">
-        <label>Temporizador (s)
-          <input type="number" id="prop-hold" min="1" max="120" step="1" placeholder="padrão" />
+        <label><span data-i18n="props.hold">Temporizador (s)</span>
+          <input type="number" id="prop-hold" min="1" max="120" step="1" placeholder="padrão" data-i18n-placeholder="props.holdDefault" />
         </label>
         <p class="props-meta" id="prop-hold-hint" hidden></p>
       </div>
       <div class="choice-field" id="wrap-side">
-        <span class="field-label" id="label-side">Lado</span>
-        <div class="icon-choices" id="prop-side" role="radiogroup" aria-label="Lado">
-          <button type="button" class="icon-choice" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" aria-pressed="false">
+        <span class="field-label" id="label-side" data-i18n="props.side">Lado</span>
+        <div class="icon-choices" id="prop-side" role="radiogroup" aria-label="Lado" data-i18n-aria="props.side">
+          <button type="button" class="icon-choice" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-side-top"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" aria-pressed="false">
+          <button type="button" class="icon-choice" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" data-i18n-title="props.right" data-i18n-aria="props.right" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-side-right"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" aria-pressed="false">
+          <button type="button" class="icon-choice" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-side-bottom"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" aria-pressed="false">
+          <button type="button" class="icon-choice" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" data-i18n-title="props.left" data-i18n-aria="props.left" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-side-left"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" aria-pressed="false" hidden>
+          <button type="button" class="icon-choice" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false" hidden>
             <svg aria-hidden="true"><use href="#i-valign-top"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" aria-pressed="false" hidden>
+          <button type="button" class="icon-choice" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false" hidden>
             <svg aria-hidden="true"><use href="#i-valign-center"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" aria-pressed="false" hidden>
+          <button type="button" class="icon-choice" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false" hidden>
             <svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg>
           </button>
         </div>
       </div>
       <div class="choice-field" id="wrap-align">
-        <span class="field-label" id="label-align">Alinhamento</span>
-        <div class="icon-choices" id="prop-align" role="radiogroup" aria-label="Alinhamento">
-          <button type="button" class="icon-choice" data-value="start" title="Início" aria-label="Início" aria-pressed="false">
+        <span class="field-label" id="label-align" data-i18n="props.align">Alinhamento</span>
+        <div class="icon-choices" id="prop-align" role="radiogroup" aria-label="Alinhamento" data-i18n-aria="props.align">
+          <button type="button" class="icon-choice" data-value="start" title="Início" aria-label="Início" data-i18n-title="props.start" data-i18n-aria="props.start" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-align-start"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-value="center" title="Centro" aria-label="Centro" aria-pressed="false">
+          <button type="button" class="icon-choice" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-align-center"></use></svg>
           </button>
-          <button type="button" class="icon-choice" data-value="end" title="Fim" aria-label="Fim" aria-pressed="false">
+          <button type="button" class="icon-choice" data-value="end" title="Fim" aria-label="Fim" data-i18n-title="props.end" data-i18n-aria="props.end" aria-pressed="false">
             <svg aria-hidden="true"><use href="#i-align-end"></use></svg>
           </button>
         </div>
@@ -396,19 +422,18 @@
 
   <dialog class="studio-modal" id="modal-delete-project">
     <form method="dialog" id="form-delete-project" class="studio-modal-body">
-      <h3>Excluir projeto</h3>
+      <h3 data-i18n="modal.deleteProject">Excluir projeto</h3>
       <p class="delete-project-lead">
-        Isto apaga <strong id="delete-project-name-label"></strong> deste navegador.
-        Não dá para desfazer.
+        <span data-i18n="modal.deleteLeadBefore">Isto apaga </span><strong id="delete-project-name-label"></strong><span data-i18n="modal.deleteLeadAfter"> deste navegador. Não dá para desfazer.</span>
       </p>
       <label class="checkbox delete-project-backup">
         <input type="checkbox" id="delete-project-backup" checked />
-        Baixar backup JSON antes de excluir
+        <span data-i18n="modal.backupJson">Baixar backup JSON antes de excluir</span>
       </label>
-      <label>Digite o nome do projeto para confirmar
+      <label><span data-i18n="modal.confirmName">Digite o nome do projeto para confirmar</span>
         <input type="text" id="delete-project-confirm" required autocomplete="off" spellcheck="false" />
       </label>
-      <p class="props-meta delete-project-hint" id="delete-project-hint" hidden>
+      <p class="props-meta delete-project-hint" id="delete-project-hint" hidden data-i18n="modal.nameMismatch">
         O nome não confere.
       </p>
       <input type="hidden" id="delete-project-id" />
@@ -416,11 +441,11 @@
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-cancel-delete-project">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          Cancelar
+          <span data-i18n="modal.cancel">Cancelar</span>
         </button>
         <button type="submit" class="btn btn-danger" id="btn-confirm-delete-project" disabled>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          Excluir
+          <span data-i18n="modal.delete">Excluir</span>
         </button>
       </div>
     </form>
@@ -428,20 +453,20 @@
 
   <dialog class="studio-modal" id="modal-new-project">
     <form method="dialog" id="form-new-project" class="studio-modal-body">
-      <h3>Novo projeto</h3>
-      <label>Nome
-        <input type="text" id="new-project-name" placeholder="Ex.: Demo onboarding" required maxlength="80" />
+      <h3 data-i18n="modal.newProject">Novo projeto</h3>
+      <label><span data-i18n="modal.name">Nome</span>
+        <input type="text" id="new-project-name" placeholder="Ex.: Demo onboarding" data-i18n-placeholder="modal.newProjectPlaceholder" required maxlength="80" />
       </label>
-      <p class="theme-section-label">Tema inicial</p>
+      <p class="theme-section-label" data-i18n="modal.initialTheme">Tema inicial</p>
       <div class="theme-presets" id="new-project-themes"></div>
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-cancel-new-project" value="cancel">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          Cancelar
+          <span data-i18n="modal.cancel">Cancelar</span>
         </button>
         <button type="submit" class="btn btn-primary" id="btn-confirm-new-project">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          Criar
+          <span data-i18n="modal.create">Criar</span>
         </button>
       </div>
     </form>
@@ -449,18 +474,18 @@
 
   <dialog class="studio-modal" id="modal-save-theme">
     <form method="dialog" id="form-save-theme" class="studio-modal-body">
-      <h3>Salvar tema</h3>
-      <label>Nome
-        <input type="text" id="save-theme-name" placeholder="Ex.: Marca cliente X" required maxlength="60" />
+      <h3 data-i18n="modal.saveTheme">Salvar tema</h3>
+      <label><span data-i18n="modal.name">Nome</span>
+        <input type="text" id="save-theme-name" placeholder="Ex.: Marca cliente X" data-i18n-placeholder="modal.themePlaceholder" required maxlength="60" />
       </label>
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-cancel-save-theme">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          Cancelar
+          <span data-i18n="modal.cancel">Cancelar</span>
         </button>
         <button type="submit" class="btn btn-primary">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-          Salvar
+          <span data-i18n="modal.save">Salvar</span>
         </button>
       </div>
     </form>
@@ -468,20 +493,20 @@
 
   <dialog class="studio-modal" id="modal-scene">
     <form method="dialog" id="form-scene" class="studio-modal-body">
-      <h3 id="modal-scene-title">Cena</h3>
-      <label>Nome
-        <input type="text" id="scene-name" required maxlength="60" placeholder="Ex.: Editor" />
+      <h3 id="modal-scene-title" data-i18n="modal.scene">Cena</h3>
+      <label><span data-i18n="modal.name">Nome</span>
+        <input type="text" id="scene-name" required maxlength="60" placeholder="Ex.: Editor" data-i18n-placeholder="modal.scenePlaceholder" />
       </label>
       <input type="hidden" id="scene-mode" value="create" />
       <input type="hidden" id="scene-number" value="" />
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-cancel-scene">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          Cancelar
+          <span data-i18n="modal.cancel">Cancelar</span>
         </button>
         <button type="submit" class="btn btn-primary" id="btn-submit-scene">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-          Salvar
+          <span data-i18n="modal.save">Salvar</span>
         </button>
       </div>
     </form>
@@ -491,31 +516,31 @@
 
   <dialog class="image-modal" id="image-modal">
     <div class="image-modal-header">
-      <h3>Escolher imagem</h3>
+      <h3 data-i18n="modal.pickImage">Escolher imagem</h3>
       <button type="button" class="btn btn-sm" id="btn-close-image-modal">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        Fechar
+        <span data-i18n="modal.close">Fechar</span>
       </button>
     </div>
     <div class="image-modal-actions">
       <button type="button" class="btn btn-primary" id="btn-upload-in-modal">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-        Enviar do computador
+        <span data-i18n="modal.uploadComputer">Enviar do computador</span>
       </button>
-      <input type="search" id="image-search" placeholder="Filtrar por nome…" />
+      <input type="search" id="image-search" placeholder="Filtrar por nome…" data-i18n-placeholder="modal.filterImages" />
     </div>
-    <p class="image-drop-hint">Arraste imagens para esta janela ou cole</p>
+    <p class="image-drop-hint" data-i18n="modal.dropHint">Arraste imagens para esta janela ou cole</p>
     <div class="image-grid" id="image-grid"></div>
   </dialog>
 
   <div class="export-overlay" id="export-overlay" hidden>
     <div class="export-overlay-card">
-      <p class="export-overlay-title" id="export-overlay-title">Exportando…</p>
+      <p class="export-overlay-title" id="export-overlay-title" data-i18n="export.overlay">Exportando…</p>
       <p class="export-overlay-status" id="export-overlay-status"></p>
       <canvas class="export-preview" id="export-preview" width="1920" height="1080" hidden></canvas>
       <button type="button" class="btn btn-ghost" id="btn-export-cancel" hidden>
         <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        Cancelar
+        <span data-i18n="modal.cancel">Cancelar</span>
       </button>
     </div>
   </div>

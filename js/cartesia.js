@@ -1,25 +1,43 @@
+import { t, getLocale } from "./i18n.js";
 /**
- * Narração em português via Cartesia Sonic.
+ * Narração via Cartesia Sonic (pt, es, en).
  * why: a chave não entra aqui; o app desktop cifra ela no chaveiro do sistema.
  */
 
 export const CARTESIA_VERSION = "2026-08-14";
 export const CARTESIA_MODEL = "sonic-3.6";
+/** Voz multilíngue Katie — o locale do pedido define o idioma/sotaque. */
 export const CARTESIA_VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4";
 
 export const CARTESIA_VOICES = [
-  { id: "pt-BR", label: "Português (Brasil)", locale: "pt-BR" },
-  { id: "pt-PT", label: "Português (Portugal)", locale: "pt-PT" },
+  { id: "pt-BR", labelKey: "cartesia.voice.pt-BR", locale: "pt-BR" },
+  { id: "pt-PT", labelKey: "cartesia.voice.pt-PT", locale: "pt-PT" },
+  { id: "es-ES", labelKey: "cartesia.voice.es-ES", locale: "es-ES" },
+  { id: "es-MX", labelKey: "cartesia.voice.es-MX", locale: "es-MX" },
+  { id: "en-US", labelKey: "cartesia.voice.en-US", locale: "en-US" },
+  { id: "en-GB", labelKey: "cartesia.voice.en-GB", locale: "en-GB" },
 ];
 
 const API_KEY = /^sk_car_[A-Za-z0-9_-]{12,180}$/;
 const LOCALES = new Set(CARTESIA_VOICES.map((voice) => voice.locale));
 
+/** Voz padrão alinhada ao idioma da interface (pt / es / en). */
+export function defaultVoiceURI(uiLocale = getLocale()) {
+  if (uiLocale === "es") return "es-ES";
+  if (uiLocale === "en") return "en-US";
+  return "pt-BR";
+}
+
 export function resolveNarration(voiceURI) {
   const id = String(voiceURI || "");
   const match = CARTESIA_VOICES.find((voice) => voice.id === id || voice.locale === id);
   const voice = match || CARTESIA_VOICES[0];
-  return { locale: voice.locale, voiceId: CARTESIA_VOICE_ID };
+  return { locale: voice.locale, voiceId: voice.voiceId || CARTESIA_VOICE_ID };
+}
+
+/** Locale BCP-47 para fallback (Google TTS / speechSynthesis). */
+export function narrationLang(voiceURI) {
+  return resolveNarration(voiceURI).locale;
 }
 
 export function isPlausibleApiKey(value) {
@@ -60,7 +78,7 @@ export function speechSpeed(rate) {
 export function ttsRequest({ text, voiceURI, rate } = {}) {
   const narration = resolveNarration(voiceURI);
   if (!LOCALES.has(narration.locale)) {
-    throw new Error("Locale inválido.");
+    throw new Error(t("cartesia.badLocale"));
   }
   return {
     model_id: CARTESIA_MODEL,
@@ -95,7 +113,7 @@ function clip(text) {
 export async function synthesizeCartesia({ apiKey, text, voiceURI, rate, fetchImpl = fetch } = {}) {
   const key = String(apiKey || "");
   const body = ttsRequest({ text, voiceURI, rate });
-  if (!body.transcript) return { ok: false, error: "Sem texto para falar." };
+  if (!body.transcript) return { ok: false, error: t("cartesia.noText") };
   let response;
   try {
     response = await fetchImpl("https://api.cartesia.ai/tts/bytes", {
@@ -108,7 +126,7 @@ export async function synthesizeCartesia({ apiKey, text, voiceURI, rate, fetchIm
       body: JSON.stringify(body),
     });
   } catch {
-    return { ok: false, error: "Não foi possível falar com a Cartesia." };
+    return { ok: false, error: t("cartesia.unreachable") };
   }
   if (!response.ok) {
     const detail = redactSecret(await response.text().catch(() => ""), key);
@@ -118,11 +136,11 @@ export async function synthesizeCartesia({ apiKey, text, voiceURI, rate, fetchIm
     } catch {
       message = detail;
     }
-    return { ok: false, error: clip(redactSecret(message, key)) || "A síntese falhou." };
+    return { ok: false, error: clip(redactSecret(message, key)) || t("cartesia.synthFail") };
   }
   const audio = await response.arrayBuffer();
   if (!audio.byteLength || audio.byteLength > AUDIO_LIMIT) {
-    return { ok: false, error: "O áudio gerado é inválido." };
+    return { ok: false, error: t("cartesia.badAudio") };
   }
   return { ok: true, audioBase64: toBase64(audio), mime: "audio/mpeg" };
 }

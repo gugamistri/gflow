@@ -60,6 +60,21 @@
   row.className = "row";
   const title = document.createElement("strong");
   title.textContent = "Captura do guia";
+  const uiFallback = {
+    title: "Captura do guia",
+    capture: "Capturar",
+    create: "Criar projeto",
+    undo: "Desfazer",
+    download: "Baixar JSON",
+    cancel: "Cancelar",
+    stepOne: "1 passo",
+    stepsN: "{n} passos",
+    hint: "Capturar congela esta tela. O clique seguinte marca o destaque.",
+    hintHotspot: "Clique no elemento do destaque. Esse clique não tira outra foto.",
+    lostApp: "A captura perdeu a conexão com o app.",
+    lostExt: "A captura perdeu a conexão. Abra de novo o ícone da extensão.",
+  };
+  let ui = uiFallback;
   const countEl = document.createElement("span");
   countEl.className = "count";
   countEl.textContent = "0 passos";
@@ -73,16 +88,17 @@
   const actions = document.createElement("div");
   actions.className = "actions";
   for (const spec of [
-    ["capture", "Capturar", "primary"],
-    ["create", "Criar projeto", "primary"],
-    ["undo", "Desfazer", ""],
-    ["download", "Baixar JSON", ""],
-    ["cancel", "Cancelar", "danger"],
+    ["capture", "capture", "primary"],
+    ["create", "create", "primary"],
+    ["undo", "undo", ""],
+    ["download", "download", ""],
+    ["cancel", "cancel", "danger"],
   ]) {
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.action = spec[0];
-    button.textContent = spec[1];
+    button.dataset.label = spec[1];
+    button.textContent = ui[spec[1]];
     if (spec[2]) button.className = spec[2];
     actions.append(button);
   }
@@ -113,11 +129,14 @@
     active = true;
     awaitingHotspot = Boolean(state.awaitingHotspot);
     mount();
+    ui = { ...uiFallback, ...(state.ui || {}) };
+    title.textContent = ui.title;
+    for (const button of actions.querySelectorAll("button")) {
+      button.textContent = ui[button.dataset.label] || button.textContent;
+    }
     const count = state.count || 0;
-    countEl.textContent = count === 1 ? "1 passo" : `${count} passos`;
-    hintEl.textContent = awaitingHotspot
-      ? "Clique no elemento do destaque. Esse clique não tira outra foto."
-      : "Capturar congela esta tela. O clique seguinte marca o destaque.";
+    countEl.textContent = count === 1 ? ui.stepOne : String(ui.stepsN).replace("{n}", String(count));
+    hintEl.textContent = awaitingHotspot ? ui.hintHotspot : ui.hint;
     statusEl.textContent = state.error || state.status || "";
     statusEl.classList.toggle("is-error", Boolean(state.error));
   }
@@ -131,7 +150,7 @@
         })
         .catch(() => {
           host.style.setProperty("visibility", "visible", "important");
-          statusEl.textContent = "A captura perdeu a conexão com o app.";
+          statusEl.textContent = ui.lostApp;
           statusEl.classList.add("is-error");
         });
       return;
@@ -139,7 +158,7 @@
     chrome.runtime.sendMessage(message, (state) => {
       if (chrome.runtime.lastError) {
         host.style.setProperty("visibility", "visible", "important");
-        statusEl.textContent = "A captura perdeu a conexão. Abra de novo o ícone da extensão.";
+        statusEl.textContent = ui.lostExt;
         statusEl.classList.add("is-error");
         return;
       }

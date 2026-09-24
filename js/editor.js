@@ -13,7 +13,7 @@ import {
 } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { clickDriverNext } from "./popoverFooter.js";
-import { isPlausibleApiKey } from "./cartesia.js";
+import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
   CAPTION_PLAYBACK_RATES,
@@ -29,10 +29,7 @@ import {
   stopSpeech,
 } from "./playback.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
-
-const DEFAULT_SCENE_LABELS = {
-  1: "Cena 1",
-};
+import { t } from "./i18n.js";
 
 function ensureSceneLabels(demo) {
   if (!demo.sceneLabels || typeof demo.sceneLabels !== "object") {
@@ -47,20 +44,24 @@ function sceneLabel(demo, scene) {
   const fromDemo = labels[n] ?? labels[String(n)];
   if (fromDemo) return fromDemo;
   if (Object.keys(labels).length) return "";
-  return DEFAULT_SCENE_LABELS[n] || DEFAULT_SCENE_LABELS[String(n)] || "";
+  return n === 1 ? t("editor.defaultScene1") : "";
 }
 
 function setSceneLabel(demo, scene, name) {
   const labels = ensureSceneLabels(demo);
   const n = Number(scene) || 1;
-  const text = String(name || "").trim() || `Cena ${n}`;
+  const text = String(name || "").trim() || t("filmstrip.scene", { n });
   delete labels[n];
   labels[String(n)] = text;
   return text;
 }
 
 function stepListName(step) {
-  return step?.popover?.title || step?.label || (step?.type === "slide" ? "Slide" : "Passo");
+  return (
+    step?.popover?.title ||
+    step?.label ||
+    (step?.type === "slide" ? t("editor.slideFallback") : t("editor.stepFallback"))
+  );
 }
 
 function containSize(nw, nh, maxW, maxH) {
@@ -226,7 +227,7 @@ export function createEditor(ctx) {
         )
       : [];
     els.propImage.innerHTML =
-      `<option value="">Sem imagem</option>` + [...custom, ...catalog].join("");
+      `<option value="">${escapeHtml(t("props.noImage"))}</option>` + [...custom, ...catalog].join("");
   }
 
   function readChoice(group, fallback) {
@@ -263,7 +264,7 @@ export function createEditor(ctx) {
     const demo = getDemo();
     const selected = getSelectedIndex();
     if (!demo.steps.length) {
-      els.filmstrip.innerHTML = `<p class="film-hint">Nenhum passo ainda. Use + Imagens ou + Passo.</p>`;
+      els.filmstrip.innerHTML = `<p class="film-hint">${escapeHtml(t("filmstrip.empty"))}</p>`;
       return;
     }
     let html = "";
@@ -275,7 +276,7 @@ export function createEditor(ctx) {
         const label = sceneLabel(demo, step.scene);
         html += `<div class="film-scene" data-scene="${Number(step.scene) || 1}" draggable="true">
           <span class="film-grip" aria-hidden="true">⋮⋮</span>
-          <span class="film-scene-label" data-action="rename-scene-inline" data-scene="${Number(step.scene) || 1}" title="Clique para renomear. Arraste para mover a cena.">Cena ${step.scene}${label ? ` · ${escapeHtml(label)}` : ""}</span>
+          <span class="film-scene-label" data-action="rename-scene-inline" data-scene="${Number(step.scene) || 1}" title="${escapeAttr(t("filmstrip.sceneRename"))}">${escapeHtml(t("filmstrip.scene", { n: step.scene }))}${label ? ` · ${escapeHtml(label)}` : ""}</span>
         </div>`;
       }
       const src = resolveImageSrc(demo, step.image);
@@ -298,7 +299,7 @@ export function createEditor(ctx) {
             <span>#${index + 1}</span>
           </div>
           <div class="film-actions">
-            <button type="button" class="film-action-close" data-action="delete" title="Remover" aria-label="Remover">×</button>
+            <button type="button" class="film-action-close" data-action="delete" title="${escapeAttr(t("filmstrip.remove"))}" aria-label="${escapeAttr(t("filmstrip.remove"))}">×</button>
           </div>
         </div>`;
     });
@@ -317,17 +318,17 @@ export function createEditor(ctx) {
   function syncSideAlignControls(step) {
     const isSlide = step?.type === "slide";
     const scope = isSlide ? "slide" : "screen";
-    if (els.labelSide) els.labelSide.textContent = isSlide ? "Vertical" : "Lado";
+    if (els.labelSide) els.labelSide.textContent = isSlide ? t("props.vertical") : t("props.side");
     if (els.propSide) {
-      els.propSide.setAttribute("aria-label", isSlide ? "Vertical" : "Lado");
+      els.propSide.setAttribute("aria-label", isSlide ? t("props.vertical") : t("props.side"));
       els.propSide.querySelectorAll("[data-scope]").forEach((btn) => {
         btn.hidden = btn.dataset.scope !== scope;
       });
     }
     if (els.propAlign) {
       const titles = isSlide
-        ? { start: "Esquerda", center: "Centro", end: "Direita" }
-        : { start: "Início", center: "Centro", end: "Fim" };
+        ? { start: t("props.left"), center: t("props.center"), end: t("props.right") }
+        : { start: t("props.start"), center: t("props.center"), end: t("props.end") };
       els.propAlign.querySelectorAll("[data-value]").forEach((btn) => {
         const label = titles[btn.dataset.value];
         if (!label) return;
@@ -573,7 +574,7 @@ export function createEditor(ctx) {
     if (!els.propHoldHint) return;
     if (floor) {
       els.propHoldHint.hidden = false;
-      els.propHoldHint.textContent = `Mínimo ${floor}s, a duração do áudio`;
+      els.propHoldHint.textContent = t("props.holdMin", { n: floor });
       return;
     }
     els.propHoldHint.hidden = true;
@@ -603,14 +604,14 @@ export function createEditor(ctx) {
     if (playBtn) {
       const playing = captionPlayer.playing;
       playBtn.disabled = !captionPlayer.clips.length || !total;
-      playBtn.setAttribute("aria-label", playing ? "Pausar" : "Reproduzir");
+      playBtn.setAttribute("aria-label", playing ? t("canvas.pause") : t("canvas.play"));
       playBtn.setAttribute("aria-pressed", playing ? "true" : "false");
       playBtn.classList.toggle("is-playing", playing);
     }
     if (rateBtn) {
       const label = formatRate(captionPlayer.rate);
       rateBtn.textContent = label;
-      rateBtn.setAttribute("aria-label", `Velocidade de reprodução, ${label}`);
+      rateBtn.setAttribute("aria-label", t("props.playbackRate", { rate: label }));
     }
   }
 
@@ -797,11 +798,11 @@ export function createEditor(ctx) {
         step.narrationAudio.clips.length;
       if (hasStaleTts) {
         statusEl.hidden = false;
-        statusEl.textContent = "Áudio desatualizado. Gere de novo ou envie outro.";
+        statusEl.textContent = t("props.audioStale");
         return;
       }
       statusEl.hidden = false;
-      statusEl.textContent = "Sem áudio neste passo.";
+      statusEl.textContent = t("props.noAudio");
       return;
     }
     if (player) player.hidden = false;
@@ -853,7 +854,7 @@ export function createEditor(ctx) {
     fillVoiceSelect(demo.narration.voiceURI);
     const bg = demo.narration.background;
     if (els.narrationBgName) {
-      els.narrationBgName.textContent = bg?.name || "Nenhum arquivo";
+      els.narrationBgName.textContent = bg?.name || t("narration.noFile");
     }
     if (els.btnNarrationBgClear) els.btnNarrationBgClear.hidden = !bg?.dataUrl;
   }
@@ -861,16 +862,18 @@ export function createEditor(ctx) {
   function fillVoiceSelect(selectedURI) {
     if (!els.narrationVoice) return;
     const current = els.narrationVoice.value;
-    const prefer = selectedURI || current || "pt-BR";
+    const prefer = selectedURI || current || defaultVoiceURI();
     els.narrationVoice.innerHTML = "";
     NARRATION_VOICES.forEach((voice) => {
       const opt = document.createElement("option");
       opt.value = voice.id;
-      opt.textContent = voice.label;
+      opt.textContent = t(voice.labelKey || "cartesia.voice.pt-BR");
       els.narrationVoice.appendChild(opt);
     });
     if ([...els.narrationVoice.options].some((o) => o.value === prefer)) {
       els.narrationVoice.value = prefer;
+    } else {
+      els.narrationVoice.value = defaultVoiceURI();
     }
   }
 
@@ -908,8 +911,8 @@ export function createEditor(ctx) {
       els.canvasSlide.hidden = false;
       const label = sceneLabel(demo, step.scene);
       els.slideKicker.textContent = label
-        ? `Cena ${step.scene} · ${label}`
-        : `Cena ${step.scene}`;
+        ? `${t("filmstrip.scene", { n: step.scene })} · ${label}`
+        : t("filmstrip.scene", { n: step.scene });
       els.slideTitle.textContent = step.popover?.title || step.label || "";
       els.slideBody.textContent = step.popover?.description || "";
       applySlideLayout(els.canvasSlide, step);
@@ -1076,7 +1079,7 @@ export function createEditor(ctx) {
     input.className = "inline-edit";
     input.value = current;
     input.maxLength = 60;
-    input.setAttribute("aria-label", "Nome da cena");
+    input.setAttribute("aria-label", t("editor.sceneNameAria"));
     host.replaceChildren(input);
     input.focus();
     input.select();
@@ -1119,17 +1122,17 @@ export function createEditor(ctx) {
 
     if (mode === "rename") {
       const n = Number(sceneNumber) || Number(currentStep()?.scene) || 1;
-      title.textContent = `Renomear cena ${n}`;
+      title.textContent = t("modal.renameScene", { n });
       modeInput.value = "rename";
       numberInput.value = String(n);
-      nameInput.value = sceneLabel(demo, n) || `Cena ${n}`;
-      submit.textContent = "Salvar";
+      nameInput.value = sceneLabel(demo, n) || t("filmstrip.scene", { n });
+      submit.textContent = t("modal.save");
     } else {
-      title.textContent = "Nova cena";
+      title.textContent = t("modal.newScene");
       modeInput.value = "create";
       numberInput.value = "";
       nameInput.value = "";
-      submit.textContent = "Criar";
+      submit.textContent = t("modal.create");
     }
     modal.showModal();
     nameInput.focus();
@@ -1147,14 +1150,14 @@ export function createEditor(ctx) {
       const step = {
         id: createStepId(),
         scene: 1,
-        label: "Novo passo",
+        label: t("editor.newStep"),
         type: "screen",
         image: "",
         hotspot: { x: 40, y: 40, w: 14, h: 8 },
         clickPoint: { x: 47, y: 44 },
         popover: {
-          title: "Novo passo",
-          description: "Edite este texto no painel à direita.",
+          title: t("editor.newStep"),
+          description: t("editor.editHint"),
           side: "bottom",
           align: "center",
         },
@@ -1168,7 +1171,7 @@ export function createEditor(ctx) {
       if (idx >= 0) selectStep(idx);
       else renderFilmstrip();
       onChange();
-      toast(`Cena ${step.scene} criada`);
+      toast(t("toast.sceneCreated", { n: step.scene }));
       return;
     }
 
@@ -1180,7 +1183,7 @@ export function createEditor(ctx) {
     renderFilmstrip();
     renderCanvas();
     onChange();
-    toast(`Cena ${n} renomeada`);
+    toast(t("toast.sceneRenamed", { n }));
   }
 
   function selectStep(index) {
@@ -1205,7 +1208,7 @@ export function createEditor(ctx) {
       syncForm();
       renderCanvas();
       onChange();
-      toast("Ordem atualizada");
+      toast(t("toast.orderUpdated"));
       return;
     }
     const [moved] = demo.steps.splice(fromIndex, 1);
@@ -1218,7 +1221,7 @@ export function createEditor(ctx) {
     syncForm();
     renderCanvas();
     onChange();
-    toast("Ordem atualizada");
+    toast(t("toast.orderUpdated"));
   }
 
   function addStep(asSlide = false) {
@@ -1227,14 +1230,14 @@ export function createEditor(ctx) {
     const step = {
       id: createStepId(),
       scene: prev?.scene || 1,
-      label: asSlide ? "Novo slide" : "Novo passo",
+      label: asSlide ? t("editor.newSlide") : t("editor.newStep"),
       type: asSlide ? "slide" : "screen",
       image: asSlide ? "" : prev?.image || "",
       hotspot: { x: 40, y: 40, w: 14, h: 8 },
       clickPoint: { x: 47, y: 44 },
       popover: {
-        title: asSlide ? "Novo slide" : "Novo passo",
-        description: "Edite este texto no painel à direita.",
+        title: asSlide ? t("editor.newSlide") : t("editor.newStep"),
+        description: t("editor.editHint"),
         side: "bottom",
         align: "center",
       },
@@ -1249,20 +1252,20 @@ export function createEditor(ctx) {
     setDemo(demo);
     selectStep(idx);
     onChange();
-    toast("Passo adicionado");
+    toast(t("toast.stepAdded"));
   }
 
   function duplicateStep() {
     const demo = getDemo();
     const step = currentStep();
     if (!step) {
-      toast("Nenhum passo para duplicar");
+      toast(t("toast.nothingToDup"));
       return;
     }
     const copy = structuredClone(step);
     copy.id = createStepId();
-    const base = copy.popover?.title || copy.label || (copy.type === "slide" ? "Slide" : "Passo");
-    const next = `${base} (cópia)`;
+    const base = copy.popover?.title || copy.label || (copy.type === "slide" ? t("editor.slideFallback") : t("editor.stepFallback"));
+    const next = t("editor.copySuffix", { name: base });
     copy.label = next;
     if (!copy.popover) copy.popover = {};
     copy.popover.title = next;
@@ -1272,13 +1275,13 @@ export function createEditor(ctx) {
     setDemo(demo);
     selectStep(idx);
     onChange();
-    toast("Passo duplicado");
+    toast(t("toast.stepDuplicated"));
   }
 
   function deleteStep() {
     const demo = getDemo();
     if (!demo.steps.length) {
-      toast("Nenhum passo para remover");
+      toast(t("toast.nothingToRemove"));
       return;
     }
     demo.steps.splice(getSelectedIndex(), 1);
@@ -1291,13 +1294,13 @@ export function createEditor(ctx) {
       selectStep(Math.max(0, Math.min(getSelectedIndex(), demo.steps.length - 1)));
     }
     onChange();
-    toast("Passo removido");
+    toast(t("toast.stepRemoved"));
   }
 
   async function ingestImageFiles(files, { createSteps }) {
     const list = [...files].filter((f) => f.type.startsWith("image/"));
     if (!list.length) {
-      toast("Nenhuma imagem válida");
+      toast(t("toast.noValidImage"));
       return;
     }
 
@@ -1331,8 +1334,8 @@ export function createEditor(ctx) {
           hotspot: { x: 40, y: 40, w: 14, h: 8 },
           clickPoint: { x: 47, y: 44 },
           popover: {
-            title: name || "Novo destaque",
-            description: "Edite a explicação deste passo.",
+            title: name || t("editor.newHighlight"),
+            description: t("editor.editExplain"),
             side: "bottom",
             align: "center",
           },
@@ -1345,7 +1348,7 @@ export function createEditor(ctx) {
       });
       setDemo(demo);
       selectStep(firstIdx);
-      toast(`${refs.length} imagem(ns) adicionada(s) como passos`);
+      toast(t("toast.imagesAdded", { n: refs.length }));
     } else {
       const step = currentStep();
       if (step && step.type !== "slide") {
@@ -1358,7 +1361,7 @@ export function createEditor(ctx) {
       renderCanvas();
       renderFilmstrip();
       onChange();
-      toast("Imagem aplicada ao passo");
+      toast(t("toast.imageApplied"));
     }
 
     if (els.imageModal.open) renderImageGrid();
@@ -1367,7 +1370,7 @@ export function createEditor(ctx) {
   function openImageModal(mode = "replace") {
     pickMode = mode;
     const title = els.imageModal?.querySelector("h3");
-    if (title) title.textContent = mode === "add" ? "Imagens" : "Escolher imagem";
+    if (title) title.textContent = mode === "add" ? t("modal.images") : t("modal.pickImage");
     els.imageSearch.value = "";
     renderImageGrid();
     els.imageModal.showModal();
@@ -1381,14 +1384,14 @@ export function createEditor(ctx) {
     const step = {
       id: createStepId(),
       scene: prev?.scene || 1,
-      label: rawLabel || "Imagem",
+      label: rawLabel || t("editor.defaultImage"),
       type: "screen",
       image: ref,
       hotspot: { x: 40, y: 40, w: 14, h: 8 },
       clickPoint: { x: 47, y: 44 },
       popover: {
-        title: rawLabel || "Novo destaque",
-        description: "Edite a explicação deste passo.",
+        title: rawLabel || t("editor.newHighlight"),
+        description: t("editor.editExplain"),
         side: "bottom",
         align: "center",
       },
@@ -1401,7 +1404,7 @@ export function createEditor(ctx) {
     setDemo(demo);
     selectStep(idx);
     if (els.imageModal.open) renderImageGrid();
-    toast("Imagem adicionada como passo");
+    toast(t("toast.imageAsStep"));
   }
 
   function renderImageGrid() {
@@ -1415,7 +1418,7 @@ export function createEditor(ctx) {
         ref: `custom:${id}`,
         label: meta.name || id,
         src: meta.dataUrl,
-        group: "Enviadas",
+        group: t("editor.imageGroup"),
       });
     });
 
@@ -1425,7 +1428,7 @@ export function createEditor(ctx) {
           ref: path,
           label: path,
           src: resolveImageSrc(demo, path),
-          group: path.split("/")[0] || "Catálogo",
+          group: path.split("/")[0] || t("editor.catalogGroup"),
         });
       });
     }
@@ -1444,7 +1447,7 @@ export function createEditor(ctx) {
       const active = currentStep()?.image === it.ref ? "is-selected" : "";
       const remove =
         it.ref.startsWith("custom:")
-          ? `<button type="button" class="image-tile-remove" data-remove-image="${escapeAttr(it.ref)}" aria-label="Remover imagem" title="Remover">×</button>`
+          ? `<button type="button" class="image-tile-remove" data-remove-image="${escapeAttr(it.ref)}" aria-label="${escapeAttr(t("editor.removeImage"))}" title="${escapeAttr(t("filmstrip.remove"))}">×</button>`
           : "";
       html += `
         <div class="image-tile-wrap">
@@ -1476,7 +1479,7 @@ export function createEditor(ctx) {
     renderFilmstrip();
     renderImageGrid();
     onChange();
-    toast("Imagem removida");
+    toast(t("toast.imageRemoved"));
   }
 
   function withImageName(file) {
@@ -1521,7 +1524,7 @@ export function createEditor(ctx) {
     const demo = getDemo();
     const label = shortImageLabel(ref, demo);
     const name = label.replace(/\.[^.]+$/, "");
-    const defaults = new Set(["", "Novo passo", "Novo destaque", "Novo slide"]);
+    const defaults = new Set(["", t("editor.newStep"), t("editor.newHighlight"), t("editor.newSlide")]);
     if (!step.popover) step.popover = {};
     if (defaults.has(step.label || "") || defaults.has(step.popover.title || "")) {
       step.label = name;
@@ -1535,7 +1538,7 @@ export function createEditor(ctx) {
     renderFilmstrip();
     onChange();
     els.imageModal.close();
-    toast("Imagem selecionada");
+    toast(t("toast.imageSelected"));
   }
 
   function clearFilmDropMarks() {
@@ -1648,7 +1651,7 @@ export function createEditor(ctx) {
         setDemo(demo);
         selectStep(Math.max(0, idx));
         onChange();
-        toast("Cena movida");
+        toast(t("toast.sceneMoved"));
         return;
       }
 
@@ -1875,10 +1878,10 @@ export function createEditor(ctx) {
         if (clearBtn) clearBtn.hidden = false;
         return;
       }
-      statusEl.textContent = "Nenhuma chave da Cartesia salva.";
+      statusEl.textContent = t("cartesia.noKey");
       if (clearBtn) clearBtn.hidden = true;
     } catch {
-      statusEl.textContent = "Não li a chave salva.";
+      statusEl.textContent = t("cartesia.readFail");
       if (clearBtn) clearBtn.hidden = true;
     }
   }
@@ -1887,7 +1890,7 @@ export function createEditor(ctx) {
     const input = document.getElementById("cartesia-key");
     const key = input?.value?.trim() || "";
     if (!isPlausibleApiKey(key)) {
-      toast("A chave deve começar com sk_car_.");
+      toast(t("toast.cartesiaKeyPrefix"));
       return;
     }
     const bridge = cartesiaBridge();
@@ -1895,16 +1898,16 @@ export function createEditor(ctx) {
     try {
       result = bridge ? await bridge.cartesiaSaveKey(key) : await putCartesiaKey(key).then(() => ({ ok: true }));
     } catch {
-      result = { ok: false, error: "Não salvei a chave" };
+      result = { ok: false, error: t("toast.cartesiaSaveFail") };
     } finally {
       if (input) input.value = "";
     }
     if (!result?.ok) {
-      toast(result?.error || "Não salvei a chave");
+      toast(result?.error || t("toast.cartesiaSaveFail"));
       await refreshCartesiaStatus();
       return;
     }
-    toast(bridge ? "Chave salva no chaveiro do sistema" : "Chave salva neste navegador");
+    toast(bridge ? t("toast.cartesiaSavedKeychain") : t("toast.cartesiaSavedBrowser"));
     await refreshCartesiaStatus();
   }
 
@@ -1914,13 +1917,13 @@ export function createEditor(ctx) {
     ensureNarration(demo);
     const text = els.propCaption?.value?.trim() || "";
     if (!step || !text) {
-      toast("Escreva o texto da narração para gerar o áudio");
+      toast(t("toast.needCaptionText"));
       return;
     }
     const btn = document.getElementById("btn-generate-caption");
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Gerando…";
+      btn.textContent = t("toast.generating");
     }
     try {
       const clips = await generateNarrationClips(text, {
@@ -1943,13 +1946,13 @@ export function createEditor(ctx) {
       enforceHoldFloor(step);
       onChange();
       syncCaptionAudio();
-      toast("Áudio salvo no passo");
+      toast(t("toast.audioSaved"));
     } catch (err) {
-      toast(err?.message || "Não gerei o áudio");
+      toast(err?.message || t("toast.audioGenFail"));
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "Gerar áudio";
+        btn.textContent = t("props.generateAudio");
       }
     }
   }
@@ -1958,18 +1961,18 @@ export function createEditor(ctx) {
     const step = currentStep();
     if (!step || !file) return;
     if (!String(file.type || "").startsWith("audio/") && !/\.(mp3|ogg|wav|m4a|aac|webm)$/i.test(file.name)) {
-      toast("Escolha um arquivo de áudio");
+      toast(t("toast.chooseAudioFile"));
       return;
     }
     const btn = document.getElementById("btn-upload-caption");
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Enviando…";
+      btn.textContent = t("toast.uploading");
     }
     try {
       const dataUrl = await fileToDataUrl(file);
       if (!String(dataUrl).startsWith("data:audio/")) {
-        toast("Não li este arquivo de áudio");
+        toast(t("toast.audioReadFail"));
         return;
       }
       const clips = [dataUrl];
@@ -1987,13 +1990,13 @@ export function createEditor(ctx) {
       enforceHoldFloor(step);
       onChange();
       syncCaptionAudio();
-      toast("Áudio enviado");
+      toast(t("toast.audioUploaded"));
     } catch (err) {
-      toast(err?.message || "Não enviei o áudio");
+      toast(err?.message || t("toast.audioUploadFail"));
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "Enviar áudio";
+        btn.textContent = t("props.uploadAudio");
       }
     }
   }
@@ -2005,7 +2008,7 @@ export function createEditor(ctx) {
     delete step.narrationAudio;
     syncCaptionAudio();
     onChange();
-    toast("Áudio removido");
+    toast(t("toast.audioRemoved"));
   }
 
   async function clearCartesiaKey() {
@@ -2014,9 +2017,9 @@ export function createEditor(ctx) {
     try {
       result = bridge ? await bridge.cartesiaLogout() : await deleteCartesiaKey().then(() => ({ ok: true }));
     } catch {
-      result = { ok: false, error: "Não removi a chave" };
+      result = { ok: false, error: t("toast.cartesiaClearFail") };
     }
-    toast(result?.ok ? "Chave removida" : result?.error || "Não removi a chave");
+    toast(result?.ok ? t("toast.cartesiaCleared") : result?.error || t("toast.cartesiaClearFail"));
     await refreshCartesiaStatus();
   }
 
@@ -2095,7 +2098,7 @@ export function createEditor(ctx) {
       demo.narration.background = { name: file.name, dataUrl };
       syncNarrationPanel();
       onChange();
-      toast("Áudio de fundo adicionado");
+      toast(t("toast.bgAdded"));
     });
     els.btnNarrationBgClear?.addEventListener("click", () => {
       const demo = getDemo();
@@ -2103,7 +2106,7 @@ export function createEditor(ctx) {
       demo.narration.background = null;
       syncNarrationPanel();
       onChange();
-      toast("Áudio de fundo removido");
+      toast(t("toast.bgRemoved"));
     });
 
     document.getElementById("btn-add-step").addEventListener("click", () => addStep(false));

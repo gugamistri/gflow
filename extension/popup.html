@@ -2,37 +2,44 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <title>Captura</title>
+    <title data-i18n="doc.title.popup">Captura</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <header>
-      <strong>Captura</strong>
-      <span id="count">desligada</span>
+      <strong data-i18n="doc.title.popup">Captura</strong>
+      <span id="count" data-i18n="ext.off">desligada</span>
+      <label class="locale-select">
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+          <option value="pt">PT</option>
+          <option value="es">ES</option>
+          <option value="en">EN</option>
+        </select>
+      </label>
     </header>
-    <p id="help">
+    <p id="help" data-i18n="ext.help">
       Congela a tela do produto, marca o clique e cria um projeto novo no editor.
     </p>
     <label class="field">
-      Nome do projeto
-      <input type="text" id="project-name" placeholder="Ex.: Tour RCV" autocomplete="off" />
+      <span data-i18n="ext.projectName">Nome do projeto</span>
+      <input type="text" id="project-name" placeholder="Ex.: Tour RCV" data-i18n-placeholder="ext.projectPlaceholder" autocomplete="off" />
     </label>
     <label class="field">
-      Editor
+      <span data-i18n="ext.editor">Editor</span>
       <input type="url" id="editor-origin" autocomplete="off" />
     </label>
     <div id="idle">
-      <button type="button" class="primary" id="start">Iniciar nesta aba</button>
+      <button type="button" class="primary" id="start" data-i18n="ext.start">Iniciar nesta aba</button>
     </div>
     <div id="live" hidden>
-      <button type="button" class="primary" id="shot">Capturar esta tela</button>
-      <button type="button" class="primary" id="create">Criar projeto</button>
-      <button type="button" id="download">Baixar JSON</button>
-      <button type="button" id="undo">Desfazer</button>
-      <button type="button" class="danger" id="cancel">Cancelar</button>
+      <button type="button" class="primary" id="shot" data-i18n="ext.shot">Capturar esta tela</button>
+      <button type="button" class="primary" id="create" data-i18n="ext.create">Criar projeto</button>
+      <button type="button" id="download" data-i18n="ext.download">Baixar JSON</button>
+      <button type="button" id="undo" data-i18n="ext.undo">Desfazer</button>
+      <button type="button" class="danger" id="cancel" data-i18n="ext.cancel">Cancelar</button>
     </div>
     <p id="status"></p>
-    <p class="keys">Option+Shift+C captura · Option+Shift+E cria o projeto</p>
+    <p class="keys" data-i18n="ext.keys">Option+Shift+C captura · Option+Shift+E cria o projeto</p>
     <script type="module" src="popup.js"></script>
   </body>
 </html>

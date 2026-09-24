@@ -1,3 +1,15 @@
+
+function gfT(key, vars) {
+  const cat = (typeof window !== "undefined" && window.__GF_I18N) || {};
+  let text = cat[key] || key;
+  if (vars && typeof vars === "object") {
+    text = String(text).replace(/\{(\w+)\}/g, (_, name) =>
+      vars[name] != null ? String(vars[name]) : "{" + name + "}"
+    );
+  }
+  return text;
+}
+
 /**
  * Player autônomo (arquivo HTML exportado). Script clássico — sem modules.
  * Espera window.INTERACTIVE_DEMO já definido.
@@ -184,7 +196,15 @@
     const token = speakToken;
     const trimmed = String(text || "").trim();
     if (!trimmed) return Promise.resolve();
-    const lang = voiceURI === "pt-PT" ? "pt-PT" : "pt-BR";
+    const langMap = {
+      "pt-BR": "pt-BR",
+      "pt-PT": "pt-PT",
+      "es-ES": "es-ES",
+      "es-MX": "es-MX",
+      "en-US": "en-US",
+      "en-GB": "en-GB",
+    };
+    const lang = langMap[voiceURI] || "pt-BR";
     const parts = splitForSpeech(trimmed);
     return (async () => {
       let played = false;
@@ -385,8 +405,8 @@
     const { footer, progress, previousButton, nextButton, footerButtons } = popover;
     if (previousButton) {
       previousButton.innerHTML = PREV_ARROW_SVG;
-      previousButton.setAttribute("aria-label", "Anterior");
-      previousButton.title = "Anterior";
+      previousButton.setAttribute("aria-label", gfT("player.prev"));
+      previousButton.title = gfT("player.prev");
     }
     if (footer && previousButton && progress && nextButton) {
       footer.appendChild(previousButton);
@@ -502,7 +522,7 @@
         const missing = document.getElementById("player-missing");
         if (missing) missing.hidden = true;
         els.slide.hidden = false;
-        els.slideKicker.textContent = "Cena " + step.scene;
+        els.slideKicker.textContent = gfT("player.scene", { n: step.scene });
         els.slideTitle.textContent = step.popover?.title || step.label || "";
         els.slideBody.textContent = step.popover?.description || "";
         applySlideLayout(els.slide, step);
@@ -580,13 +600,13 @@
 
     const steps = demo.steps;
     if (!steps.length) {
-      toast("Nenhum passo para reproduzir");
+      toast(gfT("player.noSteps"));
       return;
     }
 
     const factory = window.driver?.js?.driver || window.driver;
     if (!factory) {
-      toast("driver.js não carregou — verifique a internet");
+      toast(gfT("player.driverMissing"));
       return;
     }
 
@@ -606,10 +626,10 @@
       overlayColor: hexToRgba(overlay, 0.55),
       stagePadding: 6,
       disableActiveInteraction: false,
-      nextBtnText: "Próximo",
+      nextBtnText: gfT("player.next"),
       prevBtnText: "",
-      doneBtnText: "Concluir",
-      progressText: "{{current}} de {{total}}",
+      doneBtnText: gfT("player.done"),
+      progressText: gfT("player.progress"),
       onPopoverRender: (popover) => {
         renderDemoPopoverFooter(popover);
         setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
@@ -635,11 +655,11 @@
                 drv.destroy();
                 driverObj = null;
                 narration.stop();
-                setProgress("Demo concluída");
+                setProgress(gfT("player.doneStatus"));
                 return;
               }
               activeIndex = nextIndex;
-              setProgress("Passo " + (activeIndex + 1) + " / " + steps.length);
+              setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], true);
               drv.moveNext();
             } finally {
@@ -653,7 +673,7 @@
             const drv = optsPrev.driver;
             try {
               activeIndex -= 1;
-              setProgress("Passo " + (activeIndex + 1) + " / " + steps.length);
+              setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], true);
               drv.movePrevious();
             } finally {
@@ -665,12 +685,12 @@
       onDestroyed: () => {
         clearAutoplay();
         narration.stop();
-        setProgress("Parado");
+        setProgress(gfT("player.stopped"));
         clickFx.reset();
       },
     });
 
-    setProgress("Passo " + (activeIndex + 1) + " / " + steps.length);
+    setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
     driverObj.drive(activeIndex);
   }
 
@@ -680,7 +700,7 @@
   if (startSel) {
     startSel.innerHTML = demo.steps
       .map((step, i) => {
-        const label = (step.popover?.title || step.label || "Passo").replace(/</g, "&lt;");
+        const label = (step.popover?.title || step.label || gfT("editor.stepFallback")).replace(/</g, "&lt;");
         return `<option value="${i}">${i + 1}. ${label}</option>`;
       })
       .join("");
@@ -701,7 +721,7 @@
   });
   document.getElementById("btn-stop")?.addEventListener("click", () => {
     stop();
-    setProgress("Parado");
+    setProgress(gfT("player.stopped"));
   });
 
   function setPopoverHiddenForSlide(hidden) {
@@ -735,13 +755,13 @@
     e.stopPropagation();
     if (!driverObj) return;
     stop();
-    setProgress("Parado");
+    setProgress(gfT("player.stopped"));
   });
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       stop();
-      setProgress("Parado");
+      setProgress(gfT("player.stopped"));
     }
   });
 
@@ -753,5 +773,5 @@
     }
   });
 
-  setProgress("Pronto — Percorrer ou Assistir");
+  setProgress(gfT("player.readyHint"));
 })();

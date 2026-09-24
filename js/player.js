@@ -1,3 +1,4 @@
+import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, themeOverlayColor } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { renderDemoPopoverFooter, clickDriverNext, setPopoverHiddenForSlide } from "./popoverFooter.js";
@@ -97,7 +98,7 @@ export function createPlayer(ctx) {
         els.image.removeAttribute("src");
         if (els.missing) els.missing.hidden = true;
         els.slide.hidden = false;
-        els.slideKicker.textContent = `Cena ${step.scene}`;
+        els.slideKicker.textContent = t("player.scene", { n: step.scene });
         els.slideTitle.textContent = step.popover?.title || step.label || "";
         els.slideBody.textContent = step.popover?.description || "";
         applySlideLayout(els.slide, step);
@@ -170,14 +171,14 @@ export function createPlayer(ctx) {
     ensureNarration(demo);
     const steps = demo.steps;
     if (!steps.length) {
-      toast("Nenhum passo para reproduzir");
+      toast(t("player.noSteps"));
       onRequestExit?.();
       return;
     }
 
     const factory = driverFactory();
     if (!factory) {
-      toast("driver.js não carregou");
+      toast(t("player.driverMissing"));
       onRequestExit?.();
       return;
     }
@@ -201,10 +202,10 @@ export function createPlayer(ctx) {
       overlayColor: themeOverlayColor(0.55),
       stagePadding: 6,
       disableActiveInteraction: false,
-      nextBtnText: "Próximo",
+      nextBtnText: t("player.next"),
       prevBtnText: "",
-      doneBtnText: "Concluir",
-      progressText: "{{current}} de {{total}}",
+      doneBtnText: t("player.done"),
+      progressText: t("player.progress"),
       onPopoverRender: (popover) => {
         renderDemoPopoverFooter(popover);
         setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
@@ -230,12 +231,12 @@ export function createPlayer(ctx) {
                 drv.destroy();
                 driverObj = null;
                 narration.stop();
-                setProgress("Demo concluída");
+                setProgress(t("player.doneStatus"));
                 return;
               }
               activeIndex = nextIndex;
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
-              setProgress(`Passo ${activeIndex + 1} / ${steps.length}`);
+              setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], { speak: true });
               await waitLayout();
               drv.moveNext();
@@ -251,7 +252,7 @@ export function createPlayer(ctx) {
             try {
               activeIndex -= 1;
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
-              setProgress(`Passo ${activeIndex + 1} / ${steps.length}`);
+              setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], { speak: true });
               await waitLayout();
               drv.movePrevious();
@@ -264,13 +265,13 @@ export function createPlayer(ctx) {
       onDestroyed: () => {
         clearAutoplay();
         narration.stop();
-        setProgress("Parado");
+        setProgress(t("player.stopped"));
         clickFx.reset();
         driverObj = null;
       },
     });
 
-    setProgress(`Passo ${activeIndex + 1} / ${steps.length}`);
+    setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
     driverObj.drive(activeIndex);
   }
 
@@ -288,7 +289,7 @@ export function createPlayer(ctx) {
     clickFx.reset();
     animating = false;
     running = false;
-    if (!silent) setProgress("Parado");
+    if (!silent) setProgress(t("player.stopped"));
   }
 
   function startIndex() {

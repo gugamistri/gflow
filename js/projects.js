@@ -9,6 +9,7 @@ import {
   THEME_PRESETS,
 } from "./themes.js";
 import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback } from "./playback.js";
+import { t } from "./i18n.js";
 
 const DB_NAME = "demo-studio";
 const DB_VERSION = 2;
@@ -267,7 +268,7 @@ export function createEmptyProject({ name, theme } = {}) {
   const now = Date.now();
   return {
     id: createProjectId(),
-    name: (name || "Novo projeto").trim() || "Novo projeto",
+    name: (name || t("default.newProject")).trim() || t("default.newProject"),
     createdAt: now,
     updatedAt: now,
     theme: theme ? cloneTheme(theme) : defaultTheme(),
@@ -302,7 +303,7 @@ export function demoPayloadToProject(data, { name, id } = {}) {
   }) : defaultTheme();
   const project = {
     id: id || createProjectId(),
-    name: name || data.name || "Projeto importado",
+    name: name || data.name || t("default.importedProject"),
     createdAt: now,
     updatedAt: now,
     theme,
@@ -319,11 +320,11 @@ export function demoPayloadToProject(data, { name, id } = {}) {
 
 export async function duplicateProject(id) {
   const project = await getProject(id);
-  if (!project) throw new Error("Projeto não encontrado");
+  if (!project) throw new Error(t("err.projectNotFound"));
   const copy = {
     ...structuredClone(project),
     id: createProjectId(),
-    name: `${project.name} (cópia)`,
+    name: t("default.projectCopy", { name: project.name }),
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -333,7 +334,7 @@ export async function duplicateProject(id) {
 
 export async function renameProject(id, name) {
   const project = await getProject(id);
-  if (!project) throw new Error("Projeto não encontrado");
+  if (!project) throw new Error(t("err.projectNotFound"));
   project.name = (name || "").trim() || project.name;
   return putProject(project);
 }

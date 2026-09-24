@@ -5,6 +5,14 @@ import {
   originToMatchPattern,
   tabMatchesOrigin,
 } from "./lib/editor-origin.js";
+import { setLocale, resolveLocale, getLocale, t } from "./lib/i18n.js";
+
+const LOCALE_KEY = "guiaLocale";
+
+setLocale(resolveLocale(typeof navigator !== "undefined" ? navigator.languages || [navigator.language] : []), { persist: false });
+chrome.storage.local.get(LOCALE_KEY).then((stored) => {
+  if (stored[LOCALE_KEY]) setLocale(stored[LOCALE_KEY], { persist: false });
+});
 
 const SCRIPT_ID = "guia-capture";
 const BRIDGE_ID = "guia-bridge";
@@ -73,7 +81,26 @@ function publicState(extra = {}) {
     editorOrigin: settings?.editorOrigin || DEFAULT_EDITOR_ORIGIN,
     projectName: settings?.projectName || "",
     suggestedName: suggestProjectName(),
+    locale: getLocale(),
+    ui: captureUi(),
     ...extra,
+  };
+}
+
+function captureUi() {
+  return {
+    title: t("ext.barTitle"),
+    capture: t("ext.barCapture"),
+    create: t("ext.create"),
+    download: t("ext.download"),
+    undo: t("ext.undo"),
+    cancel: t("ext.cancel"),
+    stepOne: t("ext.stepOne"),
+    stepsN: t("ext.stepsN", { n: "{n}" }),
+    hint: t("ext.barHint"),
+    hintHotspot: t("ext.barHintHotspot"),
+    lostApp: t("ext.barLostApp"),
+    lostExt: t("ext.barLostExt"),
   };
 }
 
@@ -105,7 +132,7 @@ function isCapturable(url) {
 
 async function ensureBridge(origin) {
   const pattern = originToMatchPattern(origin);
-  if (!pattern) throw new Error("Origem do editor inválida.");
+  if (!pattern) throw new Error(t("ext.badOrigin"));
   await chrome.scripting.unregisterContentScripts({ ids: [BRIDGE_ID] }).catch(() => {});
   await chrome.scripting.registerContentScripts([
     {
@@ -156,7 +183,7 @@ async function start(tab) {
   if (!tab?.id || !isCapturable(tab.url)) {
     return publicState({
       ok: false,
-      error: "Abra a página do produto (http ou https) e inicie de novo.",
+      error: t("ext.openProduct"),
     });
   }
   session.active = true;
@@ -166,24 +193,24 @@ async function start(tab) {
   } catch {
     return publicState({
       ok: false,
-      error: "Não foi possível preparar a captura nesta página.",
+      error: t("ext.prepareFail"),
     });
   }
   const state = publicState({
-    status: "Captura ligada. Congele a tela e depois clique no destaque.",
+    status: t("ext.captureOn"),
   });
   await broadcast(state);
   return state;
 }
 
 async function captureShot(tab, meta, { withClick }) {
-  if (!session?.active) return publicState({ ok: false, error: "A captura não está ativa." });
+  if (!session?.active) return publicState({ ok: false, error: t("ext.notActive") });
   if (!tab?.id || !isCapturable(tab.url)) {
-    return publicState({ ok: false, error: "Esta página não pode ser capturada." });
+    return publicState({ ok: false, error: t("ext.pageBlocked") });
   }
   if (captureLock) return { ignore: true };
   if (Date.now() - lastCaptureAt < 400) {
-    const state = publicState({ status: "Captura anterior ainda vale." });
+    const state = publicState({ status: t("ext.prevValid") });
     await broadcast(state);
     return state;
   }
@@ -200,7 +227,7 @@ async function captureShot(tab, meta, { withClick }) {
     } catch {
       const state = publicState({
         ok: false,
-        error: "O Chrome bloqueou o print desta página.",
+        error: t("ext.chromeBlocked"),
       });
       await broadcast(state);
       return state;
@@ -222,7 +249,7 @@ async function captureShot(tab, meta, { withClick }) {
     const state = publicState({
       status: withClick
         ? `Passo ${stepNumber} salvo com o clique.`
-        : "Tela salva. Clique no elemento para marcar o destaque.",
+        : t("ext.screenSaved"),
     });
     await broadcast(state);
     return state;
@@ -234,12 +261,12 @@ async function captureShot(tab, meta, { withClick }) {
 async function markHotspot(meta) {
   const last = session.shots[session.shots.length - 1];
   const point = pointFromClick(meta);
-  if (!last || !point) return publicState({ ok: false, error: "Clique inválido." });
+  if (!last || !point) return publicState({ ok: false, error: t("ext.badClick") });
   last.clickPoint = point;
   last.awaitingHotspot = false;
   await saveSession();
   const state = publicState({
-    status: "Destaque marcado. Capture a próxima tela.",
+    status: t("ext.highlightMarked"),
   });
   await broadcast(state);
   return state;
@@ -253,10 +280,10 @@ async function onPageClick(msg, sender) {
 }
 
 async function undo() {
-  if (!session.shots.length) return publicState({ ok: false, error: "Nada para desfazer." });
+  if (!session.shots.length) return publicState({ ok: false, error: t("ext.nothingUndo") });
   session.shots.pop();
   await saveSession();
-  const state = publicState({ status: "Último passo removido." });
+  const state = publicState({ status: t("ext.lastRemoved") });
   await broadcast(state);
   return state;
 }
@@ -279,7 +306,7 @@ async function cancel() {
   session = emptySession();
   await saveSession();
   await dropRegistered();
-  const state = publicState({ show: false, status: "Captura cancelada." });
+  const state = publicState({ show: false, status: t("ext.cancelled") });
   await broadcast(state);
   return state;
 }
@@ -297,13 +324,13 @@ function buildPayload(name) {
 
 async function downloadJson() {
   if (!session.shots.length) {
-    return publicState({ ok: false, error: "Capture pelo menos uma tela." });
+    return publicState({ ok: false, error: t("ext.needOne") });
   }
   let payload;
   try {
     payload = buildPayload();
   } catch {
-    return publicState({ ok: false, error: "Uma das capturas está incompleta." });
+    return publicState({ ok: false, error: t("ext.incomplete") });
   }
 
   if (blobUrl) URL.revokeObjectURL(blobUrl);
@@ -320,13 +347,13 @@ async function downloadJson() {
   } catch {
     return publicState({
       ok: false,
-      error: "Não foi possível baixar o JSON. As capturas continuam salvas.",
+      error: t("ext.downloadFail"),
     });
   }
 
   session.pendingDownloadId = downloadId;
   await saveSession();
-  return publicState({ status: "Escolha onde salvar o JSON." });
+  return publicState({ status: t("ext.chooseSave") });
 }
 
 async function findEditorTab(origin) {
@@ -342,7 +369,7 @@ async function waitTabComplete(tabId) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       chrome.tabs.onUpdated.removeListener(onUpdated);
-      reject(new Error("O editor demorou para carregar."));
+      reject(new Error(t("ext.editorTimeout")));
     }, 20000);
     function onUpdated(id, info) {
       if (id !== tabId || info.status !== "complete") return;
@@ -356,7 +383,7 @@ async function waitTabComplete(tabId) {
 
 async function createProject({ name, editorOrigin } = {}) {
   if (!session.shots.length) {
-    return publicState({ ok: false, error: "Capture pelo menos uma tela." });
+    return publicState({ ok: false, error: t("ext.needOne") });
   }
 
   if (editorOrigin || name !== undefined) {
@@ -371,13 +398,13 @@ async function createProject({ name, editorOrigin } = {}) {
   try {
     payload = buildPayload(name);
   } catch {
-    return publicState({ ok: false, error: "Uma das capturas está incompleta." });
+    return publicState({ ok: false, error: t("ext.incomplete") });
   }
 
   try {
     await ensureBridge(origin);
   } catch {
-    return publicState({ ok: false, error: "Origem do editor inválida. Ajuste no popup." });
+    return publicState({ ok: false, error: t("ext.badOriginAdjust") });
   }
 
   await chrome.storage.local.set({
@@ -399,7 +426,7 @@ async function createProject({ name, editorOrigin } = {}) {
   } catch {
     return publicState({
       ok: false,
-      error: "Não abri o editor. Confira a origem ou use Baixar JSON.",
+      error: t("ext.openEditorFail"),
     });
   }
 
@@ -412,13 +439,13 @@ async function createProject({ name, editorOrigin } = {}) {
     await broadcast(
       publicState({
         ok: false,
-        error: "O editor não respondeu. Use Baixar JSON ou tente de novo.",
+        error: t("ext.editorNoReply"),
       })
     );
   }, 30000);
 
   const state = publicState({
-    status: "Abrindo o editor para criar o projeto…",
+    status: t("ext.openingEditor"),
   });
   await broadcast(state);
   return state;
@@ -435,7 +462,7 @@ async function settleDownload(downloadId, state) {
     session = emptySession();
     await saveSession();
     await dropRegistered();
-    await broadcast(publicState({ show: false, status: "JSON baixado. Importe no editor." }));
+    await broadcast(publicState({ show: false, status: t("ext.jsonDownloaded") }));
     return;
   }
   if (state === "interrupted") {
@@ -444,7 +471,7 @@ async function settleDownload(downloadId, state) {
     await broadcast(
       publicState({
         ok: false,
-        error: "Download cancelado. As capturas continuam aqui.",
+        error: t("ext.downloadCancelled"),
       })
     );
   }
@@ -455,7 +482,7 @@ async function onHandoffAck(msg) {
   if (!msg.ok) {
     const state = publicState({
       ok: false,
-      error: msg.error || "O editor recusou o projeto. Use Baixar JSON.",
+      error: msg.error || t("ext.editorRefused"),
     });
     await broadcast(state);
     return state;
@@ -465,7 +492,7 @@ async function onHandoffAck(msg) {
   await dropRegistered();
   const state = publicState({
     show: false,
-    status: "Projeto criado no editor.",
+    status: t("ext.projectCreated"),
   });
   await broadcast(state);
   return state;
@@ -480,7 +507,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   handle(msg, sender)
     .then(sendResponse)
     .catch((err) => {
-      sendResponse({ ok: false, error: err?.message || "Falha na captura." });
+      sendResponse({ ok: false, error: err?.message || t("ext.captureFail") });
     });
   return true;
 });
@@ -491,12 +518,19 @@ async function handle(msg, sender) {
   switch (msg.type) {
     case "STATUS":
       return publicState();
+    case "SET_LOCALE": {
+      const locale = setLocale(msg.locale || "en", { persist: false });
+      await chrome.storage.local.set({ [LOCALE_KEY]: locale });
+      const state = publicState();
+      await broadcast(state);
+      return state;
+    }
     case "SAVE_SETTINGS":
       await saveSettings({
         editorOrigin: msg.editorOrigin,
         projectName: msg.projectName,
       });
-      return publicState({ status: "Preferências salvas." });
+      return publicState({ status: t("ext.prefsSaved") });
     case "START":
       return start(await chrome.tabs.get(msg.tabId));
     case "CAPTURE_NOW": {
@@ -523,7 +557,7 @@ async function handle(msg, sender) {
     case "HANDOFF_ACK":
       return onHandoffAck(msg);
     default:
-      return { ok: false, error: "Mensagem desconhecida." };
+      return { ok: false, error: t("ext.unknownMsg") };
   }
 }
 

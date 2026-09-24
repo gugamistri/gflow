@@ -1,3 +1,4 @@
+import { t } from "./i18n.js";
 /** SVG da seta "anterior" — stroke via currentColor (= --ns-ink) */
 export const PREV_ARROW_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.5 8L2.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 3.5L2.5 8L7 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -10,12 +11,12 @@ export function renderDemoPopoverFooter(popover) {
 
   if (previousButton) {
     previousButton.innerHTML = PREV_ARROW_SVG;
-    previousButton.setAttribute("aria-label", "Anterior");
-    previousButton.title = "Anterior";
+    previousButton.setAttribute("aria-label", t("player.prev"));
+    previousButton.title = t("player.prev");
   }
 
   if (nextButton) {
-    nextButton.setAttribute("aria-label", nextButton.innerText || "Próximo");
+    nextButton.setAttribute("aria-label", nextButton.innerText || t("player.next"));
   }
 
   if (footer && previousButton && progress && nextButton) {

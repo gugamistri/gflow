@@ -6,6 +6,9 @@ import {
   nextClickAction,
   pointFromClick,
 } from "./demo-payload.js";
+import { setLocale, t } from "./i18n.js";
+
+setLocale("pt", { persist: false });
 
 test("clique no centro vira porcentagem", () => {
   assert.deepEqual(pointFromClick({ x: 500, y: 400, vw: 1000, vh: 800 }), {
@@ -59,7 +62,7 @@ test("payload liga cada passo à imagem embutida", () => {
   assert.equal(payload.steps[0].image, "custom:img-a");
   assert.equal(payload.customImages["img-a"].dataUrl, "data:image/jpeg;base64,aaa");
   assert.deepEqual(payload.steps[0].clickPoint, { x: 25, y: 40 });
-  assert.equal(payload.steps[0].popover.description, "Edite a explicação deste passo.");
+  assert.equal(payload.steps[0].popover.description, t("editor.editExplain"));
   assert.equal(payload.theme.presetId, "documento");
 });
 

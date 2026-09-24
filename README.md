@@ -6,6 +6,8 @@
 
 Editor e player de tours com capturas de tela, destaque, clique simulado e narração. Inclui uma extensão Chrome para gravar o produto e um app desktop (Electron) com captura embutida.
 
+A interface está em português, espanhol e inglês. O idioma segue o do navegador; se não for um desses três, cai em inglês. No editor, o seletor fica na barra superior (PT, ES, EN). Na extensão, o mesmo seletor fica no popup e vale também para a barra de captura na página.
+
 ## Começar no navegador
 
 ```bash
@@ -19,7 +21,8 @@ Abre em `http://localhost:4173`. O endereço publicado é [https://guiaflow-seve
 1. `npm run pack:extension` (ou use o zip em `downloads/`)
 2. Em `chrome://extensions`, ative o modo do desenvolvedor e carregue a pasta da extensão
 3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow-seven.vercel.app`, ou `http://localhost:4173` no desenvolvimento)
-4. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
+4. No popup, escolha PT, ES ou EN se quiser um idioma diferente do navegador
+5. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
 
 Manual completo: [`ajuda.html`](ajuda.html).
 

@@ -1,3 +1,4 @@
+import { t } from "./i18n.js";
 /**
  * Monta o JSON que o editor importa (steps + customImages).
  * Sem APIs do Chrome, para o mesmo código rodar no service worker e nos testes.
@@ -62,9 +63,9 @@ export function buildDemoPayload({ name, shots }) {
 
   for (const [index, shot] of shots.entries()) {
     if (!shot?.dataUrl || !shot.imageId || !shot.stepId) {
-      throw new Error("Captura incompleta");
+      throw new Error(t("ext.incompleteCapture"));
     }
-    const label = shot.label || `Passo ${index + 1}`;
+    const label = shot.label || t("ext.defaultStep", { n: index + 1 });
     const point = shot.clickPoint || { x: 47, y: 44 };
     customImages[shot.imageId] = {
       name: shot.name || `passo-${index + 1}.jpg`,
@@ -81,7 +82,7 @@ export function buildDemoPayload({ name, shots }) {
       clickPoint: { x: point.x, y: point.y },
       popover: {
         title: label,
-        description: "Edite a explicação deste passo.",
+        description: t("editor.editExplain"),
         side: "bottom",
         align: "center",
       },
@@ -91,10 +92,10 @@ export function buildDemoPayload({ name, shots }) {
   }
 
   return {
-    name: name || "Captura",
+    name: name || t("doc.title.capture"),
     theme: { ...THEME },
     customImages,
     steps,
-    sceneLabels: { 1: "Captura" },
+    sceneLabels: { 1: t("doc.title.capture") },
   };
 }
