@@ -4,7 +4,15 @@ import {
   ensureClickPoint,
   slugifyFilename,
 } from "./store.js";
-import { holdMs as resolveHoldMs, ensurePlayback } from "./playback.js";
+import {
+  holdMs as resolveHoldMs,
+  ensurePlayback,
+  ensureNarration,
+  playableNarrationClips,
+  normalizeCaptionPlaybackRate,
+  BG_VOLUME,
+  BG_DUCK_VOLUME,
+} from "./playback.js";
 
 const DRIVER_JS = "vendor/driver/driver.js.iife.js";
 const DRIVER_CSS = "vendor/driver/driver.css";
@@ -220,6 +228,14 @@ function sceneTiming(step, demo) {
   return { cursorStart, cursorEnd, clickEnd, holdEnd };
 }
 
+function exportStepFrames(step, demo, fps) {
+  const timing = sceneTiming(step, demo);
+  const frameMs = 1000 / fps;
+  let frames = 0;
+  for (let t = 0; t <= timing.holdEnd; t += frameMs) frames += 1;
+  return { timing, frames, seconds: frames / fps };
+}
+
 function waitMs(ms, signal) {
   return new Promise((resolve, reject) => {
     const t = setTimeout(resolve, ms);
@@ -245,6 +261,148 @@ async function loadDemoImages(demo, onProgress) {
   return images;
 }
 
+async function decodeExportClip(ctx, url, cache) {
+  if (cache.has(url)) return cache.get(url);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Falha ao ler o áudio da narração.");
+  const raw = await res.arrayBuffer();
+  const audio = await ctx.decodeAudioData(raw.slice(0));
+  cache.set(url, audio);
+  return audio;
+}
+
+/**
+ * Monta a trilha do vídeo: narração de cada passo no início do passo e fundo em loop.
+ * @returns {Promise<AudioBuffer|null>}
+ */
+async function renderExportAudio(demo) {
+  ensurePlayback(demo);
+  ensureNarration(demo);
+  const steps = demo.steps || [];
+  const speak = demo.narration.enabled !== false;
+  const sampleRate = 48000;
+  let cursor = 0;
+  const placements = [];
+  for (const step of steps) {
+    const span = exportStepFrames(step, demo, 30);
+    placements.push({
+      start: cursor,
+      clips: speak ? playableNarrationClips(step, demo) : [],
+      rate: normalizeCaptionPlaybackRate(step?.narrationAudio?.playbackRate),
+    });
+    cursor += span.seconds;
+  }
+  const duration = cursor + 0.6;
+  const bgUrl = demo.narration.background?.dataUrl || "";
+  if (!bgUrl && placements.every((place) => !place.clips.length)) return null;
+  if (typeof OfflineAudioContext === "undefined") return null;
+
+  const ctx = new OfflineAudioContext(2, Math.ceil(duration * sampleRate), sampleRate);
+  const cache = new Map();
+  const windows = [];
+
+  for (const place of placements) {
+    let at = place.start;
+    for (const url of place.clips) {
+      const buffer = await decodeExportClip(ctx, url, cache);
+      const span = buffer.duration / place.rate;
+      windows.push([at, at + span]);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.playbackRate.value = place.rate;
+      src.connect(ctx.destination);
+      src.start(at);
+      at += span;
+    }
+  }
+
+  if (bgUrl) {
+    const buffer = await decodeExportClip(ctx, bgUrl, cache);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(BG_VOLUME, 0);
+    for (const [from, to] of windows) {
+      gain.gain.setValueAtTime(BG_DUCK_VOLUME, from);
+      gain.gain.setValueAtTime(BG_VOLUME, to);
+    }
+    gain.connect(ctx.destination);
+    let at = 0;
+    while (at < duration - 0.01) {
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(gain);
+      src.start(at);
+      at += buffer.duration;
+    }
+  }
+
+  return ctx.startRendering();
+}
+
+async function canEncodeAac(audioBuffer) {
+  if (typeof AudioEncoder === "undefined" || !audioBuffer) return false;
+  try {
+    const { supported } = await AudioEncoder.isConfigSupported({
+      codec: "mp4a.40.2",
+      sampleRate: audioBuffer.sampleRate,
+      numberOfChannels: audioBuffer.numberOfChannels,
+      bitrate: 128_000,
+    });
+    return Boolean(supported);
+  } catch {
+    return false;
+  }
+}
+
+async function encodeAacTrack(muxer, audioBuffer, signal) {
+  let encodeError = null;
+  const encoder = new AudioEncoder({
+    output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+    error: (err) => {
+      encodeError = err;
+    },
+  });
+  const sampleRate = audioBuffer.sampleRate;
+  const channels = audioBuffer.numberOfChannels;
+  encoder.configure({
+    codec: "mp4a.40.2",
+    sampleRate,
+    numberOfChannels: channels,
+    bitrate: 128_000,
+  });
+
+  const frameCount = 1024;
+  const planes = [];
+  for (let channel = 0; channel < channels; channel += 1) {
+    planes.push(audioBuffer.getChannelData(channel));
+  }
+  for (let offset = 0; offset < audioBuffer.length; offset += frameCount) {
+    if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
+    if (encodeError) throw encodeError;
+    const planar = new Float32Array(channels * frameCount);
+    const available = Math.min(frameCount, audioBuffer.length - offset);
+    for (let channel = 0; channel < channels; channel += 1) {
+      planar.set(planes[channel].subarray(offset, offset + available), channel * frameCount);
+    }
+    const data = new AudioData({
+      format: "f32-planar",
+      sampleRate,
+      numberOfFrames: frameCount,
+      numberOfChannels: channels,
+      timestamp: Math.round((offset / sampleRate) * 1_000_000),
+      data: planar,
+    });
+    encoder.encode(data);
+    data.close();
+    while (encoder.encodeQueueSize > 8) {
+      await waitMs(8, signal);
+      if (encodeError) throw encodeError;
+    }
+  }
+  await encoder.flush();
+  encoder.close();
+  if (encodeError) throw encodeError;
+}
+
 async function canUseWebCodecsMp4(width, height) {
   if (typeof VideoEncoder === "undefined" || typeof VideoFrame === "undefined") return false;
   const codecs = ["avc1.4d0028", "avc1.640028", "avc1.420028", "avc1.42001f"];
@@ -265,7 +423,7 @@ async function canUseWebCodecsMp4(width, height) {
   return null;
 }
 
-async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec }) {
+async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer }) {
   const { Muxer, ArrayBufferTarget } = await import("../vendor/mp4-muxer/mp4-muxer.mjs");
   const steps = demo.steps || [];
   const W = 1920;
@@ -281,6 +439,13 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   const muxer = new Muxer({
     target,
     video: { codec: "avc", width: W, height: H },
+    audio: audioBuffer
+      ? {
+          codec: "aac",
+          sampleRate: audioBuffer.sampleRate,
+          numberOfChannels: audioBuffer.numberOfChannels,
+        }
+      : undefined,
     fastStart: "in-memory",
     firstTimestampBehavior: "offset",
   });
@@ -322,9 +487,11 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   for (let i = 0; i < steps.length; i++) {
     if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
     const step = steps[i];
-    const timing = sceneTiming(step, demo);
+    const span = exportStepFrames(step, demo, fps);
+    const timing = span.timing;
     onProgress?.(`Codificando passo ${i + 1} de ${steps.length}`);
-    for (let t = 0; t <= timing.holdEnd; t += 1000 / fps) {
+    for (let frame = 0; frame < span.frames; frame += 1) {
+      const t = frame * (1000 / fps);
       const scene = {
         step,
         index: i,
@@ -346,6 +513,10 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   await encoder.flush();
   encoder.close();
   if (encodeError) throw encodeError;
+  if (audioBuffer) {
+    onProgress?.("Codificando narração…");
+    await encodeAacTrack(muxer, audioBuffer, signal);
+  }
   muxer.finalize();
 
   const blob = new Blob([target.buffer], { type: "video/mp4" });
@@ -354,7 +525,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   return { size: blob.size, ext: "mp4" };
 }
 
-async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images }) {
+async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images, audioBuffer }) {
   if (typeof MediaRecorder === "undefined") {
     throw new Error("Este navegador não grava vídeo. Use o HTML navegável.");
   }
@@ -371,7 +542,19 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   cvs.height = H;
   const ctx = cvs.getContext("2d");
 
-  const stream = cvs.captureStream(30);
+  let audioCtx = null;
+  let audioSource = null;
+  const videoStream = cvs.captureStream(30);
+  let stream = videoStream;
+  if (audioBuffer && typeof AudioContext !== "undefined") {
+    audioCtx = new AudioContext();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+    const dest = audioCtx.createMediaStreamDestination();
+    audioSource = audioCtx.createBufferSource();
+    audioSource.buffer = audioBuffer;
+    audioSource.connect(dest);
+    stream = new MediaStream([...videoStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+  }
   const recorder = new MediaRecorder(stream, {
     mimeType: mime,
     videoBitsPerSecond: 8_000_000,
@@ -402,13 +585,15 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
     requestAnimationFrame(loop);
   }
   loop();
+  audioSource?.start();
   recorder.start(200);
 
   try {
     for (let i = 0; i < steps.length; i++) {
       if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
       const step = steps[i];
-      const timing = sceneTiming(step, demo);
+      const span = exportStepFrames(step, demo, 30);
+      const timing = span.timing;
       scene = {
         step,
         index: i,
@@ -419,7 +604,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
       };
       onProgress?.(`Gravando passo ${i + 1} de ${steps.length}`);
       const t0 = performance.now();
-      while (performance.now() - t0 < timing.holdEnd) {
+      while (performance.now() - t0 < span.seconds * 1000) {
         if (signal?.aborted) throw new DOMException("Exportação cancelada", "AbortError");
         scene.t = performance.now() - t0;
         await waitMs(16, signal);
@@ -430,6 +615,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   } finally {
     looping = false;
     if (recorder.state !== "inactive") recorder.stop();
+    audioCtx?.close();
   }
 
   await stopped;
@@ -445,14 +631,17 @@ export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
   if (!steps.length) throw new Error("Nenhum passo para gravar.");
 
   const images = await loadDemoImages(demo, onProgress);
+  onProgress?.("Preparando narração…");
+  const audioBuffer = await renderExportAudio(demo);
   const W = 1920;
   const H = 1080;
 
   const codec = await canUseWebCodecsMp4(W, H);
-  if (codec) {
+  const aac = await canEncodeAac(audioBuffer);
+  if (codec && (!audioBuffer || aac)) {
     try {
       onProgress?.("Codificando MP4…");
-      return await exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec });
+      return await exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer });
     } catch (err) {
       if (err?.name === "AbortError") throw err;
       console.warn("WebCodecs MP4 falhou, tentando MediaRecorder", err);
@@ -460,7 +649,7 @@ export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
     }
   }
 
-  return exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images });
+  return exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images, audioBuffer });
 }
 
 function wrapText(ctx, text, maxWidth) {
