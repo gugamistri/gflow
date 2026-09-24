@@ -266,7 +266,7 @@ export function createEditor(ctx) {
       els.filmstrip.innerHTML = `<p class="film-hint">Nenhum passo ainda. Use + Imagens ou + Passo.</p>`;
       return;
     }
-    let html = `<p class="film-hint">Arraste passos e cenas para ordenar · × remove</p>`;
+    let html = "";
     let lastScene = null;
 
     demo.steps.forEach((step, index) => {

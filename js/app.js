@@ -106,12 +106,7 @@ function beginInlineEdit(host, { value, maxLength = 80, onSave }) {
   input.setAttribute("aria-label", "Renomear");
   host.replaceChildren(input);
   if (host.id === "topbar-project") {
-    const fit = () => {
-      const chars = Math.min(48, Math.max(input.value.length, 8) + 1);
-      input.style.width = `${chars}ch`;
-    };
-    fit();
-    input.addEventListener("input", fit);
+    input.style.width = "100%";
   }
   input.focus();
   input.select();
@@ -396,7 +391,6 @@ const player = createPlayer({
 });
 
 let chromeView = "library";
-let helpOpen = false;
 let presenting = false;
 
 function paintChrome() {
@@ -408,47 +402,35 @@ function paintChrome() {
   const actionsLibrary = document.getElementById("topbar-actions-library");
   const projectLabel = document.getElementById("topbar-project");
   const title = document.getElementById("topbar-title");
-  const helpBtn = document.getElementById("btn-help");
   const presentChrome = document.getElementById("present-chrome");
 
-  libraryView.hidden = helpOpen || view !== "library";
-  editorView.hidden = helpOpen || view !== "editor";
-  if (helpView) helpView.hidden = !helpOpen;
+  libraryView.hidden = view !== "library";
+  editorView.hidden = view !== "editor";
+  if (helpView) helpView.hidden = true;
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
-  if (presentChrome) presentChrome.hidden = !presenting || helpOpen || view !== "editor";
-  if (helpBtn) {
-    helpBtn.classList.toggle("is-active", helpOpen);
-    helpBtn.setAttribute("aria-pressed", helpOpen ? "true" : "false");
-  }
+  if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
 
   if (view === "library") {
+    title.hidden = false;
     title.textContent = "Crie tours com capturas e narração";
-    projectLabel.hidden = true;
+    if (projectLabel) projectLabel.hidden = true;
+  } else if (presenting) {
+    title.hidden = false;
+    title.textContent = "Apresentação";
+    if (projectLabel) projectLabel.hidden = true;
   } else {
-    title.textContent = presenting ? "Apresentação" : "Editor";
-    projectLabel.hidden = false;
-    projectLabel.textContent = project?.name || "";
+    title.hidden = true;
+    title.textContent = "";
+    if (projectLabel) {
+      projectLabel.hidden = false;
+      projectLabel.textContent = project?.name || "";
+    }
   }
 }
 
 function setChrome(view) {
   chromeView = view;
-  helpOpen = false;
-  paintChrome();
-}
-
-function toggleHelp() {
-  helpOpen = !helpOpen;
-  if (helpOpen) {
-    if (presenting) exitPresentation();
-    else {
-      player.stop?.();
-      editor.pauseCaption?.();
-    }
-    const frame = document.getElementById("help-frame");
-    if (frame && !frame.getAttribute("src")) frame.src = "ajuda.html?embed=1";
-  }
   paintChrome();
 }
 
@@ -640,7 +622,7 @@ function renderLibrary() {
     .join("");
 }
 
-async function openProject(id) {
+async function openProject(id, { autoPreview = false } = {}) {
   const loaded = await getProject(id);
   if (!loaded) {
     toast("Projeto não encontrado");
@@ -657,7 +639,15 @@ async function openProject(id) {
   await setActiveProjectId(id);
   syncThemeUi();
   openEditor();
-  toast(`Aberto: ${loaded.name}`);
+  if (autoPreview && loaded.steps.length) {
+    // why: deixa o editor pintar o palco antes do tour automático da primeira visita
+    requestAnimationFrame(() => {
+      enterPresentation({ from: 0, autoplay: true });
+    });
+    toast("Assista ao exemplo — Esc sai para o editor");
+  } else {
+    toast(`Aberto: ${loaded.name}`);
+  }
 }
 
 async function closeProject() {
@@ -700,7 +690,6 @@ function escapeAttr(str) {
 }
 
 function bindChrome() {
-  document.getElementById("btn-help")?.addEventListener("click", () => toggleHelp());
   document.getElementById("btn-projects").addEventListener("click", () => closeProject());
   document.getElementById("btn-undo")?.addEventListener("click", () => undoEdit());
   document.getElementById("btn-redo")?.addEventListener("click", () => redoEdit());
@@ -1114,8 +1103,10 @@ function bindCaptureInbox() {
 }
 
 async function boot() {
+  let seeded = false;
   try {
-    await ensureMigrated();
+    const migration = await ensureMigrated();
+    seeded = Boolean(migration?.seeded);
   } catch (err) {
     console.error(err);
     toast("Falha na migração de projetos");
@@ -1130,19 +1121,20 @@ async function boot() {
   if (index.activeProjectId) {
     const loaded = await getProject(index.activeProjectId);
     if (loaded) {
-      if (!loaded.customImages) loaded.customImages = {};
-      normalizeSteps(loaded.steps || []);
-      ensurePlayback(loaded);
-      ensureNarration(loaded);
-      project = loaded;
-      selectedIndex = 0;
-      await attachSavedHistory(project);
-      syncThemeUi();
-      openEditor();
+      await openProject(loaded.id, { autoPreview: seeded && (loaded.steps || []).length > 0 });
       signalGuiaReady();
       return;
     }
     await setActiveProjectId(null);
+  }
+
+  if (seeded) {
+    const first = (readIndex().projects || [])[0];
+    if (first?.id) {
+      await openProject(first.id, { autoPreview: true });
+      signalGuiaReady();
+      return;
+    }
   }
 
   showLibrary();

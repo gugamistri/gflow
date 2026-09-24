@@ -17,6 +17,9 @@ const HISTORY_STORE = "history";
 const INDEX_KEY = "demo-studio-index-v2";
 const LEGACY_KEYS = ["interactive-demo-v1"];
 const DEFAULT_JSON_URL = "data/demo.json";
+/** Bump when data/demo.json muda — reinstala o tour de exemplo sem apagar outros projetos. */
+const SEED_REVISION = 2;
+const STOCK_DEMO_NAME = "Como usar o Guia";
 
 const DEFAULT_SCENE_LABELS = {
   1: "Cena 1",
@@ -84,7 +87,7 @@ export function readIndex() {
   try {
     const raw = localStorage.getItem(INDEX_KEY);
     if (!raw) {
-      return { activeProjectId: null, projects: [], customThemes: [], migrated: false };
+      return { activeProjectId: null, projects: [], customThemes: [], migrated: false, seedRevision: 0 };
     }
     const data = JSON.parse(raw);
     return {
@@ -92,9 +95,10 @@ export function readIndex() {
       projects: Array.isArray(data.projects) ? data.projects : [],
       customThemes: Array.isArray(data.customThemes) ? data.customThemes : [],
       migrated: Boolean(data.migrated),
+      seedRevision: Number(data.seedRevision) || 0,
     };
   } catch {
-    return { activeProjectId: null, projects: [], customThemes: [], migrated: false };
+    return { activeProjectId: null, projects: [], customThemes: [], migrated: false, seedRevision: 0 };
   }
 }
 
@@ -106,6 +110,7 @@ export function writeIndex(index) {
       projects: index.projects || [],
       customThemes: index.customThemes || [],
       migrated: Boolean(index.migrated),
+      seedRevision: Number(index.seedRevision) || 0,
     })
   );
 }
@@ -375,7 +380,7 @@ async function reconcileIndexFromIdb() {
   return { index, stored };
 }
 
-async function seedDefaultDemoProject() {
+async function seedDefaultDemoProject({ replaceExisting = false } = {}) {
   let legacy = loadLegacyLocalStorage();
   let data = legacy?.data || null;
   let fromLegacy = Boolean(data?.steps?.length);
@@ -388,9 +393,16 @@ async function seedDefaultDemoProject() {
     throw new Error("Demo padrão sem passos");
   }
 
+  const stockName = data.name || STOCK_DEMO_NAME;
+  const index = readIndex();
+  const existingSummary = (index.projects || []).find((p) => p.name === stockName || p.name === STOCK_DEMO_NAME);
+  const prev = existingSummary && replaceExisting ? await getProject(existingSummary.id) : null;
+
   const project = demoPayloadToProject(data, {
-    name: data.name || "Como usar o Guia",
+    name: stockName,
+    id: prev?.id,
   });
+  if (prev?.createdAt) project.createdAt = prev.createdAt;
   project.sceneLabels = {
     ...(data.sceneLabels && Object.keys(data.sceneLabels).length
       ? data.sceneLabels
@@ -409,10 +421,11 @@ async function seedDefaultDemoProject() {
     }
   }
 
-  const index = readIndex();
-  index.activeProjectId = index.activeProjectId || project.id;
-  index.migrated = true;
-  writeIndex(index);
+  const nextIndex = readIndex();
+  nextIndex.activeProjectId = nextIndex.activeProjectId || project.id;
+  nextIndex.migrated = true;
+  nextIndex.seedRevision = SEED_REVISION;
+  writeIndex(nextIndex);
   return project;
 }
 
@@ -420,34 +433,45 @@ async function seedDefaultDemoProject() {
  * Garante biblioteca utilizável:
  * - reconcilia IndexedDB ↔ índice
  * - se não houver nenhum projeto, reinstala a demo padrão
+ * - se o seed mudou, atualiza o tour de exemplo (mesmo nome)
+ * @returns {{ index: object, seeded: boolean }}
  */
 export async function ensureMigrated() {
   await reconcileIndexFromIdb();
 
   let index = readIndex();
+  let seeded = false;
 
   // Biblioteca vazia → sempre reinstala a demo (mesmo se migrated=true)
   if (!(index.projects || []).length) {
     try {
       await seedDefaultDemoProject();
       index = readIndex();
+      seeded = true;
     } catch (err) {
       console.warn("Falha ao restaurar demo padrão", err);
       index.migrated = false;
       writeIndex(index);
       throw err;
     }
+  } else if ((index.seedRevision || 0) < SEED_REVISION) {
+    try {
+      await seedDefaultDemoProject({ replaceExisting: true });
+      index = readIndex();
+    } catch (err) {
+      console.warn("Falha ao atualizar demo padrão", err);
+    }
   } else if (!index.migrated) {
     index.migrated = true;
     writeIndex(index);
   }
 
-  return index;
+  return { index, seeded };
 }
 
 /** Força reinstalação da demo embutida a partir de data/demo.json. */
 export async function restoreDefaultDemo() {
-  return seedDefaultDemoProject();
+  return seedDefaultDemoProject({ replaceExisting: true });
 }
 
 export { DEFAULT_SCENE_LABELS };

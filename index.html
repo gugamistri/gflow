@@ -34,8 +34,6 @@
     <div class="topbar-brand">
       <span class="logo">Guia<span>Flow</span></span>
       <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
-      <span class="topbar-project" id="topbar-project" hidden title="Clique para renomear"></span>
-      <button type="button" class="btn btn-ghost" id="btn-help" aria-pressed="false">Como usar</button>
     </div>
     <div class="topbar-appearance">
       <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
@@ -193,7 +191,12 @@
   </main>
 
   <main id="view-editor" class="view view-editor" hidden>
-    <aside class="filmstrip" id="filmstrip" aria-label="Passos do demo"></aside>
+    <aside class="filmstrip-panel" id="filmstrip-panel">
+      <div class="filmstrip-header">
+        <span class="filmstrip-project" id="topbar-project" hidden title="Clique para renomear"></span>
+      </div>
+      <div class="filmstrip" id="filmstrip" aria-label="Passos do demo"></div>
+    </aside>
 
     <section class="canvas-wrap">
       <div class="canvas-toolbar">
@@ -338,6 +341,10 @@
         </div>
         <p class="props-meta" id="caption-audio-status" hidden>Sem áudio neste passo.</p>
       </div>
+      <label class="checkbox" id="wrap-simulate">
+        <input type="checkbox" id="prop-simulate-click" checked />
+        Simular clique ao avançar
+      </label>
       <div class="hold-field">
         <label>Temporizador (s)
           <input type="number" id="prop-hold" min="1" max="120" step="1" placeholder="padrão" />
@@ -384,10 +391,6 @@
           </button>
         </div>
       </div>
-      <label class="checkbox" id="wrap-simulate">
-        <input type="checkbox" id="prop-simulate-click" checked />
-        Simular clique ao avançar
-      </label>
     </aside>
   </main>
 

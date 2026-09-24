@@ -102,13 +102,16 @@ export function createPlayer(ctx) {
         els.slideBody.textContent = step.popover?.description || "";
         applySlideLayout(els.slide, step);
         sizeSlideLikeImage(els.slide, els.stage, demo, step, resolveImageSrc);
-        els.hotspot.style.display = "none";
+        // why: o editor usa [hidden]; style.display não vence o !important do CSS
+        els.hotspot.hidden = true;
+        els.hotspot.style.display = "";
         resolve();
         return;
       }
 
       els.slide.hidden = true;
-      els.hotspot.style.display = "block";
+      els.hotspot.hidden = false;
+      els.hotspot.style.display = "";
       els.hotspot.classList.add("is-previewing");
 
       const src = resolveImageSrc(getDemo(), step.image);
@@ -117,7 +120,7 @@ export function createPlayer(ctx) {
         if (ok) {
           placeHotspot(step.hotspot);
         } else {
-          els.hotspot.style.display = "none";
+          els.hotspot.hidden = true;
         }
         resolve();
       });
@@ -128,10 +131,18 @@ export function createPlayer(ctx) {
     const hs = hotspot || { x: 40, y: 40, w: 12, h: 8 };
     const w = els.image.clientWidth;
     const h = els.image.clientHeight;
+    els.hotspot.hidden = false;
+    els.hotspot.style.display = "";
     els.hotspot.style.left = (hs.x / 100) * w + "px";
     els.hotspot.style.top = (hs.y / 100) * h + "px";
     els.hotspot.style.width = (hs.w / 100) * w + "px";
     els.hotspot.style.height = (hs.h / 100) * h + "px";
+  }
+
+  function waitLayout() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
   }
 
   function clickTarget(step) {
@@ -177,6 +188,8 @@ export function createPlayer(ctx) {
     els.hotspot?.classList.add("is-previewing");
     await narration.startTour(demo);
     await showStepVisual(steps[activeIndex], { speak: true });
+    // why: is-presenting muda o grid; o driver precisa do hotspot já no layout final
+    await waitLayout();
 
     if (demo?.theme) applyTheme(demo.theme);
 
@@ -224,6 +237,7 @@ export function createPlayer(ctx) {
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(`Passo ${activeIndex + 1} / ${steps.length}`);
               await showStepVisual(steps[activeIndex], { speak: true });
+              await waitLayout();
               drv.moveNext();
             } finally {
               animating = false;
@@ -239,6 +253,7 @@ export function createPlayer(ctx) {
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(`Passo ${activeIndex + 1} / ${steps.length}`);
               await showStepVisual(steps[activeIndex], { speak: true });
+              await waitLayout();
               drv.movePrevious();
             } finally {
               animating = false;
