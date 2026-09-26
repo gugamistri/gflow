@@ -581,6 +581,31 @@ function gfT(key, vars) {
     });
   }
 
+  function refreshDriver() {
+    try {
+      driverObj?.refresh?.();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // why: refresh() cancela o frame anterior; o tick entra depois para o recorte acompanhar o transform
+  function trackDriverDuringZoom() {
+    let stopped = false;
+    let raf = 0;
+    const tick = () => {
+      if (stopped) return;
+      refreshDriver();
+      raf = requestAnimationFrame(tick);
+    };
+    refreshDriver();
+    raf = requestAnimationFrame(tick);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+    };
+  }
+
   function zoomEnabled(step) {
     return step?.type !== "slide" && step?.zoomHighlight === true && els.image && !els.image.hidden;
   }
@@ -589,8 +614,11 @@ function gfT(key, vars) {
     if (!els.frame || !els.stage) return;
     if (!zoomEnabled(step)) {
       const hadZoom = Boolean(els.frame.style.transform);
+      const stopTrack = hadZoom ? trackDriverDuringZoom() : null;
       clearZoom(hadZoom);
       if (hadZoom) await waitZoomTransition();
+      stopTrack?.();
+      refreshDriver();
       return;
     }
     const cam = computeZoomCamera(
@@ -604,8 +632,11 @@ function gfT(key, vars) {
     els.stage.classList.add("is-zooming");
     els.frame.style.transformOrigin = style.transformOrigin;
     if (els.frame.style.transform === next) return;
+    const stopTrack = trackDriverDuringZoom();
     els.frame.style.transform = next;
     await waitZoomTransition();
+    stopTrack();
+    refreshDriver();
   }
 
   async function prepareStepCamera() {

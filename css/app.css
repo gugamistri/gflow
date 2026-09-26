@@ -945,13 +945,18 @@ body.is-presenting #topbar-actions-editor {
   padding: 16px;
   overflow: auto;
   position: relative;
+  /* why: 100cqw na foto usa a largura do palco, não a do frame */
+  container-type: inline-size;
 }
 
 .canvas-frame,
 .player-frame {
   position: relative;
+  width: fit-content;
   max-width: 100%;
   max-height: 100%;
+  justify-self: center;
+  align-self: center;
   line-height: 0;
   background: var(--ns-canvas);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
@@ -967,7 +972,8 @@ body.is-presenting #topbar-actions-editor {
 .canvas-frame img,
 .player-frame img {
   display: block;
-  max-width: min(100%, 1200px);
+  /* why: 100% do frame estica o palco além da foto e o zoom corta o destaque na borda */
+  max-width: min(1200px, 100cqw);
   max-height: calc(100vh - 160px);
   width: auto;
   height: auto;

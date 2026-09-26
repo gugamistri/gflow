@@ -124,6 +124,34 @@ export function createPlayer(ctx) {
     });
   }
 
+  function refreshDriver() {
+    try {
+      driverObj?.refresh?.();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
+   * why: refresh() cancela o frame anterior; o tick entra depois para o recorte
+   * acompanhar o transform em vez de saltar só no fim.
+   */
+  function trackDriverDuringZoom() {
+    let stopped = false;
+    let raf = 0;
+    const tick = () => {
+      if (stopped) return;
+      refreshDriver();
+      raf = requestAnimationFrame(tick);
+    };
+    refreshDriver();
+    raf = requestAnimationFrame(tick);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+    };
+  }
+
   function zoomEnabled(step) {
     return step?.type !== "slide" && step?.zoomHighlight === true && els.image && !els.image.hidden;
   }
@@ -132,8 +160,11 @@ export function createPlayer(ctx) {
     if (!els.frame || !els.stage) return;
     if (!zoomEnabled(step)) {
       const hadZoom = Boolean(els.frame.style.transform);
+      const stopTrack = hadZoom ? trackDriverDuringZoom() : null;
       clearZoom({ animate: hadZoom });
       if (hadZoom) await waitZoomTransition();
+      stopTrack?.();
+      refreshDriver();
       return;
     }
     const imageSize = { w: els.image.clientWidth, h: els.image.clientHeight };
@@ -144,8 +175,11 @@ export function createPlayer(ctx) {
     els.stage.classList.add("is-zooming");
     els.frame.style.transformOrigin = style.transformOrigin;
     if (els.frame.style.transform === nextTransform) return;
+    const stopTrack = trackDriverDuringZoom();
     els.frame.style.transform = nextTransform;
     await waitZoomTransition();
+    stopTrack();
+    refreshDriver();
   }
 
   /** Garante escala 1× para o retângulo do destaque aparecer antes do close-up. */
