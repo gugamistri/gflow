@@ -44,9 +44,9 @@
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
-  <link rel="stylesheet" href="a/3/css/theme.css" />
-  <link rel="stylesheet" href="a/3/css/app.css" />
-  <link rel="stylesheet" href="a/3/css/ajuda.css" />
+  <link rel="stylesheet" href="a/4/css/theme.css" />
+  <link rel="stylesheet" href="a/4/css/app.css" />
+  <link rel="stylesheet" href="a/4/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
@@ -76,19 +76,33 @@
 
     <section class="card" id="baixar">
       <h2 data-i18n="help.installTitle">1. Instalar a extensão</h2>
-      <p><a href="downloads/guiaflow-captura.zip"><span data-i18n="help.downloadZip">Baixar a extensão (zip)</span></a></p>
+      <p data-i18n="help.installLead">A extensão GuiaFlow — Captura está na Chrome Web Store. Um clique instala e o Chrome atualiza sozinho.</p>
+      <p>
+        <a class="store-link" href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener noreferrer">
+          <span data-i18n="help.storeCta">Instalar na Chrome Web Store</span>
+        </a>
+      </p>
       <ol>
-        <li data-i18n-html="help.install1">Descompacte o zip. A pasta precisa conter o arquivo <code>manifest.json</code>.</li>
-        <li data-i18n-html="help.install2">Abra <code>chrome://extensions</code>.</li>
-        <li data-i18n-html="help.install3">Ligue o <strong>Modo do desenvolvedor</strong>.</li>
-        <li data-i18n-html="help.install4">Clique em <strong>Carregar sem compactação</strong> e escolha essa pasta.</li>
-        <li data-i18n-html="help.install5">Quando sair uma versão nova, baixe de novo e clique em <strong>Recarregar</strong> no card da extensão.</li>
+        <li data-i18n-html="help.installStore1">Abra a página da extensão e clique em <strong>Usar no Chrome</strong>.</li>
+        <li data-i18n-html="help.installStore2">Confirme em <strong>Adicionar extensão</strong>.</li>
+        <li data-i18n-html="help.installStore3">Fixe o ícone do GuiaFlow na barra do Chrome para achar a captura rápido.</li>
       </ol>
+      <details class="manual-install">
+        <summary data-i18n="help.zipTitle">Instalação manual (zip)</summary>
+        <p><a href="downloads/guiaflow-captura.zip"><span data-i18n="help.downloadZip">Baixar a extensão (zip)</span></a></p>
+        <ol>
+          <li data-i18n-html="help.install1">Descompacte o zip. A pasta precisa conter o arquivo <code>manifest.json</code>.</li>
+          <li data-i18n-html="help.install2">Abra <code>chrome://extensions</code>.</li>
+          <li data-i18n-html="help.install3">Ligue o <strong>Modo do desenvolvedor</strong>.</li>
+          <li data-i18n-html="help.install4">Clique em <strong>Carregar sem compactação</strong> e escolha essa pasta.</li>
+          <li data-i18n-html="help.install5">Quando sair uma versão nova, baixe de novo e clique em <strong>Recarregar</strong> no card da extensão.</li>
+        </ol>
+      </details>
     </section>
 
     <section class="card" id="gravar">
       <h2 data-i18n="help.recordTitle">2. Gravar as telas</h2>
-      <p data-i18n-html="help.recordIntro">Deixe o editor aberto neste endereço. No popup da extensão, o campo <strong>Editor</strong> tem que ser exatamente esta origem:</p>
+      <p data-i18n-html="help.recordIntro">Deixe o editor aberto neste endereço. Na extensão da loja, o campo <strong>Editor</strong> já aponta para o GuiaFlow publicado. Se o endereço abaixo for outro, cole-o nesse campo:</p>
       <p class="origin" id="editor-origin"></p>
       <ol>
         <li data-i18n="help.record1">Abra a página do produto que você quer mostrar.</li>
@@ -124,21 +138,9 @@
       </ul>
     </section>
 
-    <section class="card" id="publicar">
-      <h2 data-i18n="help.publishTitle">Publicar na Chrome Web Store</h2>
-      <p data-i18n="help.publishIntro">O zip desta página já distribui a extensão para o time. A loja do Chrome é o passo para quem não vai usar o modo do desenvolvedor.</p>
-      <ol>
-        <li data-i18n-html="help.publish1">Entre no <a href="https://chrome.google.com/webstore/devconsole">Chrome Web Store Developer Dashboard</a>. A conta de desenvolvedor tem uma taxa única de US$ 5.</li>
-        <li data-i18n-html="help.publish2">No projeto, rode <code>npm run pack:extension</code>. O arquivo <code>downloads/guiaflow-captura.zip</code> sai com o <code>manifest.json</code> na raiz.</li>
-        <li data-i18n="help.publish3">Envie esse zip como um novo item.</li>
-        <li data-i18n-html="help.publish4">Use esta página, com <code>#privacidade</code>, como política de privacidade.</li>
-        <li data-i18n="help.publish5">Na justificativa de host, explique que a extensão só acessa a aba ativa quando a pessoa inicia a captura, e que o endereço fixo é o do editor.</li>
-        <li data-i18n="help.publish6">A revisão do Google costuma levar alguns dias. Até lá, o link de download acima continua válido.</li>
-      </ol>
-    </section>
   </main>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/3/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/4/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

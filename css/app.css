@@ -12,6 +12,12 @@ html,
 body {
   margin: 0;
   height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   font-family: var(--ns-font);
   color: var(--ns-ink);
   background: var(--ns-surface);
@@ -35,6 +41,7 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 80;
+  flex: none;
 }
 
 .topbar-brand {
@@ -56,11 +63,21 @@ textarea {
   color: var(--ns-accent);
 }
 
-.topbar-appearance {
+.topbar-tools {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 8px;
+}
+
+.topbar-appearance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar > .topbar-appearance {
+  margin-left: auto;
 }
 
 .locale-select select {
@@ -484,7 +501,47 @@ img.is-broken {
 }
 
 .view {
-  height: calc(100% - 56px);
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.ext-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
+  border-bottom: 1px solid color-mix(in srgb, var(--ns-accent) 32%, var(--ns-border));
+  color: var(--ns-ink);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.ext-banner p {
+  margin: 0;
+  min-width: 0;
+}
+
+.ext-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: none;
+}
+
+body.is-presenting .ext-banner {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .ext-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .view-help iframe {

@@ -18,13 +18,15 @@ Abre em `http://localhost:4173`. O endereço publicado é [https://guiaflow-seve
 
 ### Extensão de captura
 
-1. `npm run pack:extension` (ou use o zip em `downloads/`)
+Instale pela [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd). O manual está em [`ajuda.html`](ajuda.html).
+
+Para desenvolver a extensão localmente:
+
+1. `npm run pack:extension` (ou carregue a pasta `extension/`)
 2. Em `chrome://extensions`, ative o modo do desenvolvedor e carregue a pasta da extensão
 3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow-seven.vercel.app`, ou `http://localhost:4173` no desenvolvimento)
 4. No popup, escolha PT, ES ou EN se quiser um idioma diferente do navegador
 5. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
-
-Manual completo: [`ajuda.html`](ajuda.html).
 
 ## App desktop
 

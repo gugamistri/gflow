@@ -47,6 +47,7 @@ import {
   t,
   themePresetName,
 } from "./i18n.js";
+import { EXT_BANNER_DISMISS_KEY, shouldShowExtensionBanner } from "./extensionBanner.js";
 
 let project = null;
 let selectedIndex = 0;
@@ -1116,9 +1117,40 @@ function bindCaptureInbox() {
   });
 }
 
+function bindExtensionBanner() {
+  const banner = document.getElementById("ext-banner");
+  if (!banner) return;
+
+  const sync = () => {
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(EXT_BANNER_DISMISS_KEY) === "1";
+    } catch (err) {
+      dismissed = false;
+    }
+    banner.hidden = !shouldShowExtensionBanner({
+      dismissed,
+      isDesktop: Boolean(window.guiaDesktopApp?.isDesktop),
+      installed: document.documentElement.dataset.guiaExtension === "1",
+    });
+  };
+
+  document.documentElement.addEventListener("guia-extension-present", sync);
+  document.getElementById("ext-banner-dismiss")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem(EXT_BANNER_DISMISS_KEY, "1");
+    } catch (err) {
+      /* o aviso some nesta visita mesmo se o storage falhar */
+    }
+    banner.hidden = true;
+  });
+  sync();
+}
+
 async function boot() {
   initLocale();
   applyI18n(document);
+  bindExtensionBanner();
   bindLocaleSelect(document.getElementById("locale-select"), () => {
     applyChromeAppearance();
     paintChrome();

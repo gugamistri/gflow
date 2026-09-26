@@ -70,3 +70,28 @@ code,
   border: 1px solid var(--ns-border);
   border-radius: 4px;
 }
+
+.card a.store-link {
+  display: inline-flex;
+  align-items: center;
+  margin: 4px 0 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--ns-button);
+  color: var(--ns-button-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.card a.store-link:hover {
+  background: var(--ns-accent-dark);
+}
+
+.manual-install {
+  margin-top: 16px;
+}
+
+.manual-install summary {
+  cursor: pointer;
+  font-weight: 600;
+}

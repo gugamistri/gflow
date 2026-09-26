@@ -43,9 +43,9 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/3/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/3/css/theme.css" />
-  <link rel="stylesheet" href="a/3/css/app.css" />
+  <link rel="stylesheet" href="a/4/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/4/css/theme.css" />
+  <link rel="stylesheet" href="a/4/css/app.css" />
 </head>
 <body>
   <header class="topbar">
@@ -53,6 +53,7 @@
       <span class="logo">Guia<span>Flow</span></span>
       <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
     </div>
+    <div class="topbar-tools">
     <div class="topbar-appearance">
       <label class="locale-select">
         <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
@@ -200,7 +201,21 @@
       </button>
       <input type="file" id="import-file" accept="application/json,.json" hidden />
     </div>
+    </div>
   </header>
+
+  <aside class="ext-banner" id="ext-banner" hidden>
+    <p data-i18n="extBanner.text">Para gravar as telas do produto, instale a extensão de captura.</p>
+    <div class="ext-banner-actions">
+      <a class="btn btn-sm btn-primary" href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener noreferrer">
+        <span data-i18n="extBanner.install">Instalar no Chrome</span>
+      </a>
+      <a class="btn btn-sm" href="ajuda.html#gravar">
+        <span data-i18n="extBanner.help">Como capturar</span>
+      </a>
+      <button type="button" class="btn btn-sm" id="ext-banner-dismiss" data-i18n="extBanner.dismiss">Não mostrar de novo</button>
+    </div>
+  </aside>
 
   <main id="view-help" class="view view-help" hidden>
     <iframe id="help-frame" title="Como usar" data-i18n-title="help.iframeTitle"></iframe>
@@ -665,7 +680,7 @@
     </symbol>
   </svg>
 
-  <script src="a/3/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/3/js/app.js"></script>
+  <script src="a/4/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/4/js/app.js"></script>
 </body>
 </html>
