@@ -2,6 +2,9 @@ import { t } from "./i18n.js";
 /** SVG da seta "anterior" — stroke via currentColor (= --ns-ink) */
 export const PREV_ARROW_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.5 8L2.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 3.5L2.5 8L7 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+/** Seta "próximo" — mesmo traço, sentido oposto. */
+export const NEXT_ARROW_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 3.5L13.5 8L9 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 /**
  * Layout do footer: ← | N de X | Próximo
  * @param {import('driver.js').PopoverDOM} popover
@@ -16,7 +19,12 @@ export function renderDemoPopoverFooter(popover) {
   }
 
   if (nextButton) {
-    nextButton.setAttribute("aria-label", nextButton.innerText || t("player.next"));
+    const label = (nextButton.textContent || "").trim() || t("player.next");
+    const isDone = label === t("player.done");
+    nextButton.classList.toggle("is-icon", !isDone);
+    if (!isDone) nextButton.innerHTML = NEXT_ARROW_SVG;
+    nextButton.setAttribute("aria-label", isDone ? label : t("player.next"));
+    nextButton.title = isDone ? label : t("player.next");
   }
 
   if (footer && previousButton && progress && nextButton) {

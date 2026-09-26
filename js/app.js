@@ -48,7 +48,12 @@ import {
   t,
   themePresetName,
 } from "./i18n.js";
-import { EXT_BANNER_DISMISS_KEY, shouldShowExtensionBanner } from "./extensionBanner.js";
+import {
+  EXT_BANNER_DISMISS_KEY,
+  canOfferChromeExtension,
+  shouldShowExtensionBanner,
+} from "./extensionBanner.js";
+import { COMPACT_LANDSCAPE_MQ, COMPACT_TOUCH_MQ, isCompactLandscape, isCompactTouch } from "./compact.js";
 
 let project = null;
 let selectedIndex = 0;
@@ -419,29 +424,38 @@ function paintChrome() {
   const projectLabel = document.getElementById("topbar-project");
   const title = document.getElementById("topbar-title");
   const presentChrome = document.getElementById("present-chrome");
+  const presentClose = document.getElementById("present-close");
+  const rotateHint = document.getElementById("rotate-hint");
+  const compact = isCompactTouch();
+
+  document.body.classList.toggle("is-compact-touch", compact);
 
   libraryView.hidden = view !== "library";
   editorView.hidden = view !== "editor";
   if (helpView) helpView.hidden = true;
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
-  if (navEditor) navEditor.hidden = view !== "editor" || presenting;
-  if (moreEditorOnly) moreEditorOnly.hidden = view !== "editor" || presenting;
+  if (navEditor) navEditor.hidden = view !== "editor" || presenting || compact;
+  if (moreEditorOnly) moreEditorOnly.hidden = view !== "editor" || presenting || compact;
   if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
+  if (presentClose) presentClose.hidden = !presenting || view !== "editor" || !compact;
+  if (rotateHint) {
+    rotateHint.hidden = !presenting || view !== "editor" || !compact || isCompactLandscape();
+  }
 
   if (view === "library") {
     title.hidden = false;
     title.textContent = t("topbar.tagline");
     if (projectLabel) projectLabel.hidden = true;
   } else if (presenting) {
-    title.hidden = false;
+    title.hidden = compact;
     title.textContent = t("topbar.presenting");
     if (projectLabel) projectLabel.hidden = true;
   } else {
     title.hidden = true;
     title.textContent = "";
     if (projectLabel) {
-      projectLabel.hidden = false;
+      projectLabel.hidden = compact;
       projectLabel.textContent = project?.name || "";
     }
   }
@@ -475,12 +489,17 @@ function exitPresentation() {
     player.stop?.();
     return;
   }
+  const returnToLibrary = isCompactTouch() && Boolean(project);
   presenting = false;
   player.stop?.();
   document.body.classList.remove("is-presenting");
   document.getElementById("view-editor")?.classList.remove("is-presenting");
   document.getElementById("hotspot")?.classList.remove("is-previewing");
   paintChrome();
+  if (returnToLibrary) {
+    void closeProject();
+    return;
+  }
   if (project && chromeView === "editor") editor.refresh();
 }
 
@@ -604,6 +623,9 @@ function renderLibrary() {
   if (!projects.length) {
     grid.innerHTML = "";
     empty.hidden = false;
+    const emptyKey = isCompactTouch() ? "library.emptyCompact" : "library.empty";
+    empty.dataset.i18n = emptyKey;
+    empty.textContent = t(emptyKey);
     return;
   }
   empty.hidden = true;
@@ -658,6 +680,22 @@ async function openProject(id, { autoPreview = false } = {}) {
   await attachSavedHistory(project);
   await setActiveProjectId(id);
   syncThemeUi();
+
+  if (isCompactTouch()) {
+    if (!loaded.steps.length) {
+      toast(t("player.noSteps"));
+      await closeProject();
+      return;
+    }
+    setChrome("editor");
+    // why: o palco precisa do layout is-presenting antes do Driver medir o hotspot
+    requestAnimationFrame(() => {
+      enterPresentation({ from: 0, autoplay: true });
+    });
+    if (autoPreview) toast(t("toast.watchExample"));
+    return;
+  }
+
   openEditor();
   if (autoPreview && loaded.steps.length) {
     // why: deixa o editor pintar o palco antes do tour automático da primeira visita
@@ -713,6 +751,19 @@ function bindChrome() {
   document.getElementById("btn-projects").addEventListener("click", () => closeProject());
   document.getElementById("btn-undo")?.addEventListener("click", () => undoEdit());
   document.getElementById("btn-redo")?.addEventListener("click", () => redoEdit());
+  document.getElementById("present-close")?.addEventListener("click", () => exitPresentation());
+
+  if (window.matchMedia) {
+    const onCompactChrome = () => {
+      paintChrome();
+      if (chromeView === "library") renderLibrary();
+    };
+    for (const query of [COMPACT_TOUCH_MQ, COMPACT_LANDSCAPE_MQ]) {
+      const mq = window.matchMedia(query);
+      if (mq.addEventListener) mq.addEventListener("change", onCompactChrome);
+      else if (mq.addListener) mq.addListener(onCompactChrome);
+    }
+  }
 
   window.addEventListener("keydown", (e) => {
     if (!project) return;
@@ -1175,6 +1226,11 @@ function bindExtensionBanner() {
       dismissed,
       isDesktop: Boolean(window.guiaDesktopApp?.isDesktop),
       installed: document.documentElement.dataset.guiaExtension === "1",
+      canOffer: canOfferChromeExtension({
+        userAgent: navigator.userAgent || "",
+        maxTouchPoints: navigator.maxTouchPoints || 0,
+        hasChrome: Boolean(window.chrome),
+      }),
     });
   };
 

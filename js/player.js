@@ -10,6 +10,7 @@ import {
   ensurePlayback,
   holdMs,
 } from "./playback.js";
+import { isCompactTouch } from "./compact.js";
 
 export function createPlayer(ctx) {
   const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit } = ctx;
@@ -58,6 +59,14 @@ export function createPlayer(ctx) {
     if (!el) return;
     el.textContent = t(key);
     el.dataset.i18n = key;
+  }
+
+  function presentStopHintKey() {
+    return isCompactTouch() ? "present.touchHint" : "present.escHint";
+  }
+
+  function presentAgainHintKey() {
+    return isCompactTouch() ? "present.touchAgainHint" : "present.clickAgainHint";
   }
 
   function autoplayOn() {
@@ -324,7 +333,7 @@ export function createPlayer(ctx) {
 
     running = true;
     exitOnOutsideClick = false;
-    setPresentHint("present.escHint");
+    setPresentHint(presentStopHintKey());
     activeIndex = Math.max(0, Math.min(startIndex, steps.length - 1));
     if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
     els.hotspot?.classList.add("is-previewing");
@@ -419,7 +428,7 @@ export function createPlayer(ctx) {
         queueMicrotask(() => {
           if (!isPresenting()) return;
           exitOnOutsideClick = true;
-          setPresentHint("present.clickAgainHint");
+          setPresentHint(presentAgainHintKey());
         });
       },
     });

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title data-i18n="doc.title.editor">GuiaFlow — Editor</title>
   <meta name="theme-color" content="#1A4D6D" />
   <script>
@@ -391,6 +391,10 @@
         </div>
       </div>
       <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Clique fora para parar · Esc sai</p>
+      <button type="button" class="present-close" id="present-close" hidden aria-label="Fechar" data-i18n-aria="present.close">
+        <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+      <p class="rotate-hint" id="rotate-hint" hidden data-i18n="present.rotateHint">Gire o celular para ver a tela inteira</p>
       <input type="file" id="images-file" accept="image/*" multiple hidden />
       <div class="canvas-stage" id="canvas-stage">
         <div class="canvas-empty" id="canvas-empty" hidden>

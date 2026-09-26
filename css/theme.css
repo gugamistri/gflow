@@ -173,6 +173,24 @@
   font-weight: 700;
 }
 
+.driver-popover.demo-popover .driver-popover-next-btn.is-icon {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 !important;
+  line-height: 0;
+}
+
+.driver-popover.demo-popover .driver-popover-next-btn.is-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
 .driver-popover.demo-popover .driver-popover-next-btn:hover {
   background: var(--demo-accent-dark) !important;
   color: var(--ns-button-text) !important;
@@ -236,4 +254,92 @@
 
 .driver-popover.demo-popover .driver-popover-arrow-side-bottom {
   border-bottom-color: var(--demo-popover-bg);
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 900px),
+  (hover: none) and (pointer: coarse) and (max-height: 500px) {
+  .driver-popover.demo-popover {
+    /* why: min-width 250px do Driver estica o cartão sobre a captura */
+    min-width: 0;
+    width: max-content;
+    max-width: min(220px, 64vw);
+    max-height: min(168px, 42dvh);
+    padding: 8px 12px;
+    overflow: auto;
+  }
+
+  .driver-popover.demo-popover .driver-popover-title {
+    font-size: 13px;
+    line-height: 1.2;
+    padding-right: 22px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .driver-popover.demo-popover .driver-popover-description {
+    margin: 4px 0 0;
+    font-size: 12px;
+    line-height: 1.35;
+    max-height: 2.7em;
+    overflow: auto;
+  }
+
+  .driver-popover.demo-popover .driver-popover-footer {
+    grid-template-columns: 44px auto auto;
+    justify-content: space-between;
+    min-height: 44px;
+    column-gap: 8px;
+    margin-top: 8px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-progress-text {
+    width: auto;
+    font-size: 12px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-prev-btn {
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-prev-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-next-btn.is-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0 !important;
+  }
+
+  .driver-popover.demo-popover .driver-popover-next-btn.is-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-next-btn:not(.is-icon) {
+    min-height: 44px;
+    padding: 10px 14px !important;
+    font-size: 12px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-close-btn {
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) {
+  .driver-popover.demo-popover {
+    max-width: min(200px, 38vw);
+  }
 }

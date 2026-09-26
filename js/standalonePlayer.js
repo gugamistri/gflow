@@ -23,6 +23,8 @@ function gfT(key, vars) {
 
   const PREV_ARROW_SVG =
     '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M13.5 8L2.5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 3.5L2.5 8L7 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const NEXT_ARROW_SVG =
+    '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 3.5L13.5 8L9 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function applyTheme(theme) {
     if (!theme) return;
@@ -451,6 +453,14 @@ function gfT(key, vars) {
       previousButton.innerHTML = PREV_ARROW_SVG;
       previousButton.setAttribute("aria-label", gfT("player.prev"));
       previousButton.title = gfT("player.prev");
+    }
+    if (nextButton) {
+      const label = (nextButton.textContent || "").trim() || gfT("player.next");
+      const isDone = label === gfT("player.done");
+      nextButton.classList.toggle("is-icon", !isDone);
+      if (!isDone) nextButton.innerHTML = NEXT_ARROW_SVG;
+      nextButton.setAttribute("aria-label", isDone ? label : gfT("player.next"));
+      nextButton.title = isDone ? label : gfT("player.next");
     }
     if (footer && previousButton && progress && nextButton) {
       footer.appendChild(previousButton);
