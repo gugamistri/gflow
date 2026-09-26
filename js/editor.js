@@ -2085,13 +2085,21 @@ export function createEditor(ctx) {
   }
 
   function openLlmSettings() {
+    const more = document.getElementById("more-panel");
     const panel = document.getElementById("narration-panel");
     if (!panel) return;
-    // why: fecha outros details da topbar para o painel de Ajustes ficar visível.
-    document.querySelectorAll(".topbar-actions details.theme-panel, .topbar-actions details.export-panel").forEach((el) => {
-      if (el !== panel) el.open = false;
-    });
+    // why: abre Mais e fecha outros details para o painel de Ajustes ficar visível.
+    if (more) more.open = true;
+    document
+      .querySelectorAll(
+        ".topbar-tools details.theme-panel, .topbar-tools details.export-panel, .topbar-tools details.preview-menu",
+      )
+      .forEach((el) => {
+        if (el !== panel && el !== more) el.open = false;
+      });
     panel.open = true;
+    const llmFold = document.getElementById("settings-llm");
+    if (llmFold) llmFold.open = true;
     panel.dispatchEvent(new Event("toggle"));
     document.getElementById("llm-key")?.focus();
   }
@@ -2307,11 +2315,10 @@ export function createEditor(ctx) {
     const bridge = cartesiaBridge();
     try {
       const status = bridge ? await bridge.cartesiaStatus() : await cartesiaKeyStatus();
-      const where = bridge ? "no chaveiro do sistema" : "neste navegador";
       if (status?.configured) {
         statusEl.textContent = status.masked
-          ? `Chave ${status.masked} ${where}.`
-          : `Chave salva ${where}.`;
+          ? t("cartesia.configured", { masked: status.masked })
+          : t("cartesia.configuredPlain");
         if (clearBtn) clearBtn.hidden = false;
         return;
       }
@@ -2621,6 +2628,8 @@ export function createEditor(ctx) {
       if (onPlayFrom) onPlayFrom(getSelectedIndex(), { autoplay: false });
     }
     function watchFromSelected() {
+      const previewMenu = document.querySelector(".preview-menu");
+      if (previewMenu) previewMenu.open = false;
       if (onPlayFrom) onPlayFrom(getSelectedIndex(), { autoplay: true });
     }
     function closeSlidePreview() {

@@ -52,6 +52,68 @@ textarea {
   flex: 1;
 }
 
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.topbar-nav-sep {
+  color: var(--ns-topbar-muted);
+  opacity: 0.55;
+  font-weight: 600;
+  flex: none;
+}
+
+.btn-nav-back {
+  flex: none;
+}
+
+.topbar-project {
+  display: block;
+  min-width: 0;
+  max-width: 240px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ns-button-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.topbar-project:hover {
+  border-color: color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
+  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+}
+
+.topbar-project[data-editing="1"] {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  max-width: min(280px, 40vw);
+}
+
+.topbar-project .inline-edit {
+  display: block;
+  width: 100%;
+  min-width: 120px;
+  max-width: 100%;
+  color: var(--ns-button-text);
+  background: color-mix(in srgb, var(--ns-topbar-muted) 22%, var(--ns-topbar));
+  border: 1px solid var(--ns-accent);
+  border-radius: 8px;
+  padding: 4px 8px;
+  line-height: 1.3;
+}
+
 .logo {
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -100,10 +162,18 @@ textarea {
   appearance: none;
 }
 
-.locale-select select:hover,
+.locale-select select:hover {
+  border-color: var(--ns-topbar-muted);
+}
+
 .locale-select select:focus {
   border-color: var(--ns-topbar-muted);
   outline: none;
+}
+
+.locale-select select:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
 }
 
 .locale-select select option {
@@ -256,10 +326,12 @@ textarea {
 }
 
 .theme-panel summary,
-.export-panel summary {
+.export-panel summary,
+.more-panel > summary {
   list-style: none;
   cursor: pointer;
   padding: 0.45em 0.85em;
+  min-height: 32px;
   border-radius: 7px;
   background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
   color: var(--ns-button-text);
@@ -273,8 +345,246 @@ textarea {
 }
 
 .theme-panel summary::-webkit-details-marker,
-.export-panel summary::-webkit-details-marker {
+.export-panel summary::-webkit-details-marker,
+.more-panel > summary::-webkit-details-marker {
   display: none;
+}
+
+.more-panel {
+  position: relative;
+}
+
+.more-panel-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+  min-width: min(400px, 94vw);
+  width: min(400px, 94vw);
+  max-width: min(400px, 94vw);
+  max-height: min(85vh, 760px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  z-index: 60;
+}
+
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 8px;
+  border-bottom: 1px solid var(--ns-border);
+  margin-bottom: 4px;
+}
+
+.more-panel .locale-select select {
+  background-color: var(--ns-input-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23666' stroke-width='1.6' stroke-linecap='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  color: var(--ns-ink);
+  border-color: var(--ns-border);
+  color-scheme: inherit;
+}
+
+.more-panel .locale-select select option {
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+}
+
+.more-panel-body .btn-ghost {
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  border-color: var(--ns-border);
+}
+
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--ns-ink);
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.more-item:hover {
+  background: var(--ns-hover);
+}
+
+.more-section {
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-input-bg);
+}
+
+.more-section > summary {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--ns-ink);
+  border: 0;
+  border-radius: 8px;
+  justify-content: flex-start;
+}
+
+.more-section-body.theme-panel-body {
+  position: static;
+  right: auto;
+  top: auto;
+  min-width: 0;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  box-shadow: none;
+  border: 0;
+  border-top: 1px solid var(--ns-border);
+  border-radius: 0 0 8px 8px;
+  background: var(--ns-panel);
+}
+
+/* why: .theme-panel-wide força max-height/overflow e gerava scroll duplo dentro de Mais */
+.more-section-body.theme-panel-body.theme-panel-wide {
+  min-width: 0;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.settings-fold {
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-input-bg);
+}
+
+.settings-fold > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ns-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-fold > summary::before {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 150ms ease;
+  flex: none;
+}
+
+.settings-fold[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.settings-fold-body {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--ns-border);
+}
+
+.settings-fold-body > label:not(.checkbox) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+
+.more-editor-only {
+  display: grid;
+  gap: 4px;
+}
+
+.preview-split {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.preview-split > .btn-primary {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: 0;
+}
+
+.preview-menu {
+  position: relative;
+}
+
+.preview-menu > summary {
+  list-style: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-inline: 0.45em;
+  min-width: 28px;
+}
+
+.preview-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.preview-menu-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 220px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  z-index: 55;
+}
+
+.preview-menu-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ns-ink);
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.preview-menu-option:hover {
+  background: var(--ns-hover);
 }
 
 .theme-panel-body {
@@ -327,12 +637,19 @@ textarea {
 #narration-panel input[type="password"],
 #narration-panel input[type="text"],
 #narration-panel input[type="url"],
-#narration-panel select {
+#narration-panel select,
+#narration-panel .settings-secret {
   width: 100%;
   background: var(--ns-input-bg);
   color: var(--ns-ink);
   border: 1px solid var(--ns-border);
   border-radius: 4px;
+}
+
+/* why: type=password dispara o Password Manager do Chrome ao salvar a chave */
+.settings-secret {
+  -webkit-text-security: disc;
+  text-security: disc;
 }
 
 .export-panel {
@@ -458,6 +775,7 @@ img.is-broken {
   border: 1px solid var(--ns-border);
   border-radius: 7px;
   padding: 0.45em 0.85em;
+  min-height: 32px;
   cursor: pointer;
   background: var(--ns-panel);
   color: var(--ns-ink);
@@ -465,6 +783,17 @@ img.is-broken {
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.btn:focus-visible,
+.theme-panel summary:focus-visible,
+.export-panel summary:focus-visible,
+.more-panel > summary:focus-visible,
+.preview-menu > summary:focus-visible,
+.more-item:focus-visible,
+.preview-menu-option:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
 }
 
 .btn-ico {
@@ -493,6 +822,7 @@ img.is-broken {
 
 .btn-sm {
   padding: 0.35em 0.7em;
+  min-height: 32px;
   font-size: 0.75rem;
 }
 
@@ -946,10 +1276,26 @@ body.is-presenting #topbar-actions-editor {
 .canvas-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px 12px;
   background: var(--ns-panel);
   border-bottom: 1px solid var(--ns-border);
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 24px;
+  background: color-mix(in srgb, var(--ns-muted) 55%, var(--ns-border));
+  margin: 0 4px;
 }
 
 .canvas-hint {
@@ -1451,6 +1797,47 @@ body.is-presenting #topbar-actions-editor {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.settings-key-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.settings-key-form {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.settings-key-form input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settings-key-status {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings-actions .btn-icon {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
 }
 
 .caption-bar {

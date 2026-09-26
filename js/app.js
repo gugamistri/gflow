@@ -414,6 +414,8 @@ function paintChrome() {
   const helpView = document.getElementById("view-help");
   const actionsEditor = document.getElementById("topbar-actions-editor");
   const actionsLibrary = document.getElementById("topbar-actions-library");
+  const navEditor = document.getElementById("topbar-nav-editor");
+  const moreEditorOnly = document.getElementById("more-editor-only");
   const projectLabel = document.getElementById("topbar-project");
   const title = document.getElementById("topbar-title");
   const presentChrome = document.getElementById("present-chrome");
@@ -423,6 +425,8 @@ function paintChrome() {
   if (helpView) helpView.hidden = true;
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
+  if (navEditor) navEditor.hidden = view !== "editor" || presenting;
+  if (moreEditorOnly) moreEditorOnly.hidden = view !== "editor" || presenting;
   if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
 
   if (view === "library") {
@@ -764,12 +768,22 @@ function bindChrome() {
       },
     });
   });
+  document.getElementById("topbar-project")?.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    if (!project || e.target.closest("input")) return;
+    e.preventDefault();
+    e.currentTarget.click();
+  });
 
-  // Fecha painéis Tema / Narração / Exportar ao clicar fora
+  // Fecha painéis Tema / Narração / Exportar / Mais ao clicar fora
   document.addEventListener("pointerdown", (e) => {
-    document.querySelectorAll("details.theme-panel[open], details.export-panel[open]").forEach((panel) => {
-      if (!panel.contains(e.target)) panel.open = false;
-    });
+    document
+      .querySelectorAll(
+        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.preview-menu[open]",
+      )
+      .forEach((panel) => {
+        if (!panel.contains(e.target)) panel.open = false;
+      });
   });
 
   const captureBtns = [

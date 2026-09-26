@@ -46,6 +46,19 @@ export function createPlayer(ctx) {
   let autoplayTimer = null;
   let autoplayEnabled = false;
   let running = false;
+  let exitOnOutsideClick = false;
+  let suppressExitArm = false;
+
+  function presentHintEl() {
+    return document.getElementById("present-chrome");
+  }
+
+  function setPresentHint(key) {
+    const el = presentHintEl();
+    if (!el) return;
+    el.textContent = t(key);
+    el.dataset.i18n = key;
+  }
 
   function autoplayOn() {
     return autoplayEnabled;
@@ -310,6 +323,8 @@ export function createPlayer(ctx) {
     }
 
     running = true;
+    exitOnOutsideClick = false;
+    setPresentHint("present.escHint");
     activeIndex = Math.max(0, Math.min(startIndex, steps.length - 1));
     if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
     els.hotspot?.classList.add("is-previewing");
@@ -397,6 +412,15 @@ export function createPlayer(ctx) {
         clickFx.reset();
         clearZoom({ animate: false });
         driverObj = null;
+        animating = false;
+        running = false;
+        if (suppressExitArm) return;
+        // why: o mesmo clique no overlay não deve sair; só o próximo clique fora.
+        queueMicrotask(() => {
+          if (!isPresenting()) return;
+          exitOnOutsideClick = true;
+          setPresentHint("present.clickAgainHint");
+        });
       },
     });
 
@@ -409,10 +433,13 @@ export function createPlayer(ctx) {
     clearAutoplay();
     narration.stop();
     if (driverObj) {
+      suppressExitArm = true;
       try {
         driverObj.destroy();
       } catch {
         /* ignore */
+      } finally {
+        suppressExitArm = false;
       }
       driverObj = null;
     }
@@ -420,6 +447,7 @@ export function createPlayer(ctx) {
     clearZoom({ animate: false });
     animating = false;
     running = false;
+    exitOnOutsideClick = false;
     if (!silent) setProgress(t("player.stopped"));
   }
 
@@ -457,15 +485,25 @@ export function createPlayer(ctx) {
         if (!isPresenting()) return;
         e.preventDefault();
         e.stopPropagation();
+        exitOnOutsideClick = false;
         onRequestExit?.();
       },
       true
     );
 
+    // why: 1º clique fora para o tour; 2º clique fora volta ao editor (sem depender só do Esc).
+    els.stage?.addEventListener("click", (e) => {
+      if (!isPresenting() || driverObj || !exitOnOutsideClick) return;
+      if (e.target.closest(".canvas-frame, .driver-popover, #present-chrome")) return;
+      exitOnOutsideClick = false;
+      onRequestExit?.();
+    });
+
     window.addEventListener("keydown", (e) => {
       if (!isPresenting()) return;
       if (e.key !== "Escape") return;
       e.preventDefault();
+      exitOnOutsideClick = false;
       onRequestExit?.();
     });
 

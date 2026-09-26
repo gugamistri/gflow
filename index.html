@@ -52,192 +52,269 @@
   <header class="topbar">
     <div class="topbar-brand">
       <span class="logo">Guia<span>Flow</span></span>
+      <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
+        <button type="button" class="btn btn-ghost btn-nav-back" id="btn-projects" title="Projetos" data-i18n-title="topbar.projects">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+          <span data-i18n="topbar.projects">Projetos</span>
+        </button>
+        <span class="topbar-nav-sep" aria-hidden="true">/</span>
+        <span
+          class="topbar-project"
+          id="topbar-project"
+          hidden
+          title="Clique para renomear"
+          data-i18n-title="library.renameTitle"
+          role="button"
+          tabindex="0"
+        ></span>
+      </nav>
       <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
     </div>
     <div class="topbar-tools">
-    <div class="topbar-appearance">
-      <label class="locale-select">
-        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
-          <option value="pt">PT</option>
-          <option value="es">ES</option>
-          <option value="en">EN</option>
-        </select>
-      </label>
-      <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
-        <svg class="btn-ico" aria-hidden="true"><use id="btn-appearance-icon" href="#i-appearance"></use></svg>
-      </button>
-    </div>
-    <div class="topbar-actions" id="topbar-actions-editor" hidden>
-      <button type="button" class="btn btn-ghost" id="btn-projects">
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-        <span data-i18n="topbar.projects">Projetos</span>
-      </button>
-      <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-        <span data-i18n="topbar.capture">Capturar</span>
-      </button>
-      <button type="button" class="btn btn-ghost" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
-        <span data-i18n="topbar.feedback">Feedback</span>
-      </button>
-      <details class="theme-panel" id="narration-panel">
-        <summary>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-          <span data-i18n="topbar.settings">Ajustes</span>
-        </summary>
-        <div class="theme-panel-body theme-panel-wide">
-          <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
-          <label class="checkbox">
-            <input type="checkbox" id="narration-enabled" checked />
-            <span data-i18n="narration.speakCaption">Falar legenda no avanço automático</span>
-          </label>
-          <label><span data-i18n="narration.voice">Voz</span>
-            <select id="narration-voice"></select>
-          </label>
-          <p class="props-meta" data-i18n="narration.voiceHint">Português, espanhol ou inglês, via Cartesia.</p>
-          <label><span data-i18n="narration.rate">Velocidade</span>
-            <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
-            <span id="narration-rate-label">1.0×</span>
-          </label>
-          <label><span data-i18n="narration.defaultHold">Tempo padrão por passo (s)</span>
-            <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
-          </label>
-          <hr class="theme-divider" />
-          <p class="theme-section-label" data-i18n="narration.bgAudio">Áudio de fundo</p>
-          <div class="narration-bg-row">
-            <button type="button" class="btn btn-sm" id="btn-narration-bg">
-              <span data-i18n="narration.chooseFile">Escolher arquivo…</span>
+      <div class="topbar-actions" id="topbar-actions-editor" hidden>
+        <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+          <span data-i18n="topbar.capture">Capturar</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
+        </button>
+        <button type="button" class="btn btn-ghost btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
+        </button>
+        <div class="preview-split">
+          <button type="button" class="btn btn-primary" id="btn-play-from">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-eye"></use></svg>
+            <span data-i18n="toolbar.preview">Preview</span>
+          </button>
+          <details class="preview-menu">
+            <summary class="btn btn-primary preview-menu-toggle" aria-label="Mais opções de preview" data-i18n-aria="toolbar.previewMore">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+            </summary>
+            <div class="preview-menu-body">
+              <button type="button" class="preview-menu-option" id="btn-watch-from">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
+                <span data-i18n="toolbar.autoPreview">Preview automático</span>
+              </button>
+            </div>
+          </details>
+        </div>
+        <details class="export-panel">
+          <summary>
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
+            <span data-i18n="topbar.export">Exportar</span>
+          </summary>
+          <div class="export-panel-body">
+            <button type="button" class="export-option" id="btn-export-html">
+              <strong data-i18n="export.htmlTitle">HTML navegável</strong>
+              <span data-i18n="export.htmlDesc">Um arquivo só. A pessoa abre no navegador, percorre ou assiste.</span>
             </button>
-            <button type="button" class="btn btn-sm" id="btn-narration-bg-clear" hidden>
-              <span data-i18n="narration.remove">Remover</span>
+            <button type="button" class="export-option" id="btn-export-video">
+              <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
+              <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
             </button>
-            <input type="file" id="narration-bg-file" accept="audio/*,.mp3,.ogg,.wav,.m4a" hidden />
+            <button type="button" class="export-option" id="btn-export-json">
+              <strong data-i18n="export.jsonTitle">JSON</strong>
+              <span data-i18n="export.jsonDesc">Backup para reimportar neste editor.</span>
+            </button>
           </div>
-          <p class="props-meta" id="narration-bg-name" data-i18n="narration.noFile">Nenhum arquivo</p>
-          <hr class="theme-divider" />
-          <p class="theme-section-label" data-i18n="narration.cartesiaKey">Chave Cartesia</p>
-          <p class="props-meta" id="cartesia-status" data-i18n="narration.cartesiaStatus">A chave fica neste navegador, fora do projeto.</p>
-          <form autocomplete="off" onsubmit="return false">
-            <label><span data-i18n="narration.apiKey">Chave da API</span>
-              <input type="password" id="cartesia-key" autocomplete="off" spellcheck="false" placeholder="sk_car_…" />
+        </details>
+      </div>
+      <div class="topbar-actions" id="topbar-actions-library">
+        <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+          <span data-i18n="topbar.capture">Capturar</span>
+        </button>
+        <button type="button" class="btn btn-ghost" id="btn-import-library">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+          <span data-i18n="topbar.import">Importar</span>
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-new-project">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+          <span data-i18n="topbar.newProject">Novo projeto</span>
+        </button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden />
+      </div>
+      <details class="more-panel" id="more-panel">
+        <summary class="btn btn-ghost" aria-label="Mais" data-i18n-aria="topbar.more">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-more"></use></svg>
+          <span data-i18n="topbar.more">Mais</span>
+        </summary>
+        <div class="more-panel-body">
+          <div class="more-row topbar-appearance">
+            <label class="locale-select">
+              <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
+              <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+                <option value="pt">PT</option>
+                <option value="es">ES</option>
+                <option value="en">EN</option>
+              </select>
             </label>
-          </form>
-          <div class="narration-bg-row">
-            <button type="button" class="btn btn-sm" id="btn-cartesia-save"><span data-i18n="narration.saveSystem">Salvar no sistema</span></button>
-            <button type="button" class="btn btn-sm" id="btn-cartesia-clear" hidden><span data-i18n="narration.remove">Remover</span></button>
-            <a class="btn btn-sm" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer"><span data-i18n="narration.getKey">Obter chave</span></a>
-          </div>
-          <p class="props-meta" data-i18n="narration.keyHint">A chave fica neste navegador e não entra no projeto.</p>
-          <hr class="theme-divider" />
-          <p class="theme-section-label" data-i18n="llm.section">Inteligência</p>
-          <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">A chave fica neste navegador, fora do projeto. Use um modelo com visão.</p>
-          <label><span data-i18n="llm.provider">Provedor</span>
-            <select id="llm-provider">
-              <option value="openrouter" selected>OpenRouter</option>
-              <option value="openai">OpenAI</option>
-              <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
-            </select>
-          </label>
-          <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
-            <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
-          </label>
-          <form autocomplete="off" onsubmit="return false">
-            <label><span data-i18n="narration.apiKey">Chave da API</span>
-              <input type="password" id="llm-key" autocomplete="off" spellcheck="false" placeholder="sk-…" />
-            </label>
-          </form>
-          <label><span data-i18n="llm.model">Modelo</span>
-            <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
-            <datalist id="llm-model-list"></datalist>
-          </label>
-          <div class="narration-bg-row">
-            <button type="button" class="btn btn-sm" id="btn-llm-save"><span data-i18n="narration.saveSystem">Salvar no sistema</span></button>
-            <button type="button" class="btn btn-sm" id="btn-llm-clear" hidden><span data-i18n="narration.remove">Remover</span></button>
-            <button type="button" class="btn btn-sm" id="btn-llm-list-models"><span data-i18n="llm.listModels">Listar modelos</span></button>
-            <a class="btn btn-sm" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer"><span data-i18n="narration.getKey">Obter chave</span></a>
-          </div>
-          <p class="props-meta" data-i18n="llm.keyHint">OpenRouter funciona no navegador. A API oficial da OpenAI costuma exigir o app desktop.</p>
-        </div>
-      </details>
-      <details class="theme-panel" id="theme-panel">
-        <summary>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
-          <span data-i18n="topbar.theme">Tema</span>
-        </summary>
-        <div class="theme-panel-body theme-panel-wide">
-          <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
-          <div class="theme-presets" id="theme-presets"></div>
-          <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
-          <div class="theme-customs" id="theme-customs"></div>
-          <div class="theme-custom-actions">
-            <button type="button" class="btn btn-sm" id="btn-save-theme">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-              <span data-i18n="theme.save">Salvar tema</span>
-            </button>
-            <button type="button" class="btn btn-sm" id="btn-dup-theme">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-              <span data-i18n="theme.duplicate">Duplicar selecionado</span>
-            </button>
-            <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-              <span data-i18n="theme.delete">Excluir tema</span>
+            <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
+              <svg class="btn-ico" aria-hidden="true"><use id="btn-appearance-icon" href="#i-appearance"></use></svg>
             </button>
           </div>
-          <hr class="theme-divider" />
-          <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
-          <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
-          <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
-          <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
-          <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
-          <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
-          <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
-          <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+          <div class="more-editor-only" id="more-editor-only" hidden>
+            <details class="more-section theme-panel" id="narration-panel">
+              <summary>
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+                <span data-i18n="topbar.settings">Ajustes</span>
+              </summary>
+              <div class="more-section-body theme-panel-body theme-panel-wide">
+                <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
+                <label class="checkbox">
+                  <input type="checkbox" id="narration-enabled" checked />
+                  <span data-i18n="narration.speakCaption">Falar no avanço automático</span>
+                </label>
+                <label><span data-i18n="narration.voice">Voz</span>
+                  <select id="narration-voice"></select>
+                </label>
+                <label><span data-i18n="narration.rate">Velocidade</span>
+                  <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
+                  <span id="narration-rate-label">1.0×</span>
+                </label>
+                <label><span data-i18n="narration.defaultHold">Pausa padrão (s)</span>
+                  <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
+                </label>
+                <details class="settings-fold" id="settings-tts">
+                  <summary data-i18n="narration.cartesiaKey">Cartesia (Provedor TTS)</summary>
+                  <div class="settings-fold-body">
+                    <p class="props-meta" id="cartesia-status" data-i18n="cartesia.noKey">Nenhuma chave salva.</p>
+                    <div class="settings-key-row">
+                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
+                        <input
+                          type="text"
+                          id="cartesia-key"
+                          class="settings-secret"
+                          name="guiaflow-cartesia-api-key"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          placeholder="sk_car_…"
+                          aria-label="Chave da API"
+                          data-i18n-aria="narration.apiKey"
+                        />
+                      </form>
+                      <div class="settings-actions">
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                        <a class="btn btn-sm btn-icon" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <details class="settings-fold" id="settings-llm">
+                  <summary data-i18n="llm.section">Inteligência</summary>
+                  <div class="settings-fold-body">
+                    <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">Modelo com visão · só neste navegador</p>
+                    <label><span data-i18n="llm.provider">Provedor</span>
+                      <select id="llm-provider">
+                        <option value="openrouter" selected>OpenRouter</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
+                      </select>
+                    </label>
+                    <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
+                      <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
+                    </label>
+                    <label><span data-i18n="llm.model">Modelo</span>
+                      <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
+                      <datalist id="llm-model-list"></datalist>
+                    </label>
+                    <div class="settings-key-row">
+                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
+                        <input
+                          type="text"
+                          id="llm-key"
+                          class="settings-secret"
+                          name="guiaflow-llm-api-key"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          placeholder="sk-…"
+                          aria-label="Chave da API"
+                          data-i18n-aria="narration.apiKey"
+                        />
+                      </form>
+                      <div class="settings-actions">
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-list-models" title="Listar modelos" aria-label="Listar modelos" data-i18n-title="llm.listModels" data-i18n-aria="llm.listModels">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-list"></use></svg>
+                        </button>
+                        <a class="btn btn-sm btn-icon" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+            <details class="more-section theme-panel" id="theme-panel">
+              <summary>
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
+                <span data-i18n="topbar.themeGuide">Tema do guia</span>
+              </summary>
+              <div class="more-section-body theme-panel-body theme-panel-wide">
+                <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
+                <div class="theme-presets" id="theme-presets"></div>
+                <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
+                <div class="theme-customs" id="theme-customs"></div>
+                <div class="theme-custom-actions">
+                  <button type="button" class="btn btn-sm" id="btn-save-theme">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                    <span data-i18n="theme.save">Salvar tema</span>
+                  </button>
+                  <button type="button" class="btn btn-sm" id="btn-dup-theme">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                    <span data-i18n="theme.duplicate">Duplicar selecionado</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                    <span data-i18n="theme.delete">Excluir tema</span>
+                  </button>
+                </div>
+                <hr class="theme-divider" />
+                <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
+                <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
+                <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
+                <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
+                <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
+                <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
+                <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
+                <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+              </div>
+            </details>
+          </div>
+          <button type="button" class="more-item" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
+            <span data-i18n="topbar.feedback">Feedback</span>
+          </button>
+          <a class="more-item" id="btn-help" href="ajuda.html" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="topbar.help">Ajuda</span>
+          </a>
         </div>
       </details>
-      <details class="export-panel">
-        <summary>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
-          <span data-i18n="topbar.export">Exportar</span>
-        </summary>
-        <div class="export-panel-body">
-          <button type="button" class="export-option" id="btn-export-html">
-            <strong data-i18n="export.htmlTitle">HTML navegável</strong>
-            <span data-i18n="export.htmlDesc">Um arquivo só. A pessoa abre no navegador, percorre ou assiste.</span>
-          </button>
-          <button type="button" class="export-option" id="btn-export-video">
-            <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
-            <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
-          </button>
-          <button type="button" class="export-option" id="btn-export-json">
-            <strong data-i18n="export.jsonTitle">JSON</strong>
-            <span data-i18n="export.jsonDesc">Backup para reimportar neste editor.</span>
-          </button>
-        </div>
-      </details>
-      <button type="button" class="btn btn-ghost btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
-      </button>
-      <button type="button" class="btn btn-ghost btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
-      </button>
-    </div>
-    <div class="topbar-actions" id="topbar-actions-library">
-      <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-        <span data-i18n="topbar.capture">Capturar</span>
-      </button>
-      <button type="button" class="btn btn-ghost" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
-        <span data-i18n="topbar.feedback">Feedback</span>
-      </button>
-      <button type="button" class="btn btn-ghost" id="btn-import-library">
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-        <span data-i18n="topbar.import">Importar</span>
-      </button>
-      <button type="button" class="btn btn-primary" id="btn-new-project">
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-        <span data-i18n="topbar.newProject">Novo projeto</span>
-      </button>
-      <input type="file" id="import-file" accept="application/json,.json" hidden />
-    </div>
     </div>
   </header>
 
@@ -272,52 +349,48 @@
   <main id="view-editor" class="view view-editor" hidden>
     <aside class="filmstrip-panel" id="filmstrip-panel">
       <div class="filmstrip-header">
-        <span class="filmstrip-project" id="topbar-project" hidden title="Clique para renomear" data-i18n-title="library.renameTitle"></span>
         <span class="filmstrip-multi-hint" data-i18n="filmstrip.multiHint">⌘/Ctrl+clique ou Shift para selecionar vários</span>
       </div>
       <div class="filmstrip" id="filmstrip" aria-label="Passos do demo" data-i18n-aria="filmstrip.aria"></div>
     </aside>
 
     <section class="canvas-wrap">
-      <div class="canvas-toolbar">
-        <button type="button" class="btn btn-sm" id="btn-add-scene">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
-          <span data-i18n="toolbar.scene">Cena</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-add-step">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          <span data-i18n="toolbar.step">Passo</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-add-slide">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-          <span data-i18n="toolbar.slide">Slide</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-dup-step" title="Duplicar (⌘D)" data-i18n-title="toolbar.duplicateTitle">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-          <span data-i18n="toolbar.duplicate">Duplicar</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-copy-step" title="Copiar (⌘C)" data-i18n-title="toolbar.copyTitle">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-          <span data-i18n="toolbar.copy">Copiar</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-paste-step" title="Colar (⌘V)" data-i18n-title="toolbar.pasteTitle">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          <span data-i18n="toolbar.paste">Colar</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-add-images">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-          <span data-i18n="toolbar.images">Imagens</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-play-from">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-eye"></use></svg>
-          <span data-i18n="toolbar.preview">Preview</span>
-        </button>
-        <button type="button" class="btn btn-sm" id="btn-watch-from">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-          <span data-i18n="toolbar.autoPreview">Preview automático</span>
-        </button>
+      <div class="canvas-toolbar" role="toolbar" aria-label="Edição" data-i18n-aria="toolbar.aria">
+        <div class="toolbar-group" role="group" aria-label="Adicionar" data-i18n-aria="toolbar.groupAdd">
+          <button type="button" class="btn btn-sm" id="btn-add-scene">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
+            <span data-i18n="toolbar.scene">Cena</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-add-step">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+            <span data-i18n="toolbar.step">Passo</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-add-slide">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
+            <span data-i18n="toolbar.slide">Slide</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-add-images">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
+            <span data-i18n="toolbar.images">Imagens</span>
+          </button>
+        </div>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <div class="toolbar-group" role="group" aria-label="Editar" data-i18n-aria="toolbar.groupEdit">
+          <button type="button" class="btn btn-sm" id="btn-dup-step" title="Duplicar (⌘D)" data-i18n-title="toolbar.duplicateTitle">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-duplicate"></use></svg>
+            <span data-i18n="toolbar.duplicate">Duplicar</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-copy-step" title="Copiar (⌘C)" data-i18n-title="toolbar.copyTitle">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+            <span data-i18n="toolbar.copy">Copiar</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-paste-step" title="Colar (⌘V)" data-i18n-title="toolbar.pasteTitle">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-paste"></use></svg>
+            <span data-i18n="toolbar.paste">Colar</span>
+          </button>
+        </div>
       </div>
-      <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Pressione Esc para sair</p>
+      <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Clique fora para parar · Esc sai</p>
       <input type="file" id="images-file" accept="image/*" multiple hidden />
       <div class="canvas-stage" id="canvas-stage">
         <div class="canvas-empty" id="canvas-empty" hidden>
@@ -628,6 +701,21 @@
     <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 5v14M5 12h14"/>
     </symbol>
+    <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m6 9 6 6 6-6"/>
+    </symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+    </symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
+    </symbol>
+    <symbol id="i-duplicate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>
+    </symbol>
     <symbol id="i-import" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
     </symbol>
@@ -636,6 +724,12 @@
     </symbol>
     <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8" cy="15" r="4"/><path d="m10.7 12.3 8.8-8.8"/><path d="M17 5.5 19.5 8"/><path d="M15 7.5 17.5 10"/>
+    </symbol>
+    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
     </symbol>
     <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
