@@ -527,7 +527,8 @@ textarea {
   display: inline-flex;
   align-items: stretch;
   border-radius: 7px;
-  overflow: hidden;
+  /* why: overflow:hidden recortava o menu que abre abaixo da seta */
+  overflow: visible;
 }
 
 .preview-split > .btn-primary {
