@@ -89,12 +89,18 @@ export function createProjectId() {
   return "proj-" + Math.random().toString(36).slice(2, 10);
 }
 
-/** Grava o passo selecionado para colar noutra aba do mesmo origin. */
+/** Grava um ou mais passos para colar noutra aba do mesmo origin. */
 export async function putStepClipboard(entry) {
+  const steps = Array.isArray(entry?.steps)
+    ? entry.steps.filter(Boolean)
+    : entry?.step
+      ? [entry.step]
+      : [];
   const record = {
     id: CLIPBOARD_KEY,
     updatedAt: Date.now(),
-    step: entry?.step || null,
+    step: steps[0] || null,
+    steps,
     images: entry?.images || {},
   };
   await withStore("readwrite", (store) => store.put(record), CLIPBOARD_STORE);
@@ -103,8 +109,13 @@ export async function putStepClipboard(entry) {
 
 export async function getStepClipboard() {
   const record = await withStore("readonly", (store) => store.get(CLIPBOARD_KEY), CLIPBOARD_STORE);
-  if (!record?.step) return null;
-  return record;
+  const steps = Array.isArray(record?.steps) && record.steps.length
+    ? record.steps
+    : record?.step
+      ? [record.step]
+      : [];
+  if (!steps.length) return null;
+  return { ...record, steps, step: steps[0], images: record.images || {} };
 }
 
 export function readIndex() {

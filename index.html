@@ -43,6 +43,7 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <script async src="https://tally.so/widgets/embed.js"></script>
   <link rel="stylesheet" href="a/4/vendor/driver/driver.css" />
   <link rel="stylesheet" href="a/4/css/theme.css" />
   <link rel="stylesheet" href="a/4/css/app.css" />
@@ -75,12 +76,16 @@
         <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
         <span data-i18n="topbar.capture">Capturar</span>
       </button>
+      <button type="button" class="btn btn-ghost" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
+        <span data-i18n="topbar.feedback">Feedback</span>
+      </button>
       <details class="theme-panel" id="narration-panel">
         <summary>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-          <span data-i18n="topbar.narration">Narração</span>
+          <span data-i18n="topbar.settings">Ajustes</span>
         </summary>
         <div class="theme-panel-body theme-panel-wide">
+          <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
           <label class="checkbox">
             <input type="checkbox" id="narration-enabled" checked />
             <span data-i18n="narration.speakCaption">Falar legenda no avanço automático</span>
@@ -122,6 +127,35 @@
             <a class="btn btn-sm" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer"><span data-i18n="narration.getKey">Obter chave</span></a>
           </div>
           <p class="props-meta" data-i18n="narration.keyHint">A chave fica neste navegador e não entra no projeto.</p>
+          <hr class="theme-divider" />
+          <p class="theme-section-label" data-i18n="llm.section">Inteligência</p>
+          <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">A chave fica neste navegador, fora do projeto. Use um modelo com visão.</p>
+          <label><span data-i18n="llm.provider">Provedor</span>
+            <select id="llm-provider">
+              <option value="openrouter" selected>OpenRouter</option>
+              <option value="openai">OpenAI</option>
+              <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
+            </select>
+          </label>
+          <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
+            <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
+          </label>
+          <form autocomplete="off" onsubmit="return false">
+            <label><span data-i18n="narration.apiKey">Chave da API</span>
+              <input type="password" id="llm-key" autocomplete="off" spellcheck="false" placeholder="sk-…" />
+            </label>
+          </form>
+          <label><span data-i18n="llm.model">Modelo</span>
+            <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
+            <datalist id="llm-model-list"></datalist>
+          </label>
+          <div class="narration-bg-row">
+            <button type="button" class="btn btn-sm" id="btn-llm-save"><span data-i18n="narration.saveSystem">Salvar no sistema</span></button>
+            <button type="button" class="btn btn-sm" id="btn-llm-clear" hidden><span data-i18n="narration.remove">Remover</span></button>
+            <button type="button" class="btn btn-sm" id="btn-llm-list-models"><span data-i18n="llm.listModels">Listar modelos</span></button>
+            <a class="btn btn-sm" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer"><span data-i18n="narration.getKey">Obter chave</span></a>
+          </div>
+          <p class="props-meta" data-i18n="llm.keyHint">OpenRouter funciona no navegador. A API oficial da OpenAI costuma exigir o app desktop.</p>
         </div>
       </details>
       <details class="theme-panel" id="theme-panel">
@@ -191,6 +225,9 @@
         <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
         <span data-i18n="topbar.capture">Capturar</span>
       </button>
+      <button type="button" class="btn btn-ghost" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
+        <span data-i18n="topbar.feedback">Feedback</span>
+      </button>
       <button type="button" class="btn btn-ghost" id="btn-import-library">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
         <span data-i18n="topbar.import">Importar</span>
@@ -236,6 +273,7 @@
     <aside class="filmstrip-panel" id="filmstrip-panel">
       <div class="filmstrip-header">
         <span class="filmstrip-project" id="topbar-project" hidden title="Clique para renomear" data-i18n-title="library.renameTitle"></span>
+        <span class="filmstrip-multi-hint" data-i18n="filmstrip.multiHint">⌘/Ctrl+clique ou Shift para selecionar vários</span>
       </div>
       <div class="filmstrip" id="filmstrip" aria-label="Passos do demo" data-i18n-aria="filmstrip.aria"></div>
     </aside>
@@ -338,7 +376,20 @@
     </section>
 
     <aside class="props" id="props-panel">
-      <h2 data-i18n="props.step">Passo</h2>
+      <div class="props-header">
+        <h2 data-i18n="props.step">Passo</h2>
+        <button
+          type="button"
+          class="btn btn-ghost btn-icon btn-generate-copy"
+          id="btn-generate-copy"
+          title="Gerar título, descrição e narração"
+          aria-label="Gerar título, descrição e narração"
+          data-i18n-title="props.generateCopy"
+          data-i18n-aria="props.generateCopy"
+        >
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+        </button>
+      </div>
       <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
         <button type="button" class="mode-btn" data-value="slide" aria-pressed="false">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
@@ -672,6 +723,11 @@
     </symbol>
     <symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="6" y="6" width="12" height="12" rx="1"/>
+    </symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
+      <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
+      <path d="M5 15l.6 1.6L7.2 17l-1.6.6L5 19.2l-.6-1.6L2.8 17l1.6-.6L5 15z"/>
     </symbol>
     <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>

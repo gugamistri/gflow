@@ -25,6 +25,29 @@ test("a chave cifrada não fica em texto puro no arquivo", () => {
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
+test("payload LLM cifrado lê JSON e limpa o arquivo", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "llm-settings-"));
+  const store = createKeyStore({
+    directory,
+    fileName: "llm-settings.bin",
+    encrypt: (value) => Buffer.from(String(value).split("").reverse().join("")),
+    decrypt: (buf) => Buffer.from(buf).toString("utf8").split("").reverse().join(""),
+  });
+  const payload = {
+    provider: "openrouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    model: "deepseek/deepseek-v4.1-flash",
+    apiKey: "sk-or-v1-secretkey123456",
+  };
+  store.savePayload(payload);
+  const raw = fs.readFileSync(store.file, "utf8");
+  assert.equal(raw.includes(payload.apiKey), false);
+  assert.deepEqual(store.readPayload(), payload);
+  store.clear();
+  assert.equal(store.configured(), false);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
 test("a síntese manda a chave só no header e devolve o mp3", async () => {
   const seen = [];
   const result = await synthesize({

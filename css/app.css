@@ -325,6 +325,8 @@ textarea {
 #narration-panel input[type="range"],
 #narration-panel input[type="number"],
 #narration-panel input[type="password"],
+#narration-panel input[type="text"],
+#narration-panel input[type="url"],
 #narration-panel select {
   width: 100%;
   background: var(--ns-input-bg);
@@ -614,6 +616,16 @@ body.is-presenting #topbar-actions-editor {
   flex: 0 0 auto;
   padding: 12px 10px 8px;
   border-bottom: 1px solid var(--ns-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filmstrip-multi-hint {
+  font-size: 0.68rem;
+  line-height: 1.25;
+  color: var(--ns-muted);
+  padding: 0 8px;
 }
 
 .filmstrip-project {
@@ -790,6 +802,15 @@ body.is-presenting #topbar-actions-editor {
 .film-item.is-active {
   border-color: var(--ns-accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--ns-accent) 35%, transparent);
+}
+
+.film-item.is-selected:not(.is-active) {
+  border-color: color-mix(in srgb, var(--ns-accent) 55%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-accent) 10%, var(--ns-panel));
+}
+
+.film-item.is-selected.is-active {
+  background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
 }
 
 .film-item.is-dragging {
@@ -1223,8 +1244,25 @@ body.is-presenting #topbar-actions-editor {
 }
 
 .props h2 {
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 1rem;
+}
+
+.props-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.props-header .btn-generate-copy {
+  flex-shrink: 0;
+  color: var(--ns-ink);
+}
+
+.props-header .btn-generate-copy[aria-busy="true"] {
+  opacity: 0.55;
 }
 
 .props label {

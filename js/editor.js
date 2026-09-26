@@ -16,6 +16,26 @@ import { clickDriverNext } from "./popoverFooter.js";
 import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
+  buildChatMessages,
+  buildStepContext,
+  chatCompletions,
+  defaultLlmSettings,
+  isPlausibleLlmKey,
+  listModels,
+  LLM_DEFAULT_MODEL,
+  LLM_PROVIDERS,
+  normalizeBaseUrl,
+  parseCopyJson,
+  resolveProvider,
+  shrinkImageDataUrl,
+} from "./llm.js";
+import {
+  deleteLlmSettings,
+  llmSettingsStatus,
+  putLlmSettings,
+  readLlmSettings,
+} from "./llm-store.js";
+import {
   CAPTION_PLAYBACK_RATES,
   DEFAULT_HOLD_SECONDS,
   NARRATION_VOICES,
@@ -29,9 +49,17 @@ import {
   stopSpeech,
 } from "./playback.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
-import { t } from "./i18n.js";
+import { getLocale, t } from "./i18n.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
+import {
+  collectStepsForClipboard,
+  deleteIndices,
+  moveIndices,
+  normalizeIndices,
+  rangeIndices,
+  toggleIndex,
+} from "./stepSelection.js";
 
 function ensureSceneLabels(demo) {
   if (!demo.sceneLabels || typeof demo.sceneLabels !== "object") {
@@ -202,10 +230,14 @@ export function createEditor(ctx) {
   let dragMode = null;
   let dragStart = null;
   let filmDragFrom = null;
+  let filmDragIndices = null;
   let filmDragKind = "step";
   let pickMode = "replace"; // replace | createSteps
   let clickPointDragging = false;
   let previewDriver = null;
+  /** @type {number[]} */
+  let selectedIndices = [];
+  let selectionAnchor = 0;
 
   const clickFx = createClickFxController({
     frame: els.canvasFrame,
@@ -217,6 +249,41 @@ export function createEditor(ctx) {
   function currentStep() {
     const demo = getDemo();
     return demo.steps[getSelectedIndex()] || null;
+  }
+
+  function syncSelectionFromPrimary() {
+    const demo = getDemo();
+    const primary = getSelectedIndex();
+    if (!demo.steps.length) {
+      selectedIndices = [];
+      selectionAnchor = 0;
+      return;
+    }
+    selectedIndices = normalizeIndices(
+      selectedIndices.includes(primary) ? selectedIndices : [primary],
+      demo.steps.length
+    );
+    if (!selectedIndices.length) selectedIndices = [primary];
+    selectionAnchor = primary;
+  }
+
+  function applySelection(indices, primary) {
+    const demo = getDemo();
+    selectedIndices = normalizeIndices(indices, demo.steps.length);
+    if (!selectedIndices.length && demo.steps.length) {
+      selectedIndices = [Math.max(0, Math.min(primary ?? 0, demo.steps.length - 1))];
+    }
+    const prim =
+      primary != null && selectedIndices.includes(primary)
+        ? primary
+        : selectedIndices[selectedIndices.length - 1] ?? 0;
+    setSelectedIndex(prim);
+    selectionAnchor = prim;
+  }
+
+  function selectedSteps() {
+    syncSelectionFromPrimary();
+    return selectedIndices;
   }
 
   function fillImageSelect() {
@@ -267,6 +334,8 @@ export function createEditor(ctx) {
   function renderFilmstrip() {
     const demo = getDemo();
     const selected = getSelectedIndex();
+    syncSelectionFromPrimary();
+    const selectedSet = new Set(selectedIndices);
     if (!demo.steps.length) {
       els.filmstrip.innerHTML = `<p class="film-hint">${escapeHtml(t("filmstrip.empty"))}</p>`;
       return;
@@ -290,12 +359,20 @@ export function createEditor(ctx) {
           : src
             ? `<img src="${escapeAttr(src)}" alt="" loading="lazy" draggable="false" />`
             : `<div class="film-thumb-slide">—</div>`;
+      const classes = [
+        "film-item",
+        index === selected ? "is-active" : "",
+        selectedSet.has(index) ? "is-selected" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
       html += `
-        <div class="film-item ${index === selected ? "is-active" : ""}"
+        <div class="${classes}"
              data-index="${index}"
              draggable="true"
              role="button"
-             tabindex="0">
+             tabindex="0"
+             aria-selected="${selectedSet.has(index) ? "true" : "false"}">
           <span class="film-grip" aria-hidden="true">⋮⋮</span>
           ${thumb}
           <div class="film-meta">
@@ -1193,37 +1270,44 @@ export function createEditor(ctx) {
     toast(t("toast.sceneRenamed", { n }));
   }
 
-  function selectStep(index) {
-    setSelectedIndex(index);
+  function selectStep(index, opts = {}) {
+    const demo = getDemo();
+    const i = Number(index);
+    if (!Number.isFinite(i) || i < 0 || i >= demo.steps.length) return;
+
+    if (opts.range) {
+      applySelection(rangeIndices(selectionAnchor, i, demo.steps.length), i);
+    } else if (opts.toggle) {
+      const next = toggleIndex(selectedSteps(), i, demo.steps.length);
+      applySelection(next, i);
+    } else {
+      applySelection([i], i);
+    }
     renderFilmstrip();
     syncForm();
     renderCanvas();
   }
 
   function reorderSteps(fromIndex, toIndex, scene) {
-    if (fromIndex < 0 || toIndex < 0) return;
+    reorderStepGroup([fromIndex], toIndex, scene);
+  }
+
+  function reorderStepGroup(indices, insertBefore, scene) {
     const demo = getDemo();
-    const sameSlot = fromIndex === toIndex;
-    const nextScene = scene == null ? null : Number(scene) || 1;
-    if (sameSlot) {
-      const step = demo.steps[fromIndex];
-      if (!step || nextScene == null || Number(step.scene) === nextScene) return;
-      step.scene = nextScene;
-      renumberScenes(demo);
-      setDemo(demo);
-      renderFilmstrip();
-      syncForm();
-      renderCanvas();
-      onChange();
-      toast(t("toast.orderUpdated"));
-      return;
-    }
-    const [moved] = demo.steps.splice(fromIndex, 1);
-    demo.steps.splice(toIndex, 0, moved);
-    if (nextScene != null) moved.scene = nextScene;
+    const sorted = normalizeIndices(indices, demo.steps.length);
+    if (!sorted.length) return;
+    const beforeIds = demo.steps.map((s) => s.id);
+    const beforeScenes = demo.steps.map((s) => Number(s.scene) || 1);
+    const { steps, selected } = moveIndices(demo.steps, sorted, insertBefore, scene);
+    const unchanged =
+      beforeIds.length === steps.length &&
+      beforeIds.every((id, i) => id === steps[i]?.id) &&
+      beforeScenes.every((s, i) => s === (Number(steps[i]?.scene) || 1));
+    if (unchanged) return;
+    demo.steps = steps;
     renumberScenes(demo);
     setDemo(demo);
-    setSelectedIndex(toIndex);
+    applySelection(selected, selected[0]);
     renderFilmstrip();
     syncForm();
     renderCanvas();
@@ -1264,64 +1348,90 @@ export function createEditor(ctx) {
 
   function duplicateStep() {
     const demo = getDemo();
-    const step = currentStep();
-    if (!step) {
+    const indices = selectedSteps();
+    if (!indices.length || !demo.steps.length) {
       toast(t("toast.nothingToDup"));
       return;
     }
-    const copy = structuredClone(step);
-    copy.id = createStepId();
-    const base = copy.popover?.title || copy.label || (copy.type === "slide" ? t("editor.slideFallback") : t("editor.stepFallback"));
-    const next = t("editor.copySuffix", { name: base });
-    copy.label = next;
-    if (!copy.popover) copy.popover = {};
-    copy.popover.title = next;
-    const idx = getSelectedIndex() + 1;
-    demo.steps.splice(idx, 0, copy);
+    const copies = [];
+    for (const i of indices) {
+      const step = demo.steps[i];
+      if (!step) continue;
+      const copy = structuredClone(step);
+      copy.id = createStepId();
+      const base =
+        copy.popover?.title ||
+        copy.label ||
+        (copy.type === "slide" ? t("editor.slideFallback") : t("editor.stepFallback"));
+      const next = t("editor.copySuffix", { name: base });
+      copy.label = next;
+      if (!copy.popover) copy.popover = {};
+      copy.popover.title = next;
+      copies.push(copy);
+    }
+    if (!copies.length) {
+      toast(t("toast.nothingToDup"));
+      return;
+    }
+    const insertAt = indices[indices.length - 1] + 1;
+    demo.steps.splice(insertAt, 0, ...copies);
     renumberScenes(demo);
     setDemo(demo);
-    selectStep(idx);
+    const newSelected = copies.map((_, k) => insertAt + k);
+    applySelection(newSelected, newSelected[0]);
+    renderFilmstrip();
+    syncForm();
+    renderCanvas();
     onChange();
-    toast(t("toast.stepDuplicated"));
+    toast(copies.length > 1 ? t("toast.stepsDuplicated", { n: copies.length }) : t("toast.stepDuplicated"));
   }
 
   async function copyStepToClipboard() {
     const demo = getDemo();
-    const step = currentStep();
-    if (!step) {
+    const indices = selectedSteps();
+    if (!indices.length) {
       toast(t("toast.nothingToCopy"));
       return;
     }
     ensureCustomImages(demo);
-    const images = {};
-    const ref = typeof step.image === "string" ? step.image : "";
-    if (ref.startsWith("custom:")) {
-      const id = ref.slice(7);
-      if (demo.customImages[id]) images[id] = structuredClone(demo.customImages[id]);
+    const { steps, images } = collectStepsForClipboard(demo.steps, indices, demo.customImages);
+    if (!steps.length) {
+      toast(t("toast.nothingToCopy"));
+      return;
     }
-    await putStepClipboard({ step: structuredClone(step), images });
-    toast(t("toast.stepCopied"));
+    await putStepClipboard({ steps, step: steps[0], images });
+    toast(steps.length > 1 ? t("toast.stepsCopied", { n: steps.length }) : t("toast.stepCopied"));
   }
 
   async function pasteStepFromClipboard() {
     const demo = getDemo();
     const record = await getStepClipboard();
-    if (!record?.step) {
+    const rawSteps = record?.steps?.length ? record.steps : record?.step ? [record.step] : [];
+    if (!rawSteps.length) {
       toast(t("toast.clipboardEmpty"));
       return;
     }
     ensureCustomImages(demo);
-    const { step, images } = cloneStepForPaste(record.step, record.images || {});
     const anchor = currentStep();
-    step.scene = Number(anchor?.scene) || 1;
-    Object.assign(demo.customImages, images);
+    const scene = Number(anchor?.scene) || 1;
+    const pasted = [];
+    for (const raw of rawSteps) {
+      const { step, images } = cloneStepForPaste(raw, record.images || {});
+      step.scene = scene;
+      Object.assign(demo.customImages, images);
+      pasted.push(step);
+    }
     const idx = demo.steps.length ? getSelectedIndex() + 1 : 0;
-    demo.steps.splice(idx, 0, step);
+    demo.steps.splice(idx, 0, ...pasted);
     renumberScenes(demo);
     setDemo(demo);
-    selectStep(idx);
+    const newSelected = pasted.map((_, k) => idx + k);
+    applySelection(newSelected, newSelected[0]);
+    renderFilmstrip();
+    syncForm();
+    renderCanvas();
     onChange();
-    toast(t("toast.stepPasted"));
+    toast(pasted.length > 1 ? t("toast.stepsPasted", { n: pasted.length }) : t("toast.stepPasted"));
   }
 
   function deleteStep() {
@@ -1330,17 +1440,24 @@ export function createEditor(ctx) {
       toast(t("toast.nothingToRemove"));
       return;
     }
-    demo.steps.splice(getSelectedIndex(), 1);
+    const indices = selectedSteps();
+    const count = indices.length;
+    const { steps, primary } = deleteIndices(demo.steps, indices);
+    demo.steps = steps;
     renumberScenes(demo);
     setDemo(demo);
     if (!demo.steps.length) {
+      selectedIndices = [];
       setSelectedIndex(0);
       refresh();
     } else {
-      selectStep(Math.max(0, Math.min(getSelectedIndex(), demo.steps.length - 1)));
+      applySelection([primary], primary);
+      renderFilmstrip();
+      syncForm();
+      renderCanvas();
     }
     onChange();
-    toast(t("toast.stepRemoved"));
+    toast(count > 1 ? t("toast.stepsRemoved", { n: count }) : t("toast.stepRemoved"));
   }
 
   async function ingestImageFiles(files, { createSteps }) {
@@ -1604,6 +1721,7 @@ export function createEditor(ctx) {
       if (sceneRow && !item) {
         filmDragKind = "scene";
         filmDragFrom = Number(sceneRow.dataset.scene) || 1;
+        filmDragIndices = null;
         sceneRow.classList.add("is-dragging");
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", `scene:${filmDragFrom}`);
@@ -1612,9 +1730,27 @@ export function createEditor(ctx) {
       if (!item) return;
       filmDragKind = "step";
       filmDragFrom = Number(item.dataset.index);
-      item.classList.add("is-dragging");
+      syncSelectionFromPrimary();
+      if (selectedIndices.includes(filmDragFrom) && selectedIndices.length > 1) {
+        filmDragIndices = [...selectedIndices];
+      } else {
+        filmDragIndices = [filmDragFrom];
+        // why: não re-render no dragstart — o DOM do item arrastado sumiria e cancelaria o DnD
+        selectedIndices = [filmDragFrom];
+        setSelectedIndex(filmDragFrom);
+        selectionAnchor = filmDragFrom;
+        els.filmstrip.querySelectorAll(".film-item").forEach((el) => {
+          const i = Number(el.dataset.index);
+          el.classList.toggle("is-selected", i === filmDragFrom);
+          el.classList.toggle("is-active", i === filmDragFrom);
+          el.setAttribute("aria-selected", i === filmDragFrom ? "true" : "false");
+        });
+      }
+      for (const i of filmDragIndices) {
+        els.filmstrip.querySelector(`.film-item[data-index="${i}"]`)?.classList.add("is-dragging");
+      }
       e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", String(filmDragFrom));
+      e.dataTransfer.setData("text/plain", filmDragIndices.join(","));
     });
 
     els.filmstrip.addEventListener("dragend", () => {
@@ -1623,6 +1759,7 @@ export function createEditor(ctx) {
       });
       clearFilmDropMarks();
       filmDragFrom = null;
+      filmDragIndices = null;
       filmDragKind = "step";
     });
 
@@ -1686,6 +1823,7 @@ export function createEditor(ctx) {
       e.preventDefault();
       const demo = getDemo();
       const fromIndex = filmDragFrom;
+      const group = filmDragIndices?.length ? filmDragIndices : [fromIndex];
 
       if (filmDragKind === "scene") {
         const scene = sceneAtPointer(e.target);
@@ -1708,21 +1846,19 @@ export function createEditor(ctx) {
           if (cursor.classList.contains("film-scene")) break;
           cursor = cursor.nextElementSibling;
         }
-        let toIndex = cursor?.classList.contains("film-item")
+        const insertBefore = cursor?.classList.contains("film-item")
           ? Number(cursor.dataset.index)
           : demo.steps.length;
-        if (fromIndex < toIndex) toIndex -= 1;
-        reorderSteps(fromIndex, toIndex, scene);
+        reorderStepGroup(group, insertBefore, scene);
         return;
       }
 
       const targetIndex = Number(item.dataset.index);
       const rect = item.getBoundingClientRect();
       const before = e.clientY < rect.top + rect.height / 2;
-      let toIndex = before ? targetIndex : targetIndex + 1;
-      if (fromIndex < toIndex) toIndex -= 1;
+      const insertBefore = before ? targetIndex : targetIndex + 1;
       const scene = Number(demo.steps[targetIndex]?.scene) || 1;
-      reorderSteps(fromIndex, toIndex, scene);
+      reorderStepGroup(group, insertBefore, scene);
     });
 
     els.filmstrip.addEventListener("click", (e) => {
@@ -1742,15 +1878,20 @@ export function createEditor(ctx) {
         e.preventDefault();
         e.stopPropagation();
         const action = actionBtn.dataset.action;
-        if (action === "up") reorderSteps(index, index - 1);
-        else if (action === "down") reorderSteps(index, index + 1);
+        if (action === "up") reorderStepGroup([index], index - 1);
+        else if (action === "down") reorderStepGroup([index], index + 2);
         else if (action === "delete") {
-          setSelectedIndex(index);
+          if (!selectedIndices.includes(index) || selectedIndices.length <= 1) {
+            applySelection([index], index);
+          }
           deleteStep();
         }
         return;
       }
-      selectStep(index);
+      selectStep(index, {
+        toggle: e.metaKey || e.ctrlKey,
+        range: e.shiftKey && !(e.metaKey || e.ctrlKey),
+      });
     });
 
     els.filmstrip.addEventListener("keydown", (e) => {
@@ -1758,7 +1899,10 @@ export function createEditor(ctx) {
       const item = e.target.closest("[data-index]");
       if (!item) return;
       e.preventDefault();
-      selectStep(Number(item.dataset.index));
+      selectStep(Number(item.dataset.index), {
+        toggle: e.metaKey || e.ctrlKey,
+        range: e.shiftKey && !(e.metaKey || e.ctrlKey),
+      });
     });
   }
 
@@ -1907,6 +2051,253 @@ export function createEditor(ctx) {
     const bridge = window.guiaDesktopApp;
     if (!bridge?.cartesiaStatus || !bridge.cartesiaSaveKey) return null;
     return bridge;
+  }
+
+  function llmBridge() {
+    const bridge = window.guiaDesktopApp;
+    if (!bridge?.llmStatus || !bridge.llmSave) return null;
+    return bridge;
+  }
+
+  let llmConfigured = false;
+
+  function syncLlmProviderUi() {
+    const providerEl = document.getElementById("llm-provider");
+    const wrapBase = document.getElementById("wrap-llm-base");
+    const baseEl = document.getElementById("llm-base-url");
+    const link = document.getElementById("link-llm-signup");
+    const provider = resolveProvider(providerEl?.value || LLM_PROVIDERS.openrouter.id, baseEl?.value);
+    if (wrapBase) wrapBase.hidden = provider.id !== "custom";
+    if (link) {
+      if (provider.keysUrl) {
+        link.hidden = false;
+        link.href = provider.keysUrl;
+      } else {
+        link.hidden = true;
+      }
+    }
+  }
+
+  function syncGenerateCopyButton() {
+    const btn = document.getElementById("btn-generate-copy");
+    if (!btn) return;
+    btn.hidden = false;
+  }
+
+  function openLlmSettings() {
+    const panel = document.getElementById("narration-panel");
+    if (!panel) return;
+    // why: fecha outros details da topbar para o painel de Ajustes ficar visível.
+    document.querySelectorAll(".topbar-actions details.theme-panel, .topbar-actions details.export-panel").forEach((el) => {
+      if (el !== panel) el.open = false;
+    });
+    panel.open = true;
+    panel.dispatchEvent(new Event("toggle"));
+    document.getElementById("llm-key")?.focus();
+  }
+
+  async function refreshLlmStatus() {
+    const statusEl = document.getElementById("llm-status");
+    const clearBtn = document.getElementById("btn-llm-clear");
+    const providerEl = document.getElementById("llm-provider");
+    const baseEl = document.getElementById("llm-base-url");
+    const modelEl = document.getElementById("llm-model");
+    const bridge = llmBridge();
+    try {
+      const status = bridge ? await bridge.llmStatus() : await llmSettingsStatus();
+      llmConfigured = !!status?.configured;
+      if (providerEl && status?.provider) providerEl.value = status.provider;
+      if (baseEl && status?.baseUrl) baseEl.value = status.baseUrl;
+      if (modelEl && status?.model) modelEl.value = status.model;
+      syncLlmProviderUi();
+      if (statusEl) {
+        if (status?.configured) {
+          statusEl.textContent = status.masked
+            ? t("llm.configured", { model: status.model || LLM_DEFAULT_MODEL, masked: status.masked })
+            : t("llm.configuredNoMask");
+        } else {
+          statusEl.textContent = t("llm.statusHint");
+        }
+      }
+      if (clearBtn) clearBtn.hidden = !status?.configured;
+    } catch {
+      llmConfigured = false;
+      if (statusEl) statusEl.textContent = t("llm.badResponse");
+      if (clearBtn) clearBtn.hidden = true;
+    }
+    syncGenerateCopyButton();
+  }
+
+  async function saveLlmSettingsFromForm() {
+    const providerEl = document.getElementById("llm-provider");
+    const baseEl = document.getElementById("llm-base-url");
+    const modelEl = document.getElementById("llm-model");
+    const keyEl = document.getElementById("llm-key");
+    const provider = resolveProvider(providerEl?.value, baseEl?.value);
+    const model = String(modelEl?.value || "").trim() || LLM_DEFAULT_MODEL;
+    const apiKey = String(keyEl?.value || "").trim();
+    if (!isPlausibleLlmKey(apiKey)) {
+      toast(t("toast.llmNeedKey"));
+      return;
+    }
+    if (!model) {
+      toast(t("toast.llmNeedModel"));
+      return;
+    }
+    if (provider.id === "custom" && !normalizeBaseUrl(baseEl?.value)) {
+      toast(t("llm.badBaseUrl"));
+      return;
+    }
+    const settings = {
+      provider: provider.id,
+      baseUrl: provider.baseUrl || normalizeBaseUrl(baseEl?.value),
+      model,
+      apiKey,
+    };
+    const bridge = llmBridge();
+    let result;
+    try {
+      result = bridge
+        ? await bridge.llmSave(settings)
+        : await putLlmSettings(settings).then(() => ({ ok: true }));
+    } catch {
+      result = { ok: false, error: t("toast.llmSaveFail") };
+    } finally {
+      if (keyEl) keyEl.value = "";
+    }
+    if (!result?.ok) {
+      toast(result?.error || t("toast.llmSaveFail"));
+      await refreshLlmStatus();
+      return;
+    }
+    toast(t("toast.llmSaved"));
+    await refreshLlmStatus();
+  }
+
+  async function clearLlmSettingsFromForm() {
+    const bridge = llmBridge();
+    let result;
+    try {
+      result = bridge ? await bridge.llmClear() : await deleteLlmSettings().then(() => ({ ok: true }));
+    } catch {
+      result = { ok: false, error: t("toast.llmClearFail") };
+    }
+    toast(result?.ok ? t("toast.llmCleared") : result?.error || t("toast.llmClearFail"));
+    const defaults = defaultLlmSettings();
+    const providerEl = document.getElementById("llm-provider");
+    const baseEl = document.getElementById("llm-base-url");
+    const modelEl = document.getElementById("llm-model");
+    if (providerEl) providerEl.value = defaults.provider;
+    if (baseEl) baseEl.value = defaults.baseUrl;
+    if (modelEl) modelEl.value = defaults.model;
+    await refreshLlmStatus();
+  }
+
+  async function listLlmModelsFromForm() {
+    const bridge = llmBridge();
+    const list = document.getElementById("llm-model-list");
+    const btn = document.getElementById("btn-llm-list-models");
+    if (btn) btn.disabled = true;
+    try {
+      let result;
+      if (bridge?.llmListModels) {
+        result = await bridge.llmListModels();
+      } else {
+        const settings = await readLlmSettings();
+        result = await listModels({
+          apiKey: settings.apiKey,
+          baseUrl: settings.baseUrl,
+        });
+      }
+      if (!result?.ok) {
+        toast(result?.error || t("toast.llmCopyFail"));
+        return;
+      }
+      if (list) {
+        list.innerHTML = (result.models || [])
+          .map((id) => `<option value="${String(id).replace(/"/g, "&quot;")}"></option>`)
+          .join("");
+      }
+      toast(t("llm.modelsLoaded", { n: (result.models || []).length }));
+    } catch (err) {
+      toast(err?.message || t("toast.llmCopyFail"));
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function generateStepCopy() {
+    const demo = getDemo();
+    const step = currentStep();
+    const idx = getSelectedIndex();
+    if (!step) return;
+    if (!llmConfigured) {
+      toast(t("toast.llmNeedKey"));
+      openLlmSettings();
+      return;
+    }
+    const src = resolveImageSrc(demo, step.image);
+    if (!src) {
+      toast(t("llm.needImage"));
+      return;
+    }
+    const btn = document.getElementById("btn-generate-copy");
+    if (btn) {
+      btn.disabled = true;
+      btn.setAttribute("aria-busy", "true");
+    }
+    try {
+      const imageDataUrl = await shrinkImageDataUrl(src);
+      if (!imageDataUrl) {
+        toast(t("llm.needImage"));
+        return;
+      }
+      const context = buildStepContext(demo.steps, idx);
+      const messages = buildChatMessages({
+        imageDataUrl,
+        context,
+        draft: {
+          title: els.propTitle?.value || step.popover?.title || step.label || "",
+          description: els.propDescription?.value || step.popover?.description || "",
+          caption: els.propCaption?.value || step.caption || "",
+        },
+        locale: getLocale(),
+      });
+      const bridge = llmBridge();
+      let result;
+      if (bridge?.llmComplete) {
+        result = await bridge.llmComplete({ messages });
+      } else {
+        const settings = await readLlmSettings();
+        result = await chatCompletions({
+          apiKey: settings.apiKey,
+          baseUrl: settings.baseUrl,
+          model: settings.model,
+          messages,
+        });
+      }
+      if (!result?.ok) {
+        toast(result?.error || t("toast.llmCopyFail"));
+        return;
+      }
+      const parsed = parseCopyJson(result.content);
+      if (!parsed) {
+        toast(t("llm.badCopy"));
+        return;
+      }
+      if (els.propTitle) els.propTitle.value = parsed.title;
+      if (els.propDescription) els.propDescription.value = parsed.description;
+      if (els.propCaption) els.propCaption.value = parsed.narration;
+      applyFormToStep();
+      toast(t("toast.llmCopied"));
+    } catch (err) {
+      toast(err?.message || t("toast.llmCopyFail"));
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.removeAttribute("aria-busy");
+      }
+    }
   }
 
   async function refreshCartesiaStatus() {
@@ -2113,11 +2504,21 @@ export function createEditor(ctx) {
     });
 
     document.getElementById("narration-panel")?.addEventListener("toggle", (event) => {
-      if (event.currentTarget.open) refreshCartesiaStatus();
+      if (event.currentTarget.open) {
+        refreshCartesiaStatus();
+        refreshLlmStatus();
+      }
     });
     document.getElementById("btn-cartesia-save")?.addEventListener("click", saveCartesiaKey);
     document.getElementById("btn-cartesia-clear")?.addEventListener("click", clearCartesiaKey);
     refreshCartesiaStatus();
+
+    document.getElementById("llm-provider")?.addEventListener("change", syncLlmProviderUi);
+    document.getElementById("btn-llm-save")?.addEventListener("click", saveLlmSettingsFromForm);
+    document.getElementById("btn-llm-clear")?.addEventListener("click", clearLlmSettingsFromForm);
+    document.getElementById("btn-llm-list-models")?.addEventListener("click", listLlmModelsFromForm);
+    document.getElementById("btn-generate-copy")?.addEventListener("click", generateStepCopy);
+    refreshLlmStatus();
 
     document.getElementById("btn-generate-caption")?.addEventListener("click", generateCaptionAudio);
     document.getElementById("btn-upload-caption")?.addEventListener("click", () => {

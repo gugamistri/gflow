@@ -311,6 +311,30 @@ function cartesiaKeys() {
   });
 }
 
+function llmKeys() {
+  return createKeyStore({
+    directory: path.join(app.getPath("userData"), "secrets"),
+    fileName: "llm-settings.bin",
+    encrypt(value) {
+      if (!safeStorage.isEncryptionAvailable()) {
+        throw new Error("encryption-unavailable");
+      }
+      return safeStorage.encryptString(value);
+    },
+    decrypt(buffer) {
+      return safeStorage.decryptString(buffer);
+    },
+  });
+}
+
+let llmLibPromise = null;
+function llmLib() {
+  if (!llmLibPromise) {
+    llmLibPromise = import(pathToFileURL(path.join(ROOT, "js", "llm.js")).href);
+  }
+  return llmLibPromise;
+}
+
 function registerIpc() {
   ipcMain.handle("desktop:is", () => true);
 
@@ -367,6 +391,138 @@ function registerIpc() {
     });
     if (!spoken.ok) return { ok: false, error: spoken.error || "A síntese falhou." };
     return { ok: true, audioBase64: spoken.audioBase64, mime: spoken.mime };
+  });
+
+  ipcMain.handle("llm:status", async () => {
+    const {
+      defaultLlmSettings,
+      isPlausibleLlmKey,
+      maskLlmKey,
+      normalizeBaseUrl,
+    } = await llmLib();
+    const store = llmKeys();
+    const defaults = defaultLlmSettings();
+    if (!store.configured()) {
+      return {
+        ok: true,
+        configured: false,
+        masked: "",
+        provider: defaults.provider,
+        baseUrl: defaults.baseUrl,
+        model: defaults.model,
+      };
+    }
+    try {
+      const payload = store.readPayload() || {};
+      const apiKey = String(payload.apiKey || "");
+      const baseUrl = normalizeBaseUrl(payload.baseUrl) || defaults.baseUrl;
+      const model = String(payload.model || defaults.model).trim() || defaults.model;
+      const provider = String(payload.provider || defaults.provider);
+      const configured = isPlausibleLlmKey(apiKey) && !!baseUrl && !!model;
+      return {
+        ok: true,
+        configured,
+        masked: maskLlmKey(apiKey),
+        provider,
+        baseUrl,
+        model,
+      };
+    } catch {
+      return { ok: false, configured: false, masked: "", error: "Não li a configuração de IA." };
+    }
+  });
+
+  ipcMain.handle("llm:save", async (_event, settings) => {
+    const {
+      defaultLlmSettings,
+      isPlausibleLlmKey,
+      maskLlmKey,
+      normalizeBaseUrl,
+      resolveProvider,
+    } = await llmLib();
+    const defaults = defaultLlmSettings();
+    const provider = resolveProvider(settings?.provider, settings?.baseUrl);
+    const baseUrl = provider.baseUrl || normalizeBaseUrl(settings?.baseUrl);
+    const model = String(settings?.model || defaults.model).trim() || defaults.model;
+    const apiKey = String(settings?.apiKey || "").trim();
+    if (!isPlausibleLlmKey(apiKey)) {
+      return { ok: false, error: "Informe uma chave de API válida." };
+    }
+    if (!baseUrl) {
+      return { ok: false, error: "Informe uma URL base válida." };
+    }
+    try {
+      llmKeys().savePayload({
+        provider: provider.id,
+        baseUrl,
+        model,
+        apiKey,
+      });
+    } catch {
+      return { ok: false, error: "O chaveiro do sistema não está disponível." };
+    }
+    return {
+      ok: true,
+      configured: true,
+      masked: maskLlmKey(apiKey),
+      provider: provider.id,
+      baseUrl,
+      model,
+    };
+  });
+
+  ipcMain.handle("llm:clear", async () => {
+    llmKeys().clear();
+    return { ok: true, configured: false };
+  });
+
+  ipcMain.handle("llm:complete", async (_event, payload) => {
+    const { chatCompletions, defaultLlmSettings, isPlausibleLlmKey, normalizeBaseUrl } = await llmLib();
+    const store = llmKeys();
+    if (!store.configured()) {
+      return { ok: false, error: "Salve a configuração de IA." };
+    }
+    let settings;
+    try {
+      settings = store.readPayload() || {};
+    } catch {
+      return { ok: false, error: "Não li a configuração de IA." };
+    }
+    const defaults = defaultLlmSettings();
+    const apiKey = String(settings.apiKey || "").trim();
+    const baseUrl = normalizeBaseUrl(settings.baseUrl) || defaults.baseUrl;
+    const model = String(settings.model || defaults.model).trim() || defaults.model;
+    if (!isPlausibleLlmKey(apiKey) || !baseUrl) {
+      return { ok: false, error: "Salve a configuração de IA." };
+    }
+    return chatCompletions({
+      apiKey,
+      baseUrl,
+      model,
+      messages: payload?.messages,
+      maxTokens: payload?.maxTokens,
+    });
+  });
+
+  ipcMain.handle("llm:list-models", async () => {
+    const { listModels, defaultLlmSettings, isPlausibleLlmKey, normalizeBaseUrl } = await llmLib();
+    const store = llmKeys();
+    if (!store.configured()) {
+      return { ok: false, error: "Salve a configuração de IA.", models: [] };
+    }
+    let settings;
+    try {
+      settings = store.readPayload() || {};
+    } catch {
+      return { ok: false, error: "Não li a configuração de IA.", models: [] };
+    }
+    const defaults = defaultLlmSettings();
+    const apiKey = String(settings.apiKey || "").trim();
+    const baseUrl = normalizeBaseUrl(settings.baseUrl) || defaults.baseUrl;
+    if (!isPlausibleLlmKey(apiKey) || !baseUrl) {
+      return { ok: false, error: "Salve a configuração de IA.", models: [] };
+    }
+    return listModels({ apiKey, baseUrl });
   });
 
   ipcMain.handle("capture:open", () => {
