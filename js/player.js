@@ -3,6 +3,7 @@ import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, themeOverlayC
 import { createClickFxController } from "./clickFx.js";
 import { renderDemoPopoverFooter, clickDriverNext, setPopoverHiddenForSlide } from "./popoverFooter.js";
 import { sizeSlideLikeImage, applySlideLayout } from "./editor.js";
+import { computeZoomCamera, zoomCameraStyle } from "./zoomHighlight.js";
 import {
   createNarrationController,
   ensureNarration,
@@ -82,6 +83,97 @@ export function createPlayer(ctx) {
 
   function isPresenting() {
     return document.getElementById("view-editor")?.classList.contains("is-presenting");
+  }
+
+  function clearZoom({ animate = false } = {}) {
+    if (!els.frame) return;
+    if (!animate) {
+      const prev = els.frame.style.transition;
+      els.frame.style.transition = "none";
+      els.frame.style.transform = "";
+      els.frame.style.transformOrigin = "";
+      void els.frame.offsetWidth;
+      els.frame.style.transition = prev;
+    } else {
+      els.frame.style.transform = "";
+      els.frame.style.transformOrigin = "";
+    }
+    els.stage?.classList.remove("is-zooming");
+  }
+
+  function waitZoomTransition() {
+    return new Promise((resolve) => {
+      if (!els.frame) {
+        resolve();
+        return;
+      }
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        els.frame.removeEventListener("transitionend", onEnd);
+        clearTimeout(timer);
+        resolve();
+      };
+      const onEnd = (e) => {
+        if (e.target !== els.frame || e.propertyName !== "transform") return;
+        finish();
+      };
+      els.frame.addEventListener("transitionend", onEnd);
+      const timer = setTimeout(finish, 850);
+    });
+  }
+
+  function zoomEnabled(step) {
+    return step?.type !== "slide" && step?.zoomHighlight === true && els.image && !els.image.hidden;
+  }
+
+  async function applyStepZoom(step) {
+    if (!els.frame || !els.stage) return;
+    if (!zoomEnabled(step)) {
+      const hadZoom = Boolean(els.frame.style.transform);
+      clearZoom({ animate: hadZoom });
+      if (hadZoom) await waitZoomTransition();
+      return;
+    }
+    const imageSize = { w: els.image.clientWidth, h: els.image.clientHeight };
+    const stageSize = { w: els.stage.clientWidth, h: els.stage.clientHeight };
+    const cam = computeZoomCamera(step.hotspot, imageSize, stageSize, true);
+    const style = zoomCameraStyle(cam);
+    const nextTransform = style.transform === "none" ? "" : style.transform;
+    els.stage.classList.add("is-zooming");
+    els.frame.style.transformOrigin = style.transformOrigin;
+    if (els.frame.style.transform === nextTransform) return;
+    els.frame.style.transform = nextTransform;
+    await waitZoomTransition();
+  }
+
+  /** Garante escala 1× para o retângulo do destaque aparecer antes do close-up. */
+  async function prepareStepCamera(step) {
+    await waitLayout();
+    if (els.frame?.style.transform) {
+      clearZoom({ animate: false });
+    }
+    // why: sem zoomHighlight limpa qualquer residual; com zoom, o close-up vem depois do driver
+    if (!zoomEnabled(step) && els.stage?.classList.contains("is-zooming")) {
+      clearZoom({ animate: false });
+    }
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function zoomAfterHighlightVisible(step) {
+    if (!zoomEnabled(step)) return;
+    // why: o driver precisa pintar o recorte em 1× antes da câmera começar a andar
+    await delay(550);
+    await applyStepZoom(step);
+    try {
+      driverObj?.refresh?.();
+    } catch {
+      /* ignore */
+    }
   }
 
   async function showStepVisual(step, { speak = false } = {}) {
@@ -189,8 +281,8 @@ export function createPlayer(ctx) {
     els.hotspot?.classList.add("is-previewing");
     await narration.startTour(demo);
     await showStepVisual(steps[activeIndex], { speak: true });
-    // why: is-presenting muda o grid; o driver precisa do hotspot já no layout final
-    await waitLayout();
+    // why: is-presenting muda o grid; o driver precisa do hotspot já no layout final (ainda em 1×)
+    await prepareStepCamera(steps[activeIndex]);
 
     if (demo?.theme) applyTheme(demo.theme);
 
@@ -238,8 +330,9 @@ export function createPlayer(ctx) {
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], { speak: true });
-              await waitLayout();
+              await prepareStepCamera(steps[activeIndex]);
               drv.moveNext();
+              await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
               animating = false;
             }
@@ -254,8 +347,9 @@ export function createPlayer(ctx) {
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], { speak: true });
-              await waitLayout();
+              await prepareStepCamera(steps[activeIndex]);
               drv.movePrevious();
+              await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
               animating = false;
             }
@@ -267,12 +361,14 @@ export function createPlayer(ctx) {
         narration.stop();
         setProgress(t("player.stopped"));
         clickFx.reset();
+        clearZoom({ animate: false });
         driverObj = null;
       },
     });
 
     setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
     driverObj.drive(activeIndex);
+    await zoomAfterHighlightVisible(steps[activeIndex]);
   }
 
   function stop({ silent = false } = {}) {
@@ -287,6 +383,7 @@ export function createPlayer(ctx) {
       driverObj = null;
     }
     clickFx.reset();
+    clearZoom({ animate: false });
     animating = false;
     running = false;
     if (!silent) setProgress(t("player.stopped"));
@@ -347,7 +444,16 @@ export function createPlayer(ctx) {
         sizeSlideLikeImage(els.slide, els.stage, demo, step, resolveImageSrc);
         return;
       }
-      if (!els.image.hidden) placeHotspot(step.hotspot);
+      if (!els.image.hidden) {
+        placeHotspot(step.hotspot);
+        applyStepZoom(step).then(() => {
+          try {
+            driverObj?.refresh?.();
+          } catch {
+            /* ignore */
+          }
+        });
+      }
     });
   }
 

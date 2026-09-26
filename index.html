@@ -258,6 +258,14 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
           <span data-i18n="toolbar.duplicate">Duplicar</span>
         </button>
+        <button type="button" class="btn btn-sm" id="btn-copy-step" title="Copiar (⌘C)" data-i18n-title="toolbar.copyTitle">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+          <span data-i18n="toolbar.copy">Copiar</span>
+        </button>
+        <button type="button" class="btn btn-sm" id="btn-paste-step" title="Colar (⌘V)" data-i18n-title="toolbar.pasteTitle">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+          <span data-i18n="toolbar.paste">Colar</span>
+        </button>
         <button type="button" class="btn btn-sm" id="btn-add-images">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
           <span data-i18n="toolbar.images">Imagens</span>
@@ -386,6 +394,10 @@
       <label class="checkbox" id="wrap-simulate">
         <input type="checkbox" id="prop-simulate-click" checked />
         <span data-i18n="props.simulateClick">Simular clique ao avançar</span>
+      </label>
+      <label class="checkbox" id="wrap-zoom">
+        <input type="checkbox" id="prop-zoom-highlight" />
+        <span data-i18n="props.zoomHighlight">Ampliar destaque</span>
       </label>
       <div class="hold-field">
         <label><span data-i18n="props.hold">Temporizador (s)</span>

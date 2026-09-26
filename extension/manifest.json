@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GuiaFlow — Captura",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Captura telas e cliques e cria um projeto novo no editor do GuiaFlow.",
   "minimum_chrome_version": "120",
   "permissions": ["activeTab", "tabs", "scripting", "storage", "unlimitedStorage", "downloads"],

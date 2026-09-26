@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterShellExecution": [
+      {
+        "command": ".cursor/hooks/deploy-vercel-on-push.sh",
+        "matcher": "git\\s+push",
+        "timeout": 300
+      }
+    ]
+  }
+}

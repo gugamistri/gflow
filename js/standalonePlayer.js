@@ -64,6 +64,50 @@ function gfT(key, vars) {
     return clickPointFromHotspot(step?.hotspot);
   }
 
+  function clampCover(translate, scaledSize, stageSize) {
+    if (scaledSize <= stageSize) return 0;
+    const max = (scaledSize - stageSize) / 2;
+    return Math.min(max, Math.max(-max, translate));
+  }
+
+  function computeZoomCamera(hotspot, imageSize, stageSize, enabled) {
+    if (!enabled) return { scale: 1, translateX: 0, translateY: 0 };
+    const imgW = Number(imageSize?.w) || 0;
+    const imgH = Number(imageSize?.h) || 0;
+    const stageW = Number(stageSize?.w) || 0;
+    const stageH = Number(stageSize?.h) || 0;
+    if (imgW <= 0 || imgH <= 0 || stageW <= 0 || stageH <= 0) {
+      return { scale: 1, translateX: 0, translateY: 0 };
+    }
+    const hs = hotspot || { x: 40, y: 40, w: 12, h: 8 };
+    const hsW = Math.max(1, ((Number(hs.w) || 0) / 100) * imgW);
+    const hsH = Math.max(1, ((Number(hs.h) || 0) / 100) * imgH);
+    const hsCx = (((Number(hs.x) || 0) + (Number(hs.w) || 0) / 2) / 100) * imgW;
+    const hsCy = (((Number(hs.y) || 0) + (Number(hs.h) || 0) / 2) / 100) * imgH;
+    const fit = Math.min(stageW / hsW, stageH / hsH) * 0.55;
+    const scale = Math.min(3.2, Math.max(1, fit));
+    const imgCx = imgW / 2;
+    const imgCy = imgH / 2;
+    let translateX = scale * (imgCx - hsCx);
+    let translateY = scale * (imgCy - hsCy);
+    translateX = clampCover(translateX, scale * imgW, stageW);
+    translateY = clampCover(translateY, scale * imgH, stageH);
+    return { scale, translateX, translateY };
+  }
+
+  function zoomCameraStyle(camera) {
+    const scale = camera?.scale ?? 1;
+    const tx = camera?.translateX ?? 0;
+    const ty = camera?.translateY ?? 0;
+    if (scale === 1 && tx === 0 && ty === 0) {
+      return { transform: "none", transformOrigin: "center center" };
+    }
+    return {
+      transform: "translate(" + tx + "px, " + ty + "px) scale(" + scale + ")",
+      transformOrigin: "center center",
+    };
+  }
+
   function resolveImageSrc(imageRef) {
     if (!imageRef) return "";
     if (imageRef.startsWith("custom:")) {
@@ -419,6 +463,7 @@ function gfT(key, vars) {
   }
 
   const els = {
+    stage: document.getElementById("player-stage"),
     image: document.getElementById("player-image"),
     slide: document.getElementById("player-slide"),
     slideKicker: document.getElementById("player-slide-kicker"),
@@ -495,6 +540,93 @@ function gfT(key, vars) {
     const h = els.image.clientHeight;
     els.clickPoint.style.left = (cp.x / 100) * w + "px";
     els.clickPoint.style.top = (cp.y / 100) * h + "px";
+  }
+
+  function clearZoom(animate) {
+    if (!els.frame) return;
+    if (!animate) {
+      const prev = els.frame.style.transition;
+      els.frame.style.transition = "none";
+      els.frame.style.transform = "";
+      els.frame.style.transformOrigin = "";
+      void els.frame.offsetWidth;
+      els.frame.style.transition = prev;
+    } else {
+      els.frame.style.transform = "";
+      els.frame.style.transformOrigin = "";
+    }
+    els.stage?.classList.remove("is-zooming");
+  }
+
+  function waitZoomTransition() {
+    return new Promise((resolve) => {
+      if (!els.frame) {
+        resolve();
+        return;
+      }
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        els.frame.removeEventListener("transitionend", onEnd);
+        clearTimeout(timer);
+        resolve();
+      };
+      const onEnd = (e) => {
+        if (e.target !== els.frame || e.propertyName !== "transform") return;
+        finish();
+      };
+      els.frame.addEventListener("transitionend", onEnd);
+      const timer = setTimeout(finish, 850);
+    });
+  }
+
+  function zoomEnabled(step) {
+    return step?.type !== "slide" && step?.zoomHighlight === true && els.image && !els.image.hidden;
+  }
+
+  async function applyStepZoom(step) {
+    if (!els.frame || !els.stage) return;
+    if (!zoomEnabled(step)) {
+      const hadZoom = Boolean(els.frame.style.transform);
+      clearZoom(hadZoom);
+      if (hadZoom) await waitZoomTransition();
+      return;
+    }
+    const cam = computeZoomCamera(
+      step.hotspot,
+      { w: els.image.clientWidth, h: els.image.clientHeight },
+      { w: els.stage.clientWidth, h: els.stage.clientHeight },
+      true
+    );
+    const style = zoomCameraStyle(cam);
+    const next = style.transform === "none" ? "" : style.transform;
+    els.stage.classList.add("is-zooming");
+    els.frame.style.transformOrigin = style.transformOrigin;
+    if (els.frame.style.transform === next) return;
+    els.frame.style.transform = next;
+    await waitZoomTransition();
+  }
+
+  async function prepareStepCamera() {
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    if (els.frame?.style.transform) clearZoom(false);
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function zoomAfterHighlightVisible(step) {
+    if (!zoomEnabled(step)) return;
+    // why: o driver precisa pintar o recorte em 1× antes da câmera começar a andar
+    await delay(550);
+    await applyStepZoom(step);
+    try {
+      driverObj?.refresh?.();
+    } catch {
+      /* ignore */
+    }
   }
 
   function clickTarget(step) {
@@ -589,6 +721,7 @@ function gfT(key, vars) {
       driverObj = null;
     }
     clickFx.reset();
+    clearZoom(false);
     animating = false;
   }
 
@@ -613,6 +746,7 @@ function gfT(key, vars) {
     activeIndex = startIndex;
     await narration.startTour();
     await showStepVisual(steps[activeIndex], true);
+    await prepareStepCamera();
 
     const overlay =
       getComputedStyle(document.documentElement).getPropertyValue("--demo-overlay").trim() ||
@@ -661,7 +795,9 @@ function gfT(key, vars) {
               activeIndex = nextIndex;
               setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], true);
+              await prepareStepCamera();
               drv.moveNext();
+              await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
               animating = false;
             }
@@ -675,7 +811,9 @@ function gfT(key, vars) {
               activeIndex -= 1;
               setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], true);
+              await prepareStepCamera();
               drv.movePrevious();
+              await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
               animating = false;
             }
@@ -687,11 +825,13 @@ function gfT(key, vars) {
         narration.stop();
         setProgress(gfT("player.stopped"));
         clickFx.reset();
+        clearZoom(false);
       },
     });
 
     setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
     driverObj.drive(activeIndex);
+    await zoomAfterHighlightVisible(steps[activeIndex]);
   }
 
   applyTheme(demo.theme);
@@ -770,6 +910,13 @@ function gfT(key, vars) {
     if (step && step.type !== "slide" && !els.image.hidden) {
       placeHotspot(step.hotspot);
       placeClickPoint(ensureClickPoint(step));
+      applyStepZoom(step).then(() => {
+        try {
+          driverObj?.refresh?.();
+        } catch {
+          /* ignore */
+        }
+      });
     }
   });
 

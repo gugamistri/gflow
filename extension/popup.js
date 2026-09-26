@@ -45,6 +45,12 @@ function send(message) {
   });
 }
 
+/** Fecha o popup só depois da resposta; erro mantém aberto para ler o status. */
+function closeIfOk(state) {
+  if (state?.ok === false || state?.error) return;
+  window.close();
+}
+
 initLocale();
 applyI18n(document);
 bindLocaleSelect(document.getElementById("locale-select"), (locale) => {
@@ -86,21 +92,36 @@ document.getElementById("start").addEventListener("click", async () => {
     paint({ ok: false, error: t("ext.noActiveTab") });
     return;
   }
-  paint(await send({ type: "START", tabId: tab.id }));
+  const state = await send({ type: "START", tabId: tab.id });
+  paint(state);
+  closeIfOk(state);
 });
 
 document.getElementById("shot").addEventListener("click", async () => {
   const tab = await activeTab();
-  paint(await send({ type: "CAPTURE_NOW", tabId: tab?.id }));
+  const state = await send({ type: "CAPTURE_NOW", tabId: tab?.id });
+  paint(state);
+  closeIfOk(state);
 });
 
 document.getElementById("create").addEventListener("click", async () => {
   const { name, editorOrigin } = settingsPayload();
-  paint(await send({ type: "CREATE_PROJECT", name, editorOrigin }));
+  const state = await send({ type: "CREATE_PROJECT", name, editorOrigin });
+  paint(state);
+  closeIfOk(state);
+});
+
+document.getElementById("append").addEventListener("click", async () => {
+  const { name, editorOrigin } = settingsPayload();
+  const state = await send({ type: "APPEND_TO_PROJECT", name, editorOrigin });
+  paint(state);
+  closeIfOk(state);
 });
 
 document.getElementById("download").addEventListener("click", async () => {
-  paint(await send({ type: "DOWNLOAD_JSON" }));
+  const state = await send({ type: "DOWNLOAD_JSON" });
+  paint(state);
+  closeIfOk(state);
 });
 
 document.getElementById("undo").addEventListener("click", async () => {
@@ -108,7 +129,9 @@ document.getElementById("undo").addEventListener("click", async () => {
 });
 
 document.getElementById("cancel").addEventListener("click", async () => {
-  paint(await send({ type: "CANCEL" }));
+  const state = await send({ type: "CANCEL" });
+  paint(state);
+  closeIfOk(state);
 });
 
 send({ type: "STATUS" }).then(paint);

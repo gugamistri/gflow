@@ -23,6 +23,8 @@ import {
   getCustomThemes,
   saveCustomThemes,
 } from "./projects.js";
+import { appendCaptureToProject } from "./stepClipboard.js";
+import { renumberScenes } from "./scenes.js";
 import {
   THEME_PRESETS,
   cloneTheme,
@@ -39,7 +41,6 @@ import { createPlayer } from "./player.js";
 import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createHistory } from "./history.js";
-import { renumberScenes } from "./scenes.js";
 import {
   initLocale,
   applyI18n,
@@ -1065,6 +1066,24 @@ async function importCapturePayload(data, { name } = {}) {
   return created;
 }
 
+async function appendCapturePayload(data) {
+  if (!data || !Array.isArray(data.steps)) {
+    throw new Error(t("err.captureNoSteps"));
+  }
+  if (!project?.id) {
+    throw new Error(t("ext.appendNoProject"));
+  }
+  const { startIndex } = appendCaptureToProject(project, data, {
+    sceneLabel: data.sceneLabels?.[1] || data.sceneLabels?.["1"] || data.name,
+  });
+  renumberScenes(project);
+  setSelectedIndex(startIndex);
+  onChange();
+  editor.refresh?.();
+  paintChrome();
+  return project;
+}
+
 function signalGuiaReady() {
   document.documentElement.dataset.guiaReady = "1";
   window.postMessage({ source: "guia-editor", type: "guia-ready" }, location.origin);
@@ -1074,23 +1093,32 @@ function bindCaptureInbox() {
   window.addEventListener("message", async (event) => {
     if (event.source !== window || event.origin !== location.origin) return;
     const data = event.data;
-    if (!data || data.source !== "guia-capture" || data.type !== "import-project") return;
+    if (!data || data.source !== "guia-capture") return;
+    if (data.type !== "import-project" && data.type !== "append-steps") return;
 
+    const mode = data.type === "append-steps" ? "append" : "create";
     try {
       if (!Array.isArray(data.payload?.steps)) {
         throw new Error(t("err.captureNoSteps"));
       }
-      const created = await importCapturePayload(data.payload);
+      let result;
+      if (mode === "append") {
+        result = await appendCapturePayload(data.payload);
+        toast(t("toast.stepsAppended"));
+      } else {
+        result = await importCapturePayload(data.payload);
+        toast(t("toast.projectCreated", { name: result.name }));
+      }
       window.postMessage(
         {
           source: "guia-capture",
           type: "import-ack",
           ok: true,
-          projectId: created.id,
+          mode,
+          projectId: result.id,
         },
         location.origin
       );
-      toast(t("toast.projectCreated", { name: created.name }));
     } catch (err) {
       console.error(err);
       window.postMessage(
@@ -1098,6 +1126,7 @@ function bindCaptureInbox() {
           source: "guia-capture",
           type: "import-ack",
           ok: false,
+          mode,
           error: err?.message || t("err.createProjectFail"),
         },
         location.origin

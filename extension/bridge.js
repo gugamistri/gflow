@@ -7,6 +7,7 @@
   let delivered = false;
   let posted = false;
   let pending = null;
+  let pendingMode = "create";
 
   function editorReady() {
     return document.documentElement?.dataset.guiaReady === "1";
@@ -16,20 +17,24 @@
     chrome.runtime.sendMessage({ type: "HANDOFF_GET" }, (response) => {
       if (chrome.runtime.lastError) return;
       if (!response?.handoff?.payload) return;
-      tryDeliver(response.handoff.payload);
+      tryDeliver(response.handoff.payload, response.handoff.mode);
     });
   }
 
   // invariant: postMessage only after the editor sets data-guia-ready, otherwise the listener is not bound yet and delivering stays stuck
-  function tryDeliver(payload) {
+  function tryDeliver(payload, mode) {
     if (delivered || posted) return;
-    if (payload) pending = payload;
+    if (payload) {
+      pending = payload;
+      pendingMode = mode === "append" ? "append" : "create";
+    }
     if (!pending || !Array.isArray(pending.steps) || !editorReady()) return;
     posted = true;
+    const type = pendingMode === "append" ? "append-steps" : "import-project";
     window.postMessage(
       {
         source: SOURCE,
-        type: "import-project",
+        type,
         payload: pending,
       },
       location.origin
@@ -51,6 +56,7 @@
       chrome.runtime.sendMessage({
         type: "HANDOFF_ACK",
         ok: Boolean(data.ok),
+        mode: data.mode || pendingMode,
         projectId: data.projectId || null,
         error: data.error || null,
       });
@@ -59,7 +65,7 @@
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === "HANDOFF_PUSH" && msg.payload) {
-      tryDeliver(msg.payload);
+      tryDeliver(msg.payload, msg.mode);
     }
   });
 

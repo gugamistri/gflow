@@ -30,6 +30,8 @@ import {
 } from "./playback.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
 import { t } from "./i18n.js";
+import { cloneStepForPaste } from "./stepClipboard.js";
+import { getStepClipboard, putStepClipboard } from "./projects.js";
 
 function ensureSceneLabels(demo) {
   if (!demo.sceneLabels || typeof demo.sceneLabels !== "object") {
@@ -177,6 +179,8 @@ export function createEditor(ctx) {
     labelAlign: document.getElementById("label-align"),
     propSimulate: document.getElementById("prop-simulate-click"),
     wrapSimulate: document.getElementById("wrap-simulate"),
+    propZoom: document.getElementById("prop-zoom-highlight"),
+    wrapZoom: document.getElementById("wrap-zoom"),
     wrapImage: document.getElementById("wrap-image"),
     canvasCaption: document.getElementById("canvas-caption"),
     imagesFile: document.getElementById("images-file"),
@@ -344,6 +348,7 @@ export function createEditor(ctx) {
       setChoice(els.propAlign, step.popover?.align || "center");
     }
     if (els.wrapSimulate) els.wrapSimulate.hidden = !!isSlide;
+    if (els.wrapZoom) els.wrapZoom.hidden = !!isSlide;
   }
 
   function syncForm() {
@@ -373,6 +378,7 @@ export function createEditor(ctx) {
       els.propHold.placeholder = String(demo.playback.defaultHoldSeconds);
     }
     els.propSimulate.checked = step.simulateClick !== false;
+    if (els.propZoom) els.propZoom.checked = step.zoomHighlight === true;
     syncSideAlignControls(step);
     els.wrapImage.hidden = step.type === "slide";
     syncImageButton();
@@ -1020,6 +1026,7 @@ export function createEditor(ctx) {
     step.label = title;
     if (els.propImage.value) step.image = els.propImage.value;
     step.simulateClick = els.propSimulate.checked;
+    if (els.propZoom) step.zoomHighlight = els.propZoom.checked;
     step.caption = els.propCaption?.value || "";
     step.showCaption = els.propShowCaption ? els.propShowCaption.checked : true;
     writeHoldFromInput(step, options?.clampHold !== false);
@@ -1276,6 +1283,45 @@ export function createEditor(ctx) {
     selectStep(idx);
     onChange();
     toast(t("toast.stepDuplicated"));
+  }
+
+  async function copyStepToClipboard() {
+    const demo = getDemo();
+    const step = currentStep();
+    if (!step) {
+      toast(t("toast.nothingToCopy"));
+      return;
+    }
+    ensureCustomImages(demo);
+    const images = {};
+    const ref = typeof step.image === "string" ? step.image : "";
+    if (ref.startsWith("custom:")) {
+      const id = ref.slice(7);
+      if (demo.customImages[id]) images[id] = structuredClone(demo.customImages[id]);
+    }
+    await putStepClipboard({ step: structuredClone(step), images });
+    toast(t("toast.stepCopied"));
+  }
+
+  async function pasteStepFromClipboard() {
+    const demo = getDemo();
+    const record = await getStepClipboard();
+    if (!record?.step) {
+      toast(t("toast.clipboardEmpty"));
+      return;
+    }
+    ensureCustomImages(demo);
+    const { step, images } = cloneStepForPaste(record.step, record.images || {});
+    const anchor = currentStep();
+    step.scene = Number(anchor?.scene) || 1;
+    Object.assign(demo.customImages, images);
+    const idx = demo.steps.length ? getSelectedIndex() + 1 : 0;
+    demo.steps.splice(idx, 0, step);
+    renumberScenes(demo);
+    setDemo(demo);
+    selectStep(idx);
+    onChange();
+    toast(t("toast.stepPasted"));
   }
 
   function deleteStep() {
@@ -2024,7 +2070,7 @@ export function createEditor(ctx) {
   }
 
   function bindForm() {
-    [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate].forEach((el) => {
+    [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate, els.propZoom].forEach((el) => {
       if (!el) return;
       el.addEventListener("input", applyFormToStep);
       el.addEventListener("change", applyFormToStep);
@@ -2120,6 +2166,18 @@ export function createEditor(ctx) {
       commitSceneModal();
     });
     document.getElementById("btn-dup-step")?.addEventListener("click", duplicateStep);
+    document.getElementById("btn-copy-step")?.addEventListener("click", () => {
+      copyStepToClipboard().catch((err) => {
+        console.error(err);
+        toast(err?.message || t("toast.nothingToCopy"));
+      });
+    });
+    document.getElementById("btn-paste-step")?.addEventListener("click", () => {
+      pasteStepFromClipboard().catch((err) => {
+        console.error(err);
+        toast(err?.message || t("toast.clipboardEmpty"));
+      });
+    });
 
     window.addEventListener("keydown", (e) => {
       const editorView = document.getElementById("view-editor");
@@ -2133,6 +2191,16 @@ export function createEditor(ctx) {
       if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "d") {
         e.preventDefault();
         duplicateStep();
+        return;
+      }
+      if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        copyStepToClipboard().catch(() => {});
+        return;
+      }
+      if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        pasteStepFromClipboard().catch(() => {});
         return;
       }
 

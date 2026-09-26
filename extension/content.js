@@ -64,6 +64,7 @@
     title: "Captura do guia",
     capture: "Capturar",
     create: "Criar projeto",
+    append: "Copiar para o projeto",
     undo: "Desfazer",
     download: "Baixar JSON",
     cancel: "Cancelar",
@@ -90,6 +91,7 @@
   for (const spec of [
     ["capture", "capture", "primary"],
     ["create", "create", "primary"],
+    ["append", "append", "primary"],
     ["undo", "undo", ""],
     ["download", "download", ""],
     ["cancel", "cancel", "danger"],
@@ -177,6 +179,7 @@
       send({ type: "CAPTURE_FROM_PAGE", title: document.title, url: location.href });
     }
     if (action === "create") send({ type: "CREATE_PROJECT" });
+    if (action === "append") send({ type: "APPEND_TO_PROJECT" });
     if (action === "download") send({ type: "DOWNLOAD_JSON" });
     if (action === "undo") send({ type: "UNDO" });
     if (action === "cancel") send({ type: "CANCEL" });

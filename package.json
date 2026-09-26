@@ -1,14 +1,14 @@
 {
   "name": "guiaflow",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Editor e player de tours com captura de tela",
   "license": "MIT",
   "main": "electron/main.js",
   "scripts": {
     "start": "node scripts/dev-server.mjs",
     "pack:extension": "node scripts/pack-extension.mjs",
-    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/playback.test.js js/history.test.js js/scenes.test.js js/cartesia.test.js js/i18n.test.js js/extensionBanner.test.js electron/cartesia.test.js",
+    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/*.test.js electron/cartesia.test.js",
     "desktop": "electron .",
     "dist:desktop": "electron-builder --dir"
   },

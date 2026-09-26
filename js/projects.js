@@ -12,9 +12,11 @@ import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback } fr
 import { t } from "./i18n.js";
 
 const DB_NAME = "demo-studio";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = "projects";
 const HISTORY_STORE = "history";
+const CLIPBOARD_STORE = "clipboard";
+const CLIPBOARD_KEY = "steps";
 const INDEX_KEY = "demo-studio-index-v2";
 const LEGACY_KEYS = ["interactive-demo-v1"];
 const DEFAULT_JSON_URL = "data/demo.json";
@@ -36,6 +38,9 @@ function openDb() {
       }
       if (!db.objectStoreNames.contains(HISTORY_STORE)) {
         db.createObjectStore(HISTORY_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(CLIPBOARD_STORE)) {
+        db.createObjectStore(CLIPBOARD_STORE, { keyPath: "id" });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -82,6 +87,24 @@ function withStore(mode, fn, storeName = STORE) {
 
 export function createProjectId() {
   return "proj-" + Math.random().toString(36).slice(2, 10);
+}
+
+/** Grava o passo selecionado para colar noutra aba do mesmo origin. */
+export async function putStepClipboard(entry) {
+  const record = {
+    id: CLIPBOARD_KEY,
+    updatedAt: Date.now(),
+    step: entry?.step || null,
+    images: entry?.images || {},
+  };
+  await withStore("readwrite", (store) => store.put(record), CLIPBOARD_STORE);
+  return record;
+}
+
+export async function getStepClipboard() {
+  const record = await withStore("readonly", (store) => store.get(CLIPBOARD_KEY), CLIPBOARD_STORE);
+  if (!record?.step) return null;
+  return record;
 }
 
 export function readIndex() {

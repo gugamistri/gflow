@@ -92,6 +92,7 @@ function captureUi() {
     title: t("ext.barTitle"),
     capture: t("ext.barCapture"),
     create: t("ext.create"),
+    append: t("ext.append"),
     download: t("ext.download"),
     undo: t("ext.undo"),
     cancel: t("ext.cancel"),
@@ -360,7 +361,10 @@ async function findEditorTab(origin) {
   const pattern = originToMatchPattern(origin);
   if (!pattern) return null;
   const tabs = await chrome.tabs.query({ url: pattern });
-  return tabs.find((tab) => tabMatchesOrigin(tab.url, origin)) || null;
+  const matched = tabs.filter((tab) => tabMatchesOrigin(tab.url, origin));
+  if (!matched.length) return null;
+  const active = matched.find((tab) => tab.active);
+  return active || matched[0];
 }
 
 async function waitTabComplete(tabId) {
@@ -382,6 +386,14 @@ async function waitTabComplete(tabId) {
 }
 
 async function createProject({ name, editorOrigin } = {}) {
+  return deliverHandoff({ name, editorOrigin, mode: "create" });
+}
+
+async function appendToProject({ name, editorOrigin } = {}) {
+  return deliverHandoff({ name, editorOrigin, mode: "append" });
+}
+
+async function deliverHandoff({ name, editorOrigin, mode } = {}) {
   if (!session.shots.length) {
     return publicState({ ok: false, error: t("ext.needOne") });
   }
@@ -407,8 +419,9 @@ async function createProject({ name, editorOrigin } = {}) {
     return publicState({ ok: false, error: t("ext.badOriginAdjust") });
   }
 
+  const handoffMode = mode === "append" ? "append" : "create";
   await chrome.storage.local.set({
-    [HANDOFF_KEY]: { payload, createdAt: Date.now(), origin },
+    [HANDOFF_KEY]: { payload, mode: handoffMode, createdAt: Date.now(), origin },
   });
 
   let tab = await findEditorTab(origin);
@@ -418,11 +431,16 @@ async function createProject({ name, editorOrigin } = {}) {
       await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
       await waitTabComplete(tab.id);
     } else {
+      if (handoffMode === "append") {
+        return publicState({ ok: false, error: t("ext.appendNoProject") });
+      }
       tab = await chrome.tabs.create({ url: origin, active: true });
       await waitTabComplete(tab.id);
     }
     await injectBridge(tab.id);
-    await chrome.tabs.sendMessage(tab.id, { type: "HANDOFF_PUSH", payload }).catch(() => {});
+    await chrome.tabs
+      .sendMessage(tab.id, { type: "HANDOFF_PUSH", payload, mode: handoffMode })
+      .catch(() => {});
   } catch {
     return publicState({
       ok: false,
@@ -445,7 +463,7 @@ async function createProject({ name, editorOrigin } = {}) {
   }, 30000);
 
   const state = publicState({
-    status: t("ext.openingEditor"),
+    status: handoffMode === "append" ? t("ext.appendOpening") : t("ext.openingEditor"),
   });
   await broadcast(state);
   return state;
@@ -492,7 +510,7 @@ async function onHandoffAck(msg) {
   await dropRegistered();
   const state = publicState({
     show: false,
-    status: t("ext.projectCreated"),
+    status: msg.mode === "append" ? t("ext.appendOk") : t("ext.projectCreated"),
   });
   await broadcast(state);
   return state;
@@ -548,6 +566,8 @@ async function handle(msg, sender) {
       return cancel();
     case "CREATE_PROJECT":
       return createProject({ name: msg.name, editorOrigin: msg.editorOrigin });
+    case "APPEND_TO_PROJECT":
+      return appendToProject({ name: msg.name, editorOrigin: msg.editorOrigin });
     case "DOWNLOAD_JSON":
       return downloadJson();
     case "FINISH":
