@@ -80,3 +80,20 @@ test("o histórico descarta o passo mais antigo acima do limite", () => {
   assert.deepEqual(history.undoChange({ v: 2 }), { v: 1 });
   assert.equal(history.undoChange({ v: 1 }), null);
 });
+
+test("histórico antigo acima do limite só encolhe na próxima alteração", () => {
+  const history = createHistory({ limit: 2 });
+  history.restore({ v: 3 }, { undo: [{ v: 0 }, { v: 1 }, { v: 2 }], redo: [{ v: 9 }] });
+  assert.deepEqual(history.undoChange({ v: 3 }), { v: 2 });
+  assert.deepEqual(history.undoChange({ v: 2 }), { v: 1 });
+
+  const again = createHistory({ limit: 2 });
+  again.restore({ v: 3 }, { undo: [{ v: 0 }, { v: 1 }, { v: 2 }], redo: [{ v: 9 }] });
+  again.noteChange();
+  assert.equal(again.canRedo(), false);
+  assert.equal(again.settle({ v: 4 }), true);
+  assert.deepEqual(again.exportStacks().undo, [{ v: 2 }, { v: 3 }]);
+  assert.deepEqual(again.undoChange({ v: 4 }), { v: 3 });
+  assert.deepEqual(again.undoChange({ v: 3 }), { v: 2 });
+  assert.equal(again.undoChange({ v: 2 }), null);
+});

@@ -1,4 +1,4 @@
-const DEFAULT_LIMIT = 40;
+const DEFAULT_LIMIT = 20;
 
 function clone(value) {
   return structuredClone(value);
@@ -13,12 +13,18 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
   let redo = [];
   let committed = null;
   let burst = false;
+  let legacyOverLimit = false;
+
+  function trim(stack) {
+    if (stack.length > limit) stack.splice(0, stack.length - limit);
+  }
 
   function reset(state) {
     undo = [];
     redo = [];
     committed = state == null ? null : clone(state);
     burst = false;
+    legacyOverLimit = false;
   }
 
   function noteChange() {
@@ -35,7 +41,9 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
     const next = clone(current);
     if (same(committed, next)) return false;
     undo.push(committed);
-    if (undo.length > limit) undo.shift();
+    legacyOverLimit = false;
+    trim(undo);
+    trim(redo);
     committed = next;
     return true;
   }
@@ -59,7 +67,7 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
   function redoChange() {
     if (burst || !redo.length || committed == null) return null;
     undo.push(committed);
-    if (undo.length > limit) undo.shift();
+    if (!legacyOverLimit) trim(undo);
     committed = redo.pop();
     return clone(committed);
   }
@@ -80,8 +88,10 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
     committed = state == null ? null : clone(state);
     burst = false;
     const keep = (entry) => entry && typeof entry === "object";
-    undo = Array.isArray(saved?.undo) ? saved.undo.filter(keep).slice(-limit).map(clone) : [];
-    redo = Array.isArray(saved?.redo) ? saved.redo.filter(keep).slice(-limit).map(clone) : [];
+    // why: um projeto salvo acima do limite segue desfazível até a próxima edição
+    undo = Array.isArray(saved?.undo) ? saved.undo.filter(keep).map(clone) : [];
+    redo = Array.isArray(saved?.redo) ? saved.redo.filter(keep).map(clone) : [];
+    legacyOverLimit = undo.length > limit || redo.length > limit;
   }
 
   return { reset, noteChange, settle, undoChange, redoChange, canUndo, canRedo, exportStacks, restore };
