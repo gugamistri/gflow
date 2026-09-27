@@ -362,6 +362,7 @@ export async function duplicateProject(id) {
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
+  delete copy.share;
   await putProject(copy);
   return copy;
 }

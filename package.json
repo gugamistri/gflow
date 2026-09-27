@@ -24,6 +24,7 @@
     },
     "files": [
       "index.html",
+      "view.html",
       "ajuda.html",
       "favicon.*",
       "apple-touch-icon.png",
@@ -38,14 +39,23 @@
       "package.json"
     ],
     "mac": {
-      "target": ["dir"],
+      "target": [
+        "dir"
+      ],
       "identity": null
     },
     "linux": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     },
     "win": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     }
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
   }
 }

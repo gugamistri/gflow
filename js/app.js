@@ -42,6 +42,12 @@ import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createHistory } from "./history.js";
 import {
+  publishShareLink,
+  revokeShareLink,
+  copyText,
+} from "./share.js";
+import { shareViewUrl } from "./shareSnapshot.js";
+import {
   initLocale,
   applyI18n,
   bindLocaleSelect,
@@ -518,6 +524,15 @@ function openEditor() {
   exitPresentation();
   setChrome("editor");
   editor.refresh();
+  paintShareMenu();
+}
+
+function paintShareMenu() {
+  const publishBtn = document.getElementById("btn-share-publish");
+  const actions = document.getElementById("share-link-actions");
+  const hasShare = Boolean(project?.share?.id && project?.share?.writeToken);
+  if (publishBtn) publishBtn.hidden = hasShare;
+  if (actions) actions.hidden = !hasShare;
 }
 
 function syncThemeUi() {
@@ -1119,6 +1134,76 @@ function bindChrome() {
       } else {
         toast(err?.message || t("toast.videoFail"));
       }
+    }
+  });
+
+  async function runSharePublish({ update }) {
+    closeExportMenu();
+    if (!project) return;
+    if (!project.steps?.length) {
+      toast(t("share.errGeneric"));
+      return;
+    }
+    project.theme = formToTheme(project.theme);
+    showExportOverlay(update ? t("share.overlayUpdate") : t("share.overlay"));
+    try {
+      const share = await publishShareLink(project, {
+        onProgress: (msg) => {
+          overlayStatus.textContent = msg;
+        },
+      });
+      project.share = {
+        id: share.id,
+        writeToken: share.writeToken,
+        updatedAt: share.updatedAt,
+      };
+      saveDirty = true;
+      await flushAutosave();
+      paintShareMenu();
+      hideExportOverlay();
+      await copyText(share.url);
+      toast(update ? t("toast.shareUpdated") : t("toast.sharePublished"));
+    } catch (err) {
+      console.error(err);
+      hideExportOverlay();
+      toast(err?.message || t("share.errGeneric"));
+    }
+  }
+
+  document.getElementById("btn-share-publish")?.addEventListener("click", () => {
+    void runSharePublish({ update: false });
+  });
+  document.getElementById("btn-share-update")?.addEventListener("click", () => {
+    void runSharePublish({ update: true });
+  });
+  document.getElementById("btn-share-copy")?.addEventListener("click", async () => {
+    closeExportMenu();
+    if (!project?.share?.id) return;
+    try {
+      await copyText(shareViewUrl(project.share.id));
+      toast(t("toast.shareCopied"));
+    } catch (err) {
+      console.error(err);
+      toast(err?.message || t("share.errGeneric"));
+    }
+  });
+  document.getElementById("btn-share-revoke")?.addEventListener("click", async () => {
+    closeExportMenu();
+    if (!project?.share) return;
+    showExportOverlay(t("share.overlay"));
+    overlayStatus.textContent = t("share.revoke");
+    try {
+      await revokeShareLink(project.share);
+      delete project.share;
+      saveDirty = true;
+      await flushAutosave();
+      paintShareMenu();
+      hideExportOverlay();
+      toast(t("toast.shareRevoked"));
+    } catch (err) {
+      console.error(err);
+      hideExportOverlay();
+      toast(err?.message || t("share.errGeneric"));
     }
   });
 }

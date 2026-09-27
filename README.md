@@ -47,6 +47,7 @@ No desktop, use **Capturar** no editor: abre uma janela com a página do produto
 
 - **HTML navegável** — um arquivo único com o tour
 - **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
+- **Link do preview** — no menu Compartilhar; publica um endereço `/v/…` só para ver o tour (requer Blob na Vercel)
 
 ## Testes
 

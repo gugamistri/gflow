@@ -13,7 +13,7 @@ import {
 import { isCompactTouch } from "./compact.js";
 
 export function createPlayer(ctx) {
-  const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit } = ctx;
+  const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit, presentHintKey } = ctx;
 
   const els = {
     stage: document.getElementById("canvas-stage"),
@@ -62,10 +62,12 @@ export function createPlayer(ctx) {
   }
 
   function presentStopHintKey() {
+    if (presentHintKey) return presentHintKey;
     return isCompactTouch() ? "present.touchHint" : "present.escHint";
   }
 
   function presentAgainHintKey() {
+    if (presentHintKey) return presentHintKey;
     return isCompactTouch() ? "present.touchAgainHint" : "present.clickAgainHint";
   }
 

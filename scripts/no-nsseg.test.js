@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCAN_DIRS = ["js", "css", "extension", "data", "demo", "electron", "vendor"];
-const SCAN_FILES = ["index.html", "ajuda.html", "package.json", "vercel.json", "README.md"];
+const SCAN_FILES = ["index.html", "view.html", "ajuda.html", "package.json", "vercel.json", "README.md"];
 const EXT = new Set([".js", ".mjs", ".css", ".html", ".json", ".md", ".txt", ".svg"]);
 
 function walk(dir, out = []) {

@@ -3,7 +3,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/a/:version/:path*", "destination": "/:path*" }
+    { "source": "/a/:version/:path*", "destination": "/:path*" },
+    { "source": "/v/:id", "destination": "/view.html" }
   ],
   "headers": [
     {
