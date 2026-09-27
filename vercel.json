@@ -6,6 +6,17 @@
     { "source": "/a/:version/:path*", "destination": "/:path*" },
     { "source": "/v/:id", "destination": "/api/v/:id" }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/expire-shares",
+      "schedule": "0 6 * * *"
+    }
+  ],
+  "functions": {
+    "api/cron/expire-shares.js": {
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",

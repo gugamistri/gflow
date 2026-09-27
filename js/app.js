@@ -248,13 +248,13 @@ function bindDeleteProjectModal() {
   });
 }
 
-function toast(message) {
+function toast(message, duration = 2200) {
   toastEl.textContent = message;
   toastEl.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toastEl.hidden = true;
-  }, 2200);
+  }, duration);
 }
 
 function getDemo() {
@@ -1197,7 +1197,14 @@ function bindChrome() {
       paintShareMenu();
       hideExportOverlay();
       await copyText(share.url);
-      toast(update ? t("toast.shareUpdated") : t("toast.sharePublished"));
+      toast(
+        share.renewed
+          ? t("toast.shareRenewed")
+          : update
+            ? t("toast.shareUpdated")
+            : t("toast.sharePublished"),
+        4200
+      );
     } catch (err) {
       console.error(err);
       hideExportOverlay();

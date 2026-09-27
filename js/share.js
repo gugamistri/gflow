@@ -81,6 +81,7 @@ function shareErrorMessage(code, fallback) {
   if (code === "blob_not_configured") return t("share.errBlob");
   if (code === "forbidden") return t("share.errForbidden");
   if (code === "not_found") return t("share.errNotFound");
+  if (code === "expired") return t("share.errExpired");
   return fallback || t("share.errGeneric");
 }
 
@@ -96,10 +97,22 @@ export async function publishShareLink(project, { onProgress } = {}) {
       : {};
 
   onProgress?.(t("share.progressToken"));
-  const tokenRes = await apiJson("/api/share", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  let tokenRes;
+  let renewed = false;
+  try {
+    tokenRes = await apiJson("/api/share", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err.code !== "expired" || !body.id) throw err;
+    // why: depois de 7 dias o id antigo foi apagado; publicar de novo abre outro prazo
+    renewed = true;
+    tokenRes = await apiJson("/api/share", {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  }
 
   const writeToken = tokenRes.writeToken || prev.writeToken;
   assertShareSnapshotSafe(snapshot, writeToken);
@@ -123,6 +136,7 @@ export async function publishShareLink(project, { onProgress } = {}) {
     writeToken,
     updatedAt: Date.now(),
     url,
+    renewed,
   };
 }
 

@@ -5,9 +5,9 @@ const {
   json,
   readJsonBody,
   blobConfigured,
-  readMeta,
   writeMeta,
   issueUploadToken,
+  releaseShareIfExpired,
   hashToken,
   tokensMatch,
   createShareIds,
@@ -46,7 +46,12 @@ module.exports = async function handler(req, res) {
         json(res, 400, { error: "invalid_credentials" });
         return;
       }
-      const meta = await readMeta(existingId);
+      const gate = await releaseShareIfExpired(existingId);
+      if (gate.expired) {
+        json(res, 404, { error: "expired" });
+        return;
+      }
+      const meta = gate.meta;
       if (!meta || !tokensMatch(writeToken, meta.tokenHash)) {
         json(res, 403, { error: "forbidden" });
         return;

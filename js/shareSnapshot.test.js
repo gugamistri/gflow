@@ -16,6 +16,9 @@ const {
   tokensMatch,
   createShareIds,
   isShareId,
+  isShareExpired,
+  shareIdFromPathname,
+  SHARE_TTL_MS,
   tourPathname,
   metaPathname,
 } = require("../api/lib/share-crypto.cjs");
@@ -84,4 +87,36 @@ test("createShareIds gera id curto estilo YouTube", () => {
   assert.equal(isShareId("ggggggggggg"), true); // 11 letras válidas
   assert.equal(isShareId("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), true); // legado hex
   assert.equal(isShareId("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"), false); // hex inválido
+});
+
+test("link de preview expira 7 dias após a publicação", () => {
+  const published = 1_700_000_000_000;
+  assert.equal(isShareExpired(published, published + SHARE_TTL_MS - 1), false);
+  assert.equal(isShareExpired(published, published + SHARE_TTL_MS), true);
+  assert.equal(SHARE_TTL_MS, 7 * 24 * 60 * 60 * 1000);
+  assert.equal(isShareExpired(undefined, published), true);
+  assert.equal(isShareExpired(0, published), true);
+});
+
+test("pathname do Blob identifica tour e meta", () => {
+  assert.deepEqual(shareIdFromPathname("shares/5_QBTwlD1uQ.json"), {
+    id: "5_QBTwlD1uQ",
+    kind: "tour",
+  });
+  assert.deepEqual(shareIdFromPathname("shares/5_QBTwlD1uQ.meta.json"), {
+    id: "5_QBTwlD1uQ",
+    kind: "meta",
+  });
+  assert.equal(shareIdFromPathname("shares/nope.json"), null);
+});
+
+test("cron de expiração recusa chamada sem o segredo", async () => {
+  const previous = process.env.CRON_SECRET;
+  delete process.env.CRON_SECRET;
+  const handler = require("../api/cron/expire-shares.js");
+  const res = { statusCode: 0, body: "", setHeader() {}, end(payload) { this.body = payload; } };
+  await handler({ method: "GET", headers: {} }, res);
+  assert.equal(res.statusCode, 401);
+  if (previous === undefined) delete process.env.CRON_SECRET;
+  else process.env.CRON_SECRET = previous;
 });

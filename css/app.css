@@ -795,6 +795,17 @@ textarea {
   gap: 4px;
 }
 
+.share-expiry-note {
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
+  color: var(--ns-ink);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 .export-option {
   display: block;
   width: 100%;
@@ -2425,6 +2436,9 @@ body.view-share .caption-bar {
   border-radius: 8px;
   z-index: 100;
   font-size: 0.85rem;
+  line-height: 1.35;
+  text-align: center;
+  max-width: min(420px, calc(100vw - 32px));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 

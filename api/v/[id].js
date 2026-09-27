@@ -5,6 +5,7 @@ const {
   blobConfigured,
   readMeta,
   resolveTourUrl,
+  releaseShareIfExpired,
   isShareId,
 } = require("../lib/share-store.cjs");
 const { renderViewPage } = require("../lib/view-shell.cjs");
@@ -55,7 +56,13 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const [url, meta] = await Promise.all([resolveTourUrl(id), readMeta(id)]);
+    const gate = await releaseShareIfExpired(id);
+    if (gate.expired) {
+      sendHtml(renderViewPage({ id, name: null, origin, missing: true }), 404);
+      return;
+    }
+    const url = await resolveTourUrl(id);
+    const meta = gate.meta || (await readMeta(id));
     if (!url) {
       sendHtml(renderViewPage({ id, name: null, origin, missing: true }), 404);
       return;

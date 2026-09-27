@@ -8,6 +8,7 @@ const {
   readMeta,
   writeMeta,
   resolveTourUrl,
+  releaseShareIfExpired,
   revokeShare,
   tokensMatch,
   isShareId,
@@ -33,12 +34,17 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
+      const gate = await releaseShareIfExpired(id);
+      if (gate.expired) {
+        json(res, 404, { error: "not_found" });
+        return;
+      }
       const url = await resolveTourUrl(id);
       if (!url) {
         json(res, 404, { error: "not_found" });
         return;
       }
-      const meta = await readMeta(id);
+      const meta = gate.meta || (await readMeta(id));
       const name = typeof meta?.name === "string" && meta.name.trim() ? meta.name.trim() : null;
       json(res, 200, { id, url, name });
       return;
@@ -79,7 +85,12 @@ module.exports = async function handler(req, res) {
         json(res, 400, { error: "invalid_body" });
         return;
       }
-      const meta = await readMeta(id);
+      const gate = await releaseShareIfExpired(id);
+      if (gate.expired) {
+        json(res, 404, { error: "expired" });
+        return;
+      }
+      const meta = gate.meta;
       if (!meta || !tokensMatch(writeToken, meta.tokenHash)) {
         json(res, 403, { error: "forbidden" });
         return;

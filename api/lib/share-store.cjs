@@ -1,7 +1,7 @@
 /**
  * Leitura/escrita do meta e helpers HTTP do share.
  */
-const { put, get, del, head } = require("@vercel/blob");
+const { put, get, del, head, list } = require("@vercel/blob");
 const {
   hashToken,
   tokensMatch,
@@ -9,6 +9,9 @@ const {
   tourPathname,
   metaPathname,
   isShareId,
+  isShareExpired,
+  shareIdFromPathname,
+  SHARE_PREFIX,
   MAX_SHARE_BYTES,
 } = require("./share-crypto.cjs");
 
@@ -87,6 +90,81 @@ async function resolveTourUrl(id) {
   return null;
 }
 
+function blobUploadedAtMs(value) {
+  if (value instanceof Date) return value.getTime();
+  const parsed = typeof value === "number" ? value : Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function groupShareBlobs(blobs) {
+  const byId = new Map();
+  for (const blob of blobs || []) {
+    const parsed = shareIdFromPathname(blob?.pathname);
+    if (!parsed) continue;
+    let row = byId.get(parsed.id);
+    if (!row) {
+      row = { id: parsed.id };
+      byId.set(parsed.id, row);
+    }
+    const uploadedAt = blobUploadedAtMs(blob.uploadedAt);
+    if (parsed.kind === "meta") row.metaUploadedAt = uploadedAt;
+    else row.tourUploadedAt = uploadedAt;
+  }
+  return [...byId.values()];
+}
+
+async function releaseShareIfExpired(id, now = Date.now()) {
+  const meta = await readMeta(id);
+  if (!meta || !isShareExpired(meta.createdAt, now)) return { expired: false, meta };
+  try {
+    await revokeShare(id);
+  } catch (err) {
+    console.error("expire share", id, err);
+  }
+  return { expired: true, meta: null };
+}
+
+async function listShareBlobs() {
+  const blobs = [];
+  let cursor;
+  do {
+    const page = await list({ prefix: `${SHARE_PREFIX}/`, limit: 1000, cursor });
+    if (Array.isArray(page?.blobs)) blobs.push(...page.blobs);
+    cursor = page?.hasMore ? page.cursor : undefined;
+  } while (cursor);
+  return blobs;
+}
+
+async function purgeExpiredShares(now = Date.now()) {
+  const rows = groupShareBlobs(await listShareBlobs());
+  const removed = [];
+  for (const row of rows) {
+    let published = null;
+    if (Number.isFinite(row.metaUploadedAt)) {
+      let meta = null;
+      try {
+        meta = await readMeta(row.id);
+      } catch (err) {
+        console.error("purge read", row.id, err);
+        continue;
+      }
+      const created = Number(meta?.createdAt);
+      // why: o uploadedAt do meta muda no PATCH; o prazo conta de createdAt
+      published = Number.isFinite(created) && created > 0 ? created : row.metaUploadedAt;
+    } else {
+      published = row.tourUploadedAt;
+    }
+    if (!isShareExpired(published, now)) continue;
+    try {
+      await revokeShare(row.id);
+      removed.push(row.id);
+    } catch (err) {
+      console.error("purge share", row.id, err);
+    }
+  }
+  return removed;
+}
+
 async function revokeShare(id) {
   const pathname = tourPathname(id);
   const meta = metaPathname(id);
@@ -117,6 +195,8 @@ module.exports = {
   writeMeta,
   issueUploadToken,
   resolveTourUrl,
+  releaseShareIfExpired,
+  purgeExpiredShares,
   revokeShare,
   hashToken,
   tokensMatch,
