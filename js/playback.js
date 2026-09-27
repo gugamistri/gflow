@@ -144,6 +144,38 @@ function splitForSpeech(text, max = 180) {
   return parts;
 }
 
+function isAutoplayBlocked(err) {
+  const name = String(err?.name || "");
+  const msg = String(err?.message || "").toLowerCase();
+  return (
+    name === "NotAllowedError" ||
+    name === "AbortError" ||
+    msg.includes("notallowed") ||
+    msg.includes("user didn't interact") ||
+    msg.includes("user gesture") ||
+    msg.includes("autoplay")
+  );
+}
+
+/** why: present automático (seed / link /v) inicia sem gesto — o browser bloqueia audio.play(). */
+function waitForUserGesture() {
+  if (typeof window === "undefined") return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener("pointerdown", finish, true);
+      window.removeEventListener("keydown", finish, true);
+      window.removeEventListener("touchstart", finish, true);
+      resolve();
+    };
+    window.addEventListener("pointerdown", finish, true);
+    window.addEventListener("keydown", finish, true);
+    window.addEventListener("touchstart", finish, true);
+  });
+}
+
 function playSpeechUrl(url, rate, token) {
   return new Promise((resolve, reject) => {
     if (token !== speakToken || typeof Audio === "undefined") {
@@ -163,7 +195,41 @@ function playSpeechUrl(url, rate, token) {
     audio.addEventListener("error", () => reject(new Error("tts")), { once: true });
     audio.src = url;
     applyRate();
-    audio.play().catch(reject);
+
+    const start = async () => {
+      if (token !== speakToken) {
+        resolve();
+        return;
+      }
+      try {
+        await audio.play();
+      } catch (err) {
+        if (token !== speakToken) {
+          resolve();
+          return;
+        }
+        if (!isAutoplayBlocked(err)) {
+          reject(err);
+          return;
+        }
+        // why: aguarda o 1º clique/tecla e retenta o mesmo clip (passo 0 do demo automático)
+        await waitForUserGesture();
+        if (token !== speakToken) {
+          resolve();
+          return;
+        }
+        try {
+          await audio.play();
+        } catch (err2) {
+          if (token !== speakToken || isAutoplayBlocked(err2)) {
+            resolve();
+            return;
+          }
+          reject(err2);
+        }
+      }
+    };
+    start();
   });
 }
 
@@ -414,9 +480,14 @@ export function createNarrationController({ captionEl } = {}) {
       }
 
       duck(true);
-      speakDone = playNarrationClips(clips, step?.narrationAudio?.playbackRate).then(() => {
-        if (runId === speakToken) duck(false);
-      });
+      speakDone = playNarrationClips(clips, step?.narrationAudio?.playbackRate)
+        .then(() => {
+          if (runId === speakToken) duck(false);
+        })
+        .catch(() => {
+          // why: NotAllowedError no 1º play não pode rejeitar whenSpeechDone (trava o autoplay)
+          if (runId === speakToken) duck(false);
+        });
       return speakDone;
     },
 

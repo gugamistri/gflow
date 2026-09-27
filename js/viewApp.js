@@ -127,12 +127,13 @@ async function boot() {
     onRequestExit: () => {
       // why: na página compartilhada não há editor — Esc/clique fora reinicia o tour
       selectedIndex = 0;
-      player.play({ from: 0, autoplay: false });
+      player.play({ from: 0, autoplay: true });
     },
   });
 
   requestAnimationFrame(() => {
-    player.play({ from: 0, autoplay: false });
+    // why: tour publicado assiste sozinho; o 1º áudio retenta no gesto se o browser bloquear
+    player.play({ from: 0, autoplay: true });
   });
 }
 

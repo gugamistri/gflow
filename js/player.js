@@ -92,7 +92,7 @@ export function createPlayer(ctx) {
     const speechDone = narration.whenSpeechDone();
     const delay = holdMs(step, demo);
     autoplayTimer = setTimeout(async () => {
-      await speechDone;
+      await speechDone.catch(() => {});
       document.querySelector(".driver-popover-next-btn")?.click();
     }, delay);
   }
