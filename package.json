@@ -28,6 +28,7 @@
       "ajuda.html",
       "favicon.*",
       "apple-touch-icon.png",
+      "og-share.png",
       "css/**/*",
       "js/**/*",
       "data/**/*",

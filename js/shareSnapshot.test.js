@@ -57,7 +57,10 @@ test("embedImagesInDemo embute custom: sem rede", async () => {
 });
 
 test("shareViewUrl monta /v/:id", () => {
-  assert.equal(shareViewUrl("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "https://guiaflow-seven.vercel.app"), "https://guiaflow-seven.vercel.app/v/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+  assert.equal(
+    shareViewUrl("Ab3xY9kLm2Q", "https://guiaflow-seven.vercel.app"),
+    "https://guiaflow-seven.vercel.app/v/Ab3xY9kLm2Q"
+  );
 });
 
 test("hashToken e tokensMatch", () => {
@@ -70,12 +73,15 @@ test("hashToken e tokensMatch", () => {
   assert.equal(tokensMatch(token, ""), false);
 });
 
-test("createShareIds e paths", () => {
+test("createShareIds gera id curto estilo YouTube", () => {
   const { id, writeToken } = createShareIds();
+  assert.equal(id.length, 11);
   assert.equal(isShareId(id), true);
   assert.ok(writeToken.length > 20);
   assert.equal(tourPathname(id), `shares/${id}.json`);
   assert.equal(metaPathname(id), `shares/${id}.meta.json`);
   assert.equal(isShareId("short"), false);
-  assert.equal(isShareId("gggggggggggggggggggggggggggggggg"), false);
+  assert.equal(isShareId("ggggggggggg"), true); // 11 letras válidas
+  assert.equal(isShareId("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), true); // legado hex
+  assert.equal(isShareId("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"), false); // hex inválido
 });

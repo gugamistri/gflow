@@ -23,7 +23,7 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url || "/", "http://localhost");
   let pathname = decodeURIComponent(url.pathname);
   pathname = pathname.replace(/^\/a\/[^/]+/, "") || "/";
-  if (/^\/v\/[a-f0-9]{32}\/?$/i.test(pathname)) {
+  if (/^\/v\/([A-Za-z0-9_-]{11}|[a-f0-9]{32})\/?$/i.test(pathname)) {
     pathname = "/view.html";
   }
   if (pathname.endsWith("/")) pathname += "index.html";

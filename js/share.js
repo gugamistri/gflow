@@ -110,7 +110,11 @@ export async function publishShareLink(project, { onProgress } = {}) {
 
   await apiJson(`/api/share/${tokenRes.id}`, {
     method: "PATCH",
-    body: JSON.stringify({ writeToken, url: blob.url }),
+    body: JSON.stringify({
+      writeToken,
+      url: blob.url,
+      name: snapshot.name || project.name || "",
+    }),
   });
 
   const url = shareViewUrl(tokenRes.id);

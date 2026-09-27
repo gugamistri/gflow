@@ -38,7 +38,9 @@ module.exports = async function handler(req, res) {
         json(res, 404, { error: "not_found" });
         return;
       }
-      json(res, 200, { id, url });
+      const meta = await readMeta(id);
+      const name = typeof meta?.name === "string" && meta.name.trim() ? meta.name.trim() : null;
+      json(res, 200, { id, url, name });
       return;
     }
 
@@ -72,6 +74,7 @@ module.exports = async function handler(req, res) {
       }
       const writeToken = body?.writeToken;
       const url = body?.url;
+      const name = typeof body?.name === "string" ? body.name.trim().slice(0, 120) : "";
       if (!writeToken || typeof url !== "string" || !url.startsWith("https://")) {
         json(res, 400, { error: "invalid_body" });
         return;
@@ -81,8 +84,10 @@ module.exports = async function handler(req, res) {
         json(res, 403, { error: "forbidden" });
         return;
       }
-      await writeMeta(id, { ...meta, url, updatedAt: Date.now() });
-      json(res, 200, { ok: true, url });
+      const next = { ...meta, url, updatedAt: Date.now() };
+      if (name) next.name = name;
+      await writeMeta(id, next);
+      json(res, 200, { ok: true, url, name: next.name || null });
       return;
     }
 

@@ -1,23 +1,55 @@
-<!DOCTYPE html>
+/**
+ * HTML da página /v/:id com meta tags para crawlers (WhatsApp, Slack, etc.).
+ */
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderViewPage({ id, name, origin, missing }) {
+  const base = String(origin || "").replace(/\/$/, "");
+  const title = missing
+    ? "GuiaFlow"
+    : name
+      ? `${name} — GuiaFlow`
+      : "GuiaFlow — Tour";
+  const description = missing
+    ? "Este link não está mais disponível."
+    : name
+      ? `Tour interativo: ${name}`
+      : "Tour interativo no GuiaFlow";
+  const canonical = id ? `${base}/v/${id}` : `${base}/`;
+  const image = `${base}/og-share.png`;
+  const safeTitle = escapeHtml(title);
+  const safeDesc = escapeHtml(description);
+  const safeName = escapeHtml(name || "");
+  const safeId = escapeHtml(id || "");
+
+  return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>GuiaFlow — Tour</title>
-  <meta name="description" content="Tour interativo no GuiaFlow" />
+  <title>${safeTitle}</title>
+  <meta name="description" content="${safeDesc}" />
   <meta name="theme-color" content="#1A4D6D" />
   <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="${escapeHtml(canonical)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="GuiaFlow" />
-  <meta property="og:title" content="GuiaFlow — Tour" />
-  <meta property="og:description" content="Tour interativo no GuiaFlow" />
-  <meta property="og:image" content="https://guiaflow-seven.vercel.app/og-share.png" />
+  <meta property="og:title" content="${safeTitle}" />
+  <meta property="og:description" content="${safeDesc}" />
+  <meta property="og:url" content="${escapeHtml(canonical)}" />
+  <meta property="og:image" content="${escapeHtml(image)}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="GuiaFlow — Tour" />
-  <meta name="twitter:description" content="Tour interativo no GuiaFlow" />
-  <meta name="twitter:image" content="https://guiaflow-seven.vercel.app/og-share.png" />
+  <meta name="twitter:title" content="${safeTitle}" />
+  <meta name="twitter:description" content="${safeDesc}" />
+  <meta name="twitter:image" content="${escapeHtml(image)}" />
   <script>
     (function () {
       try {
@@ -58,12 +90,13 @@
   <link rel="stylesheet" href="/a/4/vendor/driver/driver.css" />
   <link rel="stylesheet" href="/a/4/css/theme.css" />
   <link rel="stylesheet" href="/a/4/css/app.css" />
+  <script>window.__GF_SHARE = ${JSON.stringify({ id: id || null, name: name || null, missing: Boolean(missing) })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
       <a class="logo" href="/">Guia<span>Flow</span></a>
-      <span class="topbar-title" id="topbar-title" data-i18n="view.loading">Carregando o tour…</span>
+      <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
   </header>
 
@@ -71,8 +104,8 @@
     <section class="canvas-wrap">
       <p class="present-hint" id="present-chrome" data-i18n="view.escHint">Clique fora ou Esc para recomeçar</p>
       <div class="canvas-stage" id="canvas-stage">
-        <div class="view-share-status" id="view-share-status">
-          <p id="view-share-status-text" data-i18n="view.loading">Carregando o tour…</p>
+        <div class="view-share-status" id="view-share-status"${missing ? "" : ""}>
+          <p id="view-share-status-text">${missing ? escapeHtml("Este link não está mais disponível.") : "Carregando o tour…"}</p>
         </div>
         <div class="canvas-frame" id="canvas-frame" hidden>
           <img id="canvas-image" alt="" hidden />
@@ -114,3 +147,7 @@
   <script type="module" src="/a/4/js/viewApp.js"></script>
 </body>
 </html>
+`;
+}
+
+module.exports = { renderViewPage, escapeHtml };

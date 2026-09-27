@@ -7,8 +7,10 @@ import { createPlayer } from "./player.js";
 import { initLocale, applyI18n, t } from "./i18n.js";
 
 function parseShareId() {
-  const m = location.pathname.match(/\/v\/([a-f0-9]{32})\/?$/i);
-  return m ? m[1].toLowerCase() : null;
+  const boot = typeof window !== "undefined" ? window.__GF_SHARE : null;
+  if (boot?.id && typeof boot.id === "string") return boot.id;
+  const m = location.pathname.match(/\/v\/([A-Za-z0-9_-]{11}|[a-f0-9]{32})\/?$/i);
+  return m ? m[1] : null;
 }
 
 function showStatus(message) {
@@ -63,7 +65,20 @@ async function loadDemo(id) {
 async function boot() {
   initLocale();
   applyI18n(document);
-  document.title = t("view.title");
+
+  const bootMeta = typeof window !== "undefined" ? window.__GF_SHARE : null;
+  if (bootMeta?.missing) {
+    showStatus(t("view.missing"));
+    document.title = t("view.missing");
+    return;
+  }
+  if (bootMeta?.name) {
+    document.title = `${bootMeta.name} — GuiaFlow`;
+    const titleEl = document.getElementById("topbar-title");
+    if (titleEl) titleEl.textContent = bootMeta.name;
+  } else {
+    document.title = t("view.title");
+  }
 
   const id = parseShareId();
   if (!id) {

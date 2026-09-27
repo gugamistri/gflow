@@ -5,6 +5,8 @@ const { createHash, randomBytes, timingSafeEqual } = require("node:crypto");
 
 const SHARE_PREFIX = "shares";
 const MAX_SHARE_BYTES = 80 * 1024 * 1024;
+/** 8 bytes → 11 chars base64url (estilo YouTube). */
+const SHORT_ID_BYTES = 8;
 
 function hashToken(token) {
   return createHash("sha256").update(String(token || ""), "utf8").digest("hex");
@@ -25,7 +27,7 @@ function tokensMatch(writeToken, expectedHash) {
 
 function createShareIds() {
   return {
-    id: randomBytes(16).toString("hex"),
+    id: randomBytes(SHORT_ID_BYTES).toString("base64url"),
     writeToken: randomBytes(32).toString("base64url"),
   };
 }
@@ -38,13 +40,18 @@ function metaPathname(id) {
   return `${SHARE_PREFIX}/${id}.meta.json`;
 }
 
+/** Aceita ID curto novo ou hex legado (32 chars). */
 function isShareId(id) {
-  return typeof id === "string" && /^[a-f0-9]{32}$/.test(id);
+  if (typeof id !== "string") return false;
+  if (/^[A-Za-z0-9_-]{11}$/.test(id)) return true;
+  if (/^[a-f0-9]{32}$/.test(id)) return true;
+  return false;
 }
 
 module.exports = {
   SHARE_PREFIX,
   MAX_SHARE_BYTES,
+  SHORT_ID_BYTES,
   hashToken,
   tokensMatch,
   createShareIds,
