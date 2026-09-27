@@ -101,6 +101,19 @@ test("prompt orienta o aprendiz e diferencia clique vs só destaque", () => {
   const slidePrompt = buildUserPrompt({ locale: "pt", stepType: "slide" });
   assert.match(slidePrompt, /cover\/chapter SLIDE/);
   assert.match(slidePrompt, /no click instructions/);
+  assert.match(slidePrompt, /No product screenshot is attached/);
+
+  const textOnlySlide = buildChatMessages({
+    locale: "pt",
+    stepType: "slide",
+    draft: { title: "Bem-vindo", description: "Começo", caption: "Vamos começar" },
+  });
+  assert.equal(textOnlySlide[0].content.length, 1);
+  assert.equal(textOnlySlide[0].content[0].type, "text");
+  assert.equal(
+    textOnlySlide[0].content.some((p) => p.type === "image_url"),
+    false,
+  );
 
   const messages = buildChatMessages({
     imageDataUrl: "data:image/jpeg;base64,abc",

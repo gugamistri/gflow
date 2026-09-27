@@ -2253,8 +2253,10 @@ export function createEditor(ctx) {
       openLlmSettings();
       return;
     }
+    const isSlide = step.type === "slide";
     const src = resolveImageSrc(demo, step.image);
-    if (!src) {
+    // why: slides de capa/capítulo não precisam de screenshot; screens ainda exigem imagem.
+    if (!src && !isSlide) {
       toast(t("llm.needImage"));
       return;
     }
@@ -2267,22 +2269,27 @@ export function createEditor(ctx) {
     if (label) label.textContent = t("toast.generating");
     setAiGenerating("copy", true);
     try {
-      const focus = {
-        hotspot: step.hotspot,
-        clickPoint: step.clickPoint || clickPointFromHotspot(step.hotspot),
-        simulateClick: step.simulateClick !== false,
-      };
-      const imageDataUrl = await shrinkImageDataUrl(src, {
-        hotspot: focus.hotspot,
-        clickPoint: focus.simulateClick ? focus.clickPoint : null,
-      });
-      if (!imageDataUrl) {
+      const focus = isSlide
+        ? null
+        : {
+            hotspot: step.hotspot,
+            clickPoint: step.clickPoint || clickPointFromHotspot(step.hotspot),
+            simulateClick: step.simulateClick !== false,
+          };
+      let imageDataUrl = "";
+      if (src) {
+        imageDataUrl = await shrinkImageDataUrl(src, {
+          hotspot: focus?.hotspot,
+          clickPoint: focus?.simulateClick ? focus.clickPoint : null,
+        });
+      }
+      if (!imageDataUrl && !isSlide) {
         toast(t("llm.needImage"));
         return;
       }
       const context = buildStepContext(demo.steps, idx);
       const messages = buildChatMessages({
-        imageDataUrl,
+        imageDataUrl: imageDataUrl || undefined,
         context,
         draft: {
           title: els.propTitle?.value || step.popover?.title || step.label || "",
@@ -2291,7 +2298,7 @@ export function createEditor(ctx) {
         },
         locale: getLocale(),
         focus,
-        stepType: step.type === "slide" ? "slide" : "screen",
+        stepType: isSlide ? "slide" : "screen",
       });
       const bridge = llmBridge();
       let result;

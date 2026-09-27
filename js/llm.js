@@ -201,7 +201,7 @@ export function formatFocusBlock(focus) {
   return lines.join("\n");
 }
 
-export function buildUserPrompt({ context, draft, locale, focus, stepType } = {}) {
+export function buildUserPrompt({ context, draft, locale, focus, stepType, hasImage } = {}) {
   const lang = locale || getLocale() || "pt";
   const type = stepType === "slide" ? "slide" : "screen";
   const lines = [
@@ -241,20 +241,33 @@ export function buildUserPrompt({ context, draft, locale, focus, stepType } = {}
   const description = clipText(draft?.description || "");
   const caption = clipText(draft?.caption || "");
   if (title || description || caption) {
-    lines.push("Current draft to refine (image + focus win over draft):");
+    lines.push(
+      type === "slide" && !hasImage
+        ? "Current draft to refine (keep tone; improve clarity and continuity):"
+        : "Current draft to refine (image + focus win over draft):",
+    );
     if (title) lines.push(`title: ${title}`);
     if (description) lines.push(`description: ${description}`);
     if (caption) lines.push(`narration: ${caption}`);
+  }
+  if (type === "slide" && !hasImage) {
+    lines.push(
+      "No product screenshot is attached — write from the draft, prior-step story, and chapter-slide role only.",
+    );
   }
   return lines.join("\n");
 }
 
 export function buildChatMessages({ imageDataUrl, context, draft, locale, focus, stepType } = {}) {
-  const content = [
-    { type: "text", text: buildUserPrompt({ context, draft, locale, focus, stepType }) },
-  ];
   const image = String(imageDataUrl || "").trim();
-  if (image.startsWith("data:image/")) {
+  const hasImage = image.startsWith("data:image/");
+  const content = [
+    {
+      type: "text",
+      text: buildUserPrompt({ context, draft, locale, focus, stepType, hasImage }),
+    },
+  ];
+  if (hasImage) {
     content.push({
       type: "image_url",
       image_url: { url: image },

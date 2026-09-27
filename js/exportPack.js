@@ -240,11 +240,11 @@ function exportStepFrames(step, demo, fps) {
 
 function waitMs(ms, signal) {
   return new Promise((resolve, reject) => {
-    const t = setTimeout(resolve, ms);
+    const timer = setTimeout(resolve, ms);
     signal?.addEventListener(
       "abort",
       () => {
-        clearTimeout(t);
+        clearTimeout(timer);
         reject(new DOMException(t("export.cancelled"), "AbortError"));
       },
       { once: true }
@@ -493,13 +493,14 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
     const timing = span.timing;
     onProgress?.(t("export.encodeStep", { i: i + 1, n: steps.length }));
     for (let frame = 0; frame < span.frames; frame += 1) {
-      const t = frame * (1000 / fps);
+      // why: não chamar de `t` — sombreia a i18n e quebra renderFrame (t is not a function)
+      const at = frame * (1000 / fps);
       const scene = {
         step,
         index: i,
         total: steps.length,
         img: images[i],
-        t,
+        at,
         ...timing,
       };
       renderFrame(ctx, scene, theme);
@@ -574,7 +575,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
     index: 0,
     total: steps.length,
     img: images[0],
-    t: 0,
+    at: 0,
     cursorEnd: 1,
     clickEnd: 1,
     holdEnd: 1,
@@ -601,17 +602,17 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
         index: i,
         total: steps.length,
         img: images[i],
-        t: 0,
+        at: 0,
         ...timing,
       };
       onProgress?.(t("export.recordStep", { i: i + 1, n: steps.length }));
       const t0 = performance.now();
       while (performance.now() - t0 < span.seconds * 1000) {
         if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
-        scene.t = performance.now() - t0;
+        scene.at = performance.now() - t0;
         await waitMs(16, signal);
       }
-      scene.t = timing.holdEnd;
+      scene.at = timing.holdEnd;
     }
     await waitMs(600, signal);
   } finally {
@@ -898,7 +899,8 @@ function renderFrame(ctx, scene, theme) {
   const H = ctx.canvas.height;
   const accent = theme.accent || "#2A9D8F";
   const rgb = hexRgb(accent);
-  const { step, index, total, img, t, cursorStart = 0, cursorEnd, clickEnd, holdEnd } = scene;
+  const { step, index, total, img, cursorStart = 0, cursorEnd, clickEnd, holdEnd } = scene;
+  const at = Number(scene.at ?? scene.t) || 0;
 
   ctx.fillStyle = "#0b1220";
   ctx.fillRect(0, 0, W, H);
@@ -996,17 +998,17 @@ function renderFrame(ctx, scene, theme) {
       const sx = Math.max(rect.x + 16, tx - 90);
       const sy = Math.max(rect.y + 16, ty - 70);
       const span = Math.max(1, cursorEnd - cursorStart);
-      const p = Math.min(1, Math.max(0, (t - cursorStart) / span));
+      const p = Math.min(1, Math.max(0, (at - cursorStart) / span));
       const ease = 1 - Math.pow(1 - p, 3);
       const cx = sx + (tx - sx) * ease;
       const cy = sy + (ty - sy) * ease;
-      if (t >= cursorStart) {
-        const pressed = t >= cursorEnd && t < clickEnd;
+      if (at >= cursorStart) {
+        const pressed = at >= cursorEnd && at < clickEnd;
         drawCursor(ctx, cx, cy, pressed);
       }
 
-      if (t >= cursorEnd && t < clickEnd + 350) {
-        const rt = (t - cursorEnd) / 700;
+      if (at >= cursorEnd && at < clickEnd + 350) {
+        const rt = (at - cursorEnd) / 700;
         const radius = 18 + rt * 56;
         ctx.beginPath();
         ctx.arc(tx, ty, radius, 0, Math.PI * 2);
@@ -1037,7 +1039,7 @@ function renderFrame(ctx, scene, theme) {
     });
   }
 
-  const progress = Math.min(1, t / holdEnd);
+  const progress = Math.min(1, at / holdEnd);
   ctx.fillStyle = "#1f2937";
   ctx.fillRect(0, H - 6, W, 6);
   ctx.fillStyle = accent;

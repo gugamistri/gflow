@@ -76,8 +76,16 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
   max-width: 360px;
   font-family: var(--ns-font);
-  /* why: acima do frame/imagem no preview — evita a janela ficar “embaixo” da captura */
+  /* why: acima do frame/imagem no preview — inclusive com zoom (transform) */
   z-index: 1000000020 !important;
+  /* why: layer própria no compositor; evita a captura zoomada pintar por cima */
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* why: o SVG do Driver vem com z-index inline 10000 — abaixo da imagem zoomada */
+.driver-overlay {
+  z-index: 1000000010 !important;
 }
 
 .driver-popover.demo-popover .driver-popover-title {
