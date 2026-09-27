@@ -48,21 +48,29 @@ export function hexToRgba(hex, alpha = 0.55) {
 }
 
 /**
- * Véu do Driver ao redor do hotspot.
- * why: no modo escuro a captura já é escura — alpha 0.55 no overlay do tema quase não destaca o recorte.
+ * Véu do Driver: cor sólida + opacity (o Driver multiplica os dois).
+ * hazard: passar rgba em overlayColor *e* deixar overlayOpacity 0.7 deixa o véu fraco demais.
+ * why: no modo escuro a captura já é escura — precisa de véu bem fechado para o recorte ler.
  */
-export function themeOverlayColor(alpha = 0.55) {
+export function themeOverlayPaint(baseOpacity = 0.55) {
   const root = typeof document !== "undefined" ? document.documentElement : null;
   const isDark = root?.getAttribute("data-appearance") === "social";
   if (isDark) {
-    // why: preto fechado lê melhor sobre UIs escuras do que o azul do tema em 55%
-    return hexToRgba("#000000", Math.max(Number(alpha) || 0.55, 0.78));
+    return { color: "#000000", opacity: 0.9 };
   }
   const overlay =
     (root && getComputedStyle(root).getPropertyValue("--demo-overlay").trim()) ||
     (root && getComputedStyle(root).getPropertyValue("--ns-overlay").trim()) ||
     "#000000";
-  return hexToRgba(overlay, alpha);
+  const color = /^#[0-9a-fA-F]{6}$/.test(overlay) ? overlay : "#000000";
+  const opacity = Math.min(0.95, Math.max(0.35, Number(baseOpacity) || 0.55));
+  return { color, opacity };
+}
+
+/** @deprecated prefer themeOverlayPaint — mantido para callers que só precisam de uma cor */
+export function themeOverlayColor(alpha = 0.55) {
+  const { color, opacity } = themeOverlayPaint(alpha);
+  return hexToRgba(color, opacity);
 }
 
 export function themeToForm(theme) {

@@ -1,5 +1,5 @@
 import { t } from "./i18n.js";
-import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, themeOverlayColor } from "./store.js";
+import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, themeOverlayPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { renderDemoPopoverFooter, clickDriverNext, clickDriverPrev, setPopoverHiddenForSlide } from "./popoverFooter.js";
 import { sizeSlideLikeImage, applySlideLayout } from "./editor.js";
@@ -346,6 +346,7 @@ export function createPlayer(ctx) {
 
     if (demo?.theme) applyTheme(demo.theme);
 
+    const veil = themeOverlayPaint(0.55);
     driverObj = factory({
       popoverClass: "demo-popover",
       showProgress: true,
@@ -353,7 +354,8 @@ export function createPlayer(ctx) {
       allowClose: true,
       // why: setas tratadas em keydown abaixo — o keyup nativo do driver falhava no próximo com onNextClick async.
       allowKeyboardControl: false,
-      overlayColor: themeOverlayColor(0.55),
+      overlayColor: veil.color,
+      overlayOpacity: veil.opacity,
       stagePadding: 6,
       disableActiveInteraction: false,
       nextBtnText: t("player.next"),

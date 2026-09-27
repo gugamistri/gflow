@@ -793,7 +793,7 @@ function gfT(key, vars) {
     const overlay = isDark
       ? "#000000"
       : getComputedStyle(document.documentElement).getPropertyValue("--demo-overlay").trim() || "#000000";
-    const overlayAlpha = isDark ? 0.78 : 0.55;
+    const overlayOpacity = isDark ? 0.9 : 0.55;
 
     driverObj = factory({
       popoverClass: "demo-popover",
@@ -802,7 +802,8 @@ function gfT(key, vars) {
       allowClose: true,
       // why: setas no keydown abaixo; o keyup nativo do driver falhava no próximo com onNextClick async.
       allowKeyboardControl: false,
-      overlayColor: hexToRgba(overlay, overlayAlpha),
+      overlayColor: overlay,
+      overlayOpacity,
       stagePadding: 6,
       disableActiveInteraction: false,
       nextBtnText: gfT("player.next"),
