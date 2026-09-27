@@ -4,7 +4,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/a/:version/:path*", "destination": "/:path*" },
-    { "source": "/v/:id", "destination": "/view.html" }
+    { "source": "/v/:id", "destination": "/view" }
   ],
   "headers": [
     {
