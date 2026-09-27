@@ -524,6 +524,7 @@ textarea {
 }
 
 .preview-split {
+  position: relative;
   display: inline-flex;
   align-items: stretch;
   border-radius: 7px;
@@ -538,7 +539,8 @@ textarea {
 }
 
 .preview-menu {
-  position: relative;
+  /* why: position fica no .preview-split para o menu alinhar ao botão inteiro, não só à seta */
+  position: static;
 }
 
 .preview-menu > summary {
@@ -546,42 +548,53 @@ textarea {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   padding-inline: 0.45em;
-  min-width: 28px;
+  min-width: 32px;
+  /* why: separador suave no split — evita a linha escura que “parte” o botão */
+  border-left: 1px solid color-mix(in srgb, #fff 28%, transparent);
+  box-shadow: none;
 }
 
 .preview-menu > summary::-webkit-details-marker {
   display: none;
 }
 
+.preview-menu[open] > summary {
+  background: color-mix(in srgb, #000 14%, var(--ns-button));
+}
+
 .preview-menu-body {
   position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  top: calc(100% + 4px);
   background: var(--ns-panel);
   color: var(--ns-ink);
   border: 1px solid var(--ns-border);
   border-radius: 10px;
-  padding: 6px;
-  min-width: 220px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  padding: 4px;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
   z-index: 55;
 }
 
 .preview-menu-option {
   display: flex;
   align-items: center;
-  gap: 0.45em;
+  gap: 0.5em;
   width: 100%;
   border: 0;
   background: transparent;
   color: var(--ns-ink);
-  padding: 10px 12px;
+  padding: 9px 11px;
   border-radius: 8px;
   cursor: pointer;
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   text-align: left;
+  white-space: nowrap;
 }
 
 .preview-menu-option:hover {
@@ -1477,6 +1490,12 @@ body.is-presenting #topbar-actions-editor {
   border-radius: 4px;
   background: transparent;
   color: var(--demo-popover-text);
+  /* why: o X só faz sentido no preview/apresentação — na edição do passo não tem ação útil */
+  display: none;
+}
+
+body.is-presenting .slide-card-close {
+  display: inline-flex;
 }
 
 .slide-card-close:hover {
