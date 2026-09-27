@@ -1531,6 +1531,13 @@ body.is-presenting #topbar-actions-editor {
   background: var(--ns-canvas);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
   transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* why: z-index 0 mantém o frame abaixo do overlay/popover do Driver no preview */
+  z-index: 0;
+}
+
+/* why: will-change só no zoom — permanente criava layer que cobria a janela de destaque */
+.canvas-stage.is-zooming .canvas-frame,
+.player-stage.is-zooming .player-frame {
   will-change: transform;
 }
 
@@ -2195,7 +2202,7 @@ body.is-presenting .slide-card-close {
   left: 12px;
   right: 12px;
   bottom: 12px;
-  /* why: precisa ficar acima do overlay do Driver (~1e9) no preview/player */
+  /* why: precisa ficar acima do overlay do Driver no preview/player */
   z-index: 1000000002;
   padding: 10px 14px;
   border-radius: 10px;
@@ -2207,6 +2214,18 @@ body.is-presenting .slide-card-close {
   text-align: center;
   pointer-events: none;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* why: fora do stacking do frame — senão a imagem cobria o popover e a legenda sumia no dim */
+body.is-presenting .caption-bar,
+body.view-share .caption-bar {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  width: min(720px, calc(100vw - 40px));
+  transform: translateX(-50%);
+  z-index: 1000000015;
 }
 
 .checkbox {

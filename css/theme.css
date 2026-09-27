@@ -76,6 +76,8 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
   max-width: 360px;
   font-family: var(--ns-font);
+  /* why: acima do frame/imagem no preview — evita a janela ficar “embaixo” da captura */
+  z-index: 1000000020 !important;
 }
 
 .driver-popover.demo-popover .driver-popover-title {
