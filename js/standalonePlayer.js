@@ -798,6 +798,8 @@ function gfT(key, vars) {
       showProgress: true,
       animate: true,
       allowClose: true,
+      // why: setas no keydown abaixo; o keyup nativo do driver falhava no próximo com onNextClick async.
+      allowKeyboardControl: false,
       overlayColor: hexToRgba(overlay, 0.55),
       stagePadding: 6,
       disableActiveInteraction: false,
@@ -916,6 +918,11 @@ function gfT(key, vars) {
     if (btn && !btn.disabled) btn.click();
   }
 
+  function clickDriverPrev() {
+    const btn = document.querySelector(".driver-popover-prev-btn");
+    if (btn && !btn.disabled) btn.click();
+  }
+
   function onHighlightClick(e) {
     if (!driverObj) return;
     if (e.target.closest(".slide-card-play, .slide-card-close")) return;
@@ -943,6 +950,17 @@ function gfT(key, vars) {
     if (e.key === "Escape") {
       stop();
       setProgress(gfT("player.stopped"));
+      return;
+    }
+    if (!driverObj || animating) return;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      clickDriverNext();
+      return;
+    }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      clickDriverPrev();
     }
   });
 

@@ -342,6 +342,17 @@
         <p data-i18n="library.lead">Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
       </div>
     </div>
+    <aside class="release-notes" id="release-notes" hidden>
+      <div class="release-notes-body">
+        <p class="release-notes-title" data-i18n="releaseNotes.title">Novidades</p>
+        <ul class="release-notes-list">
+          <li data-i18n="releaseNotes.item1">Gere título, descrição e narração a partir da captura do passo.</li>
+          <li data-i18n="releaseNotes.item2">O zoom acompanha o destaque enquanto o guia avança.</li>
+          <li data-i18n="releaseNotes.item3">A narração entra no vídeo exportado, no tempo de cada slide.</li>
+        </ul>
+      </div>
+      <button type="button" class="btn btn-sm" id="release-notes-dismiss" data-i18n="releaseNotes.dismiss">Entendi</button>
+    </aside>
     <div class="library-grid" id="library-grid"></div>
     <p class="library-empty" id="library-empty" hidden data-i18n="library.empty">Nenhum guia ainda. Crie o primeiro ou importe um arquivo.</p>
   </main>
@@ -455,17 +466,6 @@
     <aside class="props" id="props-panel">
       <div class="props-header">
         <h2 data-i18n="props.step">Passo</h2>
-        <button
-          type="button"
-          class="btn btn-ghost btn-icon btn-generate-copy"
-          id="btn-generate-copy"
-          title="Gerar título, descrição e narração"
-          aria-label="Gerar título, descrição e narração"
-          data-i18n-title="props.generateCopy"
-          data-i18n-aria="props.generateCopy"
-        >
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-        </button>
       </div>
       <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
         <button type="button" class="mode-btn" data-value="slide" aria-pressed="false">
@@ -485,6 +485,18 @@
         </button>
         <select id="prop-image" hidden></select>
       </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-generate-copy"
+        id="btn-generate-copy"
+        title="Gerar título, descrição e narração"
+        aria-label="Gerar título, descrição e narração"
+        data-i18n-title="props.generateCopy"
+        data-i18n-aria="props.generateCopy"
+      >
+        <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+        <span id="btn-generate-copy-label" data-i18n="props.generateCopyShort">Gerar textos</span>
+      </button>
       <label><span data-i18n="props.title">Título</span>
         <input type="text" id="prop-title" />
       </label>
@@ -500,7 +512,10 @@
           <span data-i18n="props.showCaption">Mostrar texto no slide</span>
         </label>
         <div class="caption-audio-actions" id="caption-audio-actions" hidden>
-          <button type="button" class="btn btn-sm" id="btn-generate-caption" hidden data-i18n="props.generateAudio">Gerar áudio</button>
+          <button type="button" class="btn btn-sm btn-generate-caption" id="btn-generate-caption" hidden data-i18n-aria="props.generateAudio" aria-label="Gerar áudio">
+            <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+            <span id="btn-generate-caption-label" data-i18n="props.generateAudio">Gerar áudio</span>
+          </button>
           <button type="button" class="btn btn-sm" id="btn-upload-caption" hidden data-i18n="props.uploadAudio">Enviar áudio</button>
           <button type="button" class="btn btn-sm" id="btn-clear-caption-audio" hidden data-i18n="props.removeAudio">Remover</button>
           <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />

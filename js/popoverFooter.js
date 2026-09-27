@@ -48,3 +48,9 @@ export function clickDriverNext() {
   const btn = document.querySelector(".driver-popover-next-btn");
   if (btn && !btn.disabled) btn.click();
 }
+
+/** Seta ← / Anterior — respeita o disabled do primeiro passo. */
+export function clickDriverPrev() {
+  const btn = document.querySelector(".driver-popover-prev-btn");
+  if (btn && !btn.disabled) btn.click();
+}

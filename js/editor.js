@@ -1007,14 +1007,16 @@ export function createEditor(ctx) {
 
     els.canvasSlide.hidden = true;
     els.hotspot.hidden = false;
-    els.clickPoint.hidden = false;
+    const showClick = step.simulateClick !== false;
+    els.clickPoint.hidden = !showClick;
 
     const src = resolveImageSrc(demo, step.image);
     bindImage(els.canvasImage, src, (ok) => {
       if (els.canvasMissing) els.canvasMissing.hidden = ok;
       if (ok) {
         placeHotspot(step.hotspot);
-        placeClickPoint(ensureClickPoint(step));
+        if (showClick) placeClickPoint(ensureClickPoint(step));
+        else els.clickPoint.hidden = true;
       } else {
         els.hotspot.hidden = true;
         els.clickPoint.hidden = true;
@@ -2234,6 +2236,13 @@ export function createEditor(ctx) {
     }
   }
 
+  function setAiGenerating(kind, busy) {
+    const panel = document.getElementById("props-panel");
+    if (!panel) return;
+    panel.classList.toggle("is-generating-copy", kind === "copy" && busy);
+    panel.classList.toggle("is-generating-audio", kind === "audio" && busy);
+  }
+
   async function generateStepCopy() {
     const demo = getDemo();
     const step = currentStep();
@@ -2250,12 +2259,23 @@ export function createEditor(ctx) {
       return;
     }
     const btn = document.getElementById("btn-generate-copy");
+    const label = document.getElementById("btn-generate-copy-label");
     if (btn) {
       btn.disabled = true;
       btn.setAttribute("aria-busy", "true");
     }
+    if (label) label.textContent = t("toast.generating");
+    setAiGenerating("copy", true);
     try {
-      const imageDataUrl = await shrinkImageDataUrl(src);
+      const focus = {
+        hotspot: step.hotspot,
+        clickPoint: step.clickPoint || clickPointFromHotspot(step.hotspot),
+        simulateClick: step.simulateClick !== false,
+      };
+      const imageDataUrl = await shrinkImageDataUrl(src, {
+        hotspot: focus.hotspot,
+        clickPoint: focus.simulateClick ? focus.clickPoint : null,
+      });
       if (!imageDataUrl) {
         toast(t("llm.needImage"));
         return;
@@ -2270,6 +2290,7 @@ export function createEditor(ctx) {
           caption: els.propCaption?.value || step.caption || "",
         },
         locale: getLocale(),
+        focus,
       });
       const bridge = llmBridge();
       let result;
@@ -2301,10 +2322,12 @@ export function createEditor(ctx) {
     } catch (err) {
       toast(err?.message || t("toast.llmCopyFail"));
     } finally {
+      setAiGenerating("copy", false);
       if (btn) {
         btn.disabled = false;
         btn.removeAttribute("aria-busy");
       }
+      if (label) label.textContent = t("props.generateCopyShort");
     }
   }
 
@@ -2365,10 +2388,13 @@ export function createEditor(ctx) {
       return;
     }
     const btn = document.getElementById("btn-generate-caption");
+    const label = document.getElementById("btn-generate-caption-label");
     if (btn) {
       btn.disabled = true;
-      btn.textContent = t("toast.generating");
+      btn.setAttribute("aria-busy", "true");
     }
+    if (label) label.textContent = t("toast.generating");
+    setAiGenerating("audio", true);
     try {
       const clips = await generateNarrationClips(text, {
         voiceURI: demo.narration.voiceURI,
@@ -2394,10 +2420,12 @@ export function createEditor(ctx) {
     } catch (err) {
       toast(err?.message || t("toast.audioGenFail"));
     } finally {
+      setAiGenerating("audio", false);
       if (btn) {
         btn.disabled = false;
-        btn.textContent = t("props.generateAudio");
+        btn.removeAttribute("aria-busy");
       }
+      if (label) label.textContent = t("props.generateAudio");
     }
   }
 
@@ -2739,7 +2767,8 @@ export function createEditor(ctx) {
         return;
       }
       placeHotspot(step.hotspot);
-      placeClickPoint(ensureClickPoint(step));
+      if (step.simulateClick !== false) placeClickPoint(ensureClickPoint(step));
+      else els.clickPoint.hidden = true;
     });
   }
 

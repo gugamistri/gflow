@@ -135,17 +135,91 @@ export function formatContextBlock(context) {
     .join("\n");
 }
 
-export function buildUserPrompt({ context, draft, locale } = {}) {
+function roundPct(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 10) / 10;
+}
+
+function normalizeHotspot(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const x = roundPct(raw.x);
+  const y = roundPct(raw.y);
+  const w = roundPct(raw.w);
+  const h = roundPct(raw.h);
+  if (x == null || y == null || w == null || h == null) return null;
+  if (w <= 0 || h <= 0) return null;
+  return { x, y, w, h };
+}
+
+function normalizeClickPoint(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const x = roundPct(raw.x);
+  const y = roundPct(raw.y);
+  if (x == null || y == null) return null;
+  return { x, y };
+}
+
+/**
+ * Destaque e clique do passo atual — percentuais da captura (origem canto superior esquerdo).
+ * why: o modelo de visão precisa saber o que destacar; a imagem anotada reforça o texto.
+ */
+export function normalizeFocus(focus) {
+  if (!focus || typeof focus !== "object") return null;
+  const hotspot = normalizeHotspot(focus.hotspot);
+  const clickPoint = normalizeClickPoint(focus.clickPoint);
+  if (!hotspot && !clickPoint) return null;
+  return {
+    hotspot,
+    clickPoint,
+    simulateClick: focus.simulateClick !== false,
+  };
+}
+
+export function formatFocusBlock(focus) {
+  const normalized = normalizeFocus(focus);
+  if (!normalized) return "";
+  const lines = [
+    "Focus on the screenshot (percent of image width/height, origin top-left):",
+  ];
+  if (normalized.hotspot) {
+    const h = normalized.hotspot;
+    lines.push(
+      `Highlight rectangle: x=${h.x} y=${h.y} w=${h.w} h=${h.h}. The teal box drawn on the image marks this region.`,
+    );
+  }
+  if (normalized.clickPoint && normalized.simulateClick) {
+    const c = normalized.clickPoint;
+    lines.push(
+      `Click target: x=${c.x} y=${c.y}. The teal dot on the image is where the learner clicks next.`,
+    );
+    lines.push(
+      "Narration and description should name the control inside the highlight that will be clicked.",
+    );
+  } else if (normalized.hotspot) {
+    lines.push(
+      "Click simulation is off — describe the highlighted UI region, not a click action.",
+    );
+  }
+  return lines.join("\n");
+}
+
+export function buildUserPrompt({ context, draft, locale, focus } = {}) {
   const lang = locale || getLocale() || "pt";
   const lines = [
     "Write product-demo step copy from the screenshot.",
     "The image is the primary source. Prior steps are storytelling context only.",
+    "When a highlight box and/or click marker are drawn on the image (or listed below), ground the copy on that UI — not unrelated chrome.",
     `Respond in locale "${lang}".`,
     'Return ONLY compact JSON: {"title":"...","description":"...","narration":"..."}',
     "title: one short line.",
     "description: one short glanceable sentence (about 80–140 characters). No fine UI detail — readable in a glance.",
     "narration: 2–4 spoken sentences with more detail for voiceover; name what the screen shows and continue the demo story.",
   ];
+  const focusBlock = formatFocusBlock(focus);
+  if (focusBlock) {
+    lines.push(focusBlock);
+  }
   const ctx = formatContextBlock(context);
   if (ctx) {
     lines.push("Prior steps:");
@@ -163,9 +237,9 @@ export function buildUserPrompt({ context, draft, locale } = {}) {
   return lines.join("\n");
 }
 
-export function buildChatMessages({ imageDataUrl, context, draft, locale } = {}) {
+export function buildChatMessages({ imageDataUrl, context, draft, locale, focus } = {}) {
   const content = [
-    { type: "text", text: buildUserPrompt({ context, draft, locale }) },
+    { type: "text", text: buildUserPrompt({ context, draft, locale, focus }) },
   ];
   const image = String(imageDataUrl || "").trim();
   if (image.startsWith("data:image/")) {
@@ -363,8 +437,12 @@ export async function listModels({ apiKey, baseUrl, fetchImpl = fetch } = {}) {
 /**
  * Reduz uma data URL de imagem para JPEG menor antes do envio.
  * hazard: imagens grandes estouram o custo de tokens; o PNG original não sai na requisição.
+ * why: desenha destaque e clique na captura para o modelo de visão localizar o alvo.
  */
-export async function shrinkImageDataUrl(src, { maxSide = LLM_IMAGE_MAX_SIDE, quality = 0.82 } = {}) {
+export async function shrinkImageDataUrl(
+  src,
+  { maxSide = LLM_IMAGE_MAX_SIDE, quality = 0.82, hotspot, clickPoint } = {},
+) {
   const url = String(src || "").trim();
   if (!url.startsWith("data:image/") && !/^https?:/i.test(url) && !url.startsWith("blob:")) {
     return "";
@@ -392,5 +470,46 @@ export async function shrinkImageDataUrl(src, { maxSide = LLM_IMAGE_MAX_SIDE, qu
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
   ctx.drawImage(img, 0, 0, tw, th);
+  drawFocusOverlays(ctx, tw, th, { hotspot, clickPoint });
   return canvas.toDataURL("image/jpeg", quality);
+}
+
+function drawFocusOverlays(ctx, tw, th, { hotspot, clickPoint } = {}) {
+  const box = normalizeHotspot(hotspot);
+  const click = normalizeClickPoint(clickPoint);
+  if (!box && !click) return;
+  const stroke = "#14b8a6";
+  const fill = "rgba(20, 184, 166, 0.16)";
+  const line = Math.max(2, Math.round(Math.min(tw, th) * 0.0035));
+
+  if (box) {
+    const x = (box.x / 100) * tw;
+    const y = (box.y / 100) * th;
+    const bw = (box.w / 100) * tw;
+    const bh = (box.h / 100) * th;
+    ctx.save();
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = line;
+    ctx.fillRect(x, y, bw, bh);
+    ctx.strokeRect(x, y, bw, bh);
+    ctx.restore();
+  }
+
+  if (click) {
+    const cx = (click.x / 100) * tw;
+    const cy = (click.y / 100) * th;
+    const r = Math.max(5, Math.round(Math.min(tw, th) * 0.01));
+    ctx.save();
+    ctx.strokeStyle = stroke;
+    ctx.fillStyle = stroke;
+    ctx.lineWidth = Math.max(2, Math.round(line * 0.9));
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 2.1, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }

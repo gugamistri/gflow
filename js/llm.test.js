@@ -4,10 +4,13 @@ import {
   buildChatBody,
   buildChatMessages,
   buildStepContext,
+  buildUserPrompt,
   chatCompletions,
+  formatFocusBlock,
   isPlausibleLlmKey,
   maskLlmKey,
   normalizeBaseUrl,
+  normalizeFocus,
   parseCopyJson,
   redactSecret,
   resolveProvider,
@@ -65,6 +68,41 @@ test("mensagem multimodal leva a imagem e desliga reasoning", () => {
   assert.equal(body.max_tokens, 1024);
   assert.deepEqual(body.reasoning, { effort: "none", exclude: true });
   assert.equal(JSON.stringify(body).includes(SAMPLE_KEY), false);
+});
+
+test("prompt inclui retângulo de destaque e ponto do clique", () => {
+  const focus = normalizeFocus({
+    hotspot: { x: 40.12, y: 22, w: 18, h: 9.5 },
+    clickPoint: { x: 49, y: 26 },
+    simulateClick: true,
+  });
+  assert.deepEqual(focus.hotspot, { x: 40.1, y: 22, w: 18, h: 9.5 });
+  const block = formatFocusBlock(focus);
+  assert.match(block, /Highlight rectangle: x=40\.1 y=22 w=18 h=9\.5/);
+  assert.match(block, /Click target: x=49 y=26/);
+
+  const prompt = buildUserPrompt({
+    locale: "pt",
+    focus: {
+      hotspot: { x: 10, y: 20, w: 30, h: 12 },
+      clickPoint: { x: 25, y: 26 },
+      simulateClick: false,
+    },
+  });
+  assert.match(prompt, /Highlight rectangle/);
+  assert.match(prompt, /Click simulation is off/);
+  assert.equal(prompt.includes("Click target:"), false);
+
+  const messages = buildChatMessages({
+    imageDataUrl: "data:image/jpeg;base64,abc",
+    locale: "en",
+    focus: {
+      hotspot: { x: 5, y: 5, w: 10, h: 8 },
+      clickPoint: { x: 10, y: 9 },
+      simulateClick: true,
+    },
+  });
+  assert.match(messages[0].content[0].text, /Click target: x=10 y=9/);
 });
 
 test("parseCopyJson aceita cerca markdown e exige narração", () => {

@@ -1603,13 +1603,146 @@ body.is-presenting #topbar-actions-editor {
   margin-bottom: 4px;
 }
 
-.props-header .btn-generate-copy {
-  flex-shrink: 0;
+.btn-generate-copy {
+  align-self: stretch;
+  justify-content: center;
+  gap: 6px;
   color: var(--ns-ink);
+  position: relative;
+  overflow: hidden;
 }
 
-.props-header .btn-generate-copy[aria-busy="true"] {
-  opacity: 0.55;
+.btn-generate-caption {
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-generate-copy[aria-busy="true"],
+.btn-generate-caption[aria-busy="true"] {
+  opacity: 1;
+  color: var(--ns-accent);
+  border-color: color-mix(in srgb, var(--ns-accent) 55%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-accent) 12%, var(--ns-input-bg));
+  pointer-events: none;
+}
+
+.btn-generate-copy[aria-busy="true"]::after,
+.btn-generate-caption[aria-busy="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--ns-accent) 35%,
+    color-mix(in srgb, var(--ns-accent) 40%, white) 50%,
+    var(--ns-accent) 65%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ai-progress 1.1s linear infinite;
+}
+
+.btn-ai-spark {
+  flex-shrink: 0;
+}
+
+.btn-generate-copy[aria-busy="true"] .btn-ai-spark,
+.btn-generate-caption[aria-busy="true"] .btn-ai-spark {
+  animation: ai-sparkle 1.1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+#props-panel.is-generating-copy #prop-title,
+#props-panel.is-generating-copy #prop-description,
+#props-panel.is-generating-copy #prop-caption {
+  pointer-events: none;
+  border-color: color-mix(in srgb, var(--ns-accent) 45%, var(--ns-border));
+  background:
+    linear-gradient(
+      110deg,
+      transparent 30%,
+      color-mix(in srgb, var(--ns-accent) 18%, transparent) 48%,
+      transparent 66%
+    )
+    var(--ns-input-bg);
+  background-size: 220% 100%;
+  animation: ai-field-shimmer 1.35s ease-in-out infinite;
+}
+
+#props-panel.is-generating-audio .caption-audio-actions {
+  border-radius: 8px;
+  outline: 1px solid color-mix(in srgb, var(--ns-accent) 40%, transparent);
+  outline-offset: 4px;
+  animation: ai-audio-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ai-sparkle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 0.75;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  40% {
+    transform: rotate(-12deg) scale(1.12);
+    opacity: 1;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ns-accent) 55%, transparent));
+  }
+  70% {
+    transform: rotate(10deg) scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes ai-progress {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes ai-field-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes ai-audio-pulse {
+  0%,
+  100% {
+    outline-color: color-mix(in srgb, var(--ns-accent) 30%, transparent);
+  }
+  50% {
+    outline-color: color-mix(in srgb, var(--ns-accent) 70%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-generate-copy[aria-busy="true"]::after,
+  .btn-generate-caption[aria-busy="true"]::after,
+  .btn-generate-copy[aria-busy="true"] .btn-ai-spark,
+  .btn-generate-caption[aria-busy="true"] .btn-ai-spark,
+  #props-panel.is-generating-copy #prop-title,
+  #props-panel.is-generating-copy #prop-description,
+  #props-panel.is-generating-copy #prop-caption,
+  #props-panel.is-generating-audio .caption-audio-actions {
+    animation: none;
+  }
+
+  .btn-generate-copy[aria-busy="true"] .btn-ai-spark,
+  .btn-generate-caption[aria-busy="true"] .btn-ai-spark {
+    opacity: 0.85;
+  }
 }
 
 .props label {
@@ -2282,6 +2415,51 @@ body.is-presenting #topbar-actions-editor {
   font-size: 0.92rem;
 }
 
+.release-notes {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--ns-border);
+  border-radius: 12px;
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+}
+
+.release-notes[hidden] {
+  display: none !important;
+}
+
+.release-notes-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.release-notes-title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.release-notes-list {
+  margin: 0;
+  padding-left: 1.15em;
+  color: var(--ns-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.release-notes-list li + li {
+  margin-top: 4px;
+}
+
+.release-notes > .btn {
+  flex: none;
+  align-self: flex-start;
+}
+
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -2730,6 +2908,22 @@ body.is-presenting #topbar-actions-editor {
 
   .library-header h1 {
     font-size: 1.35rem;
+  }
+
+  .release-notes {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .release-notes > .btn {
+    align-self: stretch;
+    min-height: 44px;
+  }
+
+  .btn-generate-copy {
+    min-height: 44px;
   }
 
   body.is-presenting .topbar {

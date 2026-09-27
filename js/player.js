@@ -1,7 +1,7 @@
 import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, themeOverlayColor } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
-import { renderDemoPopoverFooter, clickDriverNext, setPopoverHiddenForSlide } from "./popoverFooter.js";
+import { renderDemoPopoverFooter, clickDriverNext, clickDriverPrev, setPopoverHiddenForSlide } from "./popoverFooter.js";
 import { sizeSlideLikeImage, applySlideLayout } from "./editor.js";
 import { computeZoomCamera, zoomCameraStyle } from "./zoomHighlight.js";
 import {
@@ -349,6 +349,8 @@ export function createPlayer(ctx) {
       showProgress: true,
       animate: true,
       allowClose: true,
+      // why: setas tratadas em keydown abaixo — o keyup nativo do driver falhava no próximo com onNextClick async.
+      allowKeyboardControl: false,
       overlayColor: themeOverlayColor(0.55),
       stagePadding: 6,
       disableActiveInteraction: false,
@@ -510,10 +512,22 @@ export function createPlayer(ctx) {
 
     window.addEventListener("keydown", (e) => {
       if (!isPresenting()) return;
-      if (e.key !== "Escape") return;
-      e.preventDefault();
-      exitOnOutsideClick = false;
-      onRequestExit?.();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        exitOnOutsideClick = false;
+        onRequestExit?.();
+        return;
+      }
+      if (!driverObj || animating) return;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        clickDriverNext();
+        return;
+      }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        clickDriverPrev();
+      }
     });
 
     window.addEventListener("resize", () => {
