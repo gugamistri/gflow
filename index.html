@@ -122,11 +122,20 @@
               <span data-i18n="share.linkDesc">Endereço só para ver o tour — sem editor.</span>
             </button>
             <div class="share-link-actions" id="share-link-actions" hidden>
-              <p class="share-link-label" data-i18n="share.linkReady">Link publicado</p>
+              <div class="share-link-meta">
+                <strong data-i18n="share.linkTitle">Link do preview</strong>
+                <span data-i18n="share.linkReady">Link publicado</span>
+              </div>
               <div class="share-link-row">
-                <button type="button" class="btn btn-sm" id="btn-share-copy" data-i18n="share.copy">Copiar</button>
-                <button type="button" class="btn btn-sm" id="btn-share-update" data-i18n="share.update">Atualizar</button>
-                <button type="button" class="btn btn-sm" id="btn-share-revoke" data-i18n="share.revoke">Revogar</button>
+                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                </button>
+                <button type="button" class="btn btn-sm btn-icon" id="btn-share-update" title="Atualizar" aria-label="Atualizar" data-i18n-title="share.update" data-i18n-aria="share.update">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
+                </button>
+                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                </button>
               </div>
             </div>
             <button type="button" class="export-option" id="btn-export-html">

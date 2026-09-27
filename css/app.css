@@ -706,9 +706,11 @@ textarea {
 }
 
 .share-link-actions {
-  display: grid;
-  gap: 8px;
-  padding: 8px 12px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--ns-border);
   margin-bottom: 4px;
 }
@@ -717,16 +719,32 @@ textarea {
   display: none;
 }
 
-.share-link-label {
-  margin: 0;
-  font-size: 0.78rem;
+.share-link-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.share-link-meta strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ns-ink);
+}
+
+.share-link-meta span {
+  font-size: 0.75rem;
   color: var(--ns-muted);
 }
 
 .share-link-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.share-link-row .btn-icon {
+  width: 32px;
+  height: 32px;
 }
 
 body.view-share {
