@@ -180,56 +180,68 @@ export function formatFocusBlock(focus) {
   const normalized = normalizeFocus(focus);
   if (!normalized) return "";
   const lines = [
-    "Focus on the screenshot (percent of image width/height, origin top-left):",
+    "Focus markers on the screenshot (percent of image width/height, origin top-left):",
   ];
   if (normalized.hotspot) {
     const h = normalized.hotspot;
     lines.push(
-      `Highlight rectangle: x=${h.x} y=${h.y} w=${h.w} h=${h.h}. The teal box drawn on the image marks this region.`,
+      `Highlight rectangle: x=${h.x} y=${h.y} w=${h.w} h=${h.h}. The teal box marks the UI the learner should notice.`,
     );
   }
   if (normalized.clickPoint && normalized.simulateClick) {
     const c = normalized.clickPoint;
     lines.push(
-      `Click target: x=${c.x} y=${c.y}. The teal dot on the image is where the learner clicks next.`,
-    );
-    lines.push(
-      "Narration and description should name the control inside the highlight that will be clicked.",
+      `Click target: x=${c.x} y=${c.y}. The teal dot is the NEXT action — description and narration must tell the learner to click that control.`,
     );
   } else if (normalized.hotspot) {
     lines.push(
-      "Click simulation is off — describe the highlighted UI region, not a click action.",
+      "Click simulation is off — explain what the highlighted region is for; do not invent a click.",
     );
   }
   return lines.join("\n");
 }
 
-export function buildUserPrompt({ context, draft, locale, focus } = {}) {
+export function buildUserPrompt({ context, draft, locale, focus, stepType } = {}) {
   const lang = locale || getLocale() || "pt";
+  const type = stepType === "slide" ? "slide" : "screen";
   const lines = [
-    "Write product-demo step copy from the screenshot.",
-    "The image is the primary source. Prior steps are storytelling context only.",
-    "When a highlight box and/or click marker are drawn on the image (or listed below), ground the copy on that UI — not unrelated chrome.",
+    "You write instructor copy for ONE step of an interactive product tour.",
+    "Speak TO the learner as a guide. Second person. Teach how this screen works and what to do next.",
+    "Do NOT describe the screenshot as an image or inventory the UI (bad: \"The panel is open with 0 steps\", \"It shows buttons X and Y\", \"The image displays…\").",
+    "Do NOT narrate tour-editor chrome or meta tooling unless that UI is the product being taught.",
     `Respond in locale "${lang}".`,
     'Return ONLY compact JSON: {"title":"...","description":"...","narration":"..."}',
-    "title: one short line.",
-    "description: one short glanceable sentence (about 80–140 characters). No fine UI detail — readable in a glance.",
-    "narration: 2–4 spoken sentences with more detail for voiceover; name what the screen shows and continue the demo story.",
+    "title: short label for this teaching moment (a few words).",
+    "description: one glanceable sentence (about 80–140 characters) — purpose of this screen + next action when there is one.",
+    "narration: 2–4 spoken sentences for voiceover; guide the learner, name the control to use when marked, continue the story from prior steps.",
   ];
+  if (type === "slide") {
+    lines.push(
+      "This step is a cover/chapter SLIDE (card), not a product screenshot — welcome or set context; no click instructions.",
+    );
+  } else {
+    lines.push(
+      "This step is a SCREEN capture of the product — explain the interface from the learner's point of view.",
+    );
+  }
   const focusBlock = formatFocusBlock(focus);
   if (focusBlock) {
     lines.push(focusBlock);
+  } else if (type === "screen") {
+    lines.push(
+      "No highlight/click markers — still teach the main purpose of this screen; pick the most useful next action visible if obvious.",
+    );
   }
   const ctx = formatContextBlock(context);
   if (ctx) {
-    lines.push("Prior steps:");
+    lines.push("Prior steps (story continuity only):");
     lines.push(ctx);
   }
   const title = clipText(draft?.title || "");
   const description = clipText(draft?.description || "");
   const caption = clipText(draft?.caption || "");
   if (title || description || caption) {
-    lines.push("Current draft to refine (do not ignore the image):");
+    lines.push("Current draft to refine (image + focus win over draft):");
     if (title) lines.push(`title: ${title}`);
     if (description) lines.push(`description: ${description}`);
     if (caption) lines.push(`narration: ${caption}`);
@@ -237,9 +249,9 @@ export function buildUserPrompt({ context, draft, locale, focus } = {}) {
   return lines.join("\n");
 }
 
-export function buildChatMessages({ imageDataUrl, context, draft, locale, focus } = {}) {
+export function buildChatMessages({ imageDataUrl, context, draft, locale, focus, stepType } = {}) {
   const content = [
-    { type: "text", text: buildUserPrompt({ context, draft, locale, focus }) },
+    { type: "text", text: buildUserPrompt({ context, draft, locale, focus, stepType }) },
   ];
   const image = String(imageDataUrl || "").trim();
   if (image.startsWith("data:image/")) {

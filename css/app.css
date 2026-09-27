@@ -23,6 +23,115 @@ body {
   background: var(--ns-surface);
 }
 
+/* why: evita FOUC da biblioteca enquanto o boot decide editor vs projetos */
+body.is-booting #view-library,
+body.is-booting #view-help,
+body.is-booting #topbar-actions-library,
+body.is-booting #topbar-actions-editor,
+body.is-booting #topbar-nav-editor,
+body.is-booting #topbar-title,
+body.is-booting #ext-banner,
+body.is-booting #more-panel {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.is-booting .boot-splash {
+  display: grid;
+}
+
+.boot-splash {
+  display: none;
+  position: fixed;
+  inset: 56px 0 0;
+  z-index: 70;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  background: var(--ns-surface);
+  text-align: center;
+  padding: 24px;
+}
+
+.boot-splash-brand {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ns-ink);
+}
+
+.boot-splash-brand span {
+  color: var(--ns-accent);
+}
+
+.boot-splash-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ns-muted);
+}
+
+.boot-progress {
+  width: min(200px, 56vw);
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-border) 80%, transparent);
+  overflow: hidden;
+}
+
+.boot-progress-bar {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--ns-accent);
+  transform: translateX(-120%);
+  animation: boot-progress-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes boot-progress-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.project-open-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--ns-overlay) 40%, transparent);
+  pointer-events: none;
+}
+
+.project-open-overlay[hidden] {
+  display: none !important;
+}
+
+.project-open-overlay-card {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  margin: 0;
+  padding: 16px 20px;
+  border-radius: 10px;
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  border: 1px solid var(--ns-border);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  min-width: min(220px, 70vw);
+}
+
+.project-open-overlay-text {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 button,
 input,
 select,
@@ -1840,6 +1949,14 @@ body.is-presenting .slide-card-close {
 
   .btn-generate-copy[aria-busy="true"] .btn-ai-spark,
   .btn-generate-caption[aria-busy="true"] .btn-ai-spark {
+    opacity: 0.85;
+  }
+
+  .boot-progress-bar {
+    animation: none;
+    width: 55%;
+    transform: none;
+    margin-inline: auto;
     opacity: 0.85;
   }
 }

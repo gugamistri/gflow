@@ -684,47 +684,82 @@ function renderLibrary() {
     .join("");
 }
 
-async function openProject(id, { autoPreview = false } = {}) {
-  const loaded = await getProject(id);
-  if (!loaded) {
-    toast(t("toast.projectNotFound"));
-    return;
+function clearBootGate() {
+  document.body.classList.remove("is-booting");
+  const splash = document.getElementById("boot-splash");
+  if (splash) {
+    splash.hidden = true;
+    splash.setAttribute("aria-busy", "false");
   }
-  if (!loaded.customImages) loaded.customImages = {};
-  if (!loaded.steps) loaded.steps = [];
-  normalizeSteps(loaded.steps);
-  ensurePlayback(loaded);
-  ensureNarration(loaded);
-  project = loaded;
-  selectedIndex = 0;
-  await attachSavedHistory(project);
-  await setActiveProjectId(id);
-  syncThemeUi();
+}
 
-  if (isCompactTouch()) {
-    if (!loaded.steps.length) {
-      toast(t("player.noSteps"));
-      await closeProject();
+function setProjectOpenBusy(busy) {
+  document.body.classList.toggle("is-opening-project", busy);
+  document.body.setAttribute("aria-busy", busy ? "true" : "false");
+  const overlay = document.getElementById("project-open-overlay");
+  if (!overlay) return;
+  if (!busy) {
+    overlay.hidden = true;
+    overlay.setAttribute("aria-busy", "false");
+  }
+}
+
+async function openProject(id, { autoPreview = false } = {}) {
+  const overlay = document.getElementById("project-open-overlay");
+  const showOverlayTimer = setTimeout(() => {
+    // why: no boot o splash já cobre — evita overlay duplicado piscando
+    if (document.body.classList.contains("is-booting")) return;
+    if (overlay) {
+      overlay.hidden = false;
+      overlay.setAttribute("aria-busy", "true");
+    }
+  }, 150);
+  setProjectOpenBusy(true);
+  try {
+    const loaded = await getProject(id);
+    if (!loaded) {
+      toast(t("toast.projectNotFound"));
       return;
     }
-    setChrome("editor");
-    // why: o palco precisa do layout is-presenting antes do Driver medir o hotspot
-    requestAnimationFrame(() => {
-      enterPresentation({ from: 0, autoplay: true });
-    });
-    if (autoPreview) toast(t("toast.watchExample"));
-    return;
-  }
+    if (!loaded.customImages) loaded.customImages = {};
+    if (!loaded.steps) loaded.steps = [];
+    normalizeSteps(loaded.steps);
+    ensurePlayback(loaded);
+    ensureNarration(loaded);
+    project = loaded;
+    selectedIndex = 0;
+    await attachSavedHistory(project);
+    await setActiveProjectId(id);
+    syncThemeUi();
 
-  openEditor();
-  if (autoPreview && loaded.steps.length) {
-    // why: deixa o editor pintar o palco antes do tour automático da primeira visita
-    requestAnimationFrame(() => {
-      enterPresentation({ from: 0, autoplay: true });
-    });
-    toast(t("toast.watchExample"));
-  } else {
-    toast(t("toast.opened", { name: loaded.name }));
+    if (isCompactTouch()) {
+      if (!loaded.steps.length) {
+        toast(t("player.noSteps"));
+        await closeProject();
+        return;
+      }
+      setChrome("editor");
+      // why: o palco precisa do layout is-presenting antes do Driver medir o hotspot
+      requestAnimationFrame(() => {
+        enterPresentation({ from: 0, autoplay: true });
+      });
+      if (autoPreview) toast(t("toast.watchExample"));
+      return;
+    }
+
+    openEditor();
+    if (autoPreview && loaded.steps.length) {
+      // why: deixa o editor pintar o palco antes do tour automático da primeira visita
+      requestAnimationFrame(() => {
+        enterPresentation({ from: 0, autoplay: true });
+      });
+      toast(t("toast.watchExample"));
+    } else {
+      toast(t("toast.opened", { name: loaded.name }));
+    }
+  } finally {
+    clearTimeout(showOverlayTimer);
+    setProjectOpenBusy(false);
   }
 }
 
@@ -1392,27 +1427,29 @@ async function boot() {
   bindCaptureInbox();
 
   const index = readIndex();
-  if (index.activeProjectId) {
-    const loaded = await getProject(index.activeProjectId);
-    if (loaded) {
-      await openProject(loaded.id, { autoPreview: seeded && (loaded.steps || []).length > 0 });
-      signalGuiaReady();
-      return;
+  try {
+    if (index.activeProjectId) {
+      const loaded = await getProject(index.activeProjectId);
+      if (loaded) {
+        await openProject(loaded.id, { autoPreview: seeded && (loaded.steps || []).length > 0 });
+        return;
+      }
+      await setActiveProjectId(null);
     }
-    await setActiveProjectId(null);
-  }
 
-  if (seeded) {
-    const first = (readIndex().projects || [])[0];
-    if (first?.id) {
-      await openProject(first.id, { autoPreview: true });
-      signalGuiaReady();
-      return;
+    if (seeded) {
+      const first = (readIndex().projects || [])[0];
+      if (first?.id) {
+        await openProject(first.id, { autoPreview: true });
+        return;
+      }
     }
-  }
 
-  showLibrary();
-  signalGuiaReady();
+    showLibrary();
+  } finally {
+    clearBootGate();
+    signalGuiaReady();
+  }
 }
 
 boot();

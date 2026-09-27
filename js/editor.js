@@ -2291,6 +2291,7 @@ export function createEditor(ctx) {
         },
         locale: getLocale(),
         focus,
+        stepType: step.type === "slide" ? "slide" : "screen",
       });
       const bridge = llmBridge();
       let result;

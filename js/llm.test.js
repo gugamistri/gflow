@@ -70,7 +70,7 @@ test("mensagem multimodal leva a imagem e desliga reasoning", () => {
   assert.equal(JSON.stringify(body).includes(SAMPLE_KEY), false);
 });
 
-test("prompt inclui retângulo de destaque e ponto do clique", () => {
+test("prompt orienta o aprendiz e diferencia clique vs só destaque", () => {
   const focus = normalizeFocus({
     hotspot: { x: 40.12, y: 22, w: 18, h: 9.5 },
     clickPoint: { x: 49, y: 26 },
@@ -80,22 +80,32 @@ test("prompt inclui retângulo de destaque e ponto do clique", () => {
   const block = formatFocusBlock(focus);
   assert.match(block, /Highlight rectangle: x=40\.1 y=22 w=18 h=9\.5/);
   assert.match(block, /Click target: x=49 y=26/);
+  assert.match(block, /NEXT action/);
 
   const prompt = buildUserPrompt({
     locale: "pt",
+    stepType: "screen",
     focus: {
       hotspot: { x: 10, y: 20, w: 30, h: 12 },
       clickPoint: { x: 25, y: 26 },
       simulateClick: false,
     },
   });
+  assert.match(prompt, /Speak TO the learner/);
+  assert.match(prompt, /Do NOT describe the screenshot as an image/);
   assert.match(prompt, /Highlight rectangle/);
   assert.match(prompt, /Click simulation is off/);
   assert.equal(prompt.includes("Click target:"), false);
+  assert.match(prompt, /SCREEN capture/);
+
+  const slidePrompt = buildUserPrompt({ locale: "pt", stepType: "slide" });
+  assert.match(slidePrompt, /cover\/chapter SLIDE/);
+  assert.match(slidePrompt, /no click instructions/);
 
   const messages = buildChatMessages({
     imageDataUrl: "data:image/jpeg;base64,abc",
     locale: "en",
+    stepType: "screen",
     focus: {
       hotspot: { x: 5, y: 5, w: 10, h: 8 },
       clickPoint: { x: 10, y: 9 },
