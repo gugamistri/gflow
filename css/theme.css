@@ -83,9 +83,12 @@
   isolation: isolate;
 }
 
-/* why: o SVG do Driver vem com z-index inline 10000 — abaixo da imagem zoomada */
+/*
+ * why: o SVG do Driver usa z-index inline 10000; no zoom a captura pode cobrir o recorte.
+ * Mantém a overlay abaixo do popover (…020) e da legenda (…015).
+ */
 .driver-overlay {
-  z-index: 1000000010 !important;
+  z-index: 1000000008 !important;
 }
 
 .driver-popover.demo-popover .driver-popover-title {
