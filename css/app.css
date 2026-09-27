@@ -2282,7 +2282,7 @@ body.view-share .caption-bar {
   outline: none;
 }
 
-/* No preview/player some a borda de edição — o recorte ativo ganha anel próprio */
+/* No preview/player o Driver cuida do foco — some a borda de edição */
 .hotspot.is-previewing {
   border-color: transparent;
   background: transparent;
@@ -2301,15 +2301,11 @@ body.view-share .caption-bar {
   box-shadow: none;
 }
 
-/* why: com zoom a overlay do Driver pode ficar sob a captura — o anel no hotspot garante o destaque */
 .driver-active-element.player-hotspot,
 .driver-active-element.hotspot.is-previewing {
-  border: 2px solid var(--demo-hotspot) !important;
+  border-color: transparent !important;
   background: transparent !important;
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--demo-hotspot) 45%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--ns-button-text) 70%, transparent) !important;
-  z-index: 9;
+  box-shadow: none !important;
 }
 
 .click-fx {

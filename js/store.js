@@ -47,10 +47,20 @@ export function hexToRgba(hex, alpha = 0.55) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/**
+ * Véu do Driver ao redor do hotspot.
+ * why: no modo escuro a captura já é escura — alpha 0.55 no overlay do tema quase não destaca o recorte.
+ */
 export function themeOverlayColor(alpha = 0.55) {
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  const isDark = root?.getAttribute("data-appearance") === "social";
+  if (isDark) {
+    // why: preto fechado lê melhor sobre UIs escuras do que o azul do tema em 55%
+    return hexToRgba("#000000", Math.max(Number(alpha) || 0.55, 0.78));
+  }
   const overlay =
-    getComputedStyle(document.documentElement).getPropertyValue("--demo-overlay").trim() ||
-    getComputedStyle(document.documentElement).getPropertyValue("--ns-overlay").trim() ||
+    (root && getComputedStyle(root).getPropertyValue("--demo-overlay").trim()) ||
+    (root && getComputedStyle(root).getPropertyValue("--ns-overlay").trim()) ||
     "#000000";
   return hexToRgba(overlay, alpha);
 }
