@@ -14,6 +14,7 @@ import {
   BG_DUCK_VOLUME,
 } from "./playback.js";
 import { t, getLocale, HTML_LANG, standaloneMessages } from "./i18n.js";
+import { timeStretchChannels } from "./timeStretch.js";
 
 const DRIVER_JS = "vendor/driver/driver.js.iife.js";
 const DRIVER_CSS = "vendor/driver/driver.css";
@@ -274,6 +275,26 @@ async function decodeExportClip(ctx, url, cache) {
 }
 
 /**
+ * why: playbackRate do BufferSource afina junto com o tempo (voz de esquilo).
+ * O preview em <audio> preserva o tom; aqui o tempo entra nas samples e a taxa fica 1.
+ */
+function narrationAtPreviewPitch(ctx, buffer, tempo) {
+  const rate = Number(tempo);
+  if (!buffer || !Number.isFinite(rate) || Math.abs(rate - 1) < 1e-3) return buffer;
+  const channels = [];
+  for (let c = 0; c < buffer.numberOfChannels; c += 1) {
+    channels.push(buffer.getChannelData(c));
+  }
+  const stretched = timeStretchChannels(channels, rate, buffer.sampleRate);
+  const length = stretched[0]?.length || 1;
+  const out = ctx.createBuffer(buffer.numberOfChannels, length, buffer.sampleRate);
+  for (let c = 0; c < stretched.length; c += 1) {
+    out.getChannelData(c).set(stretched[c].subarray(0, length));
+  }
+  return out;
+}
+
+/**
  * Monta a trilha do vídeo: narração de cada passo no início do passo e fundo em loop.
  * @returns {Promise<AudioBuffer|null>}
  */
@@ -307,11 +328,12 @@ async function renderExportAudio(demo) {
     let at = place.start;
     for (const url of place.clips) {
       const buffer = await decodeExportClip(ctx, url, cache);
-      const span = buffer.duration / place.rate;
+      const rendered = narrationAtPreviewPitch(ctx, buffer, place.rate);
+      const span = rendered.duration;
       windows.push([at, at + span]);
       const src = ctx.createBufferSource();
-      src.buffer = buffer;
-      src.playbackRate.value = place.rate;
+      src.buffer = rendered;
+      src.playbackRate.value = 1;
       src.connect(ctx.destination);
       src.start(at);
       at += span;
@@ -550,7 +572,13 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   const videoStream = cvs.captureStream(30);
   let stream = videoStream;
   if (audioBuffer && typeof AudioContext !== "undefined") {
-    audioCtx = new AudioContext();
+    // why: contexto num sample rate diferente do buffer faz o MediaRecorder
+    // gravar as samples como se a taxa fosse outra (tom fino / grave).
+    try {
+      audioCtx = new AudioContext({ sampleRate: audioBuffer.sampleRate });
+    } catch {
+      audioCtx = new AudioContext();
+    }
     if (audioCtx.state === "suspended") await audioCtx.resume();
     const dest = audioCtx.createMediaStreamDestination();
     audioSource = audioCtx.createBufferSource();
