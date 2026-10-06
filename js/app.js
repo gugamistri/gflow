@@ -22,7 +22,9 @@ import {
   renameProject,
   getCustomThemes,
   saveCustomThemes,
+  writeIndex,
 } from "./projects.js";
+import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
 import { renumberScenes } from "./scenes.js";
 import {
@@ -655,8 +657,9 @@ function renderLibrary() {
       const dots = (p.themePreview || [])
         .map((c) => `<i style="background:${c}"></i>`)
         .join("");
-      const thumb = p.thumb
-        ? `<img src="${escapeAttr(p.thumb)}" alt="" loading="lazy" />`
+      const thumbSrc = p.thumb && !isHeavyDataUrl(p.thumb) ? p.thumb : "";
+      const thumb = thumbSrc
+        ? `<img src="${escapeAttr(thumbSrc)}" alt="" loading="lazy" decoding="async" />`
         : `<div class="project-card-placeholder">${escapeHtml(t("library.demoPlaceholder"))}</div>`;
       return `
         <article class="project-card" data-id="${escapeAttr(p.id)}" tabindex="0" aria-label="${escapeAttr(t("library.openAria", { name: p.name }))}">
@@ -682,6 +685,44 @@ function renderLibrary() {
         </article>`;
     })
     .join("");
+  scheduleLibraryThumbSlim();
+}
+
+let slimmingLibraryThumbs = false;
+
+function scheduleLibraryThumbSlim() {
+  if (slimmingLibraryThumbs) return;
+  const index = readIndex();
+  if (!(index.projects || []).some((p) => isHeavyDataUrl(p.thumb))) return;
+  slimmingLibraryThumbs = true;
+  void slimLibraryThumbs().finally(() => {
+    slimmingLibraryThumbs = false;
+  });
+}
+
+async function slimLibraryThumbs() {
+  const index = readIndex();
+  let changed = false;
+  for (const project of index.projects || []) {
+    if (!isHeavyDataUrl(project.thumb)) continue;
+    try {
+      project.thumb = (await downscaleImageUrl(project.thumb, { maxEdge: 480, quality: 0.72 })) || null;
+    } catch {
+      project.thumb = null;
+    }
+    delete project.thumbSig;
+    changed = true;
+  }
+  if (!changed) return;
+  const fresh = readIndex();
+  const slimById = new Map((index.projects || []).map((p) => [p.id, p.thumb]));
+  for (const project of fresh.projects || []) {
+    if (!slimById.has(project.id) || !isHeavyDataUrl(project.thumb)) continue;
+    project.thumb = slimById.get(project.id) || null;
+    delete project.thumbSig;
+  }
+  writeIndex(fresh);
+  if (chromeView === "library") renderLibrary();
 }
 
 function clearBootGate() {
