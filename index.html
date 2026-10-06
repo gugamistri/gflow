@@ -486,8 +486,14 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
             <p class="slide-kicker" id="canvas-slide-kicker"></p>
-            <h2 id="canvas-slide-title"></h2>
-            <p id="canvas-slide-body"></p>
+            <div class="inline-slot">
+              <span class="inline-placeholder" id="ph-slide-title" hidden></span>
+              <h2 id="canvas-slide-title" data-inline="title" data-ph="ph-slide-title" role="textbox" aria-multiline="false"></h2>
+            </div>
+            <div class="inline-slot">
+              <span class="inline-placeholder" id="ph-slide-body" hidden></span>
+              <p id="canvas-slide-body" data-inline="description" data-ph="ph-slide-body" role="textbox" aria-multiline="true"></p>
+            </div>
             <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir" data-i18n-aria="canvas.play">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </button>
@@ -510,7 +516,24 @@
             <span class="click-fx-burst"></span>
           </div>
           <div class="sim-cursor" id="editor-sim-cursor" hidden></div>
-          <div class="caption-bar" id="canvas-caption" hidden></div>
+          <div class="editor-popover" id="editor-popover" hidden role="group">
+            <div class="editor-popover-arrow" aria-hidden="true"></div>
+            <div class="editor-popover-grip" id="editor-popover-grip" aria-hidden="true"></div>
+            <div class="inline-slot">
+              <span class="inline-placeholder" id="ph-popover-title" hidden></span>
+              <div id="canvas-popover-title" class="editor-popover-title" data-inline="title" data-ph="ph-popover-title" role="textbox" aria-multiline="false"></div>
+            </div>
+            <div class="inline-slot">
+              <span class="inline-placeholder" id="ph-popover-body" hidden></span>
+              <div id="canvas-popover-body" class="editor-popover-body" data-inline="description" data-ph="ph-popover-body" role="textbox" aria-multiline="true"></div>
+            </div>
+            <div class="editor-popover-foot" aria-hidden="true">
+              <span class="editor-popover-progress" id="editor-popover-progress"></span>
+              <span class="editor-popover-next" id="editor-popover-next"></span>
+            </div>
+          </div>
+          <span class="inline-placeholder caption-placeholder" id="ph-caption" hidden></span>
+          <div class="caption-bar" id="canvas-caption" data-inline="caption" data-ph="ph-caption" role="textbox" aria-multiline="true" hidden></div>
         </div>
       </div>
     </section>
