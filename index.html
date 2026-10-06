@@ -95,7 +95,7 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
         </button>
         <div class="preview-split">
-          <button type="button" class="btn btn-primary" id="btn-play-from">
+          <button type="button" class="btn btn-primary" id="btn-play-from" title="Preview (P)" data-i18n-title="toolbar.previewTitle">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-eye"></use></svg>
             <span data-i18n="toolbar.preview">Preview</span>
           </button>
@@ -104,7 +104,7 @@
               <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
             </summary>
             <div class="preview-menu-body">
-              <button type="button" class="preview-menu-option" id="btn-watch-from">
+              <button type="button" class="preview-menu-option" id="btn-watch-from" title="Preview automático (Shift+P)" data-i18n-title="toolbar.autoPreviewTitle">
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
                 <span data-i18n="toolbar.autoPreview">Preview automático</span>
               </button>
@@ -341,6 +341,9 @@
               </div>
             </details>
           </div>
+          <button type="button" class="more-item" id="btn-shortcuts">
+            <span data-i18n="shortcuts.title">Atalhos</span>
+          </button>
           <button type="button" class="more-item" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
             <span data-i18n="topbar.feedback">Feedback</span>
           </button>
@@ -639,6 +642,85 @@
       </div>
     </aside>
   </main>
+
+  <dialog class="studio-modal shortcuts-modal" id="modal-shortcuts" aria-labelledby="shortcuts-title">
+    <div class="studio-modal-body">
+      <h3 id="shortcuts-title" data-i18n="shortcuts.title">Atalhos</h3>
+      <p class="shortcuts-lead" data-i18n="shortcuts.lead">Atalhos do editor. No Windows use Ctrl; no Mac, ⌘.</p>
+      <div class="shortcuts-table">
+        <div class="shortcuts-row shortcuts-head">
+          <span data-i18n="shortcuts.colAction">Ação</span>
+          <span data-i18n="shortcuts.colWindows">Windows</span>
+          <span data-i18n="shortcuts.colMac">Mac</span>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="shortcuts.select">Selecionar passo</span>
+          <kbd data-i18n="shortcuts.arrows">↑ / ↓</kbd>
+          <kbd data-i18n="shortcuts.arrows">↑ / ↓</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="shortcuts.extend">Estender seleção</span>
+          <kbd data-i18n="shortcuts.shiftArrows">Shift+↑ / Shift+↓</kbd>
+          <kbd data-i18n="shortcuts.shiftArrows">Shift+↑ / Shift+↓</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="toolbar.copy">Copiar</span>
+          <kbd data-i18n="shortcuts.winCopy">Ctrl+C</kbd>
+          <kbd data-i18n="shortcuts.macCopy">⌘C</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="filmstrip.cut">Cortar</span>
+          <kbd data-i18n="shortcuts.winCut">Ctrl+X</kbd>
+          <kbd data-i18n="shortcuts.macCut">⌘X</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="toolbar.paste">Colar</span>
+          <kbd data-i18n="shortcuts.winPaste">Ctrl+V</kbd>
+          <kbd data-i18n="shortcuts.macPaste">⌘V</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="toolbar.duplicate">Duplicar</span>
+          <kbd data-i18n="shortcuts.winDuplicate">Ctrl+D</kbd>
+          <kbd data-i18n="shortcuts.macDuplicate">⌘D</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="filmstrip.remove">Remover</span>
+          <kbd data-i18n="shortcuts.deleteKeys">Delete / Backspace</kbd>
+          <kbd data-i18n="shortcuts.deleteKeys">Delete / Backspace</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="toolbar.preview">Preview</span>
+          <kbd data-i18n="shortcuts.previewChord">P</kbd>
+          <kbd data-i18n="shortcuts.previewChord">P</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="toolbar.autoPreview">Preview automático</span>
+          <kbd data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
+          <kbd data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="topbar.undo">Desfazer</span>
+          <kbd data-i18n="shortcuts.winUndo">Ctrl+Z</kbd>
+          <kbd data-i18n="shortcuts.macUndo">⌘Z</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="topbar.redo">Refazer</span>
+          <kbd data-i18n="shortcuts.winRedo">Ctrl+Y / Ctrl+Shift+Z</kbd>
+          <kbd data-i18n="shortcuts.macRedo">⌘⇧Z</kbd>
+        </div>
+        <div class="shortcuts-row">
+          <span data-i18n="shortcuts.exitPreview">Sair do preview</span>
+          <kbd data-i18n="shortcuts.esc">Esc</kbd>
+          <kbd data-i18n="shortcuts.esc">Esc</kbd>
+        </div>
+      </div>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-close-shortcuts">
+          <span data-i18n="modal.close">Fechar</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
 
   <dialog class="studio-modal" id="modal-delete-project">
     <form method="dialog" id="form-delete-project" class="studio-modal-body">

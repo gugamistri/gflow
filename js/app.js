@@ -410,7 +410,11 @@ const editor = createEditor({
   onChange,
   onPlayFrom: (index, opts = {}) => {
     setSelectedIndex(index);
-    enterPresentation({ from: index, autoplay: !!opts.autoplay });
+    enterPresentation({
+      from: index,
+      autoplay: !!opts.autoplay,
+      indices: opts.indices,
+    });
   },
 });
 
@@ -845,6 +849,17 @@ function escapeAttr(str) {
 
 function bindChrome() {
   document.getElementById("btn-projects").addEventListener("click", () => closeProject());
+  document.getElementById("btn-shortcuts")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    document.getElementById("modal-shortcuts")?.showModal();
+  });
+  document.getElementById("btn-close-shortcuts")?.addEventListener("click", () => {
+    document.getElementById("modal-shortcuts")?.close();
+  });
+  document.getElementById("modal-shortcuts")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  });
   document.getElementById("btn-undo")?.addEventListener("click", () => undoEdit());
   document.getElementById("btn-redo")?.addEventListener("click", () => redoEdit());
   document.getElementById("present-close")?.addEventListener("click", () => exitPresentation());
@@ -864,6 +879,7 @@ function bindChrome() {
   window.addEventListener("keydown", (e) => {
     if (!project) return;
     if (presenting) return;
+    if (document.querySelector("dialog[open]")) return;
     const tag = e.target?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
     const mod = e.metaKey || e.ctrlKey;

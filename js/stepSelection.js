@@ -197,3 +197,24 @@ export function collectStepsForClipboard(steps, indices, customImages = {}) {
   }
   return { steps: outSteps, images };
 }
+
+/**
+ * Ordem do preview.
+ * Sem índices, o tour inteiro fica na lista e a reprodução começa em `from`
+ * (dá para voltar aos passos anteriores).
+ * Com índices, toca só esses passos, já ordenados, e para no último.
+ * @param {number} length
+ * @param {{ from?: number, indices?: number[] | null }} [opts]
+ * @returns {{ order: number[], start: number }}
+ */
+export function resolvePlayPlaylist(length, opts = {}) {
+  const n = Math.max(0, Number(length) || 0);
+  if (!n) return { order: [], start: 0 };
+  const picked = Array.isArray(opts.indices) ? normalizeIndices(opts.indices, n) : [];
+  if (picked.length) return { order: picked, start: 0 };
+  const from = Number(opts.from);
+  const start = Math.max(0, Math.min(n - 1, Number.isFinite(from) ? from : 0));
+  const order = [];
+  for (let i = 0; i < n; i += 1) order.push(i);
+  return { order, start };
+}
