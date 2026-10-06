@@ -41,13 +41,16 @@ import {
   NARRATION_VOICES,
   ensureNarration,
   ensurePlayback,
+  formatHoldClock,
   generateNarrationClips,
   minHoldSecondsForStep,
   normalizeCaptionPlaybackRate,
   playableNarrationClips,
   savedNarrationClips,
   stopSpeech,
+  tourHoldSeconds,
 } from "./playback.js";
+import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
 import { getLocale, t } from "./i18n.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
@@ -84,6 +87,36 @@ function setSceneLabel(demo, scene, name) {
   delete labels[n];
   labels[String(n)] = text;
   return text;
+}
+
+const listThumbs = createThumbCache({ maxEdge: 320, quality: 0.7 });
+
+function assignThumbs(cache, scope, root, pairs) {
+  if (!cache || !root) return;
+  cache.hold(scope, pairs);
+  const seen = new Set();
+  for (const pair of pairs) {
+    if (!pair || seen.has(pair.key)) continue;
+    seen.add(pair.key);
+    const apply = (url) => {
+      if (!url || !cache.holds(scope, pair.key)) return;
+      const nodes = [];
+      if (root.dataset?.thumb === pair.key) nodes.push(root);
+      root.querySelectorAll?.(`img[data-thumb="${pair.key}"]`)?.forEach((img) => nodes.push(img));
+      for (const img of nodes) {
+        if (img.getAttribute("src") !== url) img.src = url;
+      }
+    };
+    const ready = cache.peek(pair.key);
+    if (ready) {
+      apply(ready);
+      continue;
+    }
+    cache.load(pair.key, pair.src).then((url) => {
+      if (url) apply(url);
+      else if (pair.fallback) apply(pair.src);
+    });
+  }
 }
 
 function stepListName(step) {
@@ -152,6 +185,8 @@ export function sizeSlideLikeImage(slideEl, stage, demo, step, resolve) {
   probe.onload = () => {
     imageSizeCache.set(src, { w: probe.naturalWidth, h: probe.naturalHeight });
     paint(probe.naturalWidth, probe.naturalHeight);
+    probe.onload = null;
+    probe.removeAttribute("src");
   };
   probe.src = src;
 }
@@ -170,12 +205,17 @@ export function createEditor(ctx) {
     getSelectedIndex,
     setSelectedIndex,
     toast,
-    onChange,
     onPlayFrom,
   } = ctx;
 
+  function onChange() {
+    renderEditorMetrics();
+    ctx.onChange?.();
+  }
+
   const els = {
     filmstrip: document.getElementById("filmstrip"),
+    filmstripMetrics: document.getElementById("filmstrip-metrics"),
     canvasFrame: document.getElementById("canvas-frame"),
     canvasStage: document.getElementById("canvas-stage"),
     canvasEmpty: document.getElementById("canvas-empty"),
@@ -315,20 +355,46 @@ export function createEditor(ctx) {
     });
   }
 
+  function renderEditorMetrics() {
+    const el = els.filmstripMetrics;
+    if (!el) return;
+    const demo = getDemo();
+    const steps = Array.isArray(demo?.steps) ? demo.steps : [];
+    const time = formatHoldClock(tourHoldSeconds(demo));
+    el.textContent =
+      steps.length === 1
+        ? t("editor.metricsOne", { time })
+        : t("editor.metricsMany", { n: steps.length, time });
+  }
+
   function syncImageButton() {
     const demo = getDemo();
     const step = currentStep();
-    if (!step || step.type === "slide") return;
+    if (!step || step.type === "slide") {
+      listThumbs.hold("prop", []);
+      return;
+    }
     const src = resolveImageSrc(demo, step.image);
     const label = shortImageLabel(step.image, demo);
     els.propImageName.textContent = label;
-    if (src) {
-      els.propImageThumb.hidden = false;
-      els.propImageThumb.src = src;
-    } else {
+    if (!src) {
+      listThumbs.hold("prop", []);
       els.propImageThumb.hidden = true;
       els.propImageThumb.removeAttribute("src");
+      delete els.propImageThumb.dataset.thumb;
+      return;
     }
+    els.propImageThumb.hidden = false;
+    if (shouldDownscaleSrc(src)) {
+      const key = thumbKey(src);
+      els.propImageThumb.dataset.thumb = key;
+      if (!listThumbs.peek(key)) els.propImageThumb.removeAttribute("src");
+      assignThumbs(listThumbs, "prop", els.propImageThumb, [{ key, src }]);
+      return;
+    }
+    listThumbs.hold("prop", []);
+    delete els.propImageThumb.dataset.thumb;
+    els.propImageThumb.src = src;
   }
 
   function renderFilmstrip() {
@@ -336,12 +402,15 @@ export function createEditor(ctx) {
     const selected = getSelectedIndex();
     syncSelectionFromPrimary();
     const selectedSet = new Set(selectedIndices);
+    renderEditorMetrics();
     if (!demo.steps.length) {
       els.filmstrip.innerHTML = `<p class="film-hint">${escapeHtml(t("filmstrip.empty"))}</p>`;
+      listThumbs.hold("film", []);
       return;
     }
     let html = "";
     let lastScene = null;
+    const filmPairs = [];
 
     demo.steps.forEach((step, index) => {
       if (step.scene !== lastScene) {
@@ -353,12 +422,19 @@ export function createEditor(ctx) {
         </div>`;
       }
       const src = resolveImageSrc(demo, step.image);
-      const thumb =
-        step.type === "slide"
-          ? `<div class="film-thumb-slide">SLIDE</div>`
-          : src
-            ? `<img src="${escapeAttr(src)}" alt="" loading="lazy" draggable="false" />`
-            : `<div class="film-thumb-slide">—</div>`;
+      let thumb;
+      if (step.type === "slide") {
+        thumb = `<div class="film-thumb-slide">SLIDE</div>`;
+      } else if (!src) {
+        thumb = `<div class="film-thumb-slide">—</div>`;
+      } else if (shouldDownscaleSrc(src)) {
+        const key = thumbKey(src);
+        filmPairs.push({ key, src });
+        const ready = listThumbs.peek(key);
+        thumb = `<img data-thumb="${key}"${ready ? ` src="${escapeAttr(ready)}"` : ""} alt="" loading="lazy" decoding="async" draggable="false" />`;
+      } else {
+        thumb = `<img src="${escapeAttr(src)}" alt="" loading="lazy" decoding="async" draggable="false" />`;
+      }
       const classes = [
         "film-item",
         index === selected ? "is-active" : "",
@@ -388,12 +464,14 @@ export function createEditor(ctx) {
     els.filmstrip.innerHTML = html;
     els.filmstrip.querySelectorAll("img").forEach((img) => {
       img.addEventListener("error", () => {
+        if (!img.getAttribute("src")) return;
         img.replaceWith(Object.assign(document.createElement("div"), {
           className: "film-thumb-slide",
           textContent: "—",
         }));
       });
     });
+    assignThumbs(listThumbs, "film", els.filmstrip, filmPairs);
   }
 
   function syncSideAlignControls(step) {
@@ -1604,6 +1682,7 @@ export function createEditor(ctx) {
 
     let html = "";
     let lastGroup = null;
+    const gridPairs = [];
     filtered.forEach((it) => {
       if (it.group !== lastGroup) {
         lastGroup = it.group;
@@ -1614,10 +1693,19 @@ export function createEditor(ctx) {
         it.ref.startsWith("custom:")
           ? `<button type="button" class="image-tile-remove" data-remove-image="${escapeAttr(it.ref)}" aria-label="${escapeAttr(t("editor.removeImage"))}" title="${escapeAttr(t("filmstrip.remove"))}">×</button>`
           : "";
+      let imgAttrs = `alt="" loading="lazy" decoding="async"`;
+      if (shouldDownscaleSrc(it.src)) {
+        const key = thumbKey(it.src);
+        gridPairs.push({ key, src: it.src });
+        const ready = listThumbs.peek(key);
+        imgAttrs = `data-thumb="${key}"${ready ? ` src="${escapeAttr(ready)}"` : ""} ${imgAttrs}`;
+      } else if (it.src) {
+        imgAttrs = `src="${escapeAttr(it.src)}" ${imgAttrs}`;
+      }
       html += `
         <div class="image-tile-wrap">
           <button type="button" class="image-tile ${active}" data-ref="${escapeAttr(it.ref)}" title="${escapeAttr(it.label)}">
-            <img src="${escapeAttr(it.src)}" alt="" loading="lazy" />
+            <img ${imgAttrs} />
             <span>${escapeHtml(shortImageLabel(it.ref, demo))}</span>
           </button>
           ${remove}
@@ -1626,6 +1714,7 @@ export function createEditor(ctx) {
 
     els.imageGrid.innerHTML =
       html || `<p class="image-grid-empty">Nenhuma imagem ainda. Arraste, cole ou envie do computador.</p>`;
+    assignThumbs(listThumbs, "grid", els.imageGrid, gridPairs);
   }
 
   function removeCustomImage(ref) {
@@ -2710,6 +2799,9 @@ export function createEditor(ctx) {
 
     document.getElementById("btn-close-image-modal")?.addEventListener("click", () => {
       els.imageModal.close();
+    });
+    els.imageModal?.addEventListener("close", () => {
+      listThumbs.releaseScope("grid");
     });
 
     document.getElementById("btn-upload-in-modal")?.addEventListener("click", () => {

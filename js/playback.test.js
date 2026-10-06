@@ -9,9 +9,11 @@ import {
   holdMs,
   minHoldSecondsForNarration,
   normalizeCaptionPlaybackRate,
+  formatHoldClock,
   playableNarrationClips,
   resolveHoldSeconds,
   savedNarrationClips,
+  tourHoldSeconds,
 } from "./playback.js";
 
 test("padrão de hold é 6 segundos", () => {
@@ -127,6 +129,34 @@ test("temporizador não fica abaixo da duração do áudio", () => {
   step.holdSeconds = 2;
   // why: o áudio antigo ainda toca na reprodução, então o piso permanece
   assert.equal(resolveHoldSeconds(step, demo), 5);
+});
+
+test("duração do tour soma o hold efetivo de cada passo", () => {
+  const demo = {
+    playback: { defaultHoldSeconds: 6 },
+    narration: { enabled: true, voiceURI: "pt-BR", rate: 1, background: null },
+    steps: [
+      { type: "slide", holdSeconds: 3 },
+      { type: "screen" },
+      {
+        type: "screen",
+        holdSeconds: 2,
+        caption: "Olá",
+        narrationAudio: {
+          source: "upload",
+          durationSeconds: 17.2,
+          playbackRate: 1,
+          clips: ["data:audio/mpeg;base64,YQ=="],
+        },
+      },
+    ],
+  };
+  assert.equal(tourHoldSeconds(demo), 27);
+  assert.equal(formatHoldClock(27), "0:27");
+  assert.equal(formatHoldClock(220), "3:40");
+  assert.equal(formatHoldClock(3600), "60:00");
+  assert.equal(tourHoldSeconds({ steps: [] }), 0);
+  assert.equal(formatHoldClock(0), "0:00");
 });
 
 test("defaultNarration traz campos esperados", () => {
