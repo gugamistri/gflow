@@ -56,10 +56,14 @@ import { getLocale, t } from "./i18n.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
 import {
+  arrowSelection,
+  captionVisibilityState,
   collectStepsForClipboard,
   deleteIndices,
   moveIndices,
+  nextCaptionVisibility,
   normalizeIndices,
+  nudgeBlockInsert,
   rangeIndices,
   toggleIndex,
 } from "./stepSelection.js";
@@ -278,6 +282,13 @@ export function createEditor(ctx) {
   /** @type {number[]} */
   let selectedIndices = [];
   let selectionAnchor = 0;
+  /** @type {{ indices: number[], anchor: number, primary: number } | null} */
+  let selectionBeforeContext = null;
+  let contextSnapshotTimer = 0;
+  let ignoreNextFilmClick = false;
+  let filmMenuToken = 0;
+  /** @type {HTMLElement | null} */
+  let filmMenuEl = null;
 
   const clickFx = createClickFxController({
     frame: els.canvasFrame,
@@ -299,16 +310,25 @@ export function createEditor(ctx) {
       selectionAnchor = 0;
       return;
     }
+    // why: o render não pode recolocar a âncora no item ativo — Shift+seta encolhe a partir dela.
+    const hadPrimary = selectedIndices.includes(primary);
     selectedIndices = normalizeIndices(
-      selectedIndices.includes(primary) ? selectedIndices : [primary],
+      hadPrimary ? selectedIndices : [primary],
       demo.steps.length
     );
-    if (!selectedIndices.length) selectedIndices = [primary];
-    selectionAnchor = primary;
+    if (!selectedIndices.length) {
+      selectedIndices = [Math.max(0, Math.min(primary, demo.steps.length - 1))];
+    }
+    const max = demo.steps.length - 1;
+    const anchor = Number(selectionAnchor);
+    if (!hadPrimary || !Number.isFinite(anchor) || anchor < 0 || anchor > max) {
+      selectionAnchor = selectedIndices.includes(primary) ? primary : selectedIndices[selectedIndices.length - 1];
+    }
   }
 
-  function applySelection(indices, primary) {
+  function applySelection(indices, primary, opts = {}) {
     const demo = getDemo();
+    const anchorBefore = selectionAnchor;
     selectedIndices = normalizeIndices(indices, demo.steps.length);
     if (!selectedIndices.length && demo.steps.length) {
       selectedIndices = [Math.max(0, Math.min(primary ?? 0, demo.steps.length - 1))];
@@ -318,7 +338,13 @@ export function createEditor(ctx) {
         ? primary
         : selectedIndices[selectedIndices.length - 1] ?? 0;
     setSelectedIndex(prim);
-    selectionAnchor = prim;
+    if (opts.keepAnchor && demo.steps.length) {
+      const max = demo.steps.length - 1;
+      const anchor = Number(anchorBefore);
+      selectionAnchor = Number.isFinite(anchor) ? Math.max(0, Math.min(max, anchor)) : prim;
+    } else {
+      selectionAnchor = prim;
+    }
   }
 
   function selectedSteps() {
@@ -1356,7 +1382,7 @@ export function createEditor(ctx) {
     if (!Number.isFinite(i) || i < 0 || i >= demo.steps.length) return;
 
     if (opts.range) {
-      applySelection(rangeIndices(selectionAnchor, i, demo.steps.length), i);
+      applySelection(rangeIndices(selectionAnchor, i, demo.steps.length), i, { keepAnchor: true });
     } else if (opts.toggle) {
       const next = toggleIndex(selectedSteps(), i, demo.steps.length);
       applySelection(next, i);
@@ -1514,10 +1540,10 @@ export function createEditor(ctx) {
     toast(pasted.length > 1 ? t("toast.stepsPasted", { n: pasted.length }) : t("toast.stepPasted"));
   }
 
-  function deleteStep() {
+  function deleteStep(opts = {}) {
     const demo = getDemo();
     if (!demo.steps.length) {
-      toast(t("toast.nothingToRemove"));
+      if (!opts.silent) toast(t("toast.nothingToRemove"));
       return;
     }
     const indices = selectedSteps();
@@ -1537,7 +1563,75 @@ export function createEditor(ctx) {
       renderCanvas();
     }
     onChange();
-    toast(count > 1 ? t("toast.stepsRemoved", { n: count }) : t("toast.stepRemoved"));
+    if (!opts.silent) {
+      toast(count > 1 ? t("toast.stepsRemoved", { n: count }) : t("toast.stepRemoved"));
+    }
+  }
+
+  async function cutStepToClipboard() {
+    const demo = getDemo();
+    const indices = selectedSteps();
+    if (!indices.length || !demo.steps.length) {
+      toast(t("toast.nothingToCopy"));
+      return;
+    }
+    ensureCustomImages(demo);
+    const payload = collectStepsForClipboard(demo.steps, indices, demo.customImages);
+    if (!payload.steps.length) {
+      toast(t("toast.nothingToCopy"));
+      return;
+    }
+    await putStepClipboard({ steps: payload.steps, step: payload.steps[0], images: payload.images });
+    const count = payload.steps.length;
+    deleteStep({ silent: true });
+    toast(count > 1 ? t("toast.stepsCut", { n: count }) : t("toast.stepCut"));
+  }
+
+  function moveSelectionByArrow(delta, extend, { fromFilmstrip = false } = {}) {
+    const demo = getDemo();
+    if (!demo.steps.length) return;
+    syncSelectionFromPrimary();
+    const next = arrowSelection({
+      anchor: selectionAnchor,
+      active: getSelectedIndex(),
+      length: demo.steps.length,
+      delta,
+      extend,
+    });
+    const same =
+      next.active === getSelectedIndex() &&
+      next.anchor === selectionAnchor &&
+      next.indices.length === selectedIndices.length &&
+      next.indices.every((n, i) => n === selectedIndices[i]);
+    if (same) return;
+    applySelection(next.indices, next.active, { keepAnchor: extend });
+    renderFilmstrip();
+    syncForm();
+    renderCanvas();
+    const el = els.filmstrip.querySelector(`.film-item[data-index="${next.active}"]`);
+    el?.scrollIntoView({ block: "nearest" });
+    if (fromFilmstrip) el?.focus();
+  }
+
+  function nudgeSelection(direction) {
+    const demo = getDemo();
+    const indices = selectedSteps();
+    const insertBefore = nudgeBlockInsert(indices, direction, demo.steps.length);
+    if (insertBefore == null) return;
+    reorderStepGroup(indices, insertBefore);
+  }
+
+  function toggleShowCaptionOnSelection() {
+    const demo = getDemo();
+    const indices = selectedSteps();
+    if (!indices.length) return;
+    const on = nextCaptionVisibility(captionVisibilityState(demo.steps, indices));
+    for (const i of indices) {
+      if (demo.steps[i]) demo.steps[i].showCaption = on;
+    }
+    syncForm();
+    renderCanvas();
+    onChange();
   }
 
   async function ingestImageFiles(files, { createSteps }) {
@@ -1795,6 +1889,194 @@ export function createEditor(ctx) {
     toast(t("toast.imageSelected"));
   }
 
+  function closeFilmContextMenu() {
+    filmMenuToken += 1;
+    filmMenuEl?.remove();
+    filmMenuEl = null;
+    document.removeEventListener("pointerdown", onFilmMenuPointerDown, true);
+    document.removeEventListener("keydown", onFilmMenuKeydown, true);
+    window.removeEventListener("resize", closeFilmContextMenu);
+    els.filmstrip?.removeEventListener("scroll", closeFilmContextMenu);
+  }
+
+  function onFilmMenuPointerDown(e) {
+    if (!filmMenuEl || filmMenuEl.contains(e.target)) return;
+    closeFilmContextMenu();
+  }
+
+  function onFilmMenuKeydown(e) {
+    if (!filmMenuEl) return;
+    if (e.key === "Escape" || e.key === "Tab") {
+      e.preventDefault();
+      e.stopPropagation();
+      const index = Number(filmMenuEl.dataset.index);
+      closeFilmContextMenu();
+      els.filmstrip.querySelector(`.film-item[data-index="${index}"]`)?.focus();
+      return;
+    }
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Home" && e.key !== "End") return;
+    const items = [...filmMenuEl.querySelectorAll("[role='menuitem'], [role='menuitemcheckbox']")].filter(
+      (el) => !el.disabled
+    );
+    if (!items.length) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const current = items.indexOf(document.activeElement);
+    let next = 0;
+    if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = items.length - 1;
+    else if (e.key === "ArrowDown") next = current < 0 ? 0 : (current + 1) % items.length;
+    else next = current <= 0 ? items.length - 1 : current - 1;
+    items[next].focus();
+  }
+
+  function placeFilmMenu(menu, x, y) {
+    const pad = 8;
+    let left = x;
+    let top = y;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - rect.width - pad);
+    if (rect.bottom > window.innerHeight - pad) top = Math.max(pad, window.innerHeight - rect.height - pad);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+  }
+
+  function filmMenuButton(action, label, opts = {}) {
+    const attrs = [
+      `type="button"`,
+      `role="${opts.role || "menuitem"}"`,
+      `data-action="${action}"`,
+      opts.disabled ? "disabled" : "",
+      opts.danger ? `class="is-danger"` : "",
+      opts.checked != null ? `aria-checked="${opts.checked}"` : "",
+      opts.title ? `title="${escapeAttr(opts.title)}"` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return `<button ${attrs}>${escapeHtml(label)}</button>`;
+  }
+
+  function runFilmMenuAction(action) {
+    if (action === "generate-copy") {
+      generateStepCopy(selectedSteps()).catch((err) => toast(err?.message || t("toast.llmCopyFail")));
+      return;
+    }
+    if (action === "generate-audio") {
+      generateCaptionAudio(selectedSteps()).catch((err) => toast(err?.message || t("toast.audioGenFail")));
+      return;
+    }
+    if (action === "duplicate") {
+      duplicateStep();
+      return;
+    }
+    if (action === "copy") {
+      copyStepToClipboard().catch((err) => toast(err?.message || t("toast.nothingToCopy")));
+      return;
+    }
+    if (action === "cut") {
+      cutStepToClipboard().catch((err) => toast(err?.message || t("toast.nothingToCopy")));
+      return;
+    }
+    if (action === "paste") {
+      pasteStepFromClipboard().catch((err) => toast(err?.message || t("toast.clipboardEmpty")));
+      return;
+    }
+    if (action === "delete") {
+      deleteStep();
+      return;
+    }
+    if (action === "up") {
+      nudgeSelection(-1);
+      return;
+    }
+    if (action === "down") {
+      nudgeSelection(1);
+      return;
+    }
+    if (action === "show-caption") toggleShowCaptionOnSelection();
+  }
+
+  async function openFilmContextMenu(x, y, index) {
+    closeFilmContextMenu();
+    const token = filmMenuToken;
+    let canPaste = false;
+    try {
+      const record = await getStepClipboard();
+      canPaste = !!record?.steps?.length;
+    } catch {
+      canPaste = false;
+    }
+    if (token !== filmMenuToken) return;
+    const demo = getDemo();
+    syncSelectionFromPrimary();
+    const indices = selectedIndices;
+    const captionState = captionVisibilityState(demo.steps, indices);
+    const checked = captionState === "on" ? "true" : captionState === "mixed" ? "mixed" : "false";
+    const menu = document.createElement("div");
+    menu.id = "film-context-menu";
+    menu.className = "film-context-menu";
+    menu.setAttribute("role", "menu");
+    menu.setAttribute("aria-label", t("filmstrip.menu"));
+    menu.tabIndex = -1;
+    menu.dataset.index = String(index);
+    menu.innerHTML = [
+      filmMenuButton("generate-copy", t("props.generateCopyShort"), { title: t("props.generateCopy") }),
+      filmMenuButton("generate-audio", t("props.generateAudio")),
+      `<div class="film-context-sep" role="separator"></div>`,
+      filmMenuButton("duplicate", t("toolbar.duplicate"), { title: t("toolbar.duplicateTitle") }),
+      filmMenuButton("copy", t("toolbar.copy"), { title: t("toolbar.copyTitle") }),
+      filmMenuButton("cut", t("filmstrip.cut"), { title: t("filmstrip.cutTitle") }),
+      filmMenuButton("paste", t("toolbar.paste"), {
+        title: t("toolbar.pasteTitle"),
+        disabled: !canPaste,
+      }),
+      filmMenuButton("delete", t("filmstrip.remove"), { danger: true }),
+      `<div class="film-context-sep" role="separator"></div>`,
+      filmMenuButton("up", t("filmstrip.moveUp"), {
+        disabled: nudgeBlockInsert(indices, -1, demo.steps.length) == null,
+      }),
+      filmMenuButton("down", t("filmstrip.moveDown"), {
+        disabled: nudgeBlockInsert(indices, 1, demo.steps.length) == null,
+      }),
+      `<div class="film-context-sep" role="separator"></div>`,
+      filmMenuButton("show-caption", t("props.showCaption"), {
+        role: "menuitemcheckbox",
+        checked,
+      }),
+    ].join("");
+    document.body.appendChild(menu);
+    filmMenuEl = menu;
+    placeFilmMenu(menu, x, y);
+    menu.querySelector("button:not(:disabled)")?.focus();
+    document.addEventListener("pointerdown", onFilmMenuPointerDown, true);
+    document.addEventListener("keydown", onFilmMenuKeydown, true);
+    window.addEventListener("resize", closeFilmContextMenu);
+    els.filmstrip.addEventListener("scroll", closeFilmContextMenu);
+    menu.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-action]");
+      if (!btn || btn.disabled) return;
+      const action = btn.dataset.action;
+      closeFilmContextMenu();
+      runFilmMenuAction(action);
+    });
+    menu.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
+  function armContextSnapshot() {
+    syncSelectionFromPrimary();
+    selectionBeforeContext = {
+      indices: [...selectedIndices],
+      anchor: selectionAnchor,
+      primary: getSelectedIndex(),
+    };
+    window.clearTimeout(contextSnapshotTimer);
+    contextSnapshotTimer = window.setTimeout(() => {
+      selectionBeforeContext = null;
+    }, 120);
+  }
+
   function clearFilmDropMarks() {
     els.filmstrip.querySelectorAll(".film-item, .film-scene").forEach((el) => {
       el.classList.remove("drop-before", "drop-after", "is-drop-target");
@@ -1952,7 +2234,57 @@ export function createEditor(ctx) {
       reorderStepGroup(group, insertBefore, scene);
     });
 
+    els.filmstrip.addEventListener(
+      "pointerdown",
+      (e) => {
+        const item = e.target.closest?.(".film-item");
+        if (!item) return;
+        const contextGesture =
+          e.button === 2 || (e.button === 0 && e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey);
+        if (!contextGesture) return;
+        armContextSnapshot();
+      },
+      true
+    );
+
+    els.filmstrip.addEventListener("contextmenu", (e) => {
+      const item = e.target.closest(".film-item");
+      if (!item) return;
+      e.preventDefault();
+      e.stopPropagation();
+      ignoreNextFilmClick = true;
+      window.setTimeout(() => {
+        ignoreNextFilmClick = false;
+      }, 0);
+      const index = Number(item.dataset.index);
+      const before = selectionBeforeContext;
+      selectionBeforeContext = null;
+      window.clearTimeout(contextSnapshotTimer);
+      if (before?.indices?.includes(index)) {
+        const changed =
+          before.anchor !== selectionAnchor ||
+          before.primary !== getSelectedIndex() ||
+          before.indices.length !== selectedIndices.length ||
+          before.indices.some((n, i) => n !== selectedIndices[i]);
+        if (changed) {
+          selectionAnchor = before.anchor;
+          const primary = before.indices.includes(before.primary) ? before.primary : index;
+          applySelection(before.indices, primary, { keepAnchor: true });
+          renderFilmstrip();
+          syncForm();
+          renderCanvas();
+        }
+      } else if (!selectedIndices.includes(index)) {
+        selectStep(index);
+      }
+      openFilmContextMenu(e.clientX, e.clientY, index);
+    });
+
     els.filmstrip.addEventListener("click", (e) => {
+      if (ignoreNextFilmClick) {
+        ignoreNextFilmClick = false;
+        return;
+      }
       const sceneLabelEl = e.target.closest('[data-action="rename-scene-inline"]');
       if (sceneLabelEl) {
         e.preventDefault();
@@ -2332,99 +2664,135 @@ export function createEditor(ctx) {
     panel.classList.toggle("is-generating-audio", kind === "audio" && busy);
   }
 
-  async function generateStepCopy() {
+  function setGenerateBusy(kind, busy) {
+    const btn = document.getElementById(kind === "copy" ? "btn-generate-copy" : "btn-generate-caption");
+    const label = document.getElementById(kind === "copy" ? "btn-generate-copy-label" : "btn-generate-caption-label");
+    if (btn) {
+      btn.disabled = busy;
+      if (busy) btn.setAttribute("aria-busy", "true");
+      else btn.removeAttribute("aria-busy");
+    }
+    if (label) {
+      label.textContent = busy
+        ? t("toast.generating")
+        : t(kind === "copy" ? "props.generateCopyShort" : "props.generateAudio");
+    }
+    setAiGenerating(kind, busy);
+  }
+
+  function writeGeneratedCopy(step, parsed) {
+    step.label = parsed.title;
+    if (!step.popover) step.popover = { title: "", description: "", side: "bottom", align: "center" };
+    step.popover.title = parsed.title;
+    step.popover.description = parsed.description;
+    step.caption = parsed.narration;
+  }
+
+  async function generateCopyForStep(demo, step, idx) {
+    const isSlide = step.type === "slide";
+    const src = resolveImageSrc(demo, step.image);
+    // why: slides de capa/capítulo não precisam de screenshot; screens ainda exigem imagem.
+    if (!src && !isSlide) return { ok: false, reason: "image" };
+    const focus = isSlide
+      ? null
+      : {
+          hotspot: step.hotspot,
+          clickPoint: step.clickPoint || clickPointFromHotspot(step.hotspot),
+          simulateClick: step.simulateClick !== false,
+        };
+    let imageDataUrl = "";
+    if (src) {
+      imageDataUrl = await shrinkImageDataUrl(src, {
+        hotspot: focus?.hotspot,
+        clickPoint: focus?.simulateClick ? focus.clickPoint : null,
+      });
+    }
+    if (!imageDataUrl && !isSlide) return { ok: false, reason: "image" };
+    const isCurrent = idx === getSelectedIndex();
+    const messages = buildChatMessages({
+      imageDataUrl: imageDataUrl || undefined,
+      context: buildStepContext(demo.steps, idx),
+      draft: {
+        title: (isCurrent ? els.propTitle?.value : "") || step.popover?.title || step.label || "",
+        description: (isCurrent ? els.propDescription?.value : "") || step.popover?.description || "",
+        caption: (isCurrent ? els.propCaption?.value : "") || step.caption || "",
+      },
+      locale: getLocale(),
+      focus,
+      stepType: isSlide ? "slide" : "screen",
+    });
+    const bridge = llmBridge();
+    let result;
+    if (bridge?.llmComplete) {
+      result = await bridge.llmComplete({ messages });
+    } else {
+      const settings = await readLlmSettings();
+      result = await chatCompletions({
+        apiKey: settings.apiKey,
+        baseUrl: settings.baseUrl,
+        model: settings.model,
+        messages,
+      });
+    }
+    if (!result?.ok) return { ok: false, reason: "request", error: result?.error || "" };
+    const parsed = parseCopyJson(result.content);
+    if (!parsed) return { ok: false, reason: "parse" };
+    writeGeneratedCopy(step, parsed);
+    return { ok: true };
+  }
+
+  async function generateStepCopy(indices) {
     const demo = getDemo();
-    const step = currentStep();
-    const idx = getSelectedIndex();
-    if (!step) return;
+    const list = normalizeIndices(
+      Array.isArray(indices) ? indices : [getSelectedIndex()],
+      demo.steps.length
+    );
+    if (!list.length) return;
     if (!llmConfigured) {
       toast(t("toast.llmNeedKey"));
       openLlmSettings();
       return;
     }
-    const isSlide = step.type === "slide";
-    const src = resolveImageSrc(demo, step.image);
-    // why: slides de capa/capítulo não precisam de screenshot; screens ainda exigem imagem.
-    if (!src && !isSlide) {
-      toast(t("llm.needImage"));
-      return;
-    }
-    const btn = document.getElementById("btn-generate-copy");
-    const label = document.getElementById("btn-generate-copy-label");
-    if (btn) {
-      btn.disabled = true;
-      btn.setAttribute("aria-busy", "true");
-    }
-    if (label) label.textContent = t("toast.generating");
-    setAiGenerating("copy", true);
+    setGenerateBusy("copy", true);
+    let ok = 0;
+    let skipped = 0;
+    let failed = 0;
+    let lastError = "";
     try {
-      const focus = isSlide
-        ? null
-        : {
-            hotspot: step.hotspot,
-            clickPoint: step.clickPoint || clickPointFromHotspot(step.hotspot),
-            simulateClick: step.simulateClick !== false,
-          };
-      let imageDataUrl = "";
-      if (src) {
-        imageDataUrl = await shrinkImageDataUrl(src, {
-          hotspot: focus?.hotspot,
-          clickPoint: focus?.simulateClick ? focus.clickPoint : null,
-        });
+      for (const idx of list) {
+        const step = demo.steps[idx];
+        if (!step) {
+          skipped += 1;
+          continue;
+        }
+        const outcome = await generateCopyForStep(demo, step, idx);
+        if (outcome.ok) ok += 1;
+        else if (outcome.reason === "image") skipped += 1;
+        else {
+          failed += 1;
+          lastError = outcome.reason === "parse" ? t("llm.badCopy") : outcome.error || t("toast.llmCopyFail");
+        }
       }
-      if (!imageDataUrl && !isSlide) {
-        toast(t("llm.needImage"));
-        return;
-      }
-      const context = buildStepContext(demo.steps, idx);
-      const messages = buildChatMessages({
-        imageDataUrl: imageDataUrl || undefined,
-        context,
-        draft: {
-          title: els.propTitle?.value || step.popover?.title || step.label || "",
-          description: els.propDescription?.value || step.popover?.description || "",
-          caption: els.propCaption?.value || step.caption || "",
-        },
-        locale: getLocale(),
-        focus,
-        stepType: isSlide ? "slide" : "screen",
-      });
-      const bridge = llmBridge();
-      let result;
-      if (bridge?.llmComplete) {
-        result = await bridge.llmComplete({ messages });
-      } else {
-        const settings = await readLlmSettings();
-        result = await chatCompletions({
-          apiKey: settings.apiKey,
-          baseUrl: settings.baseUrl,
-          model: settings.model,
-          messages,
-        });
-      }
-      if (!result?.ok) {
-        toast(result?.error || t("toast.llmCopyFail"));
-        return;
-      }
-      const parsed = parseCopyJson(result.content);
-      if (!parsed) {
-        toast(t("llm.badCopy"));
-        return;
-      }
-      if (els.propTitle) els.propTitle.value = parsed.title;
-      if (els.propDescription) els.propDescription.value = parsed.description;
-      if (els.propCaption) els.propCaption.value = parsed.narration;
-      applyFormToStep();
-      toast(t("toast.llmCopied"));
     } catch (err) {
-      toast(err?.message || t("toast.llmCopyFail"));
+      failed += 1;
+      lastError = err?.message || t("toast.llmCopyFail");
     } finally {
-      setAiGenerating("copy", false);
-      if (btn) {
-        btn.disabled = false;
-        btn.removeAttribute("aria-busy");
-      }
-      if (label) label.textContent = t("props.generateCopyShort");
+      setGenerateBusy("copy", false);
+    }
+    if (ok) {
+      syncForm();
+      renderFilmstrip();
+      renderCanvas();
+      onChange();
+    }
+    if (ok && !failed && !skipped) {
+      toast(ok > 1 ? t("toast.llmCopiedMany", { n: ok }) : t("toast.llmCopied"));
+    } else if (ok) {
+      toast(t("toast.llmCopyPartial", { ok, fail: failed + skipped }));
+    } else if (skipped && !failed) {
+      toast(t("llm.needImage"));
+    } else {
+      toast(lastError || t("toast.llmCopyFail"));
     }
   }
 
@@ -2475,54 +2843,77 @@ export function createEditor(ctx) {
     await refreshCartesiaStatus();
   }
 
-  async function generateCaptionAudio() {
-    const step = currentStep();
+  function captionTextForStep(step, idx) {
+    let text = String(step?.caption || "").trim();
+    if (idx === getSelectedIndex()) {
+      const fromForm = String(els.propCaption?.value || "").trim();
+      if (fromForm) text = fromForm;
+    }
+    return text;
+  }
+
+  async function generateCaptionAudio(indices) {
     const demo = getDemo();
     ensureNarration(demo);
-    const text = els.propCaption?.value?.trim() || "";
-    if (!step || !text) {
+    const list = normalizeIndices(
+      Array.isArray(indices) ? indices : [getSelectedIndex()],
+      demo.steps.length
+    );
+    if (!list.length) return;
+    const workable = list.filter((idx) => captionTextForStep(demo.steps[idx], idx));
+    if (!workable.length) {
       toast(t("toast.needCaptionText"));
       return;
     }
-    const btn = document.getElementById("btn-generate-caption");
-    const label = document.getElementById("btn-generate-caption-label");
-    if (btn) {
-      btn.disabled = true;
-      btn.setAttribute("aria-busy", "true");
-    }
-    if (label) label.textContent = t("toast.generating");
-    setAiGenerating("audio", true);
+    setGenerateBusy("audio", true);
+    let ok = 0;
+    let failed = 0;
+    let lastError = "";
+    const skipped = list.length - workable.length;
     try {
-      const clips = await generateNarrationClips(text, {
-        voiceURI: demo.narration.voiceURI,
-        rate: demo.narration.rate,
-      });
-      const durations = await measureClipDurations(clips);
-      const playbackRate = normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate);
-      step.caption = text;
-      step.narrationAudio = {
-        source: "tts",
-        caption: text,
-        voiceURI: demo.narration.voiceURI || "",
-        rate: demo.narration.rate ?? 1,
-        playbackRate,
-        durationSeconds: durations.reduce((sum, n) => sum + n, 0),
-        clipDurations: durations,
-        clips,
-      };
-      enforceHoldFloor(step);
-      onChange();
-      syncCaptionAudio();
-      toast(t("toast.audioSaved"));
-    } catch (err) {
-      toast(err?.message || t("toast.audioGenFail"));
-    } finally {
-      setAiGenerating("audio", false);
-      if (btn) {
-        btn.disabled = false;
-        btn.removeAttribute("aria-busy");
+      for (const idx of workable) {
+        const step = demo.steps[idx];
+        const text = captionTextForStep(step, idx);
+        try {
+          const clips = await generateNarrationClips(text, {
+            voiceURI: demo.narration.voiceURI,
+            rate: demo.narration.rate,
+          });
+          const durations = await measureClipDurations(clips);
+          const playbackRate = normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate);
+          step.caption = text;
+          step.narrationAudio = {
+            source: "tts",
+            caption: text,
+            voiceURI: demo.narration.voiceURI || "",
+            rate: demo.narration.rate ?? 1,
+            playbackRate,
+            durationSeconds: durations.reduce((sum, n) => sum + n, 0),
+            clipDurations: durations,
+            clips,
+          };
+          enforceHoldFloor(step);
+          ok += 1;
+        } catch (err) {
+          failed += 1;
+          lastError = err?.message || t("toast.audioGenFail");
+        }
       }
-      if (label) label.textContent = t("props.generateAudio");
+    } finally {
+      setGenerateBusy("audio", false);
+    }
+    if (ok) {
+      syncForm();
+      syncCaptionAudio();
+      renderCanvas();
+      onChange();
+    }
+    if (ok && !failed && !skipped) {
+      toast(ok > 1 ? t("toast.audioSavedMany", { n: ok }) : t("toast.audioSaved"));
+    } else if (ok) {
+      toast(t("toast.audioPartial", { ok, fail: failed + skipped }));
+    } else {
+      toast(lastError || t("toast.audioGenFail"));
     }
   }
 
@@ -2723,17 +3114,35 @@ export function createEditor(ctx) {
       const mod = e.metaKey || e.ctrlKey;
       if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "d") {
         e.preventDefault();
+        closeFilmContextMenu();
         duplicateStep();
         return;
       }
       if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "c") {
         e.preventDefault();
+        closeFilmContextMenu();
         copyStepToClipboard().catch(() => {});
         return;
       }
       if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "v") {
         e.preventDefault();
+        closeFilmContextMenu();
         pasteStepFromClipboard().catch(() => {});
+        return;
+      }
+      if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "x") {
+        e.preventDefault();
+        closeFilmContextMenu();
+        cutStepToClipboard().catch(() => {});
+        return;
+      }
+
+      if (!mod && !e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        if (filmMenuEl) return;
+        e.preventDefault();
+        moveSelectionByArrow(e.key === "ArrowUp" ? -1 : 1, e.shiftKey, {
+          fromFilmstrip: !!els.filmstrip?.contains(e.target),
+        });
         return;
       }
 
@@ -2741,6 +3150,7 @@ export function createEditor(ctx) {
       if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (!currentStep()) return;
       e.preventDefault();
+      closeFilmContextMenu();
       deleteStep();
     });
     document.getElementById("btn-empty-step")?.addEventListener("click", () => addStep(false));
