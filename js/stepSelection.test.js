@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  arrowSelection,
+  captionVisibilityState,
   collectStepsForClipboard,
   deleteIndices,
   moveIndices,
+  nextCaptionVisibility,
   normalizeIndices,
+  nudgeBlockInsert,
   rangeIndices,
   toggleIndex,
 } from "./stepSelection.js";
@@ -54,6 +58,84 @@ test("moveIndices para o início e atribui cena", () => {
   assert.equal(out.steps[0].id, "c");
   assert.equal(out.steps[0].scene, 1);
   assert.deepEqual(out.selected, [0]);
+});
+
+test("arrowSelection sem shift seleciona só o vizinho e move a âncora", () => {
+  assert.deepEqual(arrowSelection({ anchor: 1, active: 1, length: 5, delta: 1, extend: false }), {
+    indices: [2],
+    anchor: 2,
+    active: 2,
+  });
+  assert.deepEqual(arrowSelection({ anchor: 0, active: 3, length: 5, delta: -1, extend: false }), {
+    indices: [2],
+    anchor: 2,
+    active: 2,
+  });
+});
+
+test("arrowSelection com shift estende e encolhe a partir da âncora", () => {
+  assert.deepEqual(arrowSelection({ anchor: 1, active: 3, length: 6, delta: 1, extend: true }), {
+    indices: [1, 2, 3, 4],
+    anchor: 1,
+    active: 4,
+  });
+  assert.deepEqual(arrowSelection({ anchor: 1, active: 4, length: 6, delta: -1, extend: true }), {
+    indices: [1, 2, 3],
+    anchor: 1,
+    active: 3,
+  });
+  assert.deepEqual(arrowSelection({ anchor: 2, active: 2, length: 5, delta: -1, extend: true }), {
+    indices: [1, 2],
+    anchor: 2,
+    active: 1,
+  });
+});
+
+test("arrowSelection não passa das bordas", () => {
+  assert.deepEqual(arrowSelection({ anchor: 0, active: 0, length: 3, delta: -1, extend: false }), {
+    indices: [0],
+    anchor: 0,
+    active: 0,
+  });
+  assert.deepEqual(arrowSelection({ anchor: 0, active: 2, length: 3, delta: 1, extend: true }), {
+    indices: [0, 1, 2],
+    anchor: 0,
+    active: 2,
+  });
+  assert.deepEqual(arrowSelection({ length: 0, delta: 1, extend: true }), {
+    indices: [],
+    anchor: 0,
+    active: 0,
+  });
+});
+
+test("nudgeBlockInsert só desloca bloco contíguo", () => {
+  assert.equal(nudgeBlockInsert([1, 2], -1, 5), 0);
+  assert.equal(nudgeBlockInsert([1, 2], 1, 5), 4);
+  assert.equal(nudgeBlockInsert([0], -1, 5), null);
+  assert.equal(nudgeBlockInsert([4], 1, 5), null);
+  assert.equal(nudgeBlockInsert([0, 2], -1, 5), null);
+  const steps = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+  const up = moveIndices(steps, [1, 2], nudgeBlockInsert([1, 2], -1, steps.length));
+  assert.deepEqual(
+    up.steps.map((s) => s.id),
+    ["b", "c", "a", "d"]
+  );
+  const down = moveIndices(steps, [1, 2], nudgeBlockInsert([1, 2], 1, steps.length));
+  assert.deepEqual(
+    down.steps.map((s) => s.id),
+    ["a", "d", "b", "c"]
+  );
+});
+
+test("captionVisibilityState trata misto e o padrão visível", () => {
+  const steps = [{ showCaption: true }, { showCaption: false }, {}];
+  assert.equal(captionVisibilityState(steps, [0, 2]), "on");
+  assert.equal(captionVisibilityState(steps, [1]), "off");
+  assert.equal(captionVisibilityState(steps, [0, 1]), "mixed");
+  assert.equal(nextCaptionVisibility("on"), false);
+  assert.equal(nextCaptionVisibility("off"), true);
+  assert.equal(nextCaptionVisibility("mixed"), true);
 });
 
 test("collectStepsForClipboard inclui imagens custom", () => {
