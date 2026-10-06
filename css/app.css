@@ -2500,6 +2500,12 @@ body.is-presenting .editor-popover {
   min-height: 2.6em;
 }
 
+.view-editor:not(.is-presenting) .caption-bar.is-caption-off {
+  opacity: 0.72;
+  outline: 1px dashed color-mix(in srgb, var(--ns-button-text) 55%, transparent);
+  outline-offset: -1px;
+}
+
 .view-editor:not(.is-presenting) .slide-card-play {
   z-index: 6;
 }

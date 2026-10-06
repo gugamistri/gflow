@@ -1132,13 +1132,19 @@ export function createEditor(ctx) {
   function setCanvasCaption(text, { visible = true, editing = false } = {}) {
     if (!els.canvasCaption) return;
     const value = String(text || "");
-    const show = visible && (editing || value.trim());
+    const hasText = !!value.trim();
+    // why: no editor a narração continua editável mesmo se estiver oculta na apresentação.
+    const show = editing ? visible || hasText : visible && hasText;
+    const canEdit = editing && show;
     paintInline(els.canvasCaption, value, {
-      editing: editing && visible,
+      editing: canEdit,
       placeholder: t("canvas.captionPlaceholder"),
       label: t("canvas.editCaption"),
     });
     els.canvasCaption.hidden = !show;
+    els.canvasCaption.classList.toggle("is-caption-off", canEdit && !visible);
+    if (canEdit && !visible) els.canvasCaption.title = t("canvas.captionHidden");
+    else els.canvasCaption.removeAttribute("title");
     placeCaptionPlaceholder();
   }
 
@@ -1361,7 +1367,11 @@ export function createEditor(ctx) {
       popoverDrag = { pointerId: e.pointerId };
       popoverDirty = false;
       pop.classList.add("is-dragging");
-      pop.setPointerCapture(e.pointerId);
+      try {
+        pop.setPointerCapture(e.pointerId);
+      } catch {
+        /* o arraste segue pelos eventos no próprio balão */
+      }
       e.preventDefault();
       e.stopPropagation();
       applyPointerPlacement(e);
@@ -2723,7 +2733,11 @@ export function createEditor(ctx) {
       } else {
         dragMode = "move";
       }
-      els.hotspot.setPointerCapture(e.pointerId);
+      try {
+        els.hotspot.setPointerCapture(e.pointerId);
+      } catch {
+        /* o arraste segue se o ponteiro continuar sobre o destaque */
+      }
       const rect = els.hotspot.getBoundingClientRect();
       dragStart = {
         x: e.clientX,
