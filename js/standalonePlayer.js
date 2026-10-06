@@ -491,6 +491,25 @@ function gfT(key, vars) {
   const clickFx = createClickFxController(els);
   const narration = createNarrationController(els.caption);
   const chkAutoplay = document.getElementById("chk-autoplay");
+  // why: igual a spotlightVeilPaint() em store.js — o HTML exportado não importa módulos.
+  const SPOTLIGHT_VEIL_OPACITY = 0.48;
+  let captionHome = null;
+
+  function elevateCaption() {
+    const el = els.caption;
+    if (!el) return;
+    el.classList.add("is-above-overlay");
+    if (captionHome || el.parentElement === document.body) return;
+    captionHome = el.parentElement;
+    document.body.appendChild(el);
+  }
+
+  function restoreCaption() {
+    const el = els.caption;
+    if (el) el.classList.remove("is-above-overlay");
+    if (el && captionHome && el.parentElement !== captionHome) captionHome.appendChild(el);
+    captionHome = null;
+  }
 
   let driverObj = null;
   let activeIndex = 0;
@@ -763,6 +782,7 @@ function gfT(key, vars) {
     }
     clickFx.reset();
     clearZoom(false);
+    restoreCaption();
     animating = false;
   }
 
@@ -786,14 +806,12 @@ function gfT(key, vars) {
 
     activeIndex = startIndex;
     await narration.startTour();
+    elevateCaption();
     await showStepVisual(steps[activeIndex], true);
     await prepareStepCamera();
 
-    const isDark = document.documentElement.getAttribute("data-appearance") === "social";
-    const overlay = isDark
-      ? "#000000"
-      : getComputedStyle(document.documentElement).getPropertyValue("--demo-overlay").trim() || "#000000";
-    const overlayOpacity = isDark ? 0.9 : 0.55;
+    const overlay = "#000000";
+    const overlayOpacity = SPOTLIGHT_VEIL_OPACITY;
 
     driverObj = factory({
       popoverClass: "demo-popover",
