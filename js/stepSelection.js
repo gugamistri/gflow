@@ -49,6 +49,84 @@ export function rangeIndices(anchor, index, length) {
   return out;
 }
 
+function clampIndex(value, length) {
+  const n = Number(value);
+  const i = Number.isFinite(n) ? Math.trunc(n) : 0;
+  if (length <= 0) return 0;
+  return Math.max(0, Math.min(length - 1, i));
+}
+
+/**
+ * Seta no filmstrip.
+ * Sem extend: seleção única no vizinho do ativo; a âncora vai junto.
+ * Com extend: intervalo contíguo da âncora até o ativo ± 1; a âncora fica.
+ * Na borda, o índice não passa do fim da lista.
+ * @param {{ anchor?: number, active?: number, length?: number, delta?: number, extend?: boolean }} input
+ * @returns {{ indices: number[], anchor: number, active: number }}
+ */
+export function arrowSelection({ anchor, active, length, delta, extend = false } = {}) {
+  const len = Math.max(0, Number(length) || 0);
+  if (len <= 0) return { indices: [], anchor: 0, active: 0 };
+  const dir = Number(delta) < 0 ? -1 : 1;
+  const current = clampIndex(active, len);
+  const next = clampIndex(current + dir, len);
+  if (!extend) return { indices: [next], anchor: next, active: next };
+  const a = clampIndex(Number.isFinite(Number(anchor)) ? Number(anchor) : current, len);
+  return { indices: rangeIndices(a, next, len), anchor: a, active: next };
+}
+
+/**
+ * insertBefore para subir ou descer um bloco contíguo um passo.
+ * null se a seleção estiver vazia, não for contígua, ou já estiver na borda.
+ * @param {number[]} indices
+ * @param {number} direction negativo sobe, positivo desce
+ * @param {number} length
+ * @returns {number | null}
+ */
+export function nudgeBlockInsert(indices, direction, length) {
+  const len = Math.max(0, Number(length) || 0);
+  const sorted = normalizeIndices(indices, len);
+  if (!sorted.length) return null;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] !== sorted[i - 1] + 1) return null;
+  }
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  if (direction < 0) return first <= 0 ? null : first - 1;
+  if (last >= len - 1) return null;
+  return last + 2;
+}
+
+/**
+ * Checkbox "mostrar texto" para vários passos.
+ * Ausente conta como visível, igual ao painel (`showCaption !== false`).
+ * @param {object[]} steps
+ * @param {number[]} indices
+ * @returns {"on" | "off" | "mixed"}
+ */
+export function captionVisibilityState(steps, indices) {
+  const list = Array.isArray(steps) ? steps : [];
+  const sorted = normalizeIndices(indices, list.length);
+  if (!sorted.length) return "off";
+  let on = 0;
+  for (const i of sorted) {
+    if (list[i]?.showCaption !== false) on += 1;
+  }
+  if (on === sorted.length) return "on";
+  if (on === 0) return "off";
+  return "mixed";
+}
+
+/**
+ * Próximo valor ao acionar "mostrar texto" na seleção.
+ * Tudo ligado desliga. Desligado ou misto liga todos.
+ * @param {"on" | "off" | "mixed"} state
+ * @returns {boolean}
+ */
+export function nextCaptionVisibility(state) {
+  return state !== "on";
+}
+
 /**
  * Remove passos pelos índices; devolve o novo array e o índice primário sugerido.
  * @param {object[]} steps
