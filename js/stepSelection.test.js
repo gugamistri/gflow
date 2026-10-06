@@ -10,6 +10,7 @@ import {
   normalizeIndices,
   nudgeBlockInsert,
   rangeIndices,
+  resolvePlayPlaylist,
   toggleIndex,
 } from "./stepSelection.js";
 
@@ -136,6 +137,26 @@ test("captionVisibilityState trata misto e o padrão visível", () => {
   assert.equal(nextCaptionVisibility("on"), false);
   assert.equal(nextCaptionVisibility("off"), true);
   assert.equal(nextCaptionVisibility("mixed"), true);
+});
+
+test("resolvePlayPlaylist limita à seleção ordenada e preserva o tour inteiro", () => {
+  assert.deepEqual(resolvePlayPlaylist(6, { from: 4, indices: [4, 1, 4, 9] }), {
+    order: [1, 4],
+    start: 0,
+  });
+  assert.deepEqual(resolvePlayPlaylist(6, { from: 2 }), {
+    order: [0, 1, 2, 3, 4, 5],
+    start: 2,
+  });
+  assert.deepEqual(resolvePlayPlaylist(3, { from: 1, indices: [] }), {
+    order: [0, 1, 2],
+    start: 1,
+  });
+  assert.deepEqual(resolvePlayPlaylist(3, { from: 9 }), {
+    order: [0, 1, 2],
+    start: 2,
+  });
+  assert.deepEqual(resolvePlayPlaylist(0, { indices: [0] }), { order: [], start: 0 });
 });
 
 test("collectStepsForClipboard inclui imagens custom", () => {

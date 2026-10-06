@@ -13,6 +13,7 @@ import {
   restoreCaptionHome,
 } from "./playback.js";
 import { isCompactTouch } from "./compact.js";
+import { resolvePlayPlaylist } from "./stepSelection.js";
 
 export function createPlayer(ctx) {
   const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit, presentHintKey } = ctx;
@@ -350,7 +351,15 @@ export function createPlayer(ctx) {
     running = true;
     exitOnOutsideClick = false;
     setPresentHint(presentStopHintKey());
-    activeIndex = Math.max(0, Math.min(startIndex, steps.length - 1));
+    // why: sem índices a lista é o tour inteiro (volta antes do início);
+    // com índices, só a seleção, em ordem, e para no último.
+    const playlist = resolvePlayPlaylist(steps.length, {
+      from: startIndex,
+      indices: opts.indices,
+    });
+    const playOrder = playlist.order;
+    let playlistPos = playlist.start;
+    activeIndex = playOrder[playlistPos] ?? 0;
     if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
     els.hotspot?.classList.add("is-previewing");
     await narration.startTour(demo);
@@ -362,6 +371,8 @@ export function createPlayer(ctx) {
     if (demo?.theme) applyTheme(demo.theme);
 
     const veil = spotlightVeilPaint();
+    const stepProgress = () =>
+      t("player.stepOf", { current: playlistPos + 1, total: playOrder.length });
     driverObj = factory({
       popoverClass: "demo-popover",
       showProgress: true,
@@ -382,32 +393,35 @@ export function createPlayer(ctx) {
         setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
         armAutoplay();
       },
-      steps: steps.map((step) => ({
-        element: step.type === "slide" ? "#canvas-slide" : "#hotspot",
-        popover: {
+      steps: playOrder.map((stepIndex) => {
+        const step = steps[stepIndex];
+        return {
+          element: step.type === "slide" ? "#canvas-slide" : "#hotspot",
+          popover: {
           title: step.popover?.title || step.label || "",
           description: (step.popover?.description || "").replace(/\n/g, "<br/>"),
           side: step.popover?.side || "bottom",
           align: step.popover?.align || "center",
-          onNextClick: async (_el, _step, opts) => {
+          onNextClick: async (_el, _step, navOpts) => {
             if (animating) return;
             animating = true;
             clearAutoplay();
             const current = steps[activeIndex];
-            const drv = opts.driver;
+            const drv = navOpts.driver;
             try {
               await animateClick(current);
-              const nextIndex = activeIndex + 1;
-              if (nextIndex >= steps.length) {
+              const nextPos = playlistPos + 1;
+              if (nextPos >= playOrder.length) {
                 drv.destroy();
                 driverObj = null;
                 narration.stop();
                 setProgress(t("player.doneStatus"));
                 return;
               }
-              activeIndex = nextIndex;
+              playlistPos = nextPos;
+              activeIndex = playOrder[playlistPos];
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
-              setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
+              setProgress(stepProgress());
               await showStepVisual(steps[activeIndex], { speak: true });
               await prepareStepCamera(steps[activeIndex]);
               drv.moveNext();
@@ -416,15 +430,16 @@ export function createPlayer(ctx) {
               animating = false;
             }
           },
-          onPrevClick: async (_el, _step, opts) => {
-            if (animating || activeIndex <= 0) return;
+          onPrevClick: async (_el, _step, navOpts) => {
+            if (animating || playlistPos <= 0) return;
             animating = true;
             clearAutoplay();
-            const drv = opts.driver;
+            const drv = navOpts.driver;
             try {
-              activeIndex -= 1;
+              playlistPos -= 1;
+              activeIndex = playOrder[playlistPos];
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
-              setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
+              setProgress(stepProgress());
               await showStepVisual(steps[activeIndex], { speak: true });
               await prepareStepCamera(steps[activeIndex]);
               drv.movePrevious();
@@ -434,7 +449,8 @@ export function createPlayer(ctx) {
             }
           },
         },
-      })),
+        };
+      }),
       onDestroyed: () => {
         clearAutoplay();
         narration.stop();
@@ -454,8 +470,8 @@ export function createPlayer(ctx) {
       },
     });
 
-    setProgress(t("player.stepOf", { current: activeIndex + 1, total: steps.length }));
-    driverObj.drive(activeIndex);
+    setProgress(t("player.stepOf", { current: playlistPos + 1, total: playOrder.length }));
+    driverObj.drive(playlistPos);
     await zoomAfterHighlightVisible(steps[activeIndex]);
   }
 
@@ -533,6 +549,7 @@ export function createPlayer(ctx) {
     window.addEventListener("keydown", (e) => {
       if (!isPresenting()) return;
       if (e.key === "Escape") {
+        if (document.querySelector("dialog[open]")) return;
         e.preventDefault();
         exitOnOutsideClick = false;
         onRequestExit?.();

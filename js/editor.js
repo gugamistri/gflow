@@ -1955,10 +1955,40 @@ export function createEditor(ctx) {
     ]
       .filter(Boolean)
       .join(" ");
-    return `<button ${attrs}>${escapeHtml(label)}</button>`;
+    const kbd = opts.kbd ? `<kbd class="film-context-kbd">${escapeHtml(opts.kbd)}</kbd>` : "";
+    return `<button ${attrs}><span>${escapeHtml(label)}</span>${kbd}</button>`;
+  }
+
+  function playFromSelected(opts = {}) {
+    closeFilmContextMenu();
+    if (opts.autoplay) {
+      const previewMenu = document.querySelector(".preview-menu");
+      if (previewMenu) previewMenu.open = false;
+    }
+    if (!onPlayFrom) return;
+    const indices = Array.isArray(opts.indices)
+      ? normalizeIndices(opts.indices, getDemo().steps.length)
+      : [];
+    const from = indices.length ? indices[0] : getSelectedIndex();
+    onPlayFrom(from, {
+      autoplay: !!opts.autoplay,
+      ...(indices.length ? { indices } : {}),
+    });
+  }
+
+  function watchFromSelected() {
+    playFromSelected({ autoplay: true });
   }
 
   function runFilmMenuAction(action) {
+    if (action === "preview") {
+      playFromSelected({ indices: selectedSteps() });
+      return;
+    }
+    if (action === "preview-auto") {
+      playFromSelected({ autoplay: true, indices: selectedSteps() });
+      return;
+    }
     if (action === "generate-copy") {
       generateStepCopy(selectedSteps()).catch((err) => toast(err?.message || t("toast.llmCopyFail")));
       return;
@@ -2022,6 +2052,15 @@ export function createEditor(ctx) {
     menu.tabIndex = -1;
     menu.dataset.index = String(index);
     menu.innerHTML = [
+      filmMenuButton("preview", t("toolbar.preview"), {
+        title: t("toolbar.previewTitle"),
+        kbd: t("shortcuts.previewChord"),
+      }),
+      filmMenuButton("preview-auto", t("toolbar.autoPreview"), {
+        title: t("toolbar.autoPreviewTitle"),
+        kbd: t("shortcuts.autoPreviewChord"),
+      }),
+      `<div class="film-context-sep" role="separator"></div>`,
       filmMenuButton("generate-copy", t("props.generateCopyShort"), { title: t("props.generateCopy") }),
       filmMenuButton("generate-audio", t("props.generateAudio")),
       `<div class="film-context-sep" role="separator"></div>`,
@@ -3146,6 +3185,13 @@ export function createEditor(ctx) {
         return;
       }
 
+      if (!mod && !e.altKey && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        if (e.shiftKey) watchFromSelected();
+        else playFromSelected();
+        return;
+      }
+
       if (mod || e.altKey) return;
       if (e.key !== "Delete" && e.key !== "Backspace") return;
       if (!currentStep()) return;
@@ -3159,14 +3205,6 @@ export function createEditor(ctx) {
       openImageModal("add");
     });
 
-    function playFromSelected() {
-      if (onPlayFrom) onPlayFrom(getSelectedIndex(), { autoplay: false });
-    }
-    function watchFromSelected() {
-      const previewMenu = document.querySelector(".preview-menu");
-      if (previewMenu) previewMenu.open = false;
-      if (onPlayFrom) onPlayFrom(getSelectedIndex(), { autoplay: true });
-    }
     function closeSlidePreview() {
       if (!previewDriver) return;
       try {
@@ -3176,7 +3214,7 @@ export function createEditor(ctx) {
       }
       previewDriver = null;
     }
-    document.getElementById("btn-play-from")?.addEventListener("click", playFromSelected);
+    document.getElementById("btn-play-from")?.addEventListener("click", () => playFromSelected());
     document.getElementById("btn-watch-from")?.addEventListener("click", watchFromSelected);
     document.getElementById("canvas-slide-play")?.addEventListener("click", (e) => {
       if (document.getElementById("view-editor")?.classList.contains("is-presenting")) return;
