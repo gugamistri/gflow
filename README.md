@@ -55,6 +55,10 @@ No desktop, use **Capturar** no editor: abre uma janela com a página do produto
 node --test extension/lib/*.test.js scripts/*.test.js
 ```
 
+## Cloud
+
+O editor e o player deste repositório continuam MIT e gratuitos. IA e narração seguem com a sua própria chave. O GuiaFlow Cloud é um companheiro privado opcional, noutro código — os ganchos daqui são stubs. Detalhes em [`docs/CLOUD.md`](docs/CLOUD.md).
+
 ## Licença
 
 MIT — ver [`LICENSE`](LICENSE).

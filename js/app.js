@@ -68,6 +68,8 @@ import {
   shouldShowReleaseNotes,
 } from "./releaseNotes.js";
 import { COMPACT_LANDSCAPE_MQ, COMPACT_TOUCH_MQ, isCompactLandscape, isCompactTouch } from "./compact.js";
+// why: registra os stubs do Cloud em window.GuiaFlowCloud; sem URL base as flags ficam desligadas.
+import "./cloudConfig.js";
 
 let project = null;
 let selectedIndex = 0;
