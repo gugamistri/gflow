@@ -39,6 +39,7 @@ import {
   cycleAppearancePreference,
 } from "./themes.js";
 import { createEditor } from "./editor.js";
+import { isTypingTarget } from "./canvasEdit.js";
 import { createPlayer } from "./player.js";
 import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
@@ -880,8 +881,7 @@ function bindChrome() {
     if (!project) return;
     if (presenting) return;
     if (document.querySelector("dialog[open]")) return;
-    const tag = e.target?.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
+    if (isTypingTarget(e.target)) return;
     const mod = e.metaKey || e.ctrlKey;
     if (!mod || e.altKey) return;
     const key = e.key.toLowerCase();
