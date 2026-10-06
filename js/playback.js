@@ -343,6 +343,28 @@ export function stepShowsCaption(step) {
 }
 
 /**
+ * why: .canvas-stage / .player-stage têm isolation e z-index 0.
+ * position:fixed da legenda não escapa esse contexto, então o véu do Driver (no body) cobre o texto.
+ * Fora do palco, o z-index da legenda fica acima do overlay e abaixo do popover.
+ * @returns {ParentNode | null} pai anterior, para restaurar ao sair do preview
+ */
+export function liftCaptionAboveOverlay(captionEl) {
+  if (!captionEl || typeof document === "undefined" || !document.body) return null;
+  captionEl.classList?.add("is-above-overlay");
+  const body = document.body;
+  if (captionEl.parentElement === body) return null;
+  const home = captionEl.parentElement;
+  body.appendChild(captionEl);
+  return home;
+}
+
+export function restoreCaptionHome(captionEl, home) {
+  if (!captionEl) return;
+  captionEl.classList?.remove("is-above-overlay");
+  if (home && captionEl.parentElement !== home) home.appendChild(captionEl);
+}
+
+/**
  * why: a API só entra aqui; a reprodução usa os clipes já salvos no passo.
  */
 export async function generateNarrationClips(text, { voiceURI, rate } = {}) {

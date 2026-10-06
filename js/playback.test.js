@@ -7,12 +7,15 @@ import {
   ensureNarration,
   ensurePlayback,
   holdMs,
+  liftCaptionAboveOverlay,
   minHoldSecondsForNarration,
   normalizeCaptionPlaybackRate,
   formatHoldClock,
   playableNarrationClips,
   resolveHoldSeconds,
+  restoreCaptionHome,
   savedNarrationClips,
+  stepShowsCaption,
   tourHoldSeconds,
 } from "./playback.js";
 
@@ -157,6 +160,55 @@ test("duração do tour soma o hold efetivo de cada passo", () => {
   assert.equal(formatHoldClock(3600), "60:00");
   assert.equal(tourHoldSeconds({ steps: [] }), 0);
   assert.equal(formatHoldClock(0), "0:00");
+});
+
+test("mostrar texto fica visível salvo quando o passo desliga", () => {
+  assert.equal(stepShowsCaption({ caption: "Olá" }), true);
+  assert.equal(stepShowsCaption({ caption: "Olá", showCaption: true }), true);
+  assert.equal(stepShowsCaption({ caption: "Olá", showCaption: false }), false);
+  assert.equal(stepShowsCaption({}), true);
+});
+
+test("a legenda do preview sai do palco para ficar acima do véu", () => {
+  const moved = [];
+  const home = {
+    appendChild(node) {
+      node.parentElement = home;
+      moved.push("home");
+    },
+  };
+  const body = {
+    appendChild(node) {
+      node.parentElement = body;
+      moved.push("body");
+    },
+  };
+  const classNames = new Set();
+  const caption = {
+    parentElement: home,
+    classList: {
+      add(name) {
+        classNames.add(name);
+      },
+      remove(name) {
+        classNames.delete(name);
+      },
+    },
+  };
+  globalThis.document = { body };
+  try {
+    const previous = liftCaptionAboveOverlay(caption);
+    assert.equal(previous, home);
+    assert.equal(caption.parentElement, body);
+    assert.equal(classNames.has("is-above-overlay"), true);
+    assert.equal(liftCaptionAboveOverlay(caption), null);
+    restoreCaptionHome(caption, previous);
+    assert.equal(caption.parentElement, home);
+    assert.equal(classNames.has("is-above-overlay"), false);
+    assert.deepEqual(moved, ["body", "home"]);
+  } finally {
+    delete globalThis.document;
+  }
 });
 
 test("defaultNarration traz campos esperados", () => {
