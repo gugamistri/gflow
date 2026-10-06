@@ -10,6 +10,7 @@ import {
 } from "./themes.js";
 import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback } from "./playback.js";
 import { t } from "./i18n.js";
+import { downscaleImageUrl, isHeavyDataUrl, thumbKey } from "./thumbs.js";
 
 const DB_NAME = "demo-studio";
 const DB_VERSION = 3;
@@ -150,18 +151,50 @@ export function writeIndex(index) {
   );
 }
 
-function summarizeProject(project) {
+function coverSource(project) {
   const firstImage = (project.steps || []).find(
     (s) => s.type !== "slide" && s.image
   )?.image;
+  if (!firstImage) return null;
+  if (firstImage.startsWith("custom:")) {
+    const dataUrl = project.customImages?.[firstImage.slice(7)]?.dataUrl || "";
+    return dataUrl ? { kind: "data", dataUrl } : null;
+  }
+  if (firstImage.startsWith("data:image/")) return { kind: "data", dataUrl: firstImage };
+  return { kind: "path", path: firstImage };
+}
+
+function coverSignature(project) {
+  const cover = coverSource(project);
+  if (!cover) return "";
+  if (cover.kind === "path") return `path:${cover.path}`;
+  return `img:${thumbKey(cover.dataUrl)}:${cover.dataUrl.length}`;
+}
+
+async function libraryThumbFor(project) {
+  const cover = coverSource(project);
+  if (!cover) return null;
+  if (cover.kind === "path") return cover.path;
+  return (await downscaleImageUrl(cover.dataUrl, { maxEdge: 480, quality: 0.72 })) || null;
+}
+
+async function summarizeProject(project, previous) {
+  const thumbSig = coverSignature(project);
   let thumb = null;
-  if (firstImage?.startsWith("custom:")) {
-    const id = firstImage.slice(7);
-    thumb = project.customImages?.[id]?.dataUrl || null;
-  } else if (firstImage && !firstImage.startsWith("data:")) {
-    thumb = firstImage;
-  } else if (firstImage?.startsWith("data:")) {
-    thumb = firstImage;
+  const reusable =
+    previous &&
+    previous.thumbSig === thumbSig &&
+    typeof previous.thumb === "string" &&
+    previous.thumb &&
+    !isHeavyDataUrl(previous.thumb);
+  if (reusable) thumb = previous.thumb;
+  else if (!thumbSig) thumb = null;
+  else {
+    try {
+      thumb = await libraryThumbFor(project);
+    } catch {
+      thumb = null;
+    }
   }
 
   return {
@@ -171,13 +204,15 @@ function summarizeProject(project) {
     updatedAt: project.updatedAt,
     stepCount: Array.isArray(project.steps) ? project.steps.length : 0,
     thumb,
+    thumbSig,
     themePreview: themePreviewDots(project.theme),
   };
 }
 
-function upsertSummary(index, project) {
-  const summary = summarizeProject(project);
+async function upsertSummary(index, project) {
   const i = index.projects.findIndex((p) => p.id === project.id);
+  const previous = i >= 0 ? index.projects[i] : null;
+  const summary = await summarizeProject(project, previous);
   if (i >= 0) index.projects[i] = summary;
   else index.projects.unshift(summary);
   index.projects.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -201,7 +236,7 @@ export async function putProject(project) {
   };
   await withStore("readwrite", (store) => store.put(next));
   const index = readIndex();
-  upsertSummary(index, next);
+  await upsertSummary(index, next);
   writeIndex(index);
   return next;
 }
@@ -213,6 +248,7 @@ export async function getProjectHistory(id) {
   return {
     undo: Array.isArray(row.undo) ? row.undo : [],
     redo: Array.isArray(row.redo) ? row.redo : [],
+    media: row.media && typeof row.media === "object" ? row.media : undefined,
   };
 }
 
@@ -225,6 +261,7 @@ export async function putProjectAndHistory(project, stacks) {
     id: next.id,
     undo: Array.isArray(stacks?.undo) ? stacks.undo : [],
     redo: Array.isArray(stacks?.redo) ? stacks.redo : [],
+    media: stacks?.media && typeof stacks.media === "object" ? stacks.media : {},
   };
   await openDb().then(
     (db) =>
@@ -247,7 +284,7 @@ export async function putProjectAndHistory(project, stacks) {
       })
   );
   const index = readIndex();
-  upsertSummary(index, next);
+  await upsertSummary(index, next);
   writeIndex(index);
   return next;
 }
@@ -405,7 +442,7 @@ async function reconcileIndexFromIdb() {
 
   // Inclui projetos que estão no IDB mas sumiram do índice
   for (const project of byId.values()) {
-    upsertSummary(index, project);
+    await upsertSummary(index, project);
   }
 
   if (index.activeProjectId && !byId.has(index.activeProjectId)) {
