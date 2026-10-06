@@ -13,6 +13,12 @@ import {
 } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { clickDriverNext } from "./popoverFooter.js";
+import {
+  isTypingTarget,
+  placePopoverBox,
+  readInlineText,
+  snapPopoverPlacement,
+} from "./canvasEdit.js";
 import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
@@ -255,6 +261,12 @@ export function createEditor(ctx) {
     wrapZoom: document.getElementById("wrap-zoom"),
     wrapImage: document.getElementById("wrap-image"),
     canvasCaption: document.getElementById("canvas-caption"),
+    editorPopover: document.getElementById("editor-popover"),
+    popoverTitle: document.getElementById("canvas-popover-title"),
+    popoverBody: document.getElementById("canvas-popover-body"),
+    popoverProgress: document.getElementById("editor-popover-progress"),
+    popoverNext: document.getElementById("editor-popover-next"),
+    popoverGrip: document.getElementById("editor-popover-grip"),
     imagesFile: document.getElementById("images-file"),
     imageModal: document.getElementById("image-modal"),
     imageGrid: document.getElementById("image-grid"),
@@ -271,6 +283,9 @@ export function createEditor(ctx) {
   };
 
   let suppressForm = false;
+  let inlineStep = null;
+  let popoverDrag = null;
+  let popoverDirty = false;
   let dragMode = null;
   let dragStart = null;
   let filmDragFrom = null;
@@ -1064,16 +1079,330 @@ export function createEditor(ctx) {
     }
   }
 
-  function setCanvasCaption(text, { visible = true } = {}) {
+  function editingCanvas() {
+    return !document.getElementById("view-editor")?.classList.contains("is-presenting");
+  }
+
+  function inlineFields() {
+    return [els.slideTitle, els.slideBody, els.canvasCaption, els.popoverTitle, els.popoverBody];
+  }
+
+  function releaseInlineFocusIfStepChanged(step) {
+    if (step === inlineStep) return;
+    const active = document.activeElement;
+    if (active?.dataset?.inline) active.blur();
+    inlineStep = step || null;
+  }
+
+  function syncInlinePlaceholder(el, value, editing) {
+    const ph = el?.dataset?.ph ? document.getElementById(el.dataset.ph) : null;
+    if (!ph) return;
+    ph.hidden = !(editing && !String(value ?? "").trim());
+  }
+
+  function paintInline(el, text, { editing, placeholder, label }) {
+    if (!el) return;
+    const value = String(text ?? "");
+    if (placeholder) {
+      const ph = el.dataset.ph ? document.getElementById(el.dataset.ph) : null;
+      if (ph) ph.textContent = placeholder;
+    }
+    if (label) el.setAttribute("aria-label", label);
+    const flag = editing ? "true" : "false";
+    if (el.contentEditable !== flag) el.contentEditable = flag;
+    el.spellcheck = !!editing;
+    const focused = document.activeElement === el;
+    if (!focused && el.textContent !== value) el.textContent = value;
+    const shown = focused ? readInlineText(el.innerText) : value;
+    el.classList.toggle("is-empty", !shown.trim());
+    syncInlinePlaceholder(el, shown, editing);
+  }
+
+  function placeCaptionPlaceholder() {
+    const ph = document.getElementById("ph-caption");
+    const cap = els.canvasCaption;
+    if (!ph || !cap || ph.hidden || cap.hidden) return;
+    const padX = 14;
+    const padY = 10;
+    ph.style.left = cap.offsetLeft + padX + "px";
+    ph.style.top = cap.offsetTop + padY + "px";
+    ph.style.width = Math.max(0, cap.clientWidth - padX * 2) + "px";
+  }
+
+  function setCanvasCaption(text, { visible = true, editing = false } = {}) {
     if (!els.canvasCaption) return;
-    const trimmed = String(text || "").trim();
-    els.canvasCaption.textContent = trimmed;
-    els.canvasCaption.hidden = !visible || !trimmed;
+    const value = String(text || "");
+    const hasText = !!value.trim();
+    // why: no editor a narração continua editável mesmo se estiver oculta na apresentação.
+    const show = editing ? visible || hasText : visible && hasText;
+    const canEdit = editing && show;
+    paintInline(els.canvasCaption, value, {
+      editing: canEdit,
+      placeholder: t("canvas.captionPlaceholder"),
+      label: t("canvas.editCaption"),
+    });
+    els.canvasCaption.hidden = !show;
+    els.canvasCaption.classList.toggle("is-caption-off", canEdit && !visible);
+    if (canEdit && !visible) els.canvasCaption.title = t("canvas.captionHidden");
+    else els.canvasCaption.removeAttribute("title");
+    placeCaptionPlaceholder();
+  }
+
+  function hideEditorPopover() {
+    if (els.editorPopover) els.editorPopover.hidden = true;
+  }
+
+  function hotspotAnchor() {
+    const hs = els.hotspot;
+    if (hs && !hs.hidden && hs.offsetWidth > 0 && hs.offsetHeight > 0) {
+      return {
+        left: parseFloat(hs.style.left) || 0,
+        top: parseFloat(hs.style.top) || 0,
+        width: hs.offsetWidth,
+        height: hs.offsetHeight,
+      };
+    }
+    const w = els.canvasFrame?.clientWidth || 360;
+    const h = els.canvasFrame?.clientHeight || 200;
+    const width = Math.max(48, w * 0.28);
+    const height = Math.max(32, h * 0.16);
+    return { left: (w - width) / 2, top: (h - height) / 2, width, height };
+  }
+
+  function placeEditorPopover() {
+    const pop = els.editorPopover;
+    if (!pop) return;
+    const step = currentStep();
+    const editing = editingCanvas();
+    if (!editing || !step || step.type === "slide") {
+      pop.hidden = true;
+      return;
+    }
+    const side = step.popover?.side || "bottom";
+    const align = step.popover?.align || "center";
+    pop.hidden = false;
+    pop.dataset.side = side;
+    pop.dataset.align = align;
+    const dragHint = t("canvas.popoverDrag");
+    pop.setAttribute("aria-label", dragHint);
+    if (els.popoverGrip) els.popoverGrip.title = dragHint;
+    pop.querySelector(".editor-popover-foot")?.setAttribute("title", dragHint);
+    paintInline(els.popoverTitle, step.popover?.title || step.label || "", {
+      editing: true,
+      placeholder: t("canvas.titlePlaceholder"),
+      label: t("canvas.editTitle"),
+    });
+    paintInline(els.popoverBody, step.popover?.description || "", {
+      editing: true,
+      placeholder: t("canvas.descriptionPlaceholder"),
+      label: t("canvas.editDescription"),
+    });
+    const total = Math.max(1, getDemo().steps.length || 1);
+    const current = Math.min(total, getSelectedIndex() + 1);
+    if (els.popoverProgress) els.popoverProgress.textContent = t("player.of", { current, total });
+    if (els.popoverNext) {
+      const last = getSelectedIndex() >= getDemo().steps.length - 1;
+      els.popoverNext.textContent = last ? t("player.done") : t("player.next");
+    }
+    const box = placePopoverBox(
+      hotspotAnchor(),
+      { width: pop.offsetWidth, height: pop.offsetHeight },
+      side,
+      align
+    );
+    pop.style.left = `${box.left}px`;
+    pop.style.top = `${box.top}px`;
+  }
+
+  function pointerInFrame(e) {
+    const frame = els.canvasFrame.getBoundingClientRect();
+    const scaleX = frame.width ? els.canvasFrame.clientWidth / frame.width : 1;
+    const scaleY = frame.height ? els.canvasFrame.clientHeight / frame.height : 1;
+    return {
+      x: (e.clientX - frame.left) * scaleX,
+      y: (e.clientY - frame.top) * scaleY,
+    };
+  }
+
+  function applyPointerPlacement(e, { commit = false } = {}) {
+    const step = currentStep();
+    if (!step || step.type === "slide") return;
+    const next = snapPopoverPlacement(hotspotAnchor(), pointerInFrame(e));
+    const prevSide = step.popover?.side || "bottom";
+    const prevAlign = step.popover?.align || "center";
+    if (next.side !== prevSide || next.align !== prevAlign) {
+      if (!step.popover) {
+        step.popover = { title: step.label || "", description: "", side: next.side, align: next.align };
+      }
+      step.popover.side = next.side;
+      step.popover.align = next.align;
+      suppressForm = true;
+      setChoice(els.propSide, next.side);
+      setChoice(els.propAlign, next.align);
+      suppressForm = false;
+      popoverDirty = true;
+      placeEditorPopover();
+    }
+    if (commit && popoverDirty) {
+      popoverDirty = false;
+      onChange();
+    }
+  }
+
+  function mirrorInline(source, value) {
+    const kind = source.dataset.inline;
+    const twin =
+      kind === "title"
+        ? source === els.slideTitle
+          ? els.popoverTitle
+          : els.slideTitle
+        : kind === "description"
+          ? source === els.slideBody
+            ? els.popoverBody
+            : els.slideBody
+          : null;
+    if (!twin || twin === source || document.activeElement === twin) return;
+    if (twin.textContent !== value) twin.textContent = value;
+    twin.classList.toggle("is-empty", !value.trim());
+    syncInlinePlaceholder(twin, value, twin.contentEditable === "true");
+  }
+
+  function commitInline(el) {
+    if (suppressForm || !el) return;
+    const step = currentStep();
+    if (!step || step !== inlineStep) return;
+    const kind = el.dataset.inline;
+    const value = readInlineText(el.innerText);
+    const editing = el.contentEditable === "true";
+    el.classList.toggle("is-empty", !value.trim());
+    syncInlinePlaceholder(el, value, editing);
+    if (kind === "caption") placeCaptionPlaceholder();
+    if (kind === "title") {
+      const titleNow = step.popover?.title ?? "";
+      if (titleNow === value && (step.label || "") === value && els.propTitle?.value === value) return;
+      if (!step.popover) step.popover = { title: "", description: "", side: "bottom", align: "center" };
+      step.label = value;
+      step.popover.title = value;
+      suppressForm = true;
+      if (els.propTitle) els.propTitle.value = value;
+      suppressForm = false;
+      mirrorInline(el, value);
+      renderFilmstrip();
+    } else if (kind === "description") {
+      const descNow = step.popover?.description ?? "";
+      if (descNow === value && els.propDescription?.value === value) return;
+      if (!step.popover) step.popover = { title: step.label || "", description: "", side: "bottom", align: "center" };
+      step.popover.description = value;
+      suppressForm = true;
+      if (els.propDescription) els.propDescription.value = value;
+      suppressForm = false;
+      mirrorInline(el, value);
+    } else if (kind === "caption") {
+      if ((step.caption || "") === value && (els.propCaption?.value || "") === value) return;
+      step.caption = value;
+      suppressForm = true;
+      if (els.propCaption) els.propCaption.value = value;
+      suppressForm = false;
+      syncCaptionAudio();
+    } else {
+      return;
+    }
+    if ((kind === "title" || kind === "description") && step.type !== "slide") placeEditorPopover();
+    onChange();
+  }
+
+  function insertPlainText(el, text) {
+    const sel = document.getSelection();
+    if (!sel?.rangeCount || !el.contains(sel.anchorNode)) {
+      el.append(document.createTextNode(text));
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const node = document.createTextNode(text);
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function bindInlineEditing() {
+    for (const el of inlineFields()) {
+      if (!el) continue;
+      el.addEventListener("input", () => commitInline(el));
+      el.addEventListener("blur", () => commitInline(el));
+      el.addEventListener("keydown", (e) => {
+        if (el.contentEditable !== "true") return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          el.blur();
+          return;
+        }
+        if (e.key === "Enter" && el.dataset.inline === "title") e.preventDefault();
+      });
+      el.addEventListener("paste", (e) => {
+        if (el.contentEditable !== "true") return;
+        e.preventDefault();
+        const text = e.clipboardData?.getData("text/plain") || "";
+        const clean = el.dataset.inline === "title" ? text.replace(/[\r\n]+/g, " ") : text;
+        insertPlainText(el, clean);
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      el.addEventListener("beforeinput", (e) => {
+        if (el.contentEditable !== "true") return;
+        if (e.inputType?.startsWith("format")) e.preventDefault();
+        if (e.inputType === "insertParagraph" && el.dataset.inline === "title") e.preventDefault();
+      });
+    }
+  }
+
+  function bindPopoverDrag() {
+    const pop = els.editorPopover;
+    if (!pop) return;
+    pop.addEventListener("pointerdown", (e) => {
+      if (!editingCanvas() || pop.hidden) return;
+      if (e.target.closest("[data-inline]")) return;
+      if (e.button != null && e.button !== 0) return;
+      popoverDrag = { pointerId: e.pointerId };
+      popoverDirty = false;
+      pop.classList.add("is-dragging");
+      try {
+        pop.setPointerCapture(e.pointerId);
+      } catch {
+        /* o arraste segue pelos eventos no próprio balão */
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      applyPointerPlacement(e);
+    });
+    pop.addEventListener("pointermove", (e) => {
+      if (!popoverDrag) return;
+      applyPointerPlacement(e);
+    });
+    const endDrag = (e) => {
+      if (!popoverDrag) return;
+      popoverDrag = null;
+      pop.classList.remove("is-dragging");
+      applyPointerPlacement(e, { commit: true });
+    };
+    pop.addEventListener("pointerup", endDrag);
+    pop.addEventListener("pointercancel", () => {
+      if (!popoverDrag) return;
+      popoverDrag = null;
+      pop.classList.remove("is-dragging");
+      if (popoverDirty) {
+        popoverDirty = false;
+        onChange();
+      }
+    });
   }
 
   function renderCanvas() {
     const demo = getDemo();
     const step = currentStep();
+    releaseInlineFocusIfStepChanged(step);
+    const editing = editingCanvas();
 
     if (!demo.steps.length || !step) {
       if (els.canvasEmpty) els.canvasEmpty.hidden = false;
@@ -1083,13 +1412,14 @@ export function createEditor(ctx) {
       els.canvasSlide.hidden = true;
       els.canvasImage.hidden = true;
       if (els.canvasMissing) els.canvasMissing.hidden = true;
-      setCanvasCaption("");
+      hideEditorPopover();
+      setCanvasCaption("", { editing: false });
       return;
     }
 
     if (els.canvasEmpty) els.canvasEmpty.hidden = true;
     els.canvasFrame.hidden = false;
-    setCanvasCaption(step.caption, { visible: step.showCaption !== false });
+    setCanvasCaption(step.caption, { visible: step.showCaption !== false, editing });
 
     if (step.type === "slide") {
       els.canvasImage.hidden = true;
@@ -1100,22 +1430,44 @@ export function createEditor(ctx) {
       els.slideKicker.textContent = label
         ? `${t("filmstrip.scene", { n: step.scene })} · ${label}`
         : t("filmstrip.scene", { n: step.scene });
-      els.slideTitle.textContent = step.popover?.title || step.label || "";
-      els.slideBody.textContent = step.popover?.description || "";
+      paintInline(els.slideTitle, step.popover?.title || step.label || "", {
+        editing,
+        placeholder: t("canvas.titlePlaceholder"),
+        label: t("canvas.editTitle"),
+      });
+      paintInline(els.slideBody, step.popover?.description || "", {
+        editing,
+        placeholder: t("canvas.descriptionPlaceholder"),
+        label: t("canvas.editDescription"),
+      });
       applySlideLayout(els.canvasSlide, step);
       sizeSlideLikeImage(els.canvasSlide, els.canvasStage, demo, step, resolveImageSrc);
       els.hotspot.hidden = true;
       els.clickPoint.hidden = true;
+      hideEditorPopover();
       return;
     }
+
+    paintInline(els.slideTitle, step.popover?.title || step.label || "", {
+      editing: false,
+      placeholder: t("canvas.titlePlaceholder"),
+      label: t("canvas.editTitle"),
+    });
+    paintInline(els.slideBody, step.popover?.description || "", {
+      editing: false,
+      placeholder: t("canvas.descriptionPlaceholder"),
+      label: t("canvas.editDescription"),
+    });
 
     els.canvasSlide.hidden = true;
     els.hotspot.hidden = false;
     const showClick = step.simulateClick !== false;
     els.clickPoint.hidden = !showClick;
+    hideEditorPopover();
 
     const src = resolveImageSrc(demo, step.image);
     bindImage(els.canvasImage, src, (ok) => {
+      if (currentStep() !== step) return;
       if (els.canvasMissing) els.canvasMissing.hidden = ok;
       if (ok) {
         placeHotspot(step.hotspot);
@@ -1125,6 +1477,7 @@ export function createEditor(ctx) {
         els.hotspot.hidden = true;
         els.clickPoint.hidden = true;
       }
+      placeEditorPopover();
     });
   }
 
@@ -2380,7 +2733,11 @@ export function createEditor(ctx) {
       } else {
         dragMode = "move";
       }
-      els.hotspot.setPointerCapture(e.pointerId);
+      try {
+        els.hotspot.setPointerCapture(e.pointerId);
+      } catch {
+        /* o arraste segue se o ponteiro continuar sobre o destaque */
+      }
       const rect = els.hotspot.getBoundingClientRect();
       dragStart = {
         x: e.clientX,
@@ -2425,6 +2782,7 @@ export function createEditor(ctx) {
       els.hotspot.style.top = top + "px";
       els.hotspot.style.width = width + "px";
       els.hotspot.style.height = height + "px";
+      if (!popoverDrag) placeEditorPopover();
     });
 
     els.hotspot.addEventListener("pointerup", () => {
@@ -2491,6 +2849,7 @@ export function createEditor(ctx) {
         els.hotspot.style.width = wPx + "px";
         els.hotspot.style.height = hPx + "px";
         commitHotspot();
+        placeEditorPopover();
         return;
       }
 
@@ -3147,8 +3506,8 @@ export function createEditor(ctx) {
       if (!editorView || editorView.hidden) return;
       if (editorView.classList.contains("is-presenting")) return;
       if (document.querySelector("dialog[open]")) return;
-      const tag = e.target?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
+      // why: título, descrição e narração no palco são contenteditable — mesmos atalhos do painel.
+      if (isTypingTarget(e.target)) return;
 
       const mod = e.metaKey || e.ctrlKey;
       if (mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "d") {
@@ -3312,11 +3671,14 @@ export function createEditor(ctx) {
       if (!step) return;
       if (step.type === "slide") {
         sizeSlideLikeImage(els.canvasSlide, els.canvasStage, getDemo(), step, resolveImageSrc);
+        placeCaptionPlaceholder();
         return;
       }
       placeHotspot(step.hotspot);
       if (step.simulateClick !== false) placeClickPoint(ensureClickPoint(step));
       else els.clickPoint.hidden = true;
+      placeEditorPopover();
+      placeCaptionPlaceholder();
     });
   }
 
@@ -3333,6 +3695,15 @@ export function createEditor(ctx) {
     stopSpeech();
     clickFx.reset();
     els.hotspot.classList.remove("is-previewing");
+    hideEditorPopover();
+    for (const el of inlineFields()) {
+      if (!el) continue;
+      el.contentEditable = "false";
+      syncInlinePlaceholder(el, el.textContent, false);
+    }
+    if (els.canvasCaption && !String(els.canvasCaption.textContent || "").trim()) {
+      els.canvasCaption.hidden = true;
+    }
   }
 
   function refresh() {
@@ -3347,6 +3718,8 @@ export function createEditor(ctx) {
 
   bindFilmstripDnD();
   bindHotspotDrag();
+  bindInlineEditing();
+  bindPopoverDrag();
   bindForm();
 
   return { refresh, selectStep, currentStep, pauseCaption, stopPreview };
