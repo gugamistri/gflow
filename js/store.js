@@ -48,23 +48,23 @@ export function hexToRgba(hex, alpha = 0.55) {
 }
 
 /**
- * Véu do Driver: cor sólida + opacity (o Driver multiplica os dois).
- * hazard: passar rgba em overlayColor *e* deixar overlayOpacity 0.7 deixa o véu fraco demais.
- * why: no modo escuro a captura já é escura — precisa de véu bem fechado para o recorte ler.
+ * Véu fora do destaque. O vídeo exportado pinta `rgba(0,0,0,0.48)`.
+ * O preview tem de usar a mesma tinta: cor sólida + este alpha.
+ * hazard: rgba em overlayColor *e* overlayOpacity do Driver multiplicam e o véu fica fraco demais.
+ * O tema (0.55 na cor do overlay, ou 0.90 no modo escuro) divergia do export e deixava o fundo mais claro.
  */
-export function themeOverlayPaint(baseOpacity = 0.55) {
-  const root = typeof document !== "undefined" ? document.documentElement : null;
-  const isDark = root?.getAttribute("data-appearance") === "social";
-  if (isDark) {
-    return { color: "#000000", opacity: 0.9 };
-  }
-  const overlay =
-    (root && getComputedStyle(root).getPropertyValue("--demo-overlay").trim()) ||
-    (root && getComputedStyle(root).getPropertyValue("--ns-overlay").trim()) ||
-    "#000000";
-  const color = /^#[0-9a-fA-F]{6}$/.test(overlay) ? overlay : "#000000";
-  const opacity = Math.min(0.95, Math.max(0.35, Number(baseOpacity) || 0.55));
-  return { color, opacity };
+export const SPOTLIGHT_VEIL_OPACITY = 0.48;
+
+export function spotlightVeilPaint() {
+  return { color: "#000000", opacity: SPOTLIGHT_VEIL_OPACITY };
+}
+
+export function spotlightVeilFill() {
+  return `rgba(0,0,0,${SPOTLIGHT_VEIL_OPACITY})`;
+}
+
+export function themeOverlayPaint() {
+  return spotlightVeilPaint();
 }
 
 /** @deprecated prefer themeOverlayPaint — mantido para callers que só precisam de uma cor */

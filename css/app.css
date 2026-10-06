@@ -2226,7 +2226,7 @@ body.is-presenting .slide-card-close {
   left: 12px;
   right: 12px;
   bottom: 12px;
-  /* why: precisa ficar acima do overlay do Driver no preview/player */
+  /* why: no editor, dentro do frame. No preview o nó sai do palco (ver .is-above-overlay). */
   z-index: 1000000002;
   padding: 10px 14px;
   border-radius: 10px;
@@ -2240,9 +2240,14 @@ body.is-presenting .slide-card-close {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
-/* why: fora do stacking do frame — senão a imagem cobria o popover e a legenda sumia no dim */
+/* why: o palco tem isolation + z-index 0. position:fixed dentro dele continua
+   abaixo do véu do Driver (z-index no body). .is-above-overlay marca a legenda
+   depois de movê-la para o body — aí 1000000015 fica acima do overlay (…0008)
+   e abaixo do popover (…0020). */
 body.is-presenting .caption-bar,
-body.view-share .caption-bar {
+body.view-share .caption-bar,
+body.standalone .caption-bar,
+.caption-bar.is-above-overlay {
   position: fixed;
   left: 50%;
   right: auto;

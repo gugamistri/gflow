@@ -1,5 +1,5 @@
 import { t } from "./i18n.js";
-import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, themeOverlayPaint } from "./store.js";
+import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { renderDemoPopoverFooter, clickDriverNext, clickDriverPrev, setPopoverHiddenForSlide } from "./popoverFooter.js";
 import { sizeSlideLikeImage, applySlideLayout } from "./editor.js";
@@ -9,6 +9,8 @@ import {
   ensureNarration,
   ensurePlayback,
   holdMs,
+  liftCaptionAboveOverlay,
+  restoreCaptionHome,
 } from "./playback.js";
 import { isCompactTouch } from "./compact.js";
 
@@ -40,6 +42,18 @@ export function createPlayer(ctx) {
   });
 
   const narration = createNarrationController({ captionEl: els.caption });
+  let captionHome = null;
+
+  function elevateCaption() {
+    if (captionHome) return;
+    const home = liftCaptionAboveOverlay(els.caption);
+    if (home) captionHome = home;
+  }
+
+  function restoreCaptionEl() {
+    restoreCaptionHome(els.caption, captionHome);
+    captionHome = null;
+  }
 
   let driverObj = null;
   let activeIndex = 0;
@@ -340,13 +354,14 @@ export function createPlayer(ctx) {
     if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
     els.hotspot?.classList.add("is-previewing");
     await narration.startTour(demo);
+    elevateCaption();
     await showStepVisual(steps[activeIndex], { speak: true });
     // why: is-presenting muda o grid; o driver precisa do hotspot já no layout final (ainda em 1×)
     await prepareStepCamera(steps[activeIndex]);
 
     if (demo?.theme) applyTheme(demo.theme);
 
-    const veil = themeOverlayPaint(0.55);
+    const veil = spotlightVeilPaint();
     driverObj = factory({
       popoverClass: "demo-popover",
       showProgress: true,
@@ -460,6 +475,7 @@ export function createPlayer(ctx) {
     }
     clickFx.reset();
     clearZoom({ animate: false });
+    restoreCaptionEl();
     animating = false;
     running = false;
     exitOnOutsideClick = false;

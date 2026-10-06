@@ -3,6 +3,7 @@ import {
   resolveImageSrc,
   ensureClickPoint,
   slugifyFilename,
+  spotlightVeilFill,
 } from "./store.js";
 import {
   holdMs as resolveHoldMs,
@@ -1012,7 +1013,7 @@ function renderFrame(ctx, scene, theme) {
       h: (raw.h / 100) * rect.h,
     };
     ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.48)";
+    ctx.fillStyle = spotlightVeilFill();
     ctx.beginPath();
     ctx.rect(rect.x, rect.y, rect.w, rect.h);
     addRoundRect(ctx, hs.x, hs.y, hs.w, hs.h, 4);
