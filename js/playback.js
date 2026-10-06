@@ -92,6 +92,23 @@ export function holdMs(step, demo) {
   return Math.round(resolveHoldSeconds(step, demo) * 1000);
 }
 
+/** Soma o tempo efetivo de cada passo (hold do passo, padrão do projeto e piso da narração). */
+export function tourHoldSeconds(demo) {
+  const steps = Array.isArray(demo?.steps) ? demo.steps : [];
+  let total = 0;
+  for (const step of steps) total += resolveHoldSeconds(step, demo);
+  return total;
+}
+
+/** Relógio m:ss da duração total. Minutos podem passar de 59. */
+export function formatHoldClock(seconds) {
+  const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  const whole = Math.round(safe);
+  const minutes = Math.floor(whole / 60);
+  const remain = whole % 60;
+  return `${minutes}:${String(remain).padStart(2, "0")}`;
+}
+
 
 export function listSpeechVoices() {
   if (typeof window === "undefined" || !window.speechSynthesis) return [];

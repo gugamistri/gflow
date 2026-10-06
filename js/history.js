@@ -1,14 +1,13 @@
-const DEFAULT_LIMIT = 20;
+import { createMediaPool } from "./mediaPool.js";
 
-function clone(value) {
-  return structuredClone(value);
-}
+const DEFAULT_LIMIT = 20;
 
 function same(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
+export function createHistory({ limit = DEFAULT_LIMIT, pool } = {}) {
+  const media = pool || createMediaPool();
   let undo = [];
   let redo = [];
   let committed = null;
@@ -19,12 +18,28 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
     if (stack.length > limit) stack.splice(0, stack.length - limit);
   }
 
+  function remember(state) {
+    return state == null ? null : media.pack(state);
+  }
+
+  function publish(state) {
+    return state == null ? null : media.unpack(state);
+  }
+
+  function syncPool() {
+    const held = [];
+    if (committed) held.push(committed);
+    held.push(...undo, ...redo);
+    media.retain(held);
+  }
+
   function reset(state) {
     undo = [];
     redo = [];
-    committed = state == null ? null : clone(state);
+    committed = remember(state);
     burst = false;
     legacyOverLimit = false;
+    syncPool();
   }
 
   function noteChange() {
@@ -32,19 +47,24 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
     if (!burst) {
       burst = true;
       redo = [];
+      syncPool();
     }
   }
 
   function settle(current) {
     if (!burst || committed == null || current == null) return false;
     burst = false;
-    const next = clone(current);
-    if (same(committed, next)) return false;
+    const next = remember(current);
+    if (same(committed, next)) {
+      syncPool();
+      return false;
+    }
     undo.push(committed);
     legacyOverLimit = false;
     trim(undo);
     trim(redo);
     committed = next;
+    syncPool();
     return true;
   }
 
@@ -53,15 +73,20 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
     if (burst) {
       burst = false;
       if (current == null) return null;
-      const now = clone(current);
-      if (same(committed, now)) return null;
+      const now = remember(current);
+      if (same(committed, now)) {
+        syncPool();
+        return null;
+      }
       redo.push(now);
-      return clone(committed);
+      syncPool();
+      return publish(committed);
     }
     if (!undo.length) return null;
     redo.push(committed);
     committed = undo.pop();
-    return clone(committed);
+    syncPool();
+    return publish(committed);
   }
 
   function redoChange() {
@@ -69,7 +94,8 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
     undo.push(committed);
     if (!legacyOverLimit) trim(undo);
     committed = redo.pop();
-    return clone(committed);
+    syncPool();
+    return publish(committed);
   }
 
   function canUndo() {
@@ -81,17 +107,23 @@ export function createHistory({ limit = DEFAULT_LIMIT } = {}) {
   }
 
   function exportStacks() {
-    return { undo: undo.map(clone), redo: redo.map(clone) };
+    return {
+      undo: undo.map((entry) => media.pack(entry)),
+      redo: redo.map((entry) => media.pack(entry)),
+      media: media.exportMedia([...undo, ...redo]),
+    };
   }
 
   function restore(state, saved) {
-    committed = state == null ? null : clone(state);
+    media.importMedia(saved?.media);
+    committed = remember(state);
     burst = false;
     const keep = (entry) => entry && typeof entry === "object";
     // why: um projeto salvo acima do limite segue desfazível até a próxima edição
-    undo = Array.isArray(saved?.undo) ? saved.undo.filter(keep).map(clone) : [];
-    redo = Array.isArray(saved?.redo) ? saved.redo.filter(keep).map(clone) : [];
+    undo = Array.isArray(saved?.undo) ? saved.undo.filter(keep).map((entry) => remember(entry)) : [];
+    redo = Array.isArray(saved?.redo) ? saved.redo.filter(keep).map((entry) => remember(entry)) : [];
     legacyOverLimit = undo.length > limit || redo.length > limit;
+    syncPool();
   }
 
   return { reset, noteChange, settle, undoChange, redoChange, canUndo, canRedo, exportStacks, restore };

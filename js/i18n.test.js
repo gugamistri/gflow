@@ -29,6 +29,15 @@ test("normalizeLocaleTag rejeita tags vazias", () => {
   assert.equal(normalizeLocaleTag("ja-JP"), null);
 });
 
+test("métricas do editor existem em pt, es e en", () => {
+  assert.match(catalogs.pt["editor.metricsOne"], /1 passo · \{time\}/);
+  assert.match(catalogs.pt["editor.metricsMany"], /\{n\} passos · \{time\}/);
+  assert.match(catalogs.es["editor.metricsOne"], /1 paso · \{time\}/);
+  assert.match(catalogs.es["editor.metricsMany"], /\{n\} pasos · \{time\}/);
+  assert.match(catalogs.en["editor.metricsOne"], /1 step · \{time\}/);
+  assert.match(catalogs.en["editor.metricsMany"], /\{n\} steps · \{time\}/);
+});
+
 test("catálogos compartilham as mesmas chaves", () => {
   const keys = Object.keys(catalogs.pt).sort();
   for (const loc of SUPPORTED_LOCALES) {
