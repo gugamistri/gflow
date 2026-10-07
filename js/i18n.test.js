@@ -38,6 +38,17 @@ test("métricas do editor existem em pt, es e en", () => {
   assert.match(catalogs.en["editor.metricsMany"], /\{n\} steps · \{time\}/);
 });
 
+test("o link mágico aponta para a API", () => {
+  for (const loc of SUPPORTED_LOCALES) {
+    assert.equal(
+      catalogs[loc]["share.cloud.pastePh"],
+      "https://api.guiaflow.pro/auth/verify?token=…"
+    );
+    assert.match(catalogs[loc]["share.cloud.signIn"], /api\.guiaflow\.pro/);
+    assert.match(catalogs[loc]["share.cloud.openSite"], /api\.guiaflow\.pro/);
+  }
+});
+
 test("catálogos compartilham as mesmas chaves", () => {
   const keys = Object.keys(catalogs.pt).sort();
   for (const loc of SUPPORTED_LOCALES) {
