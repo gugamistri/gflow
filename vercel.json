@@ -4,6 +4,17 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "guiaflow-seven.vercel.app"
+        }
+      ],
+      "destination": "https://guiaflow.pro/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
