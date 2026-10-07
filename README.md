@@ -47,7 +47,8 @@ No desktop, use **Capturar** no editor: abre uma janela com a página do produto
 
 - **HTML navegável** — um arquivo único com o tour
 - **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
-- **Link do preview** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour (requer Blob na Vercel)
+- **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias (requer Blob na Vercel)
+- **Link permanente** — no mesmo menu, quando a nuvem está configurada (`https://guiaflow.pro` no app publicado). Pede sessão por link mágico e devolve `https://guiaflow.pro/v/…`
 
 ## Testes
 
@@ -57,7 +58,7 @@ node --test extension/lib/*.test.js scripts/*.test.js
 
 ## Cloud
 
-O editor e o player deste repositório continuam MIT e gratuitos. IA e narração seguem com a sua própria chave. O GuiaFlow Cloud é um companheiro privado opcional, noutro código — os ganchos daqui são stubs. Detalhes em [`docs/CLOUD.md`](docs/CLOUD.md).
+O editor e o player deste repositório continuam MIT e gratuitos. IA e narração seguem com a sua própria chave. O GuiaFlow Cloud é um companheiro privado opcional, noutro código. Sem URL base, nada é chamado. Com URL base, o editor só publica o link permanente. Detalhes em [`docs/CLOUD.md`](docs/CLOUD.md).
 
 ## Licença
 

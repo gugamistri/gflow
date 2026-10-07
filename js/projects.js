@@ -400,6 +400,7 @@ export async function duplicateProject(id) {
     updatedAt: Date.now(),
   };
   delete copy.share;
+  delete copy.cloudShare;
   await putProject(copy);
   return copy;
 }
