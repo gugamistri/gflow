@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GuiaFlow</title>
+    <script>
+      (function () {
+        try {
+          if (window.__GUIAFLOW_CLOUD__) return;
+          var host = location.hostname;
+          if (host === "guiaflow-seven.vercel.app" || host === "guiaflow.pro") {
+            window.__GUIAFLOW_CLOUD__ = "https://api.guiaflow.pro";
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <p id="status">Entrando no GuiaFlow…</p>
+    <script type="module" src="/js/authCallback.js"></script>
+  </body>
+</html>

@@ -17,9 +17,16 @@ export const CLOUD_GLOBAL_KEY = "__GUIAFLOW_CLOUD__";
 export const CLOUD_META_NAME = "guiaflow-cloud-base";
 export const CLOUD_STORAGE_KEY = "guiaflow.cloud.baseUrl";
 export const CLOUD_SESSION_KEY = "guiaflow.cloud.session";
+export const CLOUD_PENDING_PUBLISH_KEY = "guiaflow.cloud.pendingPublish";
 export const CLOUD_VERIFY_PATH = "/auth/verify";
+export const CLOUD_AUTH_MESSAGE_TYPE = "guiaflow.cloud.auth";
+export const CLOUD_AUTH_ERROR_KEY = "guiaflow.cloud.authError";
+/** Página do editor que troca o code de uso único pela sessão. */
+export const CLOUD_CALLBACK_PATH = "/auth/callback";
+/** Origem do editor. A base HTTP da nuvem não aparece na interface. */
+export const CLOUD_EDITOR_ORIGIN = "https://guiaflow.pro";
 
-/** Editor publicado. A API Cloud ficou em api.guiaflow.pro; o apex só serve este app. */
+/** Pedidos HTTP da nuvem. O apex só serve este app. */
 export const PUBLISHED_CLOUD_BASE = "https://api.guiaflow.pro";
 const PUBLISHED_CLOUD_HOSTS = new Set(["guiaflow.pro", "guiaflow-seven.vercel.app"]);
 
@@ -251,13 +258,40 @@ function removeLocal(key) {
   }
 }
 
-export function readCloudSession() {
+function decodeBase64UrlJson(segment) {
+  try {
+    const b64 = String(segment || "").replace(/-/g, "+").replace(/_/g, "/");
+    if (!b64) return null;
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    return data && typeof data === "object" ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** JWT com exp no passado deixa de contar. Token opaco (sem exp) continua válido. */
+function accessTokenExpired(token, now) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 3 || !parts[1]) return false;
+  const payload = decodeBase64UrlJson(parts[1]);
+  if (!payload || typeof payload.exp !== "number" || !Number.isFinite(payload.exp)) return false;
+  return payload.exp * 1000 <= now;
+}
+
+export function readCloudSession(now = Date.now()) {
   const raw = readLocal(CLOUD_SESSION_KEY);
   if (!raw) return null;
   try {
     const data = JSON.parse(raw);
     const accessToken = typeof data?.accessToken === "string" ? data.accessToken.trim() : "";
     if (!accessToken) return null;
+    if (accessTokenExpired(accessToken, now)) {
+      clearCloudSession();
+      return null;
+    }
     const email = typeof data?.email === "string" ? data.email.trim() : "";
     return { accessToken, email };
   } catch {
@@ -372,18 +406,225 @@ export async function cloudFetch(path, init, env) {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CLOUD_PUBLISH_INTENT_TTL_MS = 30 * 60 * 1000;
+const CALLBACK_LOGIN_KEYS = ["guiaflow_login", "guiaflow_token"];
+const CALLBACK_SESSION_KEYS = ["guiaflow_session", "access_token"];
+const CALLBACK_STRIP_KEYS = [...CALLBACK_LOGIN_KEYS, ...CALLBACK_SESSION_KEYS];
 
-export function requestMagicLink(email, env) {
+function callbackUrlFrom(href) {
+  const fallback = `${CLOUD_EDITOR_ORIGIN}${CLOUD_CALLBACK_PATH}`;
+  let url;
+  try {
+    url = new URL(href);
+  } catch {
+    return fallback;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return fallback;
+  url.username = "";
+  url.password = "";
+  url.pathname = CLOUD_CALLBACK_PATH;
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
+/**
+ * Para onde a nuvem manda o browser depois do email ou da senha.
+ * why: o code volta em /auth/callback, nunca num host que a interface mostre.
+ */
+export function cloudLoginRedirectUrl(locationLike) {
+  const fallback = `${CLOUD_EDITOR_ORIGIN}${CLOUD_CALLBACK_PATH}`;
+  let href = "";
+  if (typeof locationLike === "string") href = locationLike.trim();
+  else if (locationLike && typeof locationLike.href === "string") href = locationLike.href;
+  else {
+    try {
+      if (typeof location !== "undefined" && location.href) href = location.href;
+    } catch {
+      href = "";
+    }
+  }
+  if (!href) return fallback;
+  return callbackUrlFrom(href);
+}
+
+function pathnameOf(url) {
+  return url.pathname.replace(/\/+$/, "") || "/";
+}
+
+/** Code de uso único só em /auth/callback. Dura cerca de 2 minutos na nuvem. */
+export function readAuthCallbackCode(href) {
+  let url;
+  try {
+    url = new URL(String(href || ""), `${CLOUD_EDITOR_ORIGIN}/`);
+  } catch {
+    return "";
+  }
+  if (pathnameOf(url) !== CLOUD_CALLBACK_PATH) return "";
+  const code = url.searchParams.get("code");
+  return code && code.trim() ? code.trim() : "";
+}
+
+/** Depois da troca, o browser fica na raiz do editor, sem o code. */
+export function editorHomeFromCallback(href) {
+  let url;
+  try {
+    url = new URL(String(href || ""), `${CLOUD_EDITOR_ORIGIN}/`);
+  } catch {
+    return `${CLOUD_EDITOR_ORIGIN}/`;
+  }
+  if (pathnameOf(url) === CLOUD_CALLBACK_PATH) url.pathname = "/";
+  url.searchParams.delete("code");
+  for (const key of CALLBACK_STRIP_KEYS) url.searchParams.delete(key);
+  const hash = url.hash.startsWith("#") ? url.hash.slice(1) : "";
+  if (hash.includes("=")) {
+    const params = new URLSearchParams(hash);
+    for (const key of CALLBACK_STRIP_KEYS) params.delete(key);
+    const next = params.toString();
+    url.hash = next ? `#${next}` : "";
+  }
+  return url.toString();
+}
+
+function firstParam(params, keys) {
+  for (const key of keys) {
+    const value = params.get(key);
+    if (value && value.trim()) return { key, token: value.trim() };
+  }
+  return null;
+}
+
+/**
+ * Token de regresso do link mágico. JWT só no fragmento: a query iria para o log do editor.
+ */
+export function readCloudAuthCallback(href) {
+  let url;
+  try {
+    url = new URL(String(href || ""), `${CLOUD_EDITOR_ORIGIN}/`);
+  } catch {
+    return null;
+  }
+  const query = firstParam(url.searchParams, CALLBACK_LOGIN_KEYS);
+  if (query) return { token: query.token, via: "query", key: query.key, kind: "magic" };
+  const hash = url.hash.startsWith("#") ? url.hash.slice(1) : "";
+  if (!hash || !hash.includes("=")) return null;
+  const hashParams = new URLSearchParams(hash);
+  const login = firstParam(hashParams, CALLBACK_LOGIN_KEYS);
+  if (login) return { token: login.token, via: "hash", key: login.key, kind: "magic" };
+  const session = firstParam(hashParams, CALLBACK_SESSION_KEYS);
+  if (session) return { token: session.token, via: "hash", key: session.key, kind: "bearer" };
+  return null;
+}
+
+export function stripCloudAuthCallback(href) {
+  let url;
+  try {
+    url = new URL(String(href || ""), `${CLOUD_EDITOR_ORIGIN}/`);
+  } catch {
+    return String(href || "");
+  }
+  for (const key of CALLBACK_STRIP_KEYS) url.searchParams.delete(key);
+  const hash = url.hash.startsWith("#") ? url.hash.slice(1) : "";
+  if (hash.includes("=")) {
+    const params = new URLSearchParams(hash);
+    for (const key of CALLBACK_STRIP_KEYS) params.delete(key);
+    const next = params.toString();
+    url.hash = next ? `#${next}` : "";
+  }
+  return url.toString();
+}
+
+export function cloudAuthMessageOrigins(env) {
+  const origins = new Set([CLOUD_EDITOR_ORIGIN]);
+  const base = getCloudBaseUrl(env);
+  if (base) {
+    try {
+      origins.add(new URL(base).origin);
+    } catch {
+      /* base inválida */
+    }
+  }
+  const page = env && typeof env.pageOrigin === "string" ? env.pageOrigin : "";
+  if (page) {
+    try {
+      const origin = new URL(page).origin;
+      if (origin && origin !== "null") origins.add(origin);
+    } catch {
+      /* origem inválida */
+    }
+  } else {
+    try {
+      if (typeof location !== "undefined" && location.origin && location.origin !== "null") {
+        origins.add(location.origin);
+      }
+    } catch {
+      /* sem location */
+    }
+  }
+  return origins;
+}
+
+export function parseCloudAuthMessage(data, origin, allowedOrigins) {
+  if (!data || typeof data !== "object") return null;
+  if (data.type !== CLOUD_AUTH_MESSAGE_TYPE) return null;
+  const token = typeof data.token === "string" ? data.token.trim() : "";
+  if (!token || token.length > 8192) return null;
+  const allow = allowedOrigins instanceof Set ? allowedOrigins : new Set(allowedOrigins || []);
+  if (!origin || !allow.has(origin)) return null;
+  const email = typeof data.email === "string" ? data.email.trim() : "";
+  return { token, email };
+}
+
+export function writeCloudPublishIntent(projectId, now = Date.now()) {
+  const id = typeof projectId === "string" ? projectId.trim() : "";
+  if (!id) return null;
+  const intent = { projectId: id, at: now };
+  writeLocal(CLOUD_PENDING_PUBLISH_KEY, JSON.stringify(intent));
+  return intent;
+}
+
+export function clearCloudPublishIntent() {
+  removeLocal(CLOUD_PENDING_PUBLISH_KEY);
+}
+
+function readCloudPublishIntent(now) {
+  const raw = readLocal(CLOUD_PENDING_PUBLISH_KEY);
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    const projectId = typeof data?.projectId === "string" ? data.projectId.trim() : "";
+    const at = Number(data?.at);
+    if (!projectId || !Number.isFinite(at) || at > now + 60_000 || now - at > CLOUD_PUBLISH_INTENT_TTL_MS) {
+      clearCloudPublishIntent();
+      return null;
+    }
+    return { projectId, at };
+  } catch {
+    clearCloudPublishIntent();
+    return null;
+  }
+}
+
+/** Uma aba só. why: o link pode abrir noutra aba e as duas verem a sessão ao mesmo tempo. */
+export function claimCloudPublishIntent(projectId, now = Date.now()) {
+  const intent = readCloudPublishIntent(now);
+  if (!intent || intent.projectId !== projectId) return false;
+  clearCloudPublishIntent();
+  return true;
+}
+
+export function requestMagicLink(email, env, options) {
   const trimmed = String(email || "").trim();
   if (!EMAIL_RE.test(trimmed)) {
     return Promise.resolve({ ok: false, error: "invalid_email", message: "" });
   }
+  const redirect = cloudLoginRedirectUrl(options?.redirect);
   return cloudFetch(
     "/auth/magic-link",
     {
       method: "POST",
       auth: false,
-      body: JSON.stringify({ email: trimmed }),
+      body: JSON.stringify({ email: trimmed, redirect }),
     },
     env
   ).then((result) => {
@@ -402,6 +643,12 @@ export function parseCloudLoginPaste(value) {
   if (!raw) return null;
   const found = raw.match(/https?:\/\/[^\s<>"']+/i);
   const candidate = found ? found[0] : raw;
+  if (found) {
+    const code = readAuthCallbackCode(candidate);
+    if (code) return { kind: "code", token: code };
+    const callback = readCloudAuthCallback(candidate);
+    if (callback) return { kind: callback.kind, token: callback.token };
+  }
   try {
     const url = new URL(candidate);
     const token = url.searchParams.get("token");
@@ -418,10 +665,15 @@ export function parseCloudLoginPaste(value) {
   return null;
 }
 
-export async function establishCloudSession(pasted, env, { emailHint = "" } = {}) {
-  const parsed = parseCloudLoginPaste(pasted);
+export async function establishCloudSession(pasted, env, { emailHint = "", forceKind } = {}) {
+  let parsed = parseCloudLoginPaste(pasted);
+  const raw = String(pasted || "").trim();
+  if (!parsed && raw && (forceKind === "magic" || forceKind === "bearer")) {
+    parsed = { kind: forceKind, token: raw };
+  }
   if (!parsed) return { ok: false, error: "invalid_token", message: "" };
   const hint = String(emailHint || "").trim();
+  if (parsed.kind === "code") return exchangeCloudAuthCode(parsed.token, env, hint);
   if (parsed.kind === "bearer") {
     const session = await cloudFetch("/auth/session", { method: "GET", accessToken: parsed.token }, env);
     if (!session.ok) return session;
@@ -452,6 +704,110 @@ export async function establishCloudSession(pasted, env, { emailHint = "" } = {}
   return { ok: true, email: typeof email === "string" ? email : "" };
 }
 
+function sessionFromAuthPayload(result, emailHint) {
+  const accessToken = typeof result?.data?.accessToken === "string" ? result.data.accessToken.trim() : "";
+  if (!result?.ok || !accessToken) return null;
+  const email = result.data?.user?.email || result.data?.email || emailHint || "";
+  const safeEmail = typeof email === "string" ? email.trim() : "";
+  writeCloudSession({ accessToken, email: safeEmail });
+  return { ok: true, email: safeEmail };
+}
+
+/**
+ * Troca o code de /auth/callback pelo accessToken e grava guiaflow.cloud.session.
+ */
+export async function exchangeCloudAuthCode(code, env, emailHint = "") {
+  const trimmed = String(code || "").trim();
+  if (!trimmed) return { ok: false, error: "invalid_token", message: "" };
+  const result = await cloudFetch(
+    CLOUD_CALLBACK_PATH,
+    {
+      method: "POST",
+      auth: false,
+      body: JSON.stringify({ code: trimmed }),
+    },
+    env
+  );
+  const stored = sessionFromAuthPayload(result, emailHint);
+  if (stored) return stored;
+  if (result.ok) return { ok: false, error: "invalid_token", message: "" };
+  return result.error ? result : { ...result, error: "invalid_token" };
+}
+
+/**
+ * Senha para quem já entrou antes. why: o regresso do browser continua a ser /auth/callback?code=
+ * quando a nuvem não devolve o accessToken neste pedido.
+ */
+export async function loginWithPassword(email, password, env) {
+  const trimmed = String(email || "").trim();
+  const pass = String(password || "");
+  if (!EMAIL_RE.test(trimmed) || !pass) {
+    return { ok: false, error: "invalid_credentials", message: "" };
+  }
+  const result = await cloudFetch(
+    "/auth/login",
+    {
+      method: "POST",
+      auth: false,
+      body: JSON.stringify({ email: trimmed, password: pass }),
+    },
+    env
+  );
+  if (!result.ok) {
+    if (result.status === 401 || result.error === "invalid_credentials" || result.error === "invalid_password") {
+      return { ...result, error: "invalid_credentials" };
+    }
+    return result;
+  }
+  const stored = sessionFromAuthPayload(result, trimmed);
+  if (stored) return stored;
+  const code = typeof result.data?.code === "string" ? result.data.code.trim() : "";
+  if (code) return exchangeCloudAuthCode(code, env, trimmed);
+  const redirect = result.data?.redirect || result.data?.url;
+  const redirectedCode = typeof redirect === "string" ? readAuthCallbackCode(redirect) : "";
+  if (redirectedCode) return exchangeCloudAuthCode(redirectedCode, env, trimmed);
+  return { ok: false, error: "invalid_token", message: "" };
+}
+
+export function stashCloudAuthError(code) {
+  const value = String(code || "invalid_token");
+  try {
+    if (typeof sessionStorage === "undefined" || typeof sessionStorage.setItem !== "function") return;
+    sessionStorage.setItem(CLOUD_AUTH_ERROR_KEY, value);
+  } catch {
+    /* modo privado */
+  }
+}
+
+export function takeCloudAuthError() {
+  try {
+    if (typeof sessionStorage === "undefined" || typeof sessionStorage.getItem !== "function") return "";
+    const value = sessionStorage.getItem(CLOUD_AUTH_ERROR_KEY) || "";
+    if (value) sessionStorage.removeItem(CLOUD_AUTH_ERROR_KEY);
+    return value;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Consome /auth/callback?code= e devolve o URL do editor já sem o segredo.
+ * Um link antigo com guiaflow_login ainda entra, para não deixar o token na barra.
+ */
+export async function completeCloudAuthCallback(href, env) {
+  const code = readAuthCallbackCode(href);
+  if (code) {
+    const clean = editorHomeFromCallback(href);
+    const session = await exchangeCloudAuthCode(code, env);
+    return { ...session, consumed: true, href: clean };
+  }
+  const found = readCloudAuthCallback(href);
+  if (!found) return { ok: false, consumed: false, href: String(href || "") };
+  const clean = stripCloudAuthCallback(href);
+  const session = await establishCloudSession(found.token, env, { forceKind: found.kind });
+  return { ...session, consumed: true, href: clean };
+}
+
 export async function endCloudSession(env) {
   if (readCloudSession() && isCloudEnabled(env)) {
     await cloudFetch("/auth/logout", { method: "POST" }, env);
@@ -476,9 +832,15 @@ export function installCloudHooks(target) {
     callCloud,
     cloudFetch,
     requestMagicLink,
+    loginWithPassword,
     establishCloudSession,
+    exchangeCloudAuthCode,
+    completeCloudAuthCallback,
     endCloudSession,
     cloudVerifyUrl,
+    cloudLoginRedirectUrl,
+    readCloudAuthCallback,
+    parseCloudAuthMessage,
   };
   host.GuiaFlowCloud = api;
   return api;

@@ -172,6 +172,7 @@ export function permanentShareErrorMessage(result) {
   const data = result?.data && typeof result.data === "object" ? result.data : {};
   const code = String(result?.error || result?.reason || data.error || "");
   if (code === "share_limit" || data.error === "share_limit") return cloudPlanLimitMessage(data);
+  if (code === "invalid_credentials" || code === "invalid_password") return t("share.cloud.badLogin");
   if (result?.status === 401 || code === "unauthorized") return t("share.cloud.unauthorized");
   if (code === "invalid_email") return t("share.cloud.invalidEmail");
   if (code === "invalid_token") return t("share.cloud.invalidToken");

@@ -48,7 +48,7 @@ No desktop, use **Capturar** no editor: abre uma janela com a página do produto
 - **HTML navegável** — um arquivo único com o tour
 - **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
 - **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias (requer Blob na Vercel)
-- **Link permanente** — no mesmo menu, quando a nuvem está configurada (`https://api.guiaflow.pro` no app publicado). Pede sessão por link mágico e devolve `https://api.guiaflow.pro/v/…`
+- **Link permanente** — no mesmo menu, no app publicado. Com sessão, mostra «Conectado como …» e publica direto. Sem sessão, o email de confirmação volta para guiaflow.pro. A base HTTP da nuvem fica só em `window.__GUIAFLOW_CLOUD__` (ver [`docs/CLOUD.md`](docs/CLOUD.md)).
 
 ## Testes
 
