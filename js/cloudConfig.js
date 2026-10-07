@@ -1,6 +1,6 @@
 /**
  * Encaixe do GuiaFlow Cloud.
- * why: o editor MIT fala com a API só quando há URL base; sem isso nada sai da máquina.
+ * why: o editor MIT fala com a nuvem só quando há URL base; sem isso nada sai da máquina.
  * hazard: BYOK continua em llm.js / cartesia.js. Não gravar AUTH_SECRET nem chave de API.
  *         O bearer da sessão fica só no localStorage do navegador.
  */
@@ -26,8 +26,8 @@ export const CLOUD_CALLBACK_PATH = "/auth/callback";
 /** Origem do editor. A base HTTP da nuvem não aparece na interface. */
 export const CLOUD_EDITOR_ORIGIN = "https://guiaflow.pro";
 
-/** Pedidos HTTP da nuvem. O apex só serve este app. */
-export const PUBLISHED_CLOUD_BASE = "https://api.guiaflow.pro";
+/** Pedidos HTTP da nuvem. O apex guiaflow.pro só serve o editor. */
+export const PUBLISHED_CLOUD_BASE = "https://app.guiaflow.pro";
 const PUBLISHED_CLOUD_HOSTS = new Set(["guiaflow.pro", "guiaflow-seven.vercel.app"]);
 
 const INJECTED_KEYS = ["baseUrl", "globalValue", "metaContent", "storageValue", "flags", "hostname"];
@@ -113,7 +113,7 @@ function readLocationHost() {
 }
 
 /**
- * Base da API nos hosts do editor publicado. localhost e o app desktop ficam sem base.
+ * Base HTTP da nuvem nos hosts do editor publicado. localhost e o app desktop ficam sem base.
  */
 export function defaultCloudBaseForHost(hostname) {
   const host = String(hostname || "").trim().toLowerCase().replace(/\.$/, "");
@@ -352,7 +352,7 @@ function cloudErrorCode(data, status) {
 }
 
 /**
- * Pedido real à API Cloud quando há URL base.
+ * Pedido real à nuvem quando há URL base.
  * Sem URL, devolve o stub e não chama fetch.
  */
 export async function cloudFetch(path, init, env) {

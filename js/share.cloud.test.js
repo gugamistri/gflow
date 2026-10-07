@@ -5,7 +5,7 @@ import { copyText, permanentShareErrorMessage, publishPermanentShare } from "./s
 
 setLocale("pt", { persist: false });
 
-const env = { baseUrl: "https://api.guiaflow.pro", accessToken: "jwt-session" };
+const env = { baseUrl: "https://app.guiaflow.pro", accessToken: "jwt-session" };
 
 function project() {
   return {
@@ -44,8 +44,8 @@ test("copyText cai no textarea quando o clipboard rejeita", async () => {
     execCommand() { return true; },
   };
   try {
-    await copyText("https://api.guiaflow.pro/v/slug-teste");
-    assert.equal(stored, "https://api.guiaflow.pro/v/slug-teste");
+    await copyText("https://app.guiaflow.pro/v/slug-teste");
+    assert.equal(stored, "https://app.guiaflow.pro/v/slug-teste");
   } finally {
     if (prevNav) Object.defineProperty(globalThis, "navigator", prevNav);
     else delete globalThis.navigator;
@@ -89,9 +89,9 @@ test("POST /shares devolve o URL e não leva o bearer no corpo", async () => {
       env,
       buildSnapshot: async () => ({ name: "Tour da nuvem", steps: [{ title: "Um" }] }),
     });
-    assert.equal(share.url, "https://api.guiaflow.pro/v/slug-permanente");
+    assert.equal(share.url, "https://app.guiaflow.pro/v/slug-permanente");
     assert.equal(share.id, "sh_1");
-    assert.equal(seen.url, "https://api.guiaflow.pro/shares");
+    assert.equal(seen.url, "https://app.guiaflow.pro/shares");
     assert.equal(new Headers(seen.init.headers).get("authorization"), "Bearer jwt-session");
     const body = JSON.parse(seen.init.body);
     assert.equal(body.title, "Tour da nuvem");
