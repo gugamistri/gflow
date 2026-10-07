@@ -788,7 +788,9 @@ textarea {
   border: 1px solid var(--ns-border);
   border-radius: 10px;
   padding: 8px;
-  min-width: 280px;
+  min-width: min(340px, 86vw);
+  max-height: min(70vh, 640px);
+  overflow: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   z-index: 80;
   display: grid;
@@ -865,6 +867,118 @@ textarea {
 .share-link-row .btn-icon {
   width: 32px;
   height: 32px;
+}
+
+.cloud-share-block {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--ns-border);
+}
+
+.cloud-share-block[hidden] {
+  display: none;
+}
+
+.cloud-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px 4px;
+  font-size: 0.72rem;
+  color: var(--ns-muted);
+}
+
+.cloud-account[hidden] {
+  display: none;
+}
+
+.cloud-account .btn {
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  border-color: var(--ns-border);
+}
+
+.cloud-share-result {
+  display: grid;
+  gap: 8px;
+  padding: 8px 12px 10px;
+}
+
+.cloud-share-result[hidden] {
+  display: none;
+}
+
+.cloud-share-url-label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ns-ink);
+}
+
+.cloud-share-url-label input {
+  width: 100%;
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+}
+
+.cloud-login {
+  display: grid;
+  gap: 8px;
+  padding: 4px 12px 10px;
+}
+
+.cloud-login[hidden] {
+  display: none;
+}
+
+.cloud-login p,
+.cloud-login-status {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--ns-muted);
+}
+
+.cloud-login a {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ns-accent);
+}
+
+.cloud-login label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ns-ink);
+}
+
+.cloud-login input {
+  width: 100%;
+  font-weight: 500;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+}
+
+.cloud-login .btn {
+  justify-self: start;
+}
+
+.cloud-login form {
+  display: grid;
+  gap: 8px;
 }
 
 body.view-share {
