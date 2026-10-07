@@ -57,7 +57,7 @@
         if (window.__GUIAFLOW_CLOUD__) return;
         var host = location.hostname;
         if (host === "guiaflow-seven.vercel.app" || host === "guiaflow.pro") {
-          window.__GUIAFLOW_CLOUD__ = "https://guiaflow.pro";
+          window.__GUIAFLOW_CLOUD__ = "https://api.guiaflow.pro";
         }
       } catch (e) {}
     })();
@@ -170,8 +170,8 @@
                 </button>
               </div>
               <div id="cloud-login" class="cloud-login" hidden>
-                <p data-i18n="share.cloud.signIn">Entre em guiaflow.pro com o link mágico. Cole o link do email para publicar.</p>
-                <a id="cloud-open-site" href="https://guiaflow.pro/auth/verify" target="_blank" rel="noopener noreferrer" data-i18n="share.cloud.openSite">Abrir guiaflow.pro</a>
+                <p data-i18n="share.cloud.signIn">Entre em api.guiaflow.pro com o link mágico. Cole o link do email para publicar.</p>
+                <a id="cloud-open-site" href="https://api.guiaflow.pro/auth/verify" target="_blank" rel="noopener noreferrer" data-i18n="share.cloud.openSite">Abrir api.guiaflow.pro</a>
                 <form id="cloud-magic-form">
                 <label>
                   <span class="visually-hidden" data-i18n="share.cloud.email">Email</span>
@@ -202,7 +202,7 @@
                     data-bwignore="true"
                     data-form-type="other"
                     data-i18n-placeholder="share.cloud.pastePh"
-                    placeholder="https://guiaflow.pro/auth/verify?token=…"
+                    placeholder="https://api.guiaflow.pro/auth/verify?token=…"
                   />
                 </label>
                 <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Continuar e publicar</button>

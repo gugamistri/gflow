@@ -14,7 +14,7 @@ A interface está em português, espanhol e inglês. O idioma segue o do navegad
 npm start
 ```
 
-Abre em `http://localhost:4173`. O endereço publicado é [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app). Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
+Abre em `http://localhost:4173`. O endereço publicado é [https://guiaflow.pro](https://guiaflow.pro) (o mesmo editor também está em [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app)). Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
 
 ### Extensão de captura
 
@@ -48,7 +48,7 @@ No desktop, use **Capturar** no editor: abre uma janela com a página do produto
 - **HTML navegável** — um arquivo único com o tour
 - **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
 - **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias (requer Blob na Vercel)
-- **Link permanente** — no mesmo menu, quando a nuvem está configurada (`https://guiaflow.pro` no app publicado). Pede sessão por link mágico e devolve `https://guiaflow.pro/v/…`
+- **Link permanente** — no mesmo menu, quando a nuvem está configurada (`https://api.guiaflow.pro` no app publicado). Pede sessão por link mágico e devolve `https://api.guiaflow.pro/v/…`
 
 ## Testes
 

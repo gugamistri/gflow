@@ -19,7 +19,11 @@ export const CLOUD_STORAGE_KEY = "guiaflow.cloud.baseUrl";
 export const CLOUD_SESSION_KEY = "guiaflow.cloud.session";
 export const CLOUD_VERIFY_PATH = "/auth/verify";
 
-const INJECTED_KEYS = ["baseUrl", "globalValue", "metaContent", "storageValue", "flags"];
+/** Editor publicado. A API Cloud ficou em api.guiaflow.pro; o apex só serve este app. */
+export const PUBLISHED_CLOUD_BASE = "https://api.guiaflow.pro";
+const PUBLISHED_CLOUD_HOSTS = new Set(["guiaflow.pro", "guiaflow-seven.vercel.app"]);
+
+const INJECTED_KEYS = ["baseUrl", "globalValue", "metaContent", "storageValue", "flags", "hostname"];
 
 export function emptyCloudFlags() {
   return {
@@ -92,6 +96,23 @@ function readGlobal() {
   }
 }
 
+function readLocationHost() {
+  try {
+    if (typeof location === "undefined" || !location.hostname) return "";
+    return location.hostname;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Base da API nos hosts do editor publicado. localhost e o app desktop ficam sem base.
+ */
+export function defaultCloudBaseForHost(hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/\.$/, "");
+  return PUBLISHED_CLOUD_HOSTS.has(host) ? PUBLISHED_CLOUD_BASE : "";
+}
+
 function isInjected(env) {
   if (!env || typeof env !== "object") return false;
   return INJECTED_KEYS.some((key) => Object.prototype.hasOwnProperty.call(env, key));
@@ -115,7 +136,8 @@ function applyFlags(enabled, overrides) {
  *   metaContent?: string,
  *   storageValue?: string | null,
  *   flags?: Record<string, boolean> | null,
- * }} [env]  omitir para ler global, meta e localStorage
+ *   hostname?: string,
+ * }} [env]  omitir para ler global, meta, localStorage e o host publicado
  */
 export function resolveCloudConfig(env) {
   const injected = isInjected(env);
@@ -139,8 +161,9 @@ export function resolveCloudConfig(env) {
 
   let baseUrl = "";
   let flagSource = null;
+  const explicitBase = Object.prototype.hasOwnProperty.call(input, "baseUrl");
 
-  if (Object.prototype.hasOwnProperty.call(input, "baseUrl")) {
+  if (explicitBase) {
     baseUrl = normalizeCloudBaseUrl(input.baseUrl);
     flagSource = input.flags ?? null;
   } else {
@@ -152,6 +175,15 @@ export function resolveCloudConfig(env) {
       baseUrl = normalizeCloudBaseUrl(metaContent) || normalizeCloudBaseUrl(storageValue);
       flagSource = input.flags ?? null;
     }
+  }
+
+  if (!baseUrl && !explicitBase) {
+    const hostname = Object.prototype.hasOwnProperty.call(input, "hostname")
+      ? input.hostname
+      : injected
+        ? ""
+        : readLocationHost();
+    baseUrl = defaultCloudBaseForHost(hostname);
   }
 
   const enabled = Boolean(baseUrl);

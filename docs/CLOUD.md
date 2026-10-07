@@ -2,7 +2,7 @@
 
 Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A API Cloud só é chamada quando há um URL base configurado.
 
-O app público continua em [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app).
+O editor público está em [https://guiaflow.pro](https://guiaflow.pro) e em [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app). A API Cloud está em [https://api.guiaflow.pro](https://api.guiaflow.pro).
 
 ## Promessa
 
@@ -41,7 +41,7 @@ O URL base vem de um destes lugares (endereço, nunca chave):
 2. `<meta name="guiaflow-cloud-base" content="https://…">`
 3. `localStorage["guiaflow.cloud.baseUrl"]`
 
-No app publicado (`guiaflow-seven.vercel.app` e `guiaflow.pro`) o editor define `window.__GUIAFLOW_CLOUD__ = "https://guiaflow.pro"` quando ninguém definiu antes. Em `localhost` e no app desktop isso não acontece: o preview no Blob continua a ser o único caminho.
+No app publicado (`guiaflow-seven.vercel.app` e `guiaflow.pro`) o editor define `window.__GUIAFLOW_CLOUD__ = "https://api.guiaflow.pro"` quando ninguém definiu antes. Em `localhost` e no app desktop isso não acontece: o preview no Blob continua a ser o único caminho.
 
 Userinfo, query e hash são descartados. Um valor que não seja `http:` ou `https:` conta como ausente.
 
@@ -63,9 +63,9 @@ No menu **Compartilhar**, com a nuvem ligada:
 1. **Preview temporário** — o fluxo Blob de 7 dias, como antes.
 2. **Link permanente** — **Compartilhar na nuvem**.
 
-Se não houver sessão, o painel pede o email (`POST /auth/magic-link`) e o link que chega no email. O editor confirma com `POST /auth/verify` e guarda o JWT. A página `https://guiaflow.pro/auth/verify` também entra na conta, mas a sessão dela fica nesse domínio; por isso a publicação continua quando o link do email é colado aqui.
+Se não houver sessão, o painel pede o email (`POST /auth/magic-link`) e o link que chega no email. O editor confirma com `POST /auth/verify` e guarda o JWT. A página `https://api.guiaflow.pro/auth/verify` também entra na conta, mas a sessão dela fica no host da API; por isso a publicação continua quando o link do email é colado aqui.
 
-Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` (`https://guiaflow.pro/v/{slug}`) com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Cloud». `401` pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
+Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` (`https://api.guiaflow.pro/v/{slug}`) com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Cloud». `401` pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
 
 O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JSON local não depende da nuvem.
 
@@ -77,4 +77,4 @@ O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JS
 
 **GuiaFlow Cloud** is a private companion (not part of this MIT repo; product name `guiaflow-cloud`). It may later add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics.
 
-With no Cloud API base URL every flag is false and helpers do not touch the network. The published editor sets the base URL to `https://guiaflow.pro`; localhost and the desktop app stay Blob-only. `cloudFetch` performs the permanent-share and magic-link calls. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview is unchanged.
+With no Cloud API base URL every flag is false and helpers do not touch the network. The published editor sets the base URL to `https://api.guiaflow.pro`; localhost and the desktop app stay Blob-only. Permanent share URLs are `https://api.guiaflow.pro/v/{slug}`. `cloudFetch` performs the permanent-share and magic-link calls. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged.
