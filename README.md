@@ -14,7 +14,7 @@ A interface está em português, espanhol e inglês. O idioma segue o do navegad
 npm start
 ```
 
-Abre em `http://localhost:4173`. O endereço publicado é [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app). Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
+Abre em `http://localhost:4173`. O editor publicado é [https://guiaflow.pro](https://guiaflow.pro). O endereço antigo `https://guiaflow-seven.vercel.app` redireciona para lá, com o mesmo caminho e a mesma query. Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
 
 ### Extensão de captura
 
@@ -24,7 +24,7 @@ Para desenvolver a extensão localmente:
 
 1. `npm run pack:extension` (ou carregue a pasta `extension/`)
 2. Em `chrome://extensions`, ative o modo do desenvolvedor e carregue a pasta da extensão
-3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow-seven.vercel.app`, ou `http://localhost:4173` no desenvolvimento)
+3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow.pro`, ou `http://localhost:4173` no desenvolvimento). Depois de atualizar a extensão, recarregue o card em `chrome://extensions`.
 4. No popup, escolha PT, ES ou EN se quiser um idioma diferente do navegador
 5. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
 

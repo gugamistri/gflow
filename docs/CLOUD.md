@@ -2,7 +2,7 @@
 
 Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A API Cloud só é chamada quando há um URL base configurado.
 
-O app público continua em [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app).
+O app público está em [https://guiaflow.pro](https://guiaflow.pro). O host antigo `guiaflow-seven.vercel.app` redireciona para esse domínio, preservando caminho e query.
 
 ## Promessa
 
@@ -41,7 +41,7 @@ O URL base vem de um destes lugares (endereço, nunca chave):
 2. `<meta name="guiaflow-cloud-base" content="https://…">`
 3. `localStorage["guiaflow.cloud.baseUrl"]`
 
-No app publicado (`guiaflow-seven.vercel.app` e `guiaflow.pro`) o editor define `window.__GUIAFLOW_CLOUD__ = "https://guiaflow.pro"` quando ninguém definiu antes. Em `localhost` e no app desktop isso não acontece: o preview no Blob continua a ser o único caminho.
+No editor publicado (`guiaflow.pro`) a página define `window.__GUIAFLOW_CLOUD__ = "https://guiaflow.pro"` quando ninguém definiu antes. O mesmo vale se o HTML ainda for servido em `guiaflow-seven.vercel.app`, antes do redirecionamento. Em `localhost` e no app desktop isso não acontece: o preview no Blob continua a ser o único caminho.
 
 Userinfo, query e hash são descartados. Um valor que não seja `http:` ou `https:` conta como ausente.
 
