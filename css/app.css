@@ -462,11 +462,26 @@ textarea {
 
 .more-panel {
   position: relative;
+  flex: none;
+}
+
+.more-panel > summary {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.more-panel[open] > summary {
+  background: color-mix(in srgb, var(--ns-accent) 32%, var(--ns-topbar));
+  border-color: color-mix(in srgb, var(--ns-accent) 70%, transparent);
 }
 
 .more-panel-body {
   position: absolute;
-  right: 0;
+  left: 0;
+  right: auto;
   top: calc(100% + 8px);
   background: var(--ns-panel);
   color: var(--ns-ink);
@@ -475,9 +490,9 @@ textarea {
   padding: 10px;
   display: grid;
   gap: 6px;
-  min-width: min(400px, 94vw);
-  width: min(400px, 94vw);
-  max-width: min(400px, 94vw);
+  min-width: min(280px, calc(100vw - 24px));
+  width: min(400px, calc(100vw - 24px));
+  max-width: min(400px, calc(100vw - 24px));
   max-height: min(85vh, 760px);
   overflow-x: hidden;
   overflow-y: auto;
@@ -778,6 +793,13 @@ textarea {
 
 .export-panel {
   position: relative;
+}
+
+.export-panel > summary {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
 }
 
 .export-panel-body {
@@ -1868,6 +1890,11 @@ body.is-presenting #topbar-actions-editor {
   min-height: 24px;
   background: color-mix(in srgb, var(--ns-muted) 55%, var(--ns-border));
   margin: 0 4px;
+}
+
+.canvas-toolbar .btn:disabled {
+  opacity: 0.38;
+  cursor: default;
 }
 
 .canvas-hint {

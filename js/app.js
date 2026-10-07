@@ -1084,6 +1084,12 @@ function bindChrome() {
   });
 
   // Fecha painéis Tema / Narração / Exportar / Mais ao clicar fora
+  const menuPanel = document.getElementById("more-panel");
+  const menuButton = document.getElementById("btn-menu");
+  menuPanel?.addEventListener("toggle", () => {
+    menuButton?.setAttribute("aria-expanded", menuPanel.open ? "true" : "false");
+  });
+
   document.addEventListener("pointerdown", (e) => {
     document
       .querySelectorAll(
@@ -1092,6 +1098,15 @@ function bindChrome() {
       .forEach((panel) => {
         if (!panel.contains(e.target)) panel.open = false;
       });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !menuPanel?.open) return;
+    if (document.querySelector("dialog[open]")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    menuPanel.open = false;
+    menuButton?.focus();
   });
 
   const captureBtns = [
