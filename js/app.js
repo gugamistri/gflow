@@ -496,6 +496,7 @@ function paintChrome() {
       projectLabel.textContent = project?.name || "";
     }
   }
+  paintAccount();
 }
 
 function setChrome(view) {
@@ -566,36 +567,85 @@ function cloudShareEnabled() {
   return isCloudEnabled() && getCloudFlags().permanentShare;
 }
 
+let accountDialogWantsPublish = false;
+
+function accountInitial(email) {
+  const ch = String(email || "").trim().charAt(0);
+  return ch ? ch.toUpperCase() : "?";
+}
+
+function paintAccount() {
+  const enabled = isCloudEnabled();
+  const account = enabled ? getCloudAccount() : { signedIn: false, email: "" };
+  const signedIn = Boolean(account.signedIn);
+  const label = signedIn ? account.email || t("share.cloud.signedInAnon") : "";
+  const slot = document.getElementById("account-slot");
+  const signInBtn = document.getElementById("btn-account-signin");
+  const chip = document.getElementById("account-chip");
+  const avatar = document.getElementById("account-avatar");
+  const emailEl = document.getElementById("account-chip-email");
+  const toggle = document.getElementById("account-chip-toggle");
+  const more = document.getElementById("more-account");
+  const menuSignIn = document.getElementById("btn-menu-signin");
+  const menuIn = document.getElementById("more-account-in");
+  const menuEmail = document.getElementById("more-account-email");
+  if (slot) slot.hidden = !enabled;
+  if (more) more.hidden = !enabled;
+  if (signInBtn) signInBtn.hidden = !enabled || signedIn;
+  if (chip) {
+    chip.hidden = !signedIn;
+    if (!signedIn) chip.open = false;
+  }
+  if (menuSignIn) menuSignIn.hidden = !enabled || signedIn;
+  if (menuIn) menuIn.hidden = !signedIn;
+  if (emailEl) emailEl.textContent = label;
+  if (menuEmail) menuEmail.textContent = label;
+  if (avatar) avatar.textContent = signedIn ? accountInitial(account.email) : "";
+  if (toggle && signedIn) {
+    toggle.setAttribute("aria-label", label);
+    toggle.setAttribute("title", label);
+  }
+}
+
+function showAccountDialog({ publish = false } = {}) {
+  if (!isCloudEnabled()) return;
+  accountDialogWantsPublish = publish;
+  const dialog = document.getElementById("modal-account");
+  if (!dialog) return;
+  const status = document.getElementById("cloud-login-status");
+  if (status) status.textContent = "";
+  if (!dialog.open) dialog.showModal();
+  document.getElementById("cloud-email")?.focus();
+}
+
+function closeAccountDialog() {
+  const dialog = document.getElementById("modal-account");
+  if (dialog?.open) dialog.close();
+}
+
+function closeAccountMenus() {
+  const chip = document.getElementById("account-chip");
+  if (chip) chip.open = false;
+  const more = document.getElementById("more-panel");
+  if (more) more.open = false;
+}
+
 function paintCloudShare() {
   const block = document.getElementById("cloud-share-block");
   if (!block) return;
   const enabled = cloudShareEnabled();
   block.hidden = !enabled;
-  const account = getCloudAccount();
-  const accountEl = document.getElementById("cloud-account");
-  const accountLabel = document.getElementById("cloud-account-label");
-  if (accountEl) accountEl.hidden = !enabled || !account.signedIn;
-  if (accountLabel) {
-    accountLabel.textContent = account.signedIn
-      ? account.email
-        ? t("share.cloud.signedIn", { email: account.email })
-        : t("share.cloud.signedInAnon")
-      : "";
-  }
-  const url = enabled ? project?.cloudShare?.url || "" : "";
+  const signedIn = enabled && getCloudAccount().signedIn;
+  const url = signedIn ? String(project?.cloudShare?.url || "") : "";
+  const guest = document.getElementById("cloud-share-guest");
+  const publishBtn = document.getElementById("btn-cloud-share");
   const result = document.getElementById("cloud-share-actions");
   const urlInput = document.getElementById("cloud-share-url");
+  if (guest) guest.hidden = !enabled || signedIn;
+  if (publishBtn) publishBtn.hidden = !signedIn || Boolean(url);
   if (result) result.hidden = !url;
   if (urlInput) urlInput.value = url;
-  const login = document.getElementById("cloud-login");
-  if (login && (!enabled || account.signedIn)) login.hidden = true;
-}
-
-function showCloudLogin() {
-  const login = document.getElementById("cloud-login");
-  if (!login || !cloudShareEnabled()) return;
-  login.hidden = false;
-  document.getElementById("cloud-email")?.focus();
+  paintAccount();
 }
 
 let resumeCloudPublishAfterLogin = async () => {};
@@ -619,9 +669,7 @@ function applyCloudAuthHref(href) {
 function showStashedAuthError() {
   const code = takeCloudAuthError();
   if (!code) return;
-  const panel = document.querySelector(".export-panel");
-  if (panel) panel.open = true;
-  showCloudLogin();
+  showAccountDialog();
   const status = document.getElementById("cloud-login-status");
   if (status) status.textContent = permanentShareErrorMessage({ error: code });
 }
@@ -630,13 +678,12 @@ async function finishCloudAuthCallback(callback) {
   if (!callback?.consumed) return;
   paintCloudShare();
   if (!callback.ok) {
-    const panel = document.querySelector(".export-panel");
-    if (panel) panel.open = true;
-    showCloudLogin();
+    showAccountDialog();
     const status = document.getElementById("cloud-login-status");
     if (status) status.textContent = permanentShareErrorMessage(callback);
     return;
   }
+  closeAccountDialog();
   await resumeCloudPublishAfterLogin({ delay: 800 });
 }
 
@@ -1040,7 +1087,7 @@ function bindChrome() {
   document.addEventListener("pointerdown", (e) => {
     document
       .querySelectorAll(
-        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.preview-menu[open]",
+        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.preview-menu[open], details.account-chip[open]",
       )
       .forEach((panel) => {
         if (!panel.contains(e.target)) panel.open = false;
@@ -1384,10 +1431,36 @@ function bindChrome() {
       toast(err?.message || t("share.errGeneric"));
     }
   });
+  document.getElementById("btn-account-signin")?.addEventListener("click", () => {
+    showAccountDialog();
+  });
+  document.getElementById("btn-menu-signin")?.addEventListener("click", () => {
+    closeAccountMenus();
+    showAccountDialog();
+  });
+  document.getElementById("btn-cloud-share-signin")?.addEventListener("click", () => {
+    showAccountDialog({ publish: Boolean(project?.id) });
+  });
+  document.getElementById("btn-account-signout")?.addEventListener("click", () => {
+    void signOutAccount();
+  });
+  document.getElementById("btn-menu-signout")?.addEventListener("click", () => {
+    void signOutAccount();
+  });
+  document.getElementById("btn-account-dialog-close")?.addEventListener("click", () => {
+    closeAccountDialog();
+  });
+  document.getElementById("modal-account")?.addEventListener("close", () => {
+    accountDialogWantsPublish = false;
+  });
+  document.getElementById("modal-account")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  });
+
   document.getElementById("btn-cloud-share")?.addEventListener("click", () => {
     if (!project || !cloudShareEnabled()) return;
     if (!getCloudAccount().signedIn) {
-      showCloudLogin();
+      showAccountDialog({ publish: true });
       return;
     }
     clearCloudPublishIntent();
@@ -1423,12 +1496,26 @@ function bindChrome() {
     }
   });
 
-  document.getElementById("btn-cloud-signout")?.addEventListener("click", async () => {
+  async function signOutAccount() {
     clearCloudPublishIntent();
+    accountDialogWantsPublish = false;
+    closeAccountMenus();
     await endCloudSession();
     paintCloudShare();
-    showCloudLogin();
-  });
+  }
+
+  async function afterAccountSignedIn() {
+    const publishNow = accountDialogWantsPublish;
+    accountDialogWantsPublish = false;
+    closeAccountDialog();
+    paintCloudShare();
+    if (publishNow && project?.id && cloudShareEnabled()) {
+      clearCloudPublishIntent();
+      await runCloudPublish();
+      return;
+    }
+    await resumeCloudPublishAfterLogin({ delay: 0 });
+  }
 
   resumeCloudPublishAfterLogin = async ({ delay = 0 } = {}) => {
     if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
@@ -1454,13 +1541,12 @@ function bindChrome() {
         forceKind,
       });
       if (!session.ok) {
+        showAccountDialog();
         const status = document.getElementById("cloud-login-status");
         if (status) status.textContent = permanentShareErrorMessage(session);
-        showCloudLogin();
         return;
       }
-      paintCloudShare();
-      await resumeCloudPublishAfterLogin({ delay: 0 });
+      await afterAccountSignedIn();
     })();
   });
 
@@ -1476,7 +1562,7 @@ function bindChrome() {
         if (status) status.textContent = permanentShareErrorMessage(result);
         return;
       }
-      if (project?.id) writeCloudPublishIntent(project.id);
+      if (accountDialogWantsPublish && project?.id) writeCloudPublishIntent(project.id);
       if (status) status.textContent = t("share.cloud.sent", { email: String(email).trim() });
     } catch (err) {
       console.error(err);
@@ -1501,9 +1587,7 @@ function bindChrome() {
       }
       const field = document.getElementById("cloud-password");
       if (field) field.value = "";
-      clearCloudPublishIntent();
-      paintCloudShare();
-      await runCloudPublish();
+      await afterAccountSignedIn();
     } catch (err) {
       console.error(err);
       if (status) status.textContent = t("share.cloud.network");
@@ -1527,9 +1611,7 @@ function bindChrome() {
       const paste = document.getElementById("cloud-paste");
       if (paste) paste.value = "";
       if (status) status.textContent = "";
-      clearCloudPublishIntent();
-      paintCloudShare();
-      await runCloudPublish();
+      await afterAccountSignedIn();
     } catch (err) {
       console.error(err);
       if (status) status.textContent = err?.message || t("share.cloud.network");
@@ -1546,8 +1628,7 @@ function bindChrome() {
       return;
     }
     if (!getCloudAccount().signedIn) {
-      if (exportPanel) exportPanel.open = true;
-      showCloudLogin();
+      showAccountDialog({ publish: true });
       return;
     }
     project.theme = formToTheme(project.theme);
@@ -1580,8 +1661,7 @@ function bindChrome() {
       if (err?.code === "unauthorized" || err?.status === 401) {
         await endCloudSession();
         paintCloudShare();
-        if (exportPanel) exportPanel.open = true;
-        showCloudLogin();
+        showAccountDialog({ publish: true });
         const status = document.getElementById("cloud-login-status");
         if (status) status.textContent = err?.message || t("share.cloud.unauthorized");
       }
