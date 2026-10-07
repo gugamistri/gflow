@@ -2913,7 +2913,7 @@ export function createEditor(ctx) {
     if (more) more.open = true;
     document
       .querySelectorAll(
-        ".topbar-tools details.theme-panel, .topbar-tools details.export-panel, .topbar-tools details.preview-menu",
+        "details.theme-panel, details.export-panel, details.preview-menu",
       )
       .forEach((el) => {
         if (el !== panel && el !== more) el.open = false;

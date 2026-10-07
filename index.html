@@ -67,155 +67,17 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/13/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/13/css/theme.css" />
-  <link rel="stylesheet" href="a/13/css/app.css" />
+  <link rel="stylesheet" href="a/14/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/14/css/theme.css" />
+  <link rel="stylesheet" href="a/14/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
-    <div class="topbar-brand">
-      <span class="logo">Guia<span>Flow</span></span>
-      <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
-        <button type="button" class="btn btn-ghost btn-nav-back" id="btn-projects" title="Projetos" data-i18n-title="topbar.projects">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-          <span data-i18n="topbar.projects">Projetos</span>
-        </button>
-        <span class="topbar-nav-sep" aria-hidden="true">/</span>
-        <span
-          class="topbar-project"
-          id="topbar-project"
-          hidden
-          title="Clique para renomear"
-          data-i18n-title="library.renameTitle"
-          role="button"
-          tabindex="0"
-        ></span>
-      </nav>
-      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
-    </div>
-    <div class="topbar-tools">
-      <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-          <span data-i18n="topbar.capture">Capturar</span>
-        </button>
-        <button type="button" class="btn btn-ghost btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
-        </button>
-        <button type="button" class="btn btn-ghost btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
-        </button>
-        <div class="preview-split">
-          <button type="button" class="btn btn-primary" id="btn-play-from" title="Preview (P)" data-i18n-title="toolbar.previewTitle">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-eye"></use></svg>
-            <span data-i18n="toolbar.preview">Preview</span>
-          </button>
-          <details class="preview-menu">
-            <summary class="btn btn-primary preview-menu-toggle" aria-label="Mais opções de preview" data-i18n-aria="toolbar.previewMore">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
-            </summary>
-            <div class="preview-menu-body">
-              <button type="button" class="preview-menu-option" id="btn-watch-from" title="Preview automático (Shift+P)" data-i18n-title="toolbar.autoPreviewTitle">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-                <span data-i18n="toolbar.autoPreview">Preview automático</span>
-              </button>
-            </div>
-          </details>
-        </div>
-        <details class="export-panel">
-          <summary>
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
-            <span data-i18n="topbar.share">Compartilhar</span>
-          </summary>
-          <div class="export-panel-body">
-            <p class="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
-            <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Preview temporário</strong>
-              <span data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
-            </button>
-            <div class="share-link-actions" id="share-link-actions" hidden>
-              <div class="share-link-meta">
-                <strong data-i18n="share.linkTitle">Preview temporário</strong>
-                <span data-i18n="share.linkReady">Link publicado</span>
-              </div>
-              <div class="share-link-row">
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                </button>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-update" title="Atualizar" aria-label="Atualizar" data-i18n-title="share.update" data-i18n-aria="share.update">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
-                </button>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                </button>
-              </div>
-            </div>
-            <div id="cloud-share-block" class="cloud-share-block" hidden>
-              <div id="cloud-share-guest" class="cloud-share-guest" hidden>
-                <p data-i18n="share.cloud.needAccount">Entre para publicar um link permanente.</p>
-                <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="account.signIn">Entrar</button>
-              </div>
-              <button type="button" class="export-option" id="btn-cloud-share" hidden>
-                <strong data-i18n="share.cloud.title">Link permanente</strong>
-                <span data-i18n="share.cloud.desc">Publicar link permanente</span>
-              </button>
-              <div class="cloud-share-result" id="cloud-share-actions" hidden>
-                <p class="cloud-share-heading" data-i18n="share.cloud.title">Link permanente</p>
-                <input id="cloud-share-url" type="text" readonly value="" data-i18n-aria="share.cloud.title" aria-label="Link permanente" />
-                <button type="button" class="btn btn-sm" id="btn-cloud-copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                  <span data-i18n="share.copy">Copiar</span>
-                </button>
-              </div>
-            </div>
-            <button type="button" class="export-option" id="btn-export-html">
-              <strong data-i18n="export.htmlTitle">HTML navegável</strong>
-              <span data-i18n="export.htmlDesc">Tour em um arquivo para percorrer os passos ou assistir no navegador.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-export-video">
-              <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
-              <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-export-json">
-              <strong data-i18n="export.jsonTitle">JSON</strong>
-              <span data-i18n="export.jsonDesc">Backup para reimportar neste editor.</span>
-            </button>
-          </div>
-        </details>
-      </div>
-      <div class="topbar-actions" id="topbar-actions-library">
-        <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-          <span data-i18n="topbar.capture">Capturar</span>
-        </button>
-        <button type="button" class="btn btn-ghost" id="btn-import-library">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-          <span data-i18n="topbar.import">Importar</span>
-        </button>
-        <button type="button" class="btn btn-primary" id="btn-new-project">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          <span data-i18n="topbar.newProject">Novo projeto</span>
-        </button>
-        <input type="file" id="import-file" accept="application/json,.json" hidden />
-      </div>
-      <div class="account-slot" id="account-slot" hidden>
-        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.signIn">Entrar</button>
-        <details class="account-chip" id="account-chip" hidden>
-          <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
-            <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
-          </summary>
-          <div class="account-chip-menu">
-            <p class="account-chip-email" id="account-chip-email"></p>
-            <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
-          </div>
-        </details>
-      </div>
       <details class="more-panel" id="more-panel">
-        <summary class="btn btn-ghost" aria-label="Mais" data-i18n-aria="topbar.more">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-more"></use></svg>
-          <span data-i18n="topbar.more">Mais</span>
+        <summary class="btn btn-ghost btn-icon" id="btn-menu" aria-label="Menu" aria-expanded="false" aria-controls="more-panel-body" data-i18n-aria="topbar.menu">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-menu"></use></svg>
         </summary>
-        <div class="more-panel-body">
+        <div class="more-panel-body" id="more-panel-body">
           <div class="more-row topbar-appearance">
             <label class="locale-select">
               <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
@@ -405,6 +267,135 @@
           </a>
         </div>
       </details>
+    <div class="topbar-brand">
+      <span class="logo">Guia<span>Flow</span></span>
+      <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
+        <button type="button" class="btn btn-ghost btn-nav-back" id="btn-projects" title="Projetos" data-i18n-title="topbar.projects">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+          <span data-i18n="topbar.projects">Projetos</span>
+        </button>
+        <span class="topbar-nav-sep" aria-hidden="true">/</span>
+        <span
+          class="topbar-project"
+          id="topbar-project"
+          hidden
+          title="Clique para renomear"
+          data-i18n-title="library.renameTitle"
+          role="button"
+          tabindex="0"
+        ></span>
+      </nav>
+      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
+    </div>
+    <div class="topbar-tools">
+      <div class="topbar-actions" id="topbar-actions-editor" hidden>
+        <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+          <span data-i18n="topbar.capture">Capturar</span>
+        </button>
+        <div class="preview-split">
+          <button type="button" class="btn btn-primary btn-icon" id="btn-play-from" title="Preview (P)" aria-label="Preview" data-i18n-title="toolbar.previewTitle" data-i18n-aria="toolbar.preview">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-preview"></use></svg>
+          </button>
+          <details class="preview-menu">
+            <summary class="btn btn-primary preview-menu-toggle" aria-label="Mais opções de preview" data-i18n-aria="toolbar.previewMore">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+            </summary>
+            <div class="preview-menu-body">
+              <button type="button" class="preview-menu-option" id="btn-watch-from" title="Preview automático (Shift+P)" data-i18n-title="toolbar.autoPreviewTitle">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
+                <span data-i18n="toolbar.autoPreview">Preview automático</span>
+              </button>
+            </div>
+          </details>
+        </div>
+        <details class="export-panel">
+          <summary class="btn-icon" aria-label="Compartilhar" title="Compartilhar" data-i18n-aria="topbar.share" data-i18n-title="topbar.share">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
+          </summary>
+          <div class="export-panel-body">
+            <p class="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
+            <button type="button" class="export-option" id="btn-share-publish">
+              <strong data-i18n="share.linkTitle">Preview temporário</strong>
+              <span data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
+            </button>
+            <div class="share-link-actions" id="share-link-actions" hidden>
+              <div class="share-link-meta">
+                <strong data-i18n="share.linkTitle">Preview temporário</strong>
+                <span data-i18n="share.linkReady">Link publicado</span>
+              </div>
+              <div class="share-link-row">
+                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                </button>
+                <button type="button" class="btn btn-sm btn-icon" id="btn-share-update" title="Atualizar" aria-label="Atualizar" data-i18n-title="share.update" data-i18n-aria="share.update">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
+                </button>
+                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                </button>
+              </div>
+            </div>
+            <div id="cloud-share-block" class="cloud-share-block" hidden>
+              <div id="cloud-share-guest" class="cloud-share-guest" hidden>
+                <p data-i18n="share.cloud.needAccount">Entre para publicar um link permanente.</p>
+                <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="account.signIn">Entrar</button>
+              </div>
+              <button type="button" class="export-option" id="btn-cloud-share" hidden>
+                <strong data-i18n="share.cloud.title">Link permanente</strong>
+                <span data-i18n="share.cloud.desc">Publicar link permanente</span>
+              </button>
+              <div class="cloud-share-result" id="cloud-share-actions" hidden>
+                <p class="cloud-share-heading" data-i18n="share.cloud.title">Link permanente</p>
+                <input id="cloud-share-url" type="text" readonly value="" data-i18n-aria="share.cloud.title" aria-label="Link permanente" />
+                <button type="button" class="btn btn-sm" id="btn-cloud-copy">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  <span data-i18n="share.copy">Copiar</span>
+                </button>
+              </div>
+            </div>
+            <button type="button" class="export-option" id="btn-export-html">
+              <strong data-i18n="export.htmlTitle">HTML navegável</strong>
+              <span data-i18n="export.htmlDesc">Tour em um arquivo para percorrer os passos ou assistir no navegador.</span>
+            </button>
+            <button type="button" class="export-option" id="btn-export-video">
+              <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
+              <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
+            </button>
+            <button type="button" class="export-option" id="btn-export-json">
+              <strong data-i18n="export.jsonTitle">JSON</strong>
+              <span data-i18n="export.jsonDesc">Backup para reimportar neste editor.</span>
+            </button>
+          </div>
+        </details>
+      </div>
+      <div class="topbar-actions" id="topbar-actions-library">
+        <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+          <span data-i18n="topbar.capture">Capturar</span>
+        </button>
+        <button type="button" class="btn btn-ghost" id="btn-import-library">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+          <span data-i18n="topbar.import">Importar</span>
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-new-project">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+          <span data-i18n="topbar.newProject">Novo projeto</span>
+        </button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden />
+      </div>
+      <div class="account-slot" id="account-slot" hidden>
+        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.signIn">Entrar</button>
+        <details class="account-chip" id="account-chip" hidden>
+          <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
+            <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
+          </summary>
+          <div class="account-chip-menu">
+            <p class="account-chip-email" id="account-chip-email"></p>
+            <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
+          </div>
+        </details>
+      </div>
     </div>
   </header>
 
@@ -503,6 +494,14 @@
           <button type="button" class="btn btn-sm" id="btn-paste-step" title="Colar (⌘V)" data-i18n-title="toolbar.pasteTitle">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-paste"></use></svg>
             <span data-i18n="toolbar.paste">Colar</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
+            <span data-i18n="topbar.undo">Desfazer</span>
+          </button>
+          <button type="button" class="btn btn-sm" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
+            <span data-i18n="topbar.redo">Refazer</span>
           </button>
         </div>
       </div>
@@ -1010,6 +1009,14 @@
     <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 5v14M5 12h14"/>
     </symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 7h16M4 12h16M4 17h16"/>
+    </symbol>
+    <symbol id="i-preview" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 3h16"/>
+      <path d="M6 3v10h12V3"/>
+      <path d="m8 21 4-6 4 6"/>
+    </symbol>
     <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
     </symbol>
@@ -1158,7 +1165,7 @@
     </symbol>
   </svg>
 
-  <script src="a/13/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/13/js/app.js"></script>
+  <script src="a/14/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/14/js/app.js"></script>
 </body>
 </html>
