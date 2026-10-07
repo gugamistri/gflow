@@ -2,6 +2,19 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "guiaflow-seven.vercel.app"
+        }
+      ],
+      "destination": "https://guiaflow.pro/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/a/:version/:path*", "destination": "/:path*" },
     { "source": "/v/:id", "destination": "/api/v/:id" }

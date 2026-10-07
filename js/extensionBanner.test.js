@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { canOfferChromeExtension, shouldShowExtensionBanner } from "./extensionBanner.js";
 
@@ -57,6 +58,34 @@ test("oferece a extensão só em Chromium desktop", () => {
       maxTouchPoints: 0,
     }),
     false
+  );
+});
+
+test("guiaflow.pro recebe o script de presença e o aviso some quando ele dispara", () => {
+  const manifest = JSON.parse(
+    readFileSync(new URL("../extension/manifest.json", import.meta.url), "utf8")
+  );
+  const presence = manifest.content_scripts.find((script) => script.js?.includes("presence.js"));
+  assert.ok(presence);
+  assert.ok(presence.matches.includes("https://guiaflow.pro/*"));
+  assert.ok(presence.matches.includes("http://localhost:4173/*"));
+  assert.equal(
+    shouldShowExtensionBanner({
+      dismissed: false,
+      isDesktop: false,
+      installed: true,
+      canOffer: true,
+    }),
+    false
+  );
+  assert.equal(
+    shouldShowExtensionBanner({
+      dismissed: false,
+      isDesktop: false,
+      installed: false,
+      canOffer: true,
+    }),
+    true
   );
 });
 
