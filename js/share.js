@@ -250,11 +250,7 @@ export async function publishPermanentShare(project, { onProgress, env, buildSna
   };
 }
 
-export async function copyText(text) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
+function copyWithTextarea(text) {
   const ta = document.createElement("textarea");
   ta.value = text;
   ta.setAttribute("readonly", "");
@@ -262,6 +258,19 @@ export async function copyText(text) {
   ta.style.left = "-9999px";
   document.body.appendChild(ta);
   ta.select();
-  document.execCommand("copy");
+  const ok = document.execCommand("copy");
   document.body.removeChild(ta);
+  if (!ok) throw new Error(t("share.errGeneric"));
+}
+
+export async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    // why: o Clipboard API rejeita sem foco; o textarea ainda copia
+  }
+  copyWithTextarea(text);
 }

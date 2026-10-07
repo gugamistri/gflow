@@ -1365,7 +1365,10 @@ function bindChrome() {
       toast(t("toast.cloudCopied"));
     } catch (err) {
       console.error(err);
-      toast(err?.message || t("share.cloud.generic"));
+      const field = document.getElementById("cloud-share-url");
+      field?.focus();
+      field?.select();
+      toast(t("toast.cloudCopyFail"));
     }
   });
 

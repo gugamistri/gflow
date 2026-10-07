@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { setLocale } from "./i18n.js";
-import { permanentShareErrorMessage, publishPermanentShare } from "./share.js";
+import { copyText, permanentShareErrorMessage, publishPermanentShare } from "./share.js";
 
 setLocale("pt", { persist: false });
 
@@ -14,6 +14,45 @@ function project() {
     steps: [{ title: "Um" }],
   };
 }
+
+test("copyText cai no textarea quando o clipboard rejeita", async () => {
+  const prevNav = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  const prevDoc = globalThis.document;
+  let stored = "";
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: {
+      clipboard: {
+        writeText: async () => {
+          throw new Error("Document is not focused");
+        },
+      },
+    },
+  });
+  globalThis.document = {
+    createElement() {
+      const el = { style: {} };
+      el.setAttribute = () => {};
+      el.select = () => {};
+      Object.defineProperty(el, "value", {
+        get() { return stored; },
+        set(v) { stored = String(v); },
+      });
+      return el;
+    },
+    body: { appendChild() {}, removeChild() {} },
+    execCommand() { return true; },
+  };
+  try {
+    await copyText("https://guiaflow.pro/v/slug-teste");
+    assert.equal(stored, "https://guiaflow.pro/v/slug-teste");
+  } finally {
+    if (prevNav) Object.defineProperty(globalThis, "navigator", prevNav);
+    else delete globalThis.navigator;
+    if (prevDoc === undefined) delete globalThis.document;
+    else globalThis.document = prevDoc;
+  }
+});
 
 test("sem URL base o link permanente não chama a rede", async () => {
   const prev = globalThis.fetch;
