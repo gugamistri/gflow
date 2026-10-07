@@ -1,10 +1,10 @@
 # GuiaFlow Cloud
 
-Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A API Cloud só é chamada quando há um URL base configurado.
+Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A nuvem só é chamada quando há um URL base configurado.
 
 O editor público está em [https://guiaflow.pro](https://guiaflow.pro). O host antigo `guiaflow-seven.vercel.app` redireciona para esse domínio, preservando caminho e query.
 
-**Operadores:** a base HTTP da nuvem não entra na interface. Fica em `window.__GUIAFLOW_CLOUD__` (`https://api.guiaflow.pro`). A cópia do produto fala em GuiaFlow e guiaflow.pro.
+**Operadores:** a base HTTP da nuvem não entra na interface. Fica em `window.__GUIAFLOW_CLOUD__` (`https://app.guiaflow.pro`). O apex `guiaflow.pro` continua a ser o editor gratuito. A cópia do produto fala em GuiaFlow e guiaflow.pro.
 
 ## Promessa
 
@@ -43,7 +43,7 @@ O URL base vem de um destes lugares (endereço, nunca chave):
 2. `<meta name="guiaflow-cloud-base" content="https://…">`
 3. `localStorage["guiaflow.cloud.baseUrl"]`
 
-No editor publicado (`guiaflow.pro`) a página define `window.__GUIAFLOW_CLOUD__ = "https://api.guiaflow.pro"` quando ninguém definiu antes. O mesmo vale se o HTML ainda for servido em `guiaflow-seven.vercel.app`, antes do redirecionamento. Em `localhost` e no app desktop isso não acontece: o preview no Blob continua a ser o único caminho.
+No editor publicado (`guiaflow.pro`) a página define `window.__GUIAFLOW_CLOUD__ = "https://app.guiaflow.pro"` quando ninguém definiu antes. O mesmo vale se o HTML ainda for servido em `guiaflow-seven.vercel.app`, antes do redirecionamento. Um global já definido — por exemplo o host anterior — fica como está. Meta e `localStorage["guiaflow.cloud.baseUrl"]` valem quando o global não está definido. Em `localhost` e no app desktop a página não injeta base: o preview no Blob continua a ser o único caminho.
 
 Userinfo, query e hash são descartados. Um valor que não seja `http:` ou `https:` conta como ausente.
 
@@ -83,7 +83,7 @@ O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JS
 
 Esta secção não é cópia de produto. O host abaixo é a base HTTP; a pessoa que usa o editor não o vê.
 
-`AUTH_BASE_URL` continua a ser a base dos pedidos do servidor (`https://api.guiaflow.pro`). O link do email **não** pode abrir esse host nem uma página que se apresente como «API». Tem de voltar ao editor.
+`AUTH_BASE_URL` é a base dos pedidos do servidor (`https://app.guiaflow.pro`). O link do email volta ao editor em `https://guiaflow.pro/auth/callback`. Não abre essa base nem uma página que se apresente como «API».
 
 Contrato alinhado ao PR `guiaflow-cloud` #5. Depois de confirmar o link mágico ou de entrar com senha, o browser abre:
 
@@ -129,4 +129,4 @@ Um email antigo que ainda aponte para `{AUTH_BASE_URL}/auth/verify?token=` conti
 
 **GuiaFlow Cloud** is a private companion (not part of this MIT repo; product name `guiaflow-cloud`). It may later add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics.
 
-With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://api.guiaflow.pro` for operators; that host is not shown in the product UI. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips the magic link and publishes immediately («Connected as …»). Otherwise `POST /auth/magic-link` sends `{ email, redirect }` with `redirect` ending in `/auth/callback`. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. Returning users can `POST /auth/login` with email and password. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged.
+With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://app.guiaflow.pro` for operators; that host is not shown in the product UI. Apex `guiaflow.pro` stays the free editor. A global set earlier stays in place, including a previous host. Meta and `guiaflow.cloud.baseUrl` apply when the global is unset. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips the magic link and publishes immediately («Connected as …»). Otherwise `POST /auth/magic-link` sends `{ email, redirect }` with `redirect` ending in `/auth/callback`. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. Returning users can `POST /auth/login` with email and password. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged.
