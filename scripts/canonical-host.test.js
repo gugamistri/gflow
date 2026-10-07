@@ -4,16 +4,26 @@ import test from "node:test";
 
 const config = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
 
-test("guiaflow-seven.vercel.app redireciona em definitivo para guiaflow.pro", () => {
-  const redirects = config.redirects || [];
-  const rule = redirects.find((entry) =>
-    entry.has?.some((cond) => cond.type === "host" && cond.value === "guiaflow-seven.vercel.app")
+function legacyHostRedirect(source) {
+  return (config.redirects || []).find(
+    (entry) =>
+      entry.source === source &&
+      entry.has?.some((cond) => cond.type === "host" && cond.value === "guiaflow-seven.vercel.app")
   );
-  assert.ok(rule, "falta o redirect condicionado ao host antigo");
-  assert.equal(rule.source, "/:path*");
-  assert.equal(rule.destination, "https://guiaflow.pro/:path*");
-  assert.equal(rule.permanent, true);
-  assert.equal(rule.destination.includes("?"), false);
+}
+
+test("guiaflow-seven.vercel.app redireciona a raiz e os demais caminhos", () => {
+  // why: com cleanUrls, /:path* não casa com / e a home antiga continua em 200
+  const root = legacyHostRedirect("/");
+  const paths = legacyHostRedirect("/:path*");
+  assert.ok(root, "falta o redirect da raiz");
+  assert.ok(paths, "falta o redirect /:path*");
+  assert.equal(root.destination, "https://guiaflow.pro/");
+  assert.equal(root.permanent, true);
+  assert.equal(root.destination.includes("?"), false);
+  assert.equal(paths.destination, "https://guiaflow.pro/:path*");
+  assert.equal(paths.permanent, true);
+  assert.equal(paths.destination.includes("?"), false);
 });
 
 test("o redirect não pega guiaflow.pro e o rewrite /v continua", () => {
