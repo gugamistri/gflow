@@ -581,11 +581,11 @@ function paintCloudShare() {
   if (urlInput) urlInput.value = url;
   const login = document.getElementById("cloud-login");
   if (login && (!enabled || account.signedIn)) login.hidden = true;
+  const verify = cloudVerifyUrl();
   const openSite = document.getElementById("cloud-open-site");
-  if (openSite) {
-    const href = cloudVerifyUrl();
-    if (href) openSite.href = href;
-  }
+  if (openSite && verify) openSite.href = verify;
+  const paste = document.getElementById("cloud-paste");
+  if (paste && verify) paste.placeholder = `${verify}?token=…`;
 }
 
 function showCloudLogin() {
