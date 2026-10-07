@@ -32,4 +32,26 @@ export function tabMatchesOrigin(tabUrl, origin) {
   }
 }
 
-export const DEFAULT_EDITOR_ORIGIN = "https://guiaflow-seven.vercel.app";
+/** Produção antiga. Quem ainda tem isso salvo passa a abrir o domínio canônico. */
+export const LEGACY_EDITOR_ORIGIN = "https://guiaflow-seven.vercel.app";
+
+export const DEFAULT_EDITOR_ORIGIN = "https://guiaflow.pro";
+
+/**
+ * Onde o content script de presença e as host permissions precisam valer.
+ * O manifest.json repete esta lista; o teste impede que os dois se afastem.
+ * www.guiaflow.pro não está no projeto da Vercel, então não entra aqui.
+ */
+export const EDITOR_CONTENT_MATCHES = [
+  `${DEFAULT_EDITOR_ORIGIN}/*`,
+  `${LEGACY_EDITOR_ORIGIN}/*`,
+  "http://localhost:4173/*",
+  "http://127.0.0.1:4173/*",
+];
+
+/** Origem gravada na extensão. Vazio ou o host antigo viram guiaflow.pro. */
+export function resolveEditorOrigin(raw) {
+  const normalized = normalizeEditorOrigin(raw);
+  if (!normalized || normalized === LEGACY_EDITOR_ORIGIN) return DEFAULT_EDITOR_ORIGIN;
+  return normalized;
+}

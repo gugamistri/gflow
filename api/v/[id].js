@@ -12,7 +12,7 @@ const { renderViewPage } = require("../lib/view-shell.cjs");
 
 function requestOrigin(req) {
   const proto = (req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
-  const host = (req.headers["x-forwarded-host"] || req.headers.host || "guiaflow-seven.vercel.app")
+  const host = (req.headers["x-forwarded-host"] || req.headers.host || "guiaflow.pro")
     .split(",")[0]
     .trim();
   return `${proto}://${host}`;
