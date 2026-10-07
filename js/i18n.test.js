@@ -39,20 +39,22 @@ test("métricas do editor existem em pt, es e en", () => {
   assert.match(catalogs.en["editor.metricsMany"], /\{n\} steps · \{time\}/);
 });
 
-test("o painel da nuvem não mostra o host da API", () => {
+test("o diálogo de entrada não mostra o host da API", () => {
   for (const loc of SUPPORTED_LOCALES) {
     for (const [key, value] of Object.entries(catalogs[loc])) {
-      if (!key.startsWith("share.cloud.")) continue;
+      if (!key.startsWith("share.cloud.") && !key.startsWith("account.")) continue;
       assert.equal(/api\.guiaflow\.pro/i.test(value), false, `${loc} ${key}`);
       assert.equal(/\bAPI\b/.test(value), false, `${loc} ${key}`);
+      assert.equal(/nuvem|nube|\bcloud\b/i.test(value), false, `${loc} ${key}: ${value}`);
     }
     assert.match(catalogs[loc]["share.cloud.sent"], /email/i);
     assert.match(catalogs[loc]["share.cloud.signedIn"], /\{email\}/);
+    assert.equal(catalogs[loc]["account.signOut"].toLowerCase().includes("nuvem"), false);
     assert.equal(catalogs[loc]["share.cloud.openSite"], undefined);
   }
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-  const start = html.indexOf('id="cloud-login"');
-  const end = html.indexOf('id="btn-export-html"');
+  const start = html.indexOf('id="modal-account"');
+  const end = html.indexOf("</dialog>", start);
   const panel = html.slice(start, end);
   assert.ok(start > 0 && end > start);
   assert.equal(/api\.guiaflow\.pro/i.test(panel), false);
@@ -60,6 +62,12 @@ test("o painel da nuvem não mostra o host da API", () => {
   assert.equal(panel.includes("cloud-open-site"), false);
   assert.match(panel, /link de confirmação do GuiaFlow/);
   assert.match(panel, /O link abriu noutro aparelho/);
+  const shareStart = html.indexOf('id="cloud-share-block"');
+  const shareEnd = html.indexOf('id="btn-export-html"');
+  const share = html.slice(shareStart, shareEnd);
+  assert.equal(/nuvem|nube|Conectado como|Sair da nuvem/i.test(share), false);
+  assert.equal(share.includes("cloud-account"), false);
+  assert.equal(share.includes('id="cloud-login"'), false);
 });
 
 test("catálogos compartilham as mesmas chaves", () => {
