@@ -1,8 +1,8 @@
 import { buildDemoPayload, nextClickAction, pointFromClick } from "./lib/demo-payload.js";
 import {
   DEFAULT_EDITOR_ORIGIN,
-  normalizeEditorOrigin,
   originToMatchPattern,
+  resolveEditorOrigin,
   tabMatchesOrigin,
 } from "./lib/editor-origin.js";
 import { setLocale, resolveLocale, getLocale, t } from "./lib/i18n.js";
@@ -51,7 +51,7 @@ async function loadSettings() {
   const stored = await chrome.storage.local.get(SETTINGS_KEY);
   const raw = stored[SETTINGS_KEY] || {};
   settings = {
-    editorOrigin: normalizeEditorOrigin(raw.editorOrigin) || DEFAULT_EDITOR_ORIGIN,
+    editorOrigin: resolveEditorOrigin(raw.editorOrigin),
     projectName: typeof raw.projectName === "string" ? raw.projectName : "",
   };
   return settings;
@@ -64,7 +64,7 @@ async function saveSession() {
 
 async function saveSettings(next) {
   settings = {
-    editorOrigin: normalizeEditorOrigin(next.editorOrigin) || DEFAULT_EDITOR_ORIGIN,
+    editorOrigin: resolveEditorOrigin(next.editorOrigin),
     projectName: String(next.projectName || "").trim(),
   };
   await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
