@@ -2,7 +2,9 @@
 
 Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A API Cloud só é chamada quando há um URL base configurado.
 
-O editor público está em [https://guiaflow.pro](https://guiaflow.pro). O host antigo `guiaflow-seven.vercel.app` redireciona para esse domínio, preservando caminho e query. A API Cloud está em [https://api.guiaflow.pro](https://api.guiaflow.pro).
+O editor público está em [https://guiaflow.pro](https://guiaflow.pro). O host antigo `guiaflow-seven.vercel.app` redireciona para esse domínio, preservando caminho e query.
+
+**Operadores:** a base HTTP da nuvem não entra na interface. Fica em `window.__GUIAFLOW_CLOUD__` (`https://api.guiaflow.pro`). A cópia do produto fala em GuiaFlow e guiaflow.pro.
 
 ## Promessa
 
@@ -33,7 +35,7 @@ O preview de 7 dias em `publishShareLink` (`js/share.js`) não muda. O link perm
 
 ## Hooks
 
-`js/cloudConfig.js` lê o URL base e, se ele existir, `cloudFetch` fala com essa API. Não há Stripe, `AUTH_SECRET` nem chave de API neste repositório. O bearer da sessão fica só no `localStorage` do navegador (`guiaflow.cloud.session`).
+`js/cloudConfig.js` lê o URL base e, se ele existir, `cloudFetch` fala com essa base. Não há Stripe, `AUTH_SECRET` nem chave secreta neste repositório. O bearer da sessão fica só no `localStorage` do navegador (`guiaflow.cloud.session`).
 
 O URL base vem de um destes lugares (endereço, nunca chave):
 
@@ -60,14 +62,64 @@ Flags: `hostedAi`, `tts`, `permanentShare`, `branding`, `analytics`.
 
 No menu **Compartilhar**, com a nuvem ligada:
 
-1. **Preview temporário** — o fluxo Blob de 7 dias, como antes.
+1. **Preview temporário** — o fluxo Blob de 7 dias, como antes. Não muda.
 2. **Link permanente** — **Compartilhar na nuvem**.
 
-Se não houver sessão, o painel pede o email (`POST /auth/magic-link`) e o link que chega no email. O editor confirma com `POST /auth/verify` e guarda o JWT. A página `https://api.guiaflow.pro/auth/verify` também entra na conta, mas a sessão dela fica no host da API; por isso a publicação continua quando o link do email é colado aqui.
+Se `localStorage["guiaflow.cloud.session"]` já tem um access token que ainda vale (JWT com `exp` no futuro, ou token opaco sem `exp`), o painel mostra «Conectado como {email}» e o clique publica direto. Não pede email nem para colar um link.
 
-Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` (`https://api.guiaflow.pro/v/{slug}`) com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Cloud». `401` pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
+Sem sessão, o painel pede o email e chama `POST /auth/magic-link` com `{ email, redirect }`. `redirect` é `https://guiaflow.pro/auth/callback` no site publicado (noutra origem de desenvolvimento, a mesma origem com esse caminho). Depois do envio: «Enviamos um link para {email}. Abra o email e confirme para entrar.»
+
+Quem já tem senha abre «Entrar com senha». O editor chama `POST /auth/login` com `{ email, password }`. Se a resposta trouxer `accessToken`, a sessão fica gravada na hora. Se trouxer `code` ou um URL de regresso, vale o mesmo passo abaixo.
+
+O browser, depois de confirmar o email ou de entrar com senha na nuvem, abre `https://guiaflow.pro/auth/callback?code=…`. O code é de uso único e dura cerca de 2 minutos. `auth/callback.html` faz `POST {base}/auth/callback` com `{ code }`, grava `accessToken` em `guiaflow.cloud.session` e volta à raiz do editor (`location.replace`). O code não fica na barra. Se a troca falhar, a raiz mostra o erro no painel. Com intenção de publicar ainda válida, a raiz continua o link permanente. Outra aba do mesmo navegador ouve `storage` e também pode publicar; só uma reclama a intenção.
+
+Noutro aparelho, «O link abriu noutro aparelho?» ainda aceita colar um link antigo. Esse atalho não é o caminho principal.
+
+Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` que a nuvem devolve, com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Cloud». `401` apaga a sessão e pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
 
 O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JSON local não depende da nuvem.
+
+## Contrato para operadores (`guiaflow-cloud`)
+
+Esta secção não é cópia de produto. O host abaixo é a base HTTP; a pessoa que usa o editor não o vê.
+
+`AUTH_BASE_URL` continua a ser a base dos pedidos do servidor (`https://api.guiaflow.pro`). O link do email **não** pode abrir esse host nem uma página que se apresente como «API». Tem de voltar ao editor.
+
+Contrato alinhado ao PR `guiaflow-cloud` #5. Depois de confirmar o link mágico ou de entrar com senha, o browser abre:
+
+`https://guiaflow.pro/auth/callback?code={code}`
+
+O code é de uso único e expira em cerca de 2 minutos. O editor não mostra o host da base HTTP.
+
+`POST /auth/magic-link`
+
+```json
+{ "email": "pessoa@example.com", "redirect": "https://guiaflow.pro/auth/callback" }
+```
+
+`POST /auth/login` (quem já tem senha, a partir do editor)
+
+```json
+{ "email": "pessoa@example.com", "password": "…" }
+```
+
+Resposta com sessão direta: `{ "accessToken": "…", "user": { "email": "…" } }`. Em alternativa, `{ "code": "…" }` ou `{ "redirect": "https://guiaflow.pro/auth/callback?code=…" }`. `401` é email ou senha incorretos.
+
+`POST /auth/callback`
+
+```json
+{ "code": "…" }
+```
+
+Resposta: `{ "accessToken": "…", "user": { "email": "…" } }`. O editor grava só isso em `localStorage["guiaflow.cloud.session"]` e substitui o endereço por `https://guiaflow.pro/`.
+
+`redirect`, quando a nuvem o honrar, só pode ser a origem do editor mais `/auth/callback`. Allowlist (qualquer outra origem é open redirect — responder `400` e não redirecionar):
+
+- `https://guiaflow.pro/auth/callback`
+- `https://guiaflow-seven.vercel.app/auth/callback` (legado; redireciona para o apex e preserva a query)
+- `http://localhost` e `http://127.0.0.1`, com qualquer porta, só em desenvolvimento
+
+Um email antigo que ainda aponte para `{AUTH_BASE_URL}/auth/verify?token=` continua a poder ser colado no atalho do editor. A interface não mostra esse endereço.
 
 ## English
 
@@ -77,4 +129,4 @@ O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JS
 
 **GuiaFlow Cloud** is a private companion (not part of this MIT repo; product name `guiaflow-cloud`). It may later add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics.
 
-With no Cloud API base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets the Cloud API base URL to `https://api.guiaflow.pro`; localhost and the desktop app stay Blob-only. Permanent share URLs are `https://api.guiaflow.pro/v/{slug}`. `cloudFetch` performs the permanent-share and magic-link calls. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged.
+With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://api.guiaflow.pro` for operators; that host is not shown in the product UI. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips the magic link and publishes immediately («Connected as …»). Otherwise `POST /auth/magic-link` sends `{ email, redirect }` with `redirect` ending in `/auth/callback`. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. Returning users can `POST /auth/login` with email and password. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged.
