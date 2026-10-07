@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   CLOUD_AUTH_MESSAGE_TYPE,
@@ -6,6 +7,7 @@ import {
   CLOUD_GLOBAL_KEY,
   CLOUD_PENDING_PUBLISH_KEY,
   CLOUD_SESSION_KEY,
+  PUBLISHED_CLOUD_BASE,
   callCloud,
   claimCloudPublishIntent,
   cloudAuthMessageOrigins,
@@ -175,10 +177,11 @@ test("meta ganha do storage quando o global não tem URL", () => {
   );
 });
 
-test("hosts publicados resolvem a API e o link mágico", () => {
+test("hosts publicados resolvem a nuvem e o link mágico", () => {
+  assert.equal(PUBLISHED_CLOUD_BASE, "https://app.guiaflow.pro");
   for (const hostname of ["guiaflow.pro", "guiaflow-seven.vercel.app", "GUIAFLOW.PRO."]) {
-    assert.equal(getCloudBaseUrl({ hostname }), "https://api.guiaflow.pro");
-    assert.equal(cloudVerifyUrl({ hostname }), "https://api.guiaflow.pro/auth/verify");
+    assert.equal(getCloudBaseUrl({ hostname }), "https://app.guiaflow.pro");
+    assert.equal(cloudVerifyUrl({ hostname }), "https://app.guiaflow.pro/auth/verify");
     assert.equal(isCloudEnabled({ hostname }), true);
   }
   assert.equal(getCloudBaseUrl({ hostname: "localhost" }), "");
@@ -190,13 +193,45 @@ test("hosts publicados resolvem a API e o link mágico", () => {
     "https://override.example"
   );
   const prev = globalThis[CLOUD_GLOBAL_KEY];
-  globalThis[CLOUD_GLOBAL_KEY] = "https://api.guiaflow.pro";
+  globalThis[CLOUD_GLOBAL_KEY] = "https://app.guiaflow.pro";
   try {
-    assert.equal(getCloudBaseUrl(), "https://api.guiaflow.pro");
-    assert.equal(cloudVerifyUrl(), "https://api.guiaflow.pro/auth/verify");
+    assert.equal(getCloudBaseUrl(), "https://app.guiaflow.pro");
+    assert.equal(cloudVerifyUrl(), "https://app.guiaflow.pro/auth/verify");
   } finally {
     if (prev === undefined) delete globalThis[CLOUD_GLOBAL_KEY];
     else globalThis[CLOUD_GLOBAL_KEY] = prev;
+  }
+});
+
+test("override local com o host anterior da nuvem continua a valer", () => {
+  const legacy = "https://api.guiaflow.pro";
+  assert.equal(
+    getCloudBaseUrl({ hostname: "guiaflow.pro", globalValue: legacy }),
+    legacy
+  );
+  assert.equal(
+    getCloudBaseUrl({ hostname: "guiaflow.pro", globalValue: "", storageValue: `${legacy}/` }),
+    legacy
+  );
+  assert.equal(cloudVerifyUrl({ baseUrl: legacy }), `${legacy}/auth/verify`);
+  const origins = cloudAuthMessageOrigins({ baseUrl: legacy });
+  assert.equal(origins.has(legacy), true);
+  assert.deepEqual(parseCloudLoginPaste(`  ${legacy}/auth/verify?token=once-token  `), {
+    kind: "magic",
+    token: "once-token",
+  });
+});
+
+test("o HTML publicado define a nuvem em app.guiaflow.pro e os assets em a/12", () => {
+  for (const file of ["../index.html", "../auth/callback.html"]) {
+    const html = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(html, /__GUIAFLOW_CLOUD__ = "https:\/\/app\.guiaflow\.pro"/);
+    assert.equal(html.includes("api.guiaflow.pro"), false);
+  }
+  for (const file of ["../index.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
+    const text = readFileSync(new URL(file, import.meta.url), "utf8");
+    assert.match(text, /a\/12\//);
+    assert.equal(text.includes("a/11/"), false);
   }
 });
 
@@ -233,25 +268,25 @@ test("cloudFetch recusa caminho absoluto e manda o bearer só no header", async 
     return {
       ok: true,
       status: 200,
-      json: async () => ({ ok: true, url: "https://api.guiaflow.pro/v/abc" }),
+      json: async () => ({ ok: true, url: "https://app.guiaflow.pro/v/abc" }),
     };
   };
   try {
     writeCloudSession({ accessToken: "sess-token", email: "a@b.co" });
     assert.deepEqual(getCloudAccount(), { signedIn: true, email: "a@b.co" });
     const blocked = await cloudFetch("https://evil.example/shares", { method: "POST" }, {
-      baseUrl: "https://api.guiaflow.pro",
+      baseUrl: "https://app.guiaflow.pro",
     });
     assert.equal(blocked.ok, false);
     assert.equal(blocked.error, "invalid_path");
-    const ok = await cloudFetch("/shares", { method: "POST", body: "{}" }, { baseUrl: "https://api.guiaflow.pro" });
+    const ok = await cloudFetch("/shares", { method: "POST", body: "{}" }, { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(ok.ok, true);
     assert.equal(fetchCalls.length, 1);
-    assert.equal(fetchCalls[0].url, "https://api.guiaflow.pro/shares");
+    assert.equal(fetchCalls[0].url, "https://app.guiaflow.pro/shares");
     assert.equal(fetchCalls[0].authorization, "Bearer sess-token");
     assert.equal(fetchCalls[0].url.includes("sess-token"), false);
     const anon = await cloudFetch("/auth/magic-link", { method: "POST", auth: false, body: "{}" }, {
-      baseUrl: "https://api.guiaflow.pro",
+      baseUrl: "https://app.guiaflow.pro",
     });
     assert.equal(anon.ok, true);
     assert.equal(fetchCalls[1].authorization, null);
@@ -271,13 +306,13 @@ test("parse do link mágico e pedido sem email não saem da máquina", async () 
     throw new Error("network");
   };
   try {
-    assert.deepEqual(parseCloudLoginPaste("  https://api.guiaflow.pro/auth/verify?token=once-token  "), {
+    assert.deepEqual(parseCloudLoginPaste("  https://app.guiaflow.pro/auth/verify?token=once-token  "), {
       kind: "magic",
       token: "once-token",
     });
     assert.equal(parseCloudLoginPaste("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.c2ln").kind, "bearer");
     assert.equal(parseCloudLoginPaste("não é token"), null);
-    const bad = await requestMagicLink("sem-arroba", { baseUrl: "https://api.guiaflow.pro" });
+    const bad = await requestMagicLink("sem-arroba", { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(bad.error, "invalid_email");
     assert.equal(called, 0);
   } finally {
@@ -310,8 +345,8 @@ test("verificar o link grava o JWT e não o token de uso único", async () => {
   };
   try {
     const session = await establishCloudSession(
-      "https://api.guiaflow.pro/auth/verify?token=once-token",
-      { baseUrl: "https://api.guiaflow.pro" }
+      "https://app.guiaflow.pro/auth/verify?token=once-token",
+      { baseUrl: "https://app.guiaflow.pro" }
     );
     assert.deepEqual(session, { ok: true, email: "ana@example.com" });
     const stored = JSON.parse(mem.get(CLOUD_SESSION_KEY));
@@ -402,7 +437,7 @@ test("o link mágico volta ao editor e o callback não deixa o token no URL", as
     );
     const sent = await requestMagicLink(
       "ana@example.com",
-      { baseUrl: "https://api.guiaflow.pro" },
+      { baseUrl: "https://app.guiaflow.pro" },
       { redirect: "https://guiaflow.pro/?next=1#x" }
     );
     assert.equal(sent.ok, true);
@@ -421,7 +456,7 @@ test("o link mágico volta ao editor e o callback não deixa o token no URL", as
       { kind: "magic", token: "once-token-editor" }
     );
 
-    const done = await completeCloudAuthCallback(href, { baseUrl: "https://api.guiaflow.pro" });
+    const done = await completeCloudAuthCallback(href, { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(done.ok, true);
     assert.equal(done.consumed, true);
     assert.equal(done.email, "ana@example.com");
@@ -486,7 +521,7 @@ test("o code de /auth/callback vira sessão e a senha também", async () => {
     assert.equal(readAuthCallbackCode(href), "once-code");
     assert.equal(readAuthCallbackCode("https://guiaflow.pro/?code=once-code"), "");
     assert.equal(editorHomeFromCallback(href), "https://guiaflow.pro/?lang=pt#stay=1");
-    const done = await completeCloudAuthCallback(href, { baseUrl: "https://api.guiaflow.pro" });
+    const done = await completeCloudAuthCallback(href, { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(done.ok, true);
     assert.equal(done.consumed, true);
     assert.equal(done.email, "ana@example.com");
@@ -494,21 +529,21 @@ test("o code de /auth/callback vira sessão e a senha também", async () => {
     assert.equal(done.href.includes("/auth/callback"), false);
     assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-from-code");
     assert.equal(calls[0].auth, null);
-    assert.equal(calls[0].path, "https://api.guiaflow.pro/auth/callback");
+    assert.equal(calls[0].path, "https://app.guiaflow.pro/auth/callback");
 
     store.mem.delete(CLOUD_SESSION_KEY);
-    const bad = await loginWithPassword("ana@example.com", "errada", { baseUrl: "https://api.guiaflow.pro" });
+    const bad = await loginWithPassword("ana@example.com", "errada", { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(bad.error, "invalid_credentials");
     assert.equal(store.mem.has(CLOUD_SESSION_KEY), false);
-    const empty = await loginWithPassword("ana@example.com", "", { baseUrl: "https://api.guiaflow.pro" });
+    const empty = await loginWithPassword("ana@example.com", "", { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(empty.error, "invalid_credentials");
     assert.equal(calls.length, 2);
 
-    const pass = await loginWithPassword("ana@example.com", "secreta", { baseUrl: "https://api.guiaflow.pro" });
+    const pass = await loginWithPassword("ana@example.com", "secreta", { baseUrl: "https://app.guiaflow.pro" });
     assert.deepEqual(pass, { ok: true, email: "ana@example.com" });
     assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-from-password");
 
-    const viaCode = await loginWithPassword("ana@example.com", "via-code", { baseUrl: "https://api.guiaflow.pro" });
+    const viaCode = await loginWithPassword("ana@example.com", "via-code", { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(viaCode.ok, true);
     assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-from-code");
   } finally {
@@ -520,7 +555,7 @@ test("o code de /auth/callback vira sessão e a senha também", async () => {
 
 test("postMessage de auth só aceita o editor ou a origem da nuvem", () => {
   const origins = cloudAuthMessageOrigins({
-    baseUrl: "https://api.guiaflow.pro",
+    baseUrl: "https://app.guiaflow.pro",
     pageOrigin: "http://localhost:4173",
   });
   const msg = { type: CLOUD_AUTH_MESSAGE_TYPE, token: "once-token-editor", email: "ana@example.com" };
@@ -528,7 +563,7 @@ test("postMessage de auth só aceita o editor ou a origem da nuvem", () => {
     token: "once-token-editor",
     email: "ana@example.com",
   });
-  assert.equal(parseCloudAuthMessage(msg, "https://api.guiaflow.pro", origins)?.token, "once-token-editor");
+  assert.equal(parseCloudAuthMessage(msg, "https://app.guiaflow.pro", origins)?.token, "once-token-editor");
   assert.equal(parseCloudAuthMessage(msg, "http://localhost:4173", origins)?.token, "once-token-editor");
   assert.equal(parseCloudAuthMessage(msg, "https://evil.example", origins), null);
   assert.equal(parseCloudAuthMessage({ type: "other", token: "x" }, "https://guiaflow.pro", origins), null);

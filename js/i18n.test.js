@@ -56,6 +56,7 @@ test("o painel da nuvem não mostra o host da API", () => {
   const panel = html.slice(start, end);
   assert.ok(start > 0 && end > start);
   assert.equal(/api\.guiaflow\.pro/i.test(panel), false);
+  assert.equal(/app\.guiaflow\.pro/i.test(panel), false);
   assert.equal(panel.includes("cloud-open-site"), false);
   assert.match(panel, /link de confirmação do GuiaFlow/);
   assert.match(panel, /O link abriu noutro aparelho/);
