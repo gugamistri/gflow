@@ -67,9 +67,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/12/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/12/css/theme.css" />
-  <link rel="stylesheet" href="a/12/css/app.css" />
+  <link rel="stylesheet" href="a/13/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/13/css/theme.css" />
+  <link rel="stylesheet" href="a/13/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -150,82 +150,22 @@
                 </button>
               </div>
             </div>
-            <div id="cloud-share-block" hidden>
-              <button type="button" class="export-option" id="btn-cloud-share">
-                <strong data-i18n="share.cloud.title">Link permanente</strong>
-                <span data-i18n="share.cloud.desc">Compartilhar na nuvem</span>
-              </button>
-              <div class="cloud-account" id="cloud-account" hidden>
-                <span id="cloud-account-label"></span>
-                <button type="button" class="btn btn-ghost btn-sm" id="btn-cloud-signout" data-i18n="share.cloud.signOut">Sair da nuvem</button>
+            <div id="cloud-share-block" class="cloud-share-block" hidden>
+              <div id="cloud-share-guest" class="cloud-share-guest" hidden>
+                <p data-i18n="share.cloud.needAccount">Entre para publicar um link permanente.</p>
+                <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="account.signIn">Entrar</button>
               </div>
+              <button type="button" class="export-option" id="btn-cloud-share" hidden>
+                <strong data-i18n="share.cloud.title">Link permanente</strong>
+                <span data-i18n="share.cloud.desc">Publicar link permanente</span>
+              </button>
               <div class="cloud-share-result" id="cloud-share-actions" hidden>
-                <label class="cloud-share-url-label">
-                  <span data-i18n="share.cloud.title">Link permanente</span>
-                  <input id="cloud-share-url" type="text" readonly value="" />
-                </label>
+                <p class="cloud-share-heading" data-i18n="share.cloud.title">Link permanente</p>
+                <input id="cloud-share-url" type="text" readonly value="" data-i18n-aria="share.cloud.title" aria-label="Link permanente" />
                 <button type="button" class="btn btn-sm" id="btn-cloud-copy">
                   <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
                   <span data-i18n="share.copy">Copiar</span>
                 </button>
-              </div>
-              <div id="cloud-login" class="cloud-login" hidden>
-                <p data-i18n="share.cloud.signIn">Entre com o seu email para publicar o link permanente. Vamos enviar um link de confirmação do GuiaFlow.</p>
-                <form id="cloud-magic-form">
-                <label>
-                  <span class="visually-hidden" data-i18n="share.cloud.email">Email</span>
-                  <input
-                    type="email"
-                    id="cloud-email"
-                    name="guiaflow-cloud-email"
-                    autocomplete="email"
-                    inputmode="email"
-                    data-i18n-placeholder="share.cloud.emailPh"
-                    placeholder="seu@email.com"
-                  />
-                </label>
-                <button type="submit" class="btn btn-sm" id="btn-cloud-magic" data-i18n="share.cloud.send">Enviar link</button>
-                </form>
-                <details id="cloud-password-fallback" class="cloud-login-extra">
-                  <summary data-i18n="share.cloud.passwordToggle">Entrar com senha</summary>
-                  <form id="cloud-password-form">
-                    <label>
-                      <span class="visually-hidden" data-i18n="share.cloud.password">Senha</span>
-                      <input
-                        type="password"
-                        id="cloud-password"
-                        name="guiaflow-cloud-password"
-                        autocomplete="current-password"
-                        data-i18n-placeholder="share.cloud.passwordPh"
-                        placeholder="Sua senha"
-                      />
-                    </label>
-                    <button type="submit" class="btn btn-sm" id="btn-cloud-password" data-i18n="share.cloud.passwordSubmit">Entrar</button>
-                  </form>
-                </details>
-                <p id="cloud-login-status" class="cloud-login-status" role="status"></p>
-                <details id="cloud-paste-fallback" class="cloud-login-extra cloud-paste-fallback">
-                  <summary data-i18n="share.cloud.pasteLabel">O link abriu noutro aparelho?</summary>
-                  <label>
-                    <span class="visually-hidden" data-i18n="share.cloud.pastePh">Cole o link de confirmação</span>
-                    <input
-                      type="text"
-                      id="cloud-paste"
-                      name="guiaflow-cloud-magic-link"
-                      autocomplete="off"
-                      autocorrect="off"
-                      autocapitalize="off"
-                      spellcheck="false"
-                      data-1p-ignore="true"
-                      data-lpignore="true"
-                      data-bwignore="true"
-                      data-form-type="other"
-                      data-i18n-placeholder="share.cloud.pastePh"
-                      placeholder="Cole o link de confirmação"
-                    />
-                  </label>
-                  <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Entrar e publicar</button>
-                </details>
               </div>
             </div>
             <button type="button" class="export-option" id="btn-export-html">
@@ -258,6 +198,18 @@
         </button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
       </div>
+      <div class="account-slot" id="account-slot" hidden>
+        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.signIn">Entrar</button>
+        <details class="account-chip" id="account-chip" hidden>
+          <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
+            <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
+          </summary>
+          <div class="account-chip-menu">
+            <p class="account-chip-email" id="account-chip-email"></p>
+            <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
+          </div>
+        </details>
+      </div>
       <details class="more-panel" id="more-panel">
         <summary class="btn btn-ghost" aria-label="Mais" data-i18n-aria="topbar.more">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-more"></use></svg>
@@ -276,6 +228,18 @@
             <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
               <svg class="btn-ico" aria-hidden="true"><use id="btn-appearance-icon" href="#i-appearance"></use></svg>
             </button>
+          </div>
+          <div class="more-account" id="more-account" hidden>
+            <button type="button" class="more-item more-item-signin" id="btn-menu-signin">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-user"></use></svg>
+              <span data-i18n="account.signIn">Entrar</span>
+            </button>
+            <div id="more-account-in" hidden>
+              <p class="more-account-email" id="more-account-email"></p>
+              <button type="button" class="more-item" id="btn-menu-signout">
+                <span data-i18n="account.signOut">Sair</span>
+              </button>
+            </div>
           </div>
           <div class="more-editor-only" id="more-editor-only" hidden>
             <details class="more-section theme-panel" id="narration-panel">
@@ -755,6 +719,73 @@
     </aside>
   </main>
 
+  <dialog class="studio-modal" id="modal-account" aria-labelledby="account-dialog-title">
+    <div class="studio-modal-body cloud-login" id="cloud-login">
+      <div class="account-dialog-head">
+        <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
+        <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <p data-i18n="share.cloud.signIn">Entre com o seu email. Vamos enviar um link de confirmação do GuiaFlow.</p>
+      <form id="cloud-magic-form">
+        <label>
+          <span class="visually-hidden" data-i18n="share.cloud.email">Email</span>
+          <input
+            type="email"
+            id="cloud-email"
+            name="guiaflow-cloud-email"
+            autocomplete="email"
+            inputmode="email"
+            data-i18n-placeholder="share.cloud.emailPh"
+            placeholder="seu@email.com"
+          />
+        </label>
+        <button type="submit" class="btn btn-sm" id="btn-cloud-magic" data-i18n="share.cloud.send">Enviar link</button>
+      </form>
+      <details id="cloud-password-fallback" class="cloud-login-extra">
+        <summary data-i18n="share.cloud.passwordToggle">Entrar com senha</summary>
+        <form id="cloud-password-form">
+          <label>
+            <span class="visually-hidden" data-i18n="share.cloud.password">Senha</span>
+            <input
+              type="password"
+              id="cloud-password"
+              name="guiaflow-cloud-password"
+              autocomplete="current-password"
+              data-i18n-placeholder="share.cloud.passwordPh"
+              placeholder="Sua senha"
+            />
+          </label>
+          <button type="submit" class="btn btn-sm" id="btn-cloud-password" data-i18n="share.cloud.passwordSubmit">Entrar</button>
+        </form>
+      </details>
+      <p id="cloud-login-status" class="cloud-login-status" role="status"></p>
+      <details id="cloud-paste-fallback" class="cloud-login-extra cloud-paste-fallback">
+        <summary data-i18n="share.cloud.pasteLabel">O link abriu noutro aparelho?</summary>
+        <label>
+          <span class="visually-hidden" data-i18n="share.cloud.pastePh">Cole o link de confirmação</span>
+          <input
+            type="text"
+            id="cloud-paste"
+            name="guiaflow-cloud-magic-link"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-1p-ignore="true"
+            data-lpignore="true"
+            data-bwignore="true"
+            data-form-type="other"
+            data-i18n-placeholder="share.cloud.pastePh"
+            placeholder="Cole o link de confirmação"
+          />
+        </label>
+        <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Entrar</button>
+      </details>
+    </div>
+  </dialog>
+
   <dialog class="studio-modal shortcuts-modal" id="modal-shortcuts" aria-labelledby="shortcuts-title">
     <div class="studio-modal-body">
       <h3 id="shortcuts-title" data-i18n="shortcuts.title">Atalhos</h3>
@@ -1118,12 +1149,16 @@
       <path d="m15 14 5-5-5-5" />
       <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" />
     </symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21a8 8 0 0 0-16 0" />
+      <circle cx="12" cy="7" r="4" />
+    </symbol>
     <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 6 6 18M6 6l12 12"/>
     </symbol>
   </svg>
 
-  <script src="a/12/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/12/js/app.js"></script>
+  <script src="a/13/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/13/js/app.js"></script>
 </body>
 </html>

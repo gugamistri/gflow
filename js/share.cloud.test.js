@@ -64,7 +64,7 @@ test("sem URL base o link permanente não chama a rede", async () => {
   try {
     await assert.rejects(
       () => publishPermanentShare(project(), { env: { baseUrl: "" }, buildSnapshot: async () => ({}) }),
-      (err) => err.code === "cloud-not-configured" && /não está configurada/.test(err.message)
+      (err) => err.code === "cloud-not-configured" && /não está configurada/.test(err.message) && !/nuvem/i.test(err.message)
     );
     assert.equal(called, 0);
   } finally {
@@ -112,10 +112,11 @@ test("share_limit, 401 e rede têm mensagens claras", async () => {
   );
   assert.equal(
     permanentShareErrorMessage({ error: "share_limit", data: { plan: "cloud", limit: 25 } }),
-    "Limite de links do plano Cloud"
+    "Limite de links da conta"
   );
-  assert.match(permanentShareErrorMessage({ status: 401, error: "unauthorized" }), /sessão da nuvem/i);
-  assert.match(permanentShareErrorMessage({ error: "network" }), /contactar a nuvem/);
+  assert.match(permanentShareErrorMessage({ status: 401, error: "unauthorized" }), /sessão expirou/i);
+  assert.match(permanentShareErrorMessage({ error: "network" }), /contactar o GuiaFlow/);
+  assert.doesNotMatch(permanentShareErrorMessage({ error: "network" }), /nuvem|cloud/i);
 
   const prev = globalThis.fetch;
   globalThis.fetch = async () => ({
