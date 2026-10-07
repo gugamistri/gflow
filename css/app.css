@@ -31,6 +31,7 @@ body.is-booting #topbar-actions-editor,
 body.is-booting #topbar-nav-editor,
 body.is-booting #topbar-title,
 body.is-booting #ext-banner,
+body.is-booting #account-slot,
 body.is-booting #more-panel {
   visibility: hidden !important;
   pointer-events: none !important;
@@ -881,45 +882,45 @@ textarea {
   display: none;
 }
 
-.cloud-account {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.cloud-share-guest {
+  display: grid;
   gap: 8px;
-  padding: 0 12px 4px;
-  font-size: 0.72rem;
-  color: var(--ns-muted);
+  padding: 8px 12px 10px;
 }
 
-.cloud-account[hidden] {
+.cloud-share-guest[hidden] {
   display: none;
 }
 
-.cloud-account .btn {
-  background: var(--ns-panel);
-  color: var(--ns-ink);
-  border-color: var(--ns-border);
+.cloud-share-guest p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ns-muted);
+}
+
+.cloud-share-guest .btn {
+  justify-self: start;
 }
 
 .cloud-share-result {
   display: grid;
   gap: 8px;
-  padding: 8px 12px 10px;
+  padding: 10px 12px;
 }
 
 .cloud-share-result[hidden] {
   display: none;
 }
 
-.cloud-share-url-label {
-  display: grid;
-  gap: 4px;
-  font-size: 0.75rem;
-  font-weight: 700;
+.cloud-share-heading {
+  margin: 0;
   color: var(--ns-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-.cloud-share-url-label input {
+.cloud-share-result input {
   width: 100%;
   font-weight: 500;
   font-size: 0.75rem;
@@ -930,14 +931,124 @@ textarea {
   color: var(--ns-ink);
 }
 
+.cloud-share-result .btn {
+  justify-self: start;
+}
+
+.account-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.account-chip {
+  position: relative;
+}
+
+.account-chip-toggle {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.account-chip-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.account-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--ns-accent) 78%, white);
+  color: #102027;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.account-chip-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  z-index: 80;
+  display: grid;
+}
+
+.account-chip-email,
+.more-account-email {
+  margin: 0;
+  padding: 8px 12px 4px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ns-muted);
+  word-break: break-all;
+}
+
+.account-chip-signout {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--ns-ink);
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.account-chip-signout:hover {
+  background: var(--ns-hover);
+}
+
+.more-account {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ns-border);
+}
+
+.more-item-signin {
+  color: var(--ns-accent);
+}
+
+.account-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.account-dialog-head h3 {
+  margin: 0;
+}
+
 .cloud-login {
   display: grid;
   gap: 8px;
-  padding: 4px 12px 10px;
 }
 
-.cloud-login[hidden] {
-  display: none;
+#modal-account .cloud-login > p {
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .cloud-login p,
@@ -985,7 +1096,7 @@ textarea {
   font-size: 0.72rem;
 }
 
-.export-panel .cloud-login-extra summary {
+#modal-account .cloud-login-extra summary {
   display: inline-flex;
   padding: 0;
   min-height: 0;
@@ -996,10 +1107,11 @@ textarea {
   font-size: 0.72rem;
   font-weight: 600;
   line-height: 1.35;
+  list-style: none;
 }
 
-.export-panel .cloud-login-extra summary::-webkit-details-marker {
-  display: inline;
+#modal-account .cloud-login-extra summary::-webkit-details-marker {
+  display: none;
 }
 
 .cloud-login-extra[open] {
@@ -1148,6 +1260,8 @@ img.is-broken {
 .theme-panel summary:focus-visible,
 .export-panel summary:focus-visible,
 .more-panel > summary:focus-visible,
+.account-chip-toggle:focus-visible,
+.account-chip-signout:focus-visible,
 .preview-menu > summary:focus-visible,
 .more-item:focus-visible,
 .preview-menu-option:focus-visible {
