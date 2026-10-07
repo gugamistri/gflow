@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   catalogs,
@@ -38,15 +39,26 @@ test("métricas do editor existem em pt, es e en", () => {
   assert.match(catalogs.en["editor.metricsMany"], /\{n\} steps · \{time\}/);
 });
 
-test("o link mágico aponta para a API", () => {
+test("o painel da nuvem não mostra o host da API", () => {
   for (const loc of SUPPORTED_LOCALES) {
-    assert.equal(
-      catalogs[loc]["share.cloud.pastePh"],
-      "https://api.guiaflow.pro/auth/verify?token=…"
-    );
-    assert.match(catalogs[loc]["share.cloud.signIn"], /api\.guiaflow\.pro/);
-    assert.match(catalogs[loc]["share.cloud.openSite"], /api\.guiaflow\.pro/);
+    for (const [key, value] of Object.entries(catalogs[loc])) {
+      if (!key.startsWith("share.cloud.")) continue;
+      assert.equal(/api\.guiaflow\.pro/i.test(value), false, `${loc} ${key}`);
+      assert.equal(/\bAPI\b/.test(value), false, `${loc} ${key}`);
+    }
+    assert.match(catalogs[loc]["share.cloud.sent"], /email/i);
+    assert.match(catalogs[loc]["share.cloud.signedIn"], /\{email\}/);
+    assert.equal(catalogs[loc]["share.cloud.openSite"], undefined);
   }
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="cloud-login"');
+  const end = html.indexOf('id="btn-export-html"');
+  const panel = html.slice(start, end);
+  assert.ok(start > 0 && end > start);
+  assert.equal(/api\.guiaflow\.pro/i.test(panel), false);
+  assert.equal(panel.includes("cloud-open-site"), false);
+  assert.match(panel, /link de confirmação do GuiaFlow/);
+  assert.match(panel, /O link abriu noutro aparelho/);
 });
 
 test("catálogos compartilham as mesmas chaves", () => {

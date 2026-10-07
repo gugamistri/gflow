@@ -981,6 +981,37 @@ textarea {
   gap: 8px;
 }
 
+.cloud-login-extra {
+  font-size: 0.72rem;
+}
+
+.export-panel .cloud-login-extra summary {
+  display: inline-flex;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ns-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.export-panel .cloud-login-extra summary::-webkit-details-marker {
+  display: inline;
+}
+
+.cloud-login-extra[open] {
+  display: grid;
+  gap: 8px;
+}
+
+.cloud-login-extra form {
+  display: grid;
+  gap: 8px;
+}
+
 body.view-share {
   min-height: 100dvh;
 }

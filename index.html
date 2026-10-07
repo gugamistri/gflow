@@ -170,8 +170,7 @@
                 </button>
               </div>
               <div id="cloud-login" class="cloud-login" hidden>
-                <p data-i18n="share.cloud.signIn">Entre em api.guiaflow.pro com o link mágico. Cole o link do email para publicar.</p>
-                <a id="cloud-open-site" href="https://api.guiaflow.pro/auth/verify" target="_blank" rel="noopener noreferrer" data-i18n="share.cloud.openSite">Abrir api.guiaflow.pro</a>
+                <p data-i18n="share.cloud.signIn">Entre com o seu email para publicar o link permanente. Vamos enviar um link de confirmação do GuiaFlow.</p>
                 <form id="cloud-magic-form">
                 <label>
                   <span class="visually-hidden" data-i18n="share.cloud.email">Email</span>
@@ -187,26 +186,46 @@
                 </label>
                 <button type="submit" class="btn btn-sm" id="btn-cloud-magic" data-i18n="share.cloud.send">Enviar link</button>
                 </form>
-                <label>
-                  <span data-i18n="share.cloud.pasteLabel">Link do email</span>
-                  <input
-                    type="text"
-                    id="cloud-paste"
-                    name="guiaflow-cloud-magic-link"
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                    data-1p-ignore="true"
-                    data-lpignore="true"
-                    data-bwignore="true"
-                    data-form-type="other"
-                    data-i18n-placeholder="share.cloud.pastePh"
-                    placeholder="https://api.guiaflow.pro/auth/verify?token=…"
-                  />
-                </label>
-                <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Continuar e publicar</button>
+                <details id="cloud-password-fallback" class="cloud-login-extra">
+                  <summary data-i18n="share.cloud.passwordToggle">Entrar com senha</summary>
+                  <form id="cloud-password-form">
+                    <label>
+                      <span class="visually-hidden" data-i18n="share.cloud.password">Senha</span>
+                      <input
+                        type="password"
+                        id="cloud-password"
+                        name="guiaflow-cloud-password"
+                        autocomplete="current-password"
+                        data-i18n-placeholder="share.cloud.passwordPh"
+                        placeholder="Sua senha"
+                      />
+                    </label>
+                    <button type="submit" class="btn btn-sm" id="btn-cloud-password" data-i18n="share.cloud.passwordSubmit">Entrar</button>
+                  </form>
+                </details>
                 <p id="cloud-login-status" class="cloud-login-status" role="status"></p>
+                <details id="cloud-paste-fallback" class="cloud-login-extra cloud-paste-fallback">
+                  <summary data-i18n="share.cloud.pasteLabel">O link abriu noutro aparelho?</summary>
+                  <label>
+                    <span class="visually-hidden" data-i18n="share.cloud.pastePh">Cole o link de confirmação</span>
+                    <input
+                      type="text"
+                      id="cloud-paste"
+                      name="guiaflow-cloud-magic-link"
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
+                      data-bwignore="true"
+                      data-form-type="other"
+                      data-i18n-placeholder="share.cloud.pastePh"
+                      placeholder="Cole o link de confirmação"
+                    />
+                  </label>
+                  <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Entrar e publicar</button>
+                </details>
               </div>
             </div>
             <button type="button" class="export-option" id="btn-export-html">

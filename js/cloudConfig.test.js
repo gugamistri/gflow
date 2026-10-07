@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  CLOUD_AUTH_MESSAGE_TYPE,
   CLOUD_FLAG_KEYS,
   CLOUD_GLOBAL_KEY,
+  CLOUD_PENDING_PUBLISH_KEY,
   CLOUD_SESSION_KEY,
   callCloud,
+  claimCloudPublishIntent,
+  cloudAuthMessageOrigins,
   cloudFetch,
+  cloudLoginRedirectUrl,
   cloudVerifyUrl,
+  completeCloudAuthCallback,
+  editorHomeFromCallback,
   endCloudSession,
   establishCloudSession,
   getCloudAccount,
@@ -14,8 +21,15 @@ import {
   getCloudFlags,
   installCloudHooks,
   isCloudEnabled,
+  loginWithPassword,
+  parseCloudAuthMessage,
   parseCloudLoginPaste,
+  readAuthCallbackCode,
+  readCloudAuthCallback,
+  readCloudSession,
   requestMagicLink,
+  stripCloudAuthCallback,
+  writeCloudPublishIntent,
   writeCloudSession,
 } from "./cloudConfig.js";
 
@@ -311,5 +325,229 @@ test("verificar o link grava o JWT e não o token de uso único", async () => {
     else globalThis.fetch = prev;
     if (prevStorage === undefined) delete globalThis.localStorage;
     else globalThis.localStorage = prevStorage;
+  }
+});
+
+function fakeJwt(payload) {
+  const enc = (obj) => Buffer.from(JSON.stringify(obj)).toString("base64url");
+  return `${enc({ alg: "none", typ: "JWT" })}.${enc(payload)}.sig`;
+}
+
+function memoryStorage() {
+  const mem = new Map();
+  const prev = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: (key) => (mem.has(key) ? mem.get(key) : null),
+    setItem: (key, value) => mem.set(key, String(value)),
+    removeItem: (key) => mem.delete(key),
+  };
+  return {
+    mem,
+    restore() {
+      if (prev === undefined) delete globalThis.localStorage;
+      else globalThis.localStorage = prev;
+    },
+  };
+}
+
+test("sessão com JWT expirado não entra; a válida mostra a conta", () => {
+  const store = memoryStorage();
+  try {
+    writeCloudSession({ accessToken: fakeJwt({ exp: 1 }), email: "a@b.co" });
+    assert.equal(readCloudSession(), null);
+    assert.equal(store.mem.has(CLOUD_SESSION_KEY), false);
+    assert.deepEqual(getCloudAccount(), { signedIn: false, email: "" });
+
+    writeCloudSession({
+      accessToken: fakeJwt({ exp: Math.floor(Date.now() / 1000) + 3600 }),
+      email: "ana@example.com",
+    });
+    assert.deepEqual(getCloudAccount(), { signedIn: true, email: "ana@example.com" });
+    writeCloudSession({ accessToken: "opaque-session", email: "ana@example.com" });
+    assert.equal(getCloudAccount().signedIn, true);
+  } finally {
+    store.restore();
+  }
+});
+
+test("o link mágico volta ao editor e o callback não deixa o token no URL", async () => {
+  const prev = globalThis.fetch;
+  const store = memoryStorage();
+  let body = null;
+  globalThis.fetch = async (url, init) => {
+    const path = String(url);
+    if (path.endsWith("/auth/magic-link")) {
+      body = JSON.parse(init.body);
+      return { ok: true, status: 200, json: async () => ({ delivered: true }) };
+    }
+    if (path.endsWith("/auth/verify")) {
+      assert.equal(JSON.parse(init.body).token, "once-token-editor");
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ accessToken: "jwt-session", user: { email: "ana@example.com" } }),
+      };
+    }
+    return { ok: false, status: 404, json: async () => ({ error: "not_found" }) };
+  };
+  try {
+    assert.equal(
+      cloudLoginRedirectUrl("https://guiaflow.pro/editor?guiaflow_login=segredo#access_token=nope"),
+      "https://guiaflow.pro/auth/callback"
+    );
+    assert.equal(cloudLoginRedirectUrl("file:///tmp/app.html"), "https://guiaflow.pro/auth/callback");
+    assert.equal(
+      cloudLoginRedirectUrl("http://127.0.0.1:4173/projetos"),
+      "http://127.0.0.1:4173/auth/callback"
+    );
+    const sent = await requestMagicLink(
+      "ana@example.com",
+      { baseUrl: "https://api.guiaflow.pro" },
+      { redirect: "https://guiaflow.pro/?next=1#x" }
+    );
+    assert.equal(sent.ok, true);
+    assert.deepEqual(body, { email: "ana@example.com", redirect: "https://guiaflow.pro/auth/callback" });
+
+    const href = "https://guiaflow.pro/?lang=pt&guiaflow_login=once-token-editor#stay=1";
+    assert.deepEqual(readCloudAuthCallback(href), {
+      token: "once-token-editor",
+      via: "query",
+      key: "guiaflow_login",
+      kind: "magic",
+    });
+    assert.equal(readCloudAuthCallback("https://guiaflow.pro/?access_token=segredo"), null);
+    assert.deepEqual(
+      parseCloudLoginPaste("https://guiaflow.pro/?guiaflow_login=once-token-editor"),
+      { kind: "magic", token: "once-token-editor" }
+    );
+
+    const done = await completeCloudAuthCallback(href, { baseUrl: "https://api.guiaflow.pro" });
+    assert.equal(done.ok, true);
+    assert.equal(done.consumed, true);
+    assert.equal(done.email, "ana@example.com");
+    assert.equal(done.href.includes("guiaflow_login"), false);
+    assert.equal(done.href.includes("once-token-editor"), false);
+    assert.match(done.href, /lang=pt/);
+    assert.match(done.href, /stay=1/);
+    assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-session");
+
+    const bearer = readCloudAuthCallback(
+      `https://guiaflow.pro/#guiaflow_session=${fakeJwt({ sub: "ana" })}&stay=1`
+    );
+    assert.equal(bearer.kind, "bearer");
+    assert.equal(bearer.via, "hash");
+    const stripped = stripCloudAuthCallback(
+      "https://guiaflow.pro/?guiaflow_login=abc&lang=pt#access_token=jwt&stay=1"
+    );
+    assert.equal(stripped.includes("guiaflow_login"), false);
+    assert.equal(stripped.includes("access_token"), false);
+    assert.match(stripped, /lang=pt/);
+    assert.match(stripped, /stay=1/);
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+    store.restore();
+  }
+});
+
+test("o code de /auth/callback vira sessão e a senha também", async () => {
+  const prev = globalThis.fetch;
+  const store = memoryStorage();
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    const path = String(url);
+    calls.push({ path, body: init?.body ? JSON.parse(init.body) : null, auth: new Headers(init.headers).get("authorization") });
+    if (path.endsWith("/auth/callback")) {
+      assert.equal(JSON.parse(init.body).code, "once-code");
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ accessToken: "jwt-from-code", user: { email: "ana@example.com" } }),
+      };
+    }
+    if (path.endsWith("/auth/login")) {
+      const body = JSON.parse(init.body);
+      if (body.password === "errada") {
+        return { ok: false, status: 401, json: async () => ({ error: "invalid_credentials" }) };
+      }
+      if (body.password === "via-code") {
+        return { ok: true, status: 200, json: async () => ({ code: "once-code" }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ accessToken: "jwt-from-password", user: { email: body.email } }),
+      };
+    }
+    return { ok: false, status: 404, json: async () => ({ error: "not_found" }) };
+  };
+  try {
+    const href = "https://guiaflow.pro/auth/callback?code=once-code&lang=pt#stay=1";
+    assert.equal(readAuthCallbackCode(href), "once-code");
+    assert.equal(readAuthCallbackCode("https://guiaflow.pro/?code=once-code"), "");
+    assert.equal(editorHomeFromCallback(href), "https://guiaflow.pro/?lang=pt#stay=1");
+    const done = await completeCloudAuthCallback(href, { baseUrl: "https://api.guiaflow.pro" });
+    assert.equal(done.ok, true);
+    assert.equal(done.consumed, true);
+    assert.equal(done.email, "ana@example.com");
+    assert.equal(done.href.includes("code="), false);
+    assert.equal(done.href.includes("/auth/callback"), false);
+    assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-from-code");
+    assert.equal(calls[0].auth, null);
+    assert.equal(calls[0].path, "https://api.guiaflow.pro/auth/callback");
+
+    store.mem.delete(CLOUD_SESSION_KEY);
+    const bad = await loginWithPassword("ana@example.com", "errada", { baseUrl: "https://api.guiaflow.pro" });
+    assert.equal(bad.error, "invalid_credentials");
+    assert.equal(store.mem.has(CLOUD_SESSION_KEY), false);
+    const empty = await loginWithPassword("ana@example.com", "", { baseUrl: "https://api.guiaflow.pro" });
+    assert.equal(empty.error, "invalid_credentials");
+    assert.equal(calls.length, 2);
+
+    const pass = await loginWithPassword("ana@example.com", "secreta", { baseUrl: "https://api.guiaflow.pro" });
+    assert.deepEqual(pass, { ok: true, email: "ana@example.com" });
+    assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-from-password");
+
+    const viaCode = await loginWithPassword("ana@example.com", "via-code", { baseUrl: "https://api.guiaflow.pro" });
+    assert.equal(viaCode.ok, true);
+    assert.equal(JSON.parse(store.mem.get(CLOUD_SESSION_KEY)).accessToken, "jwt-from-code");
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+    store.restore();
+  }
+});
+
+test("postMessage de auth só aceita o editor ou a origem da nuvem", () => {
+  const origins = cloudAuthMessageOrigins({
+    baseUrl: "https://api.guiaflow.pro",
+    pageOrigin: "http://localhost:4173",
+  });
+  const msg = { type: CLOUD_AUTH_MESSAGE_TYPE, token: "once-token-editor", email: "ana@example.com" };
+  assert.deepEqual(parseCloudAuthMessage(msg, "https://guiaflow.pro", origins), {
+    token: "once-token-editor",
+    email: "ana@example.com",
+  });
+  assert.equal(parseCloudAuthMessage(msg, "https://api.guiaflow.pro", origins)?.token, "once-token-editor");
+  assert.equal(parseCloudAuthMessage(msg, "http://localhost:4173", origins)?.token, "once-token-editor");
+  assert.equal(parseCloudAuthMessage(msg, "https://evil.example", origins), null);
+  assert.equal(parseCloudAuthMessage({ type: "other", token: "x" }, "https://guiaflow.pro", origins), null);
+  assert.equal(parseCloudAuthMessage("nope", "https://guiaflow.pro", origins), null);
+});
+
+test("a intenção de publicar só uma aba reclama", () => {
+  const store = memoryStorage();
+  try {
+    const now = 1_700_000_000_000;
+    assert.equal(writeCloudPublishIntent("proj-1", now)?.projectId, "proj-1");
+    assert.equal(claimCloudPublishIntent("outro", now), false);
+    assert.equal(store.mem.has(CLOUD_PENDING_PUBLISH_KEY), true);
+    assert.equal(claimCloudPublishIntent("proj-1", now), true);
+    assert.equal(claimCloudPublishIntent("proj-1", now), false);
+    writeCloudPublishIntent("proj-1", now);
+    assert.equal(claimCloudPublishIntent("proj-1", now + 31 * 60 * 1000), false);
+    assert.equal(store.mem.has(CLOUD_PENDING_PUBLISH_KEY), false);
+  } finally {
+    store.restore();
   }
 });

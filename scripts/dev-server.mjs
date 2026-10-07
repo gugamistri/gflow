@@ -26,6 +26,9 @@ const server = createServer(async (req, res) => {
   if (/^\/v\/([A-Za-z0-9_-]{11}|[a-f0-9]{32})\/?$/i.test(pathname)) {
     pathname = "/view.html";
   }
+  if (pathname === "/auth/callback" || pathname === "/auth/callback/") {
+    pathname = "/auth/callback.html";
+  }
   if (pathname.endsWith("/")) pathname += "index.html";
   const file = normalize(join(root, pathname));
   if (!file.startsWith(root.endsWith(sep) ? root : root + sep) && file !== root) {

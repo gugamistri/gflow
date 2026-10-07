@@ -71,13 +71,21 @@ import {
 } from "./releaseNotes.js";
 import { COMPACT_LANDSCAPE_MQ, COMPACT_TOUCH_MQ, isCompactLandscape, isCompactTouch } from "./compact.js";
 import {
-  cloudVerifyUrl,
+  CLOUD_SESSION_KEY,
+  claimCloudPublishIntent,
+  clearCloudPublishIntent,
+  cloudAuthMessageOrigins,
+  completeCloudAuthCallback,
   endCloudSession,
   establishCloudSession,
   getCloudAccount,
   getCloudFlags,
   isCloudEnabled,
+  loginWithPassword,
+  parseCloudAuthMessage,
   requestMagicLink,
+  takeCloudAuthError,
+  writeCloudPublishIntent,
 } from "./cloudConfig.js";
 
 let project = null;
@@ -581,11 +589,6 @@ function paintCloudShare() {
   if (urlInput) urlInput.value = url;
   const login = document.getElementById("cloud-login");
   if (login && (!enabled || account.signedIn)) login.hidden = true;
-  const verify = cloudVerifyUrl();
-  const openSite = document.getElementById("cloud-open-site");
-  if (openSite && verify) openSite.href = verify;
-  const paste = document.getElementById("cloud-paste");
-  if (paste && verify) paste.placeholder = `${verify}?token=…`;
 }
 
 function showCloudLogin() {
@@ -593,6 +596,48 @@ function showCloudLogin() {
   if (!login || !cloudShareEnabled()) return;
   login.hidden = false;
   document.getElementById("cloud-email")?.focus();
+}
+
+let resumeCloudPublishAfterLogin = async () => {};
+
+function applyCloudAuthHref(href) {
+  if (!href) return;
+  try {
+    const next = new URL(href, location.href);
+    if (next.origin !== location.origin) return;
+    const relative = `${next.pathname}${next.search}${next.hash}`;
+    const current = `${location.pathname}${location.search}${location.hash}`;
+    if (relative === current) return;
+    // why: `history` neste módulo é a pilha de desfazer, não a do navegador.
+    //      replaceState cedo demais também pode ser reposto pelo carregamento.
+    window.history.replaceState(null, "", relative);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function showStashedAuthError() {
+  const code = takeCloudAuthError();
+  if (!code) return;
+  const panel = document.querySelector(".export-panel");
+  if (panel) panel.open = true;
+  showCloudLogin();
+  const status = document.getElementById("cloud-login-status");
+  if (status) status.textContent = permanentShareErrorMessage({ error: code });
+}
+
+async function finishCloudAuthCallback(callback) {
+  if (!callback?.consumed) return;
+  paintCloudShare();
+  if (!callback.ok) {
+    const panel = document.querySelector(".export-panel");
+    if (panel) panel.open = true;
+    showCloudLogin();
+    const status = document.getElementById("cloud-login-status");
+    if (status) status.textContent = permanentShareErrorMessage(callback);
+    return;
+  }
+  await resumeCloudPublishAfterLogin({ delay: 800 });
 }
 
 function syncThemeUi() {
@@ -1345,12 +1390,18 @@ function bindChrome() {
       showCloudLogin();
       return;
     }
+    clearCloudPublishIntent();
     void runCloudPublish();
   });
 
   document.getElementById("cloud-magic-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
     void sendCloudMagicLink();
+  });
+
+  document.getElementById("cloud-password-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void sendCloudPassword();
   });
 
   document.getElementById("btn-cloud-continue")?.addEventListener("click", () => {
@@ -1373,9 +1424,44 @@ function bindChrome() {
   });
 
   document.getElementById("btn-cloud-signout")?.addEventListener("click", async () => {
+    clearCloudPublishIntent();
     await endCloudSession();
     paintCloudShare();
     showCloudLogin();
+  });
+
+  resumeCloudPublishAfterLogin = async ({ delay = 0 } = {}) => {
+    if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+    if (!project?.id || !cloudShareEnabled() || !getCloudAccount().signedIn) return;
+    if (!claimCloudPublishIntent(project.id)) return;
+    await runCloudPublish();
+  };
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== CLOUD_SESSION_KEY) return;
+    paintCloudShare();
+    if (event.newValue) void resumeCloudPublishAfterLogin({ delay: 0 });
+  });
+
+  window.addEventListener("message", (event) => {
+    if (!cloudShareEnabled()) return;
+    const parsed = parseCloudAuthMessage(event.data, event.origin, cloudAuthMessageOrigins());
+    if (!parsed) return;
+    void (async () => {
+      const forceKind = /^eyJ/.test(parsed.token) ? "bearer" : "magic";
+      const session = await establishCloudSession(parsed.token, undefined, {
+        emailHint: parsed.email,
+        forceKind,
+      });
+      if (!session.ok) {
+        const status = document.getElementById("cloud-login-status");
+        if (status) status.textContent = permanentShareErrorMessage(session);
+        showCloudLogin();
+        return;
+      }
+      paintCloudShare();
+      await resumeCloudPublishAfterLogin({ delay: 0 });
+    })();
   });
 
   async function sendCloudMagicLink() {
@@ -1390,8 +1476,34 @@ function bindChrome() {
         if (status) status.textContent = permanentShareErrorMessage(result);
         return;
       }
+      if (project?.id) writeCloudPublishIntent(project.id);
       if (status) status.textContent = t("share.cloud.sent", { email: String(email).trim() });
-      document.getElementById("cloud-paste")?.focus();
+    } catch (err) {
+      console.error(err);
+      if (status) status.textContent = t("share.cloud.network");
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function sendCloudPassword() {
+    const status = document.getElementById("cloud-login-status");
+    const email = document.getElementById("cloud-email")?.value || "";
+    const password = document.getElementById("cloud-password")?.value || "";
+    const button = document.getElementById("btn-cloud-password");
+    if (button) button.disabled = true;
+    if (status) status.textContent = "";
+    try {
+      const session = await loginWithPassword(email, password);
+      if (!session.ok) {
+        if (status) status.textContent = permanentShareErrorMessage(session);
+        return;
+      }
+      const field = document.getElementById("cloud-password");
+      if (field) field.value = "";
+      clearCloudPublishIntent();
+      paintCloudShare();
+      await runCloudPublish();
     } catch (err) {
       console.error(err);
       if (status) status.textContent = t("share.cloud.network");
@@ -1415,6 +1527,7 @@ function bindChrome() {
       const paste = document.getElementById("cloud-paste");
       if (paste) paste.value = "";
       if (status) status.textContent = "";
+      clearCloudPublishIntent();
       paintCloudShare();
       await runCloudPublish();
     } catch (err) {
@@ -1656,6 +1769,16 @@ function bindReleaseNotes() {
 async function boot() {
   initLocale();
   applyI18n(document);
+  let authCallback = { ok: false, consumed: false };
+  try {
+    authCallback = await completeCloudAuthCallback(location.href);
+    if (authCallback.consumed) {
+      applyCloudAuthHref(authCallback.href);
+      window.addEventListener("load", () => applyCloudAuthHref(authCallback.href), { once: true });
+    }
+  } catch (err) {
+    console.error(err);
+  }
   bindExtensionBanner();
   bindReleaseNotes();
   bindLocaleSelect(document.getElementById("locale-select"), () => {
@@ -1702,8 +1825,12 @@ async function boot() {
 
     showLibrary();
   } finally {
+    if (authCallback.consumed) applyCloudAuthHref(authCallback.href);
     clearBootGate();
     signalGuiaReady();
+    showStashedAuthError();
+    if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
+    else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });
   }
 }
 
