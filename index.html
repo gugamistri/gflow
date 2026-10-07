@@ -51,6 +51,17 @@
       } catch (e) {}
     })();
   </script>
+  <script>
+    (function () {
+      try {
+        if (window.__GUIAFLOW_CLOUD__) return;
+        var host = location.hostname;
+        if (host === "guiaflow-seven.vercel.app" || host === "guiaflow.pro") {
+          window.__GUIAFLOW_CLOUD__ = "https://guiaflow.pro";
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
@@ -119,12 +130,12 @@
           <div class="export-panel-body">
             <p class="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
             <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Link do preview</strong>
-              <span data-i18n="share.linkDesc">Endereço só para ver o tour — sem editor.</span>
+              <strong data-i18n="share.linkTitle">Preview temporário</strong>
+              <span data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
             </button>
             <div class="share-link-actions" id="share-link-actions" hidden>
               <div class="share-link-meta">
-                <strong data-i18n="share.linkTitle">Link do preview</strong>
+                <strong data-i18n="share.linkTitle">Preview temporário</strong>
                 <span data-i18n="share.linkReady">Link publicado</span>
               </div>
               <div class="share-link-row">
@@ -137,6 +148,65 @@
                 <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
                   <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
                 </button>
+              </div>
+            </div>
+            <div id="cloud-share-block" hidden>
+              <button type="button" class="export-option" id="btn-cloud-share">
+                <strong data-i18n="share.cloud.title">Link permanente</strong>
+                <span data-i18n="share.cloud.desc">Compartilhar na nuvem</span>
+              </button>
+              <div class="cloud-account" id="cloud-account" hidden>
+                <span id="cloud-account-label"></span>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-cloud-signout" data-i18n="share.cloud.signOut">Sair da nuvem</button>
+              </div>
+              <div class="cloud-share-result" id="cloud-share-actions" hidden>
+                <label class="cloud-share-url-label">
+                  <span data-i18n="share.cloud.title">Link permanente</span>
+                  <input id="cloud-share-url" type="text" readonly value="" />
+                </label>
+                <button type="button" class="btn btn-sm" id="btn-cloud-copy">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  <span data-i18n="share.copy">Copiar</span>
+                </button>
+              </div>
+              <div id="cloud-login" class="cloud-login" hidden>
+                <p data-i18n="share.cloud.signIn">Entre em guiaflow.pro com o link mágico. Cole o link do email para publicar.</p>
+                <a id="cloud-open-site" href="https://guiaflow.pro/auth/verify" target="_blank" rel="noopener noreferrer" data-i18n="share.cloud.openSite">Abrir guiaflow.pro</a>
+                <form id="cloud-magic-form">
+                <label>
+                  <span class="visually-hidden" data-i18n="share.cloud.email">Email</span>
+                  <input
+                    type="email"
+                    id="cloud-email"
+                    name="guiaflow-cloud-email"
+                    autocomplete="email"
+                    inputmode="email"
+                    data-i18n-placeholder="share.cloud.emailPh"
+                    placeholder="seu@email.com"
+                  />
+                </label>
+                <button type="submit" class="btn btn-sm" id="btn-cloud-magic" data-i18n="share.cloud.send">Enviar link</button>
+                </form>
+                <label>
+                  <span data-i18n="share.cloud.pasteLabel">Link do email</span>
+                  <input
+                    type="text"
+                    id="cloud-paste"
+                    name="guiaflow-cloud-magic-link"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    data-bwignore="true"
+                    data-form-type="other"
+                    data-i18n-placeholder="share.cloud.pastePh"
+                    placeholder="https://guiaflow.pro/auth/verify?token=…"
+                  />
+                </label>
+                <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Continuar e publicar</button>
+                <p id="cloud-login-status" class="cloud-login-status" role="status"></p>
               </div>
             </div>
             <button type="button" class="export-option" id="btn-export-html">

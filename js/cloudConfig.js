@@ -1,7 +1,8 @@
 /**
- * Stubs do GuiaFlow Cloud.
- * why: o editor MIT precisa das flags sem chamar a API paga nem guardar segredo.
- * hazard: BYOK continua em llm.js / cartesia.js; não colocar chave, token ou fetch aqui.
+ * Encaixe do GuiaFlow Cloud.
+ * why: o editor MIT fala com a API só quando há URL base; sem isso nada sai da máquina.
+ * hazard: BYOK continua em llm.js / cartesia.js. Não gravar AUTH_SECRET nem chave de API.
+ *         O bearer da sessão fica só no localStorage do navegador.
  */
 
 export const CLOUD_FLAG_KEYS = Object.freeze([
@@ -15,6 +16,8 @@ export const CLOUD_FLAG_KEYS = Object.freeze([
 export const CLOUD_GLOBAL_KEY = "__GUIAFLOW_CLOUD__";
 export const CLOUD_META_NAME = "guiaflow-cloud-base";
 export const CLOUD_STORAGE_KEY = "guiaflow.cloud.baseUrl";
+export const CLOUD_SESSION_KEY = "guiaflow.cloud.session";
+export const CLOUD_VERIFY_PATH = "/auth/verify";
 
 const INJECTED_KEYS = ["baseUrl", "globalValue", "metaContent", "storageValue", "flags"];
 
@@ -181,14 +184,253 @@ function stubResult(env) {
 }
 
 /**
- * why: o OSS não abre rede; o objeto estável deixa o chamador seguir sem Cloud.
+ * why: IA hospedada, TTS, marca e analytics continuam fora deste repo.
+ *      O link permanente usa cloudFetch, não este stub.
  */
 export function callCloud(_path, _init, env) {
   return Promise.resolve(stubResult(env));
 }
 
-export function cloudFetch(path, init, env) {
-  return callCloud(path, init, env);
+function readLocal(key) {
+  try {
+    if (typeof localStorage === "undefined" || typeof localStorage.getItem !== "function") return "";
+    return localStorage.getItem(key) || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeLocal(key, value) {
+  try {
+    if (typeof localStorage === "undefined" || typeof localStorage.setItem !== "function") return false;
+    localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeLocal(key) {
+  try {
+    if (typeof localStorage === "undefined" || typeof localStorage.removeItem !== "function") return;
+    localStorage.removeItem(key);
+  } catch {
+    /* modo privado */
+  }
+}
+
+export function readCloudSession() {
+  const raw = readLocal(CLOUD_SESSION_KEY);
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    const accessToken = typeof data?.accessToken === "string" ? data.accessToken.trim() : "";
+    if (!accessToken) return null;
+    const email = typeof data?.email === "string" ? data.email.trim() : "";
+    return { accessToken, email };
+  } catch {
+    return null;
+  }
+}
+
+export function writeCloudSession(session) {
+  const accessToken = typeof session?.accessToken === "string" ? session.accessToken.trim() : "";
+  if (!accessToken) {
+    clearCloudSession();
+    return null;
+  }
+  const next = {
+    accessToken,
+    email: typeof session?.email === "string" ? session.email.trim() : "",
+  };
+  writeLocal(CLOUD_SESSION_KEY, JSON.stringify(next));
+  return next;
+}
+
+export function clearCloudSession() {
+  removeLocal(CLOUD_SESSION_KEY);
+}
+
+export function getCloudAccount() {
+  const session = readCloudSession();
+  if (!session) return { signedIn: false, email: "" };
+  return { signedIn: true, email: session.email || "" };
+}
+
+function resolveAccessToken(request, env) {
+  if (request && Object.prototype.hasOwnProperty.call(request, "accessToken")) {
+    return String(request.accessToken || "").trim();
+  }
+  if (env && Object.prototype.hasOwnProperty.call(env, "accessToken")) {
+    return String(env.accessToken || "").trim();
+  }
+  return readCloudSession()?.accessToken || "";
+}
+
+/**
+ * Só caminhos relativos na URL base. why: o bearer não pode seguir para outro host.
+ */
+export function joinCloudUrl(baseUrl, path) {
+  const base = normalizeCloudBaseUrl(baseUrl);
+  const rel = typeof path === "string" ? path : "";
+  if (!base || !rel.startsWith("/") || rel.startsWith("//")) {
+    throw new Error("invalid_cloud_path");
+  }
+  return `${base}${rel}`;
+}
+
+function cloudErrorCode(data, status) {
+  if (data && typeof data.error === "string" && data.error) return data.error;
+  if (status === 401) return "unauthorized";
+  return status ? `http_${status}` : "request_failed";
+}
+
+/**
+ * Pedido real à API Cloud quando há URL base.
+ * Sem URL, devolve o stub e não chama fetch.
+ */
+export async function cloudFetch(path, init, env) {
+  const config = resolveCloudConfig(env);
+  if (!config.enabled) {
+    return { ok: false, stub: true, reason: "cloud-not-configured" };
+  }
+  const request = init && typeof init === "object" ? init : {};
+  const useAuth = request.auth !== false;
+  const token = useAuth ? resolveAccessToken(request, env) : "";
+  let url;
+  try {
+    url = joinCloudUrl(config.baseUrl, path);
+  } catch {
+    return { ok: false, error: "invalid_path", message: "" };
+  }
+  const headers = new Headers(request.headers || undefined);
+  if (!headers.has("Accept")) headers.set("Accept", "application/json");
+  if (request.body != null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  const { auth: _auth, accessToken: _token, headers: _headers, ...rest } = request;
+  try {
+    const res = await fetch(url, {
+      ...rest,
+      headers,
+      credentials: rest.credentials || "omit",
+    });
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        error: cloudErrorCode(data, res.status),
+        message: typeof data?.message === "string" ? data.message : "",
+        data,
+      };
+    }
+    return { ok: true, status: res.status, data };
+  } catch (err) {
+    return { ok: false, error: "network", message: err?.message || "" };
+  }
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function requestMagicLink(email, env) {
+  const trimmed = String(email || "").trim();
+  if (!EMAIL_RE.test(trimmed)) {
+    return Promise.resolve({ ok: false, error: "invalid_email", message: "" });
+  }
+  return cloudFetch(
+    "/auth/magic-link",
+    {
+      method: "POST",
+      auth: false,
+      body: JSON.stringify({ email: trimmed }),
+    },
+    env
+  ).then((result) => {
+    if (result.ok && result.data && result.data.delivered === false) {
+      return { ok: false, error: "email_failed", message: "", data: result.data };
+    }
+    return result;
+  });
+}
+
+/**
+ * Aceita o URL do email (?token=), o token de uso único, ou um JWT já emitido.
+ */
+export function parseCloudLoginPaste(value) {
+  const raw = String(value || "").trim().replace(/^["']|["']$/g, "");
+  if (!raw) return null;
+  const found = raw.match(/https?:\/\/[^\s<>"']+/i);
+  const candidate = found ? found[0] : raw;
+  try {
+    const url = new URL(candidate);
+    const token = url.searchParams.get("token");
+    if (token && token.trim()) return { kind: "magic", token: token.trim() };
+  } catch {
+    /* não é URL */
+  }
+  if (/^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(candidate)) {
+    return { kind: "bearer", token: candidate };
+  }
+  if (/^[A-Za-z0-9._~-]{16,}$/.test(candidate)) {
+    return { kind: "magic", token: candidate };
+  }
+  return null;
+}
+
+export async function establishCloudSession(pasted, env, { emailHint = "" } = {}) {
+  const parsed = parseCloudLoginPaste(pasted);
+  if (!parsed) return { ok: false, error: "invalid_token", message: "" };
+  const hint = String(emailHint || "").trim();
+  if (parsed.kind === "bearer") {
+    const session = await cloudFetch("/auth/session", { method: "GET", accessToken: parsed.token }, env);
+    if (!session.ok) return session;
+    const email =
+      session.data?.user?.email || session.data?.email || hint;
+    writeCloudSession({ accessToken: parsed.token, email: typeof email === "string" ? email : "" });
+    return { ok: true, email: typeof email === "string" ? email : "" };
+  }
+  const verified = await cloudFetch(
+    "/auth/verify",
+    {
+      method: "POST",
+      auth: false,
+      body: JSON.stringify({ token: parsed.token }),
+    },
+    env
+  );
+  const accessToken = verified.data?.accessToken;
+  if (!verified.ok || typeof accessToken !== "string" || !accessToken.trim()) {
+    if (verified.ok) return { ok: false, error: "invalid_token", message: "" };
+    return verified.error ? verified : { ...verified, error: "invalid_token" };
+  }
+  const email = verified.data?.user?.email || hint;
+  writeCloudSession({
+    accessToken: accessToken.trim(),
+    email: typeof email === "string" ? email : "",
+  });
+  return { ok: true, email: typeof email === "string" ? email : "" };
+}
+
+export async function endCloudSession(env) {
+  if (readCloudSession() && isCloudEnabled(env)) {
+    await cloudFetch("/auth/logout", { method: "POST" }, env);
+  }
+  clearCloudSession();
+}
+
+export function cloudVerifyUrl(env) {
+  const base = getCloudBaseUrl(env);
+  if (!base) return "";
+  return `${base}${CLOUD_VERIFY_PATH}`;
 }
 
 export function installCloudHooks(target) {
@@ -198,8 +440,13 @@ export function installCloudHooks(target) {
     isCloudEnabled,
     getCloudFlags,
     getCloudBaseUrl,
+    getCloudAccount,
     callCloud,
     cloudFetch,
+    requestMagicLink,
+    establishCloudSession,
+    endCloudSession,
+    cloudVerifyUrl,
   };
   host.GuiaFlowCloud = api;
   return api;

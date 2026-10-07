@@ -46,8 +46,10 @@ import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createHistory } from "./history.js";
 import {
   publishShareLink,
+  publishPermanentShare,
   revokeShareLink,
   copyText,
+  permanentShareErrorMessage,
 } from "./share.js";
 import { shareViewUrl } from "./shareSnapshot.js";
 import {
@@ -68,8 +70,15 @@ import {
   shouldShowReleaseNotes,
 } from "./releaseNotes.js";
 import { COMPACT_LANDSCAPE_MQ, COMPACT_TOUCH_MQ, isCompactLandscape, isCompactTouch } from "./compact.js";
-// why: registra os stubs do Cloud em window.GuiaFlowCloud; sem URL base as flags ficam desligadas.
-import "./cloudConfig.js";
+import {
+  cloudVerifyUrl,
+  endCloudSession,
+  establishCloudSession,
+  getCloudAccount,
+  getCloudFlags,
+  isCloudEnabled,
+  requestMagicLink,
+} from "./cloudConfig.js";
 
 let project = null;
 let selectedIndex = 0;
@@ -542,6 +551,48 @@ function paintShareMenu() {
   const hasShare = Boolean(project?.share?.id && project?.share?.writeToken);
   if (publishBtn) publishBtn.hidden = hasShare;
   if (actions) actions.hidden = !hasShare;
+  paintCloudShare();
+}
+
+function cloudShareEnabled() {
+  return isCloudEnabled() && getCloudFlags().permanentShare;
+}
+
+function paintCloudShare() {
+  const block = document.getElementById("cloud-share-block");
+  if (!block) return;
+  const enabled = cloudShareEnabled();
+  block.hidden = !enabled;
+  const account = getCloudAccount();
+  const accountEl = document.getElementById("cloud-account");
+  const accountLabel = document.getElementById("cloud-account-label");
+  if (accountEl) accountEl.hidden = !enabled || !account.signedIn;
+  if (accountLabel) {
+    accountLabel.textContent = account.signedIn
+      ? account.email
+        ? t("share.cloud.signedIn", { email: account.email })
+        : t("share.cloud.signedInAnon")
+      : "";
+  }
+  const url = enabled ? project?.cloudShare?.url || "" : "";
+  const result = document.getElementById("cloud-share-actions");
+  const urlInput = document.getElementById("cloud-share-url");
+  if (result) result.hidden = !url;
+  if (urlInput) urlInput.value = url;
+  const login = document.getElementById("cloud-login");
+  if (login && (!enabled || account.signedIn)) login.hidden = true;
+  const openSite = document.getElementById("cloud-open-site");
+  if (openSite) {
+    const href = cloudVerifyUrl();
+    if (href) openSite.href = href;
+  }
+}
+
+function showCloudLogin() {
+  const login = document.getElementById("cloud-login");
+  if (!login || !cloudShareEnabled()) return;
+  login.hidden = false;
+  document.getElementById("cloud-email")?.focus();
 }
 
 function syncThemeUi() {
@@ -1288,6 +1339,140 @@ function bindChrome() {
       toast(err?.message || t("share.errGeneric"));
     }
   });
+  document.getElementById("btn-cloud-share")?.addEventListener("click", () => {
+    if (!project || !cloudShareEnabled()) return;
+    if (!getCloudAccount().signedIn) {
+      showCloudLogin();
+      return;
+    }
+    void runCloudPublish();
+  });
+
+  document.getElementById("cloud-magic-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void sendCloudMagicLink();
+  });
+
+  document.getElementById("btn-cloud-continue")?.addEventListener("click", () => {
+    void continueCloudLogin();
+  });
+
+  document.getElementById("btn-cloud-copy")?.addEventListener("click", async () => {
+    const url = project?.cloudShare?.url;
+    if (!url) return;
+    try {
+      await copyText(url);
+      toast(t("toast.cloudCopied"));
+    } catch (err) {
+      console.error(err);
+      toast(err?.message || t("share.cloud.generic"));
+    }
+  });
+
+  document.getElementById("btn-cloud-signout")?.addEventListener("click", async () => {
+    await endCloudSession();
+    paintCloudShare();
+    showCloudLogin();
+  });
+
+  async function sendCloudMagicLink() {
+    const status = document.getElementById("cloud-login-status");
+    const email = document.getElementById("cloud-email")?.value || "";
+    const button = document.getElementById("btn-cloud-magic");
+    if (button) button.disabled = true;
+    if (status) status.textContent = "";
+    try {
+      const result = await requestMagicLink(email);
+      if (!result.ok) {
+        if (status) status.textContent = permanentShareErrorMessage(result);
+        return;
+      }
+      if (status) status.textContent = t("share.cloud.sent", { email: String(email).trim() });
+      document.getElementById("cloud-paste")?.focus();
+    } catch (err) {
+      console.error(err);
+      if (status) status.textContent = t("share.cloud.network");
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function continueCloudLogin() {
+    const status = document.getElementById("cloud-login-status");
+    const pasted = document.getElementById("cloud-paste")?.value || "";
+    const emailHint = document.getElementById("cloud-email")?.value || "";
+    const button = document.getElementById("btn-cloud-continue");
+    if (button) button.disabled = true;
+    try {
+      const session = await establishCloudSession(pasted, undefined, { emailHint });
+      if (!session.ok) {
+        if (status) status.textContent = permanentShareErrorMessage(session);
+        return;
+      }
+      const paste = document.getElementById("cloud-paste");
+      if (paste) paste.value = "";
+      if (status) status.textContent = "";
+      paintCloudShare();
+      await runCloudPublish();
+    } catch (err) {
+      console.error(err);
+      if (status) status.textContent = err?.message || t("share.cloud.network");
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function runCloudPublish() {
+    closeExportMenu();
+    if (!project || !cloudShareEnabled()) return;
+    if (!project.steps?.length) {
+      toast(t("share.errGeneric"));
+      return;
+    }
+    if (!getCloudAccount().signedIn) {
+      if (exportPanel) exportPanel.open = true;
+      showCloudLogin();
+      return;
+    }
+    project.theme = formToTheme(project.theme);
+    showExportOverlay(t("share.cloud.overlay"));
+    try {
+      const share = await publishPermanentShare(project, {
+        onProgress: (msg) => {
+          overlayStatus.textContent = msg;
+        },
+      });
+      project.cloudShare = {
+        id: share.id,
+        url: share.url,
+        updatedAt: share.updatedAt,
+      };
+      saveDirty = true;
+      await flushAutosave();
+      paintCloudShare();
+      hideExportOverlay();
+      if (exportPanel) exportPanel.open = true;
+      try {
+        await copyText(share.url);
+        toast(t("toast.cloudPublished"), 4200);
+      } catch (err) {
+        console.error(err);
+      }
+    } catch (err) {
+      console.error(err);
+      hideExportOverlay();
+      if (err?.code === "unauthorized" || err?.status === 401) {
+        await endCloudSession();
+        paintCloudShare();
+        if (exportPanel) exportPanel.open = true;
+        showCloudLogin();
+        const status = document.getElementById("cloud-login-status");
+        if (status) status.textContent = err?.message || t("share.cloud.unauthorized");
+      }
+      toast(err?.message || t("share.cloud.generic"));
+    }
+  }
+
   document.getElementById("btn-share-revoke")?.addEventListener("click", async () => {
     closeExportMenu();
     if (!project?.share) return;
@@ -1473,6 +1658,7 @@ async function boot() {
   bindLocaleSelect(document.getElementById("locale-select"), () => {
     applyChromeAppearance();
     paintChrome();
+    paintShareMenu();
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();

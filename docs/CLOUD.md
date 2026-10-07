@@ -1,6 +1,6 @@
 # GuiaFlow Cloud
 
-Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Nada neste repositório chama uma API paga.
+Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A API Cloud só é chamada quando há um URL base configurado.
 
 O app público continua em [https://guiaflow-seven.vercel.app](https://guiaflow-seven.vercel.app).
 
@@ -10,7 +10,7 @@ O app público continua em [https://guiaflow-seven.vercel.app](https://guiaflow-
 
 **BYOK continua aqui.** Quem quiser IA ou voz traz a própria chave pelos módulos que já existem: `js/llm.js`, `js/cartesia.js` e os stores `js/llm-store.js` e `js/cartesia-store.js`. O Cloud não remove nem quebra esse caminho.
 
-**GuiaFlow Cloud** é um companheiro privado, noutro código, fora deste repositório MIT (o nome do produto é `guiaflow-cloud`). Ele é opcional. Quando existir, pode acrescentar:
+**GuiaFlow Cloud** é um companheiro privado, noutro código, fora deste repositório MIT (o nome do produto é `guiaflow-cloud`). Ele é opcional. Pode acrescentar:
 
 - IA sem BYOK (hospedada)
 - TTS hospedado
@@ -25,21 +25,23 @@ O app público continua em [https://guiaflow-seven.vercel.app](https://guiaflow-
 | Editor e player | Gratuitos para sempre | Não substitui o editor aberto |
 | IA | A sua chave (BYOK) | IA hospedada, sem a chave no browser |
 | TTS | A sua chave (BYOK) | Voz hospedada |
-| Compartilhar | Preview temporário (Vercel Blob), como hoje | Links permanentes |
+| Compartilhar | Preview temporário (Vercel Blob), 7 dias | Link permanente (`POST /shares`) quando a URL base está configurada |
 | Marca | Temas do próprio tour | Branding da conta |
 | Analytics | Não | Uso do tour publicado |
 
-O link de preview em `js/share.js` não muda. Este repositório não implementa compartilhamento permanente contra o Cloud.
+O preview de 7 dias em `publishShareLink` (`js/share.js`) não muda. O link permanente é um caminho à parte, só quando a URL base existe e a flag `permanentShare` está ligada.
 
 ## Hooks
 
-`js/cloudConfig.js` só prepara o encaixe. Os helpers são stubs: não há Stripe, segredo, nem `fetch`.
+`js/cloudConfig.js` lê o URL base e, se ele existir, `cloudFetch` fala com essa API. Não há Stripe, `AUTH_SECRET` nem chave de API neste repositório. O bearer da sessão fica só no `localStorage` do navegador (`guiaflow.cloud.session`).
 
-O URL base da API, se um dia for configurado, vem só de um destes lugares (endereço, nunca chave):
+O URL base vem de um destes lugares (endereço, nunca chave):
 
 1. `window.__GUIAFLOW_CLOUD__` — uma string `https://…` ou `{ baseUrl, flags? }`
 2. `<meta name="guiaflow-cloud-base" content="https://…">`
 3. `localStorage["guiaflow.cloud.baseUrl"]`
+
+No app publicado (`guiaflow-seven.vercel.app` e `guiaflow.pro`) o editor define `window.__GUIAFLOW_CLOUD__ = "https://guiaflow.pro"` quando ninguém definiu antes. Em `localhost` e no app desktop isso não acontece: o preview no Blob continua a ser o único caminho.
 
 Userinfo, query e hash são descartados. Um valor que não seja `http:` ou `https:` conta como ausente.
 
@@ -47,13 +49,25 @@ Sem URL base:
 
 - `isCloudEnabled()` devolve `false`
 - `getCloudFlags()` devolve as cinco flags em `false`
-- `callCloud` / `cloudFetch` devolvem `{ ok: false, stub: true, reason: "cloud-not-configured" }`
+- `callCloud` / `cloudFetch` devolvem `{ ok: false, stub: true, reason: "cloud-not-configured" }` e não chamam `fetch`
+- o menu Compartilhar mostra só o preview temporário
 
-Com URL base, as flags passam a ler como disponíveis (`true`), ainda assim só como stub. Dá para desligar uma delas com `flags: { tts: false }`. A chamada continua sem rede e devolve `{ ok: false, stub: true, reason: "not-implemented" }`. A ligação real fica para depois, fora deste código MIT.
+Com URL base, as flags passam a ler como disponíveis (`true`). Dá para desligar uma delas com `flags: { permanentShare: false }`. `cloudFetch` faz o pedido HTTP (Bearer se houver sessão). `callCloud` continua stub `{ ok: false, stub: true, reason: "not-implemented" }` para o que este repo não liga: IA hospedada, TTS, marca e analytics.
 
 Flags: `hostedAi`, `tts`, `permanentShare`, `branding`, `analytics`.
 
-Nenhum fluxo de LLM, Cartesia ou share consulta essas flags hoje. O editor só importa o módulo para o deixar disponível em `window.GuiaFlowCloud`.
+### Link permanente
+
+No menu **Compartilhar**, com a nuvem ligada:
+
+1. **Preview temporário** — o fluxo Blob de 7 dias, como antes.
+2. **Link permanente** — **Compartilhar na nuvem**.
+
+Se não houver sessão, o painel pede o email (`POST /auth/magic-link`) e o link que chega no email. O editor confirma com `POST /auth/verify` e guarda o JWT. A página `https://guiaflow.pro/auth/verify` também entra na conta, mas a sessão dela fica nesse domínio; por isso a publicação continua quando o link do email é colado aqui.
+
+Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` (`https://guiaflow.pro/v/{slug}`) com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Cloud». `401` pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
+
+O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JSON local não depende da nuvem.
 
 ## English
 
@@ -63,4 +77,4 @@ Nenhum fluxo de LLM, Cartesia ou share consulta essas flags hoje. O editor só i
 
 **GuiaFlow Cloud** is a private companion (not part of this MIT repo; product name `guiaflow-cloud`). It may later add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics.
 
-Hooks here are stubs. With no Cloud API base URL every flag is false and helpers no-op. With a base URL set, flags may read as available, but `callCloud` / `cloudFetch` still return `{ ok: false, stub: true, reason: "not-implemented" }` and do not touch the network. The existing Vercel Blob preview share stays as it is.
+With no Cloud API base URL every flag is false and helpers do not touch the network. The published editor sets the base URL to `https://guiaflow.pro`; localhost and the desktop app stay Blob-only. `cloudFetch` performs the permanent-share and magic-link calls. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview is unchanged.

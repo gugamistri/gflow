@@ -3,6 +3,12 @@
  */
 import { t } from "./i18n.js";
 import {
+  cloudFetch,
+  getCloudBaseUrl,
+  getCloudFlags,
+  isCloudEnabled,
+} from "./cloudConfig.js";
+import {
   assertShareSnapshotSafe,
   buildShareSnapshot,
   shareViewUrl,
@@ -148,6 +154,100 @@ export async function revokeShareLink(share) {
     method: "DELETE",
     body: JSON.stringify({ writeToken: share.writeToken }),
   });
+}
+
+function cloudPlanLimitMessage(data) {
+  const plan = String(data?.plan || data?.tier || data?.product || "").toLowerCase();
+  if (/(cloud|pro|paid|team|plus)/.test(plan)) return t("share.cloud.limitCloud");
+  if (/(free|hobby|starter)/.test(plan)) return t("share.cloud.limitFree");
+  const limit = Number(data?.limit ?? data?.max ?? data?.cap);
+  if (Number.isFinite(limit) && limit >= 25) return t("share.cloud.limitCloud");
+  return t("share.cloud.limitFree");
+}
+
+/**
+ * Mensagens do link permanente. why: a API manda códigos; a interface fala em português.
+ */
+export function permanentShareErrorMessage(result) {
+  const data = result?.data && typeof result.data === "object" ? result.data : {};
+  const code = String(result?.error || result?.reason || data.error || "");
+  if (code === "share_limit" || data.error === "share_limit") return cloudPlanLimitMessage(data);
+  if (result?.status === 401 || code === "unauthorized") return t("share.cloud.unauthorized");
+  if (code === "invalid_email") return t("share.cloud.invalidEmail");
+  if (code === "invalid_token") return t("share.cloud.invalidToken");
+  if (code === "email_failed" || code === "config_missing") return t("share.cloud.emailFailed");
+  if (code === "cloud-not-configured") return t("share.cloud.off");
+  if (code === "network" || code === "invalid_path") return t("share.cloud.network");
+  return t("share.cloud.generic");
+}
+
+function readPermanentPayload(data) {
+  const body = data && typeof data === "object" ? data : {};
+  const nested = body.share && typeof body.share === "object" ? body.share : null;
+  const url = String(nested?.url || body.url || "").trim();
+  const id = String(nested?.id || body.id || nested?.slug || body.slug || "").trim();
+  return { url, id };
+}
+
+function absoluteCloudUrl(url, env) {
+  const raw = String(url || "").trim();
+  if (!raw) return "";
+  try {
+    const base = getCloudBaseUrl(env);
+    return new URL(raw, base ? `${base}/` : undefined).toString();
+  } catch {
+    return raw;
+  }
+}
+
+/**
+ * Publica um link permanente em POST /shares.
+ * why: o preview de 7 dias continua em publishShareLink; este caminho é opcional.
+ */
+export async function publishPermanentShare(project, { onProgress, env, buildSnapshot = buildShareSnapshot } = {}) {
+  if (!isCloudEnabled(env) || !getCloudFlags(env).permanentShare) {
+    const err = new Error(permanentShareErrorMessage({ reason: "cloud-not-configured" }));
+    err.code = "cloud-not-configured";
+    throw err;
+  }
+  const snapshot = await buildSnapshot(project, { onProgress });
+  try {
+    assertShareSnapshotSafe(snapshot, project?.share?.writeToken);
+  } catch {
+    const err = new Error(t("share.errGeneric"));
+    err.code = "share_failed";
+    throw err;
+  }
+  onProgress?.(t("share.cloud.progress"));
+  const result = await cloudFetch(
+    "/shares",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        title: String(project?.name || snapshot?.name || "").slice(0, 200),
+        tour: snapshot,
+      }),
+    },
+    env
+  );
+  if (!result.ok) {
+    const err = new Error(permanentShareErrorMessage(result));
+    err.code = result.error || result.reason || "share_failed";
+    err.status = result.status;
+    throw err;
+  }
+  const payload = readPermanentPayload(result.data);
+  const url = absoluteCloudUrl(payload.url, env);
+  if (!url) {
+    const err = new Error(t("share.cloud.generic"));
+    err.code = "share_failed";
+    throw err;
+  }
+  return {
+    id: payload.id,
+    url,
+    updatedAt: Date.now(),
+  };
 }
 
 export async function copyText(text) {
