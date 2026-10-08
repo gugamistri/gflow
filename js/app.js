@@ -1189,6 +1189,13 @@ async function closeProject() {
   showLibrary();
 }
 
+function openNewProjectDialog() {
+  selectedNewThemeId = resolveAppearanceMode(appearancePreference);
+  document.getElementById("new-project-name").value = "";
+  renderNewProjectThemes();
+  document.getElementById("modal-new-project").showModal();
+}
+
 function showLibrary() {
   exitPresentation();
   player.stop?.();
@@ -1214,6 +1221,25 @@ function bindChrome() {
     const more = document.getElementById("more-panel");
     if (more) more.open = false;
     closeProject();
+  });
+  document.getElementById("btn-menu-new")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    openNewProjectDialog();
+  });
+  document.getElementById("btn-menu-open")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    if (chromeView === "library") {
+      document.getElementById("library-board")?.focus();
+      return;
+    }
+    void closeProject();
+  });
+  document.getElementById("btn-menu-import")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    document.getElementById("import-file")?.click();
   });
   document.getElementById("btn-shortcuts")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
@@ -1481,10 +1507,7 @@ function bindChrome() {
   }
 
   document.getElementById("btn-new-project").addEventListener("click", () => {
-    selectedNewThemeId = resolveAppearanceMode(appearancePreference);
-    document.getElementById("new-project-name").value = "";
-    renderNewProjectThemes();
-    document.getElementById("modal-new-project").showModal();
+    openNewProjectDialog();
   });
 
   document.getElementById("btn-cancel-new-project").addEventListener("click", () => {

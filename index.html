@@ -67,9 +67,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/19/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/19/css/theme.css" />
-  <link rel="stylesheet" href="a/19/css/app.css" />
+  <link rel="stylesheet" href="a/20/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/20/css/theme.css" />
+  <link rel="stylesheet" href="a/20/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -78,6 +78,21 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-menu"></use></svg>
         </summary>
         <div class="more-panel-body" id="more-panel-body">
+          <div class="more-group" id="more-file-group">
+            <button type="button" class="more-item" id="btn-menu-new">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+              <span data-i18n="menu.new">Novo</span>
+            </button>
+            <button type="button" class="more-item" id="btn-menu-open">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-open"></use></svg>
+              <span data-i18n="menu.open">Abrir</span>
+            </button>
+            <button type="button" class="more-item" id="btn-menu-import">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+              <span data-i18n="menu.import">Importar</span>
+            </button>
+          </div>
+          <hr class="more-divider" />
           <div class="more-group more-group-actions">
             <div class="more-editor-only" id="more-editor-only" hidden>
               <button type="button" class="more-item" id="btn-menu-projects">
@@ -378,14 +393,6 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
           <span data-i18n="topbar.capture">Capturar</span>
         </button>
-        <button type="button" class="btn btn-ghost" id="btn-import-library">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-          <span data-i18n="topbar.import">Importar</span>
-        </button>
-        <button type="button" class="btn btn-primary" id="btn-new-project">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          <span data-i18n="topbar.newProject">Novo projeto</span>
-        </button>
         <input type="file" id="import-file" accept="application/json,.json" hidden />
       </div>
       <div class="account-slot" id="account-slot" hidden>
@@ -454,7 +461,21 @@
       </div>
       <button type="button" class="btn btn-sm" id="release-notes-dismiss" data-i18n="releaseNotes.dismiss">Entendi</button>
     </aside>
-    <div class="library-grid" id="library-grid"></div>
+    <div class="library-grid" id="library-board" tabindex="-1">
+      <button type="button" class="library-action-card library-create-card" id="btn-new-project">
+        <span class="library-action-icon" aria-hidden="true">
+          <svg class="btn-ico"><use href="#i-plus"></use></svg>
+        </span>
+        <span data-i18n="topbar.newProject">Novo projeto</span>
+      </button>
+      <button type="button" class="library-action-card library-import-card" id="btn-import-library">
+        <span class="library-action-icon" aria-hidden="true">
+          <svg class="btn-ico"><use href="#i-import"></use></svg>
+        </span>
+        <span data-i18n="topbar.import">Importar</span>
+      </button>
+      <div id="library-grid" class="library-grid-items"></div>
+    </div>
     <p class="library-empty" id="library-empty" hidden data-i18n="library.empty">Nenhum guia ainda. Crie o primeiro ou importe um arquivo.</p>
   </main>
 
@@ -1224,7 +1245,7 @@
     </symbol>
   </svg>
 
-  <script src="a/19/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/19/js/app.js"></script>
+  <script src="a/20/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/20/js/app.js"></script>
 </body>
 </html>
