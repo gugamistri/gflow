@@ -1359,6 +1359,11 @@ textarea {
   color: var(--ns-ink);
 }
 
+.account-chip-plan.is-pending {
+  color: var(--ns-muted);
+  font-weight: 650;
+}
+
 .pro-badge {
   display: inline-flex;
   align-items: center;
@@ -1383,33 +1388,109 @@ textarea {
   flex: 0 0 auto;
 }
 
-.upgrade-modal .account-dialog-head h3 {
-  flex: 1;
-  min-width: 0;
-  line-height: 1.25;
-}
-
 .upgrade-modal {
-  max-width: 420px;
-  max-height: min(640px, calc(100dvh - 24px));
+  width: min(440px, calc(100vw - 24px));
+  max-width: 440px;
+  max-height: min(720px, calc(100dvh - 24px));
   overflow: auto;
+  border: 0;
+  padding: 0;
 }
 
 .upgrade-dialog {
   gap: 14px;
+  padding: 18px 18px 16px;
 }
 
-.upgrade-message,
-.upgrade-free-note {
+.paywall-hero {
+  display: grid;
+  gap: 8px;
+  margin: -18px -18px 0;
+  padding: 16px 18px 14px;
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--ns-accent) 28%, transparent), transparent 58%),
+    var(--ns-panel);
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.paywall-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.paywall-hero-badge {
+  margin-left: 0;
+}
+
+.paywall-hero h3 {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1.45rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.paywall-lead,
+.paywall-email-note {
+  margin: 0;
+  font-size: 0.92rem;
   font-weight: 400;
   line-height: 1.45;
   color: var(--ns-muted);
 }
 
-.upgrade-free-note {
-  font-size: 0.8rem;
+.paywall-email-note {
+  color: var(--ns-ink);
+  font-weight: 650;
+}
+
+.paywall-benefits {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.paywall-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.paywall-benefits li.is-highlight {
+  border-color: color-mix(in srgb, var(--ns-accent) 55%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-accent) 16%, var(--ns-panel));
+  font-weight: 700;
+}
+
+.paywall-check {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-accent) 22%, var(--ns-panel));
+  box-shadow: inset 0 0 0 1.5px var(--ns-accent);
+}
+
+.paywall-check::after {
+  content: "";
+  display: block;
+  width: 7px;
+  height: 4px;
+  margin: 5px auto 0;
+  border-left: 1.5px solid var(--ns-accent);
+  border-bottom: 1.5px solid var(--ns-accent);
+  transform: rotate(-45deg);
 }
 
 .upgrade-intervals {
@@ -1428,14 +1509,12 @@ textarea {
   gap: 2px;
   justify-items: start;
   align-content: center;
-  min-height: 44px;
-  padding: 10px 12px;
+  min-height: 96px;
+  padding: 12px;
   border: 1px solid var(--ns-border);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--ns-input-bg);
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 700;
   color: var(--ns-ink);
 }
 
@@ -1450,6 +1529,7 @@ textarea {
 .upgrade-interval:has(input:checked) {
   border-color: var(--ns-accent);
   background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
+  box-shadow: inset 0 0 0 1px var(--ns-accent);
 }
 
 .upgrade-interval:focus-within {
@@ -1457,28 +1537,158 @@ textarea {
   outline-offset: 2px;
 }
 
-.upgrade-save {
-  font-size: 0.72rem;
+.paywall-interval-name {
+  font-size: 0.78rem;
   font-weight: 650;
   color: var(--ns-muted);
 }
 
-.upgrade-modal .btn {
-  min-height: 44px;
+.paywall-price {
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
-.upgrade-modal .studio-modal-actions {
-  margin-top: 0;
+.paywall-cadence,
+.upgrade-save {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--ns-muted);
 }
 
-@media (max-width: 520px) {
-  .upgrade-modal .studio-modal-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
+.upgrade-interval:has(input:checked) .upgrade-save {
+  color: var(--ns-ink);
+}
+
+.paywall-cta {
+  width: 100%;
+  min-height: 46px;
+  font-size: 1rem;
+}
+
+.paywall-login {
+  justify-self: center;
+  border: 0;
+  background: transparent;
+  color: var(--ns-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.paywall-login:hover,
+.paywall-login:focus-visible {
+  color: var(--ns-ink);
+}
+
+.local-save {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  max-width: 100%;
+}
+
+.local-save-chip,
+.local-save-dismiss {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.local-save-chip {
+  color: var(--ns-muted);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  padding: 2px 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ns-muted) 45%, transparent);
+  text-underline-offset: 2px;
+}
+
+.local-save-chip:hover,
+.local-save-chip:focus-visible {
+  color: var(--ns-ink);
+}
+
+.local-save-dismiss {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: var(--ns-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.local-save-dismiss:hover,
+.local-save-dismiss:focus-visible {
+  background: var(--ns-hover);
+  color: var(--ns-ink);
+}
+
+.local-save-tip {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  top: calc(100% + 6px);
+  width: min(260px, 70vw);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ns-border);
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 24px rgba(15, 50, 72, 0.12);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.local-save:hover .local-save-tip,
+.local-save:focus-within .local-save-tip {
+  opacity: 1;
+}
+
+body.is-presenting .local-save {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .upgrade-modal {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
   }
 
-  .upgrade-modal .studio-modal-actions .btn {
-    width: 100%;
+  .upgrade-dialog {
+    padding: 14px 14px 12px;
+  }
+
+  .paywall-hero {
+    margin: -14px -14px 0;
+    padding: 14px 14px 12px;
+  }
+
+  .paywall-hero h3 {
+    font-size: 1.25rem;
+  }
+
+  .upgrade-intervals {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-interval {
+    min-height: 0;
+  }
+
+  #local-save-editor .local-save-tip {
+    display: none;
   }
 }
 

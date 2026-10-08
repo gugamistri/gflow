@@ -28,49 +28,71 @@ function withFetch(handler, run) {
 }
 
 test("o regresso de billing lê o tipo e limpa a query", () => {
-  const success = "https://guiaflow.pro/?billing=success&session_id=cs_test_abc123&tema=1#passo";
-  assert.deepEqual(readBillingReturn(success), {
-    kind: "success",
-    sessionId: "cs_test_abc123",
-  });
+  const success = "https://guiaflow.pro/?welcome=pro&code=handoff-1&tema=1#passo";
+  assert.deepEqual(readBillingReturn(success), { kind: "welcome", sessionId: "", code: "handoff-1" });
   assert.equal(stripBillingReturn(success), "https://guiaflow.pro/?tema=1#passo");
-  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=cancel"), {
+  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?checkout=cancel"), {
     kind: "cancel",
     sessionId: "",
+    code: "",
+  });
+  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?checkout=pending"), {
+    kind: "pending",
+    sessionId: "",
+    code: "",
+  });
+  assert.equal(stripBillingReturn("https://guiaflow.pro/?checkout=pending"), "https://guiaflow.pro/");
+  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=success&session_id=cs_test_abc123"), {
+    kind: "welcome",
+    sessionId: "cs_test_abc123",
+    code: "",
   });
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=portal&session_id=cs_should_not_stick"), {
     kind: "portal",
     sessionId: "",
+    code: "",
   });
   assert.equal(stripBillingReturn("https://guiaflow.pro/?billing=portal&session_id=cs_should_not_stick"), "https://guiaflow.pro/");
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=success&session_id=javascript:alert(1)"), {
-    kind: "success",
+    kind: "welcome",
     sessionId: "",
+    code: "",
   });
-  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?outra=1"), { kind: "", sessionId: "" });
+  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?outra=1"), { kind: "", sessionId: "", code: "" });
   assert.equal(readBillingReturn("https://guiaflow.pro/").kind, "");
 });
 
 test("entitlement lê plan e status, no corpo ou aninhado", () => {
-  assert.deepEqual(parseEntitlement({ plan: "free", status: "none", active: false }), {
-    plan: "free",
+  assert.deepEqual(parseEntitlement({ plan: "none", status: "none", active: false }), {
+    plan: "none",
     status: "none",
     interval: "",
     active: false,
   });
-  assert.deepEqual(
-    parseEntitlement({ plan: "cloud", status: "active", interval: "annual", active: true }),
-    { plan: "cloud", status: "active", interval: "annual", active: true }
-  );
-  assert.deepEqual(parseEntitlement({ entitlement: { plan: "cloud", status: "trialing", interval: "month" } }), {
-    plan: "cloud",
+  assert.deepEqual(parseEntitlement({ plan: "pro", status: "active", interval: "annual", active: true }), {
+    plan: "pro",
+    status: "active",
+    interval: "annual",
+    active: true,
+  });
+  assert.deepEqual(parseEntitlement({ entitlement: { plan: "pro", status: "trialing", interval: "month" } }), {
+    plan: "pro",
     status: "trialing",
     interval: "monthly",
     active: true,
   });
-  assert.equal(parseEntitlement({ plan: "cloud", status: "canceled" }).active, false);
-  assert.equal(parseEntitlement({ plan: "cloud", status: "active", active: false }).active, false);
-  assert.equal(parseEntitlement({ subscription: { plan: "cloud", status: "past_due", interval: "year" } }).active, true);
+  assert.equal(parseEntitlement({ plan: "cloud", status: "active" }).plan, "pro");
+  assert.equal(parseEntitlement({ plan: "free", status: "none" }).plan, "none");
+  assert.equal(parseEntitlement({ plan: "pro", status: "canceled" }).active, false);
+  assert.equal(parseEntitlement({ plan: "pro", status: "active", active: false }).active, false);
+  const late = parseEntitlement({ plan: "pro", status: "past_due", interval: "year", active: true });
+  assert.equal(late.active, false);
+  assert.equal(late.plan, "none");
+  assert.equal(late.status, "past_due");
+  assert.deepEqual(
+    billingMenuModel({ signedIn: true, status: "ready", entitlement: late }),
+    { showPlan: true, showAction: true, planLabel: "past_due", action: "portal" }
+  );
 });
 
 test("o menu esconde o plano quando o billing não está disponível", () => {
@@ -80,22 +102,21 @@ test("o menu esconde o plano quando o billing não está disponível", () => {
     planLabel: "",
     action: "",
   });
-  assert.equal(
-    billingMenuModel({
-      signedIn: true,
-      status: "ready",
-      entitlement: { plan: "free", active: false },
-    }).action,
-    "checkout"
-  );
-  assert.equal(
-    billingMenuModel({
-      signedIn: true,
-      status: "ready",
-      entitlement: { plan: "cloud", active: true },
-    }).action,
-    "portal"
-  );
+  const guestPlan = billingMenuModel({
+    signedIn: true,
+    status: "ready",
+    entitlement: { plan: "none", active: false },
+  });
+  assert.equal(guestPlan.action, "checkout");
+  assert.equal(guestPlan.showPlan, false);
+  assert.equal(guestPlan.planLabel, "none");
+  const proPlan = billingMenuModel({
+    signedIn: true,
+    status: "ready",
+    entitlement: { plan: "pro", active: true },
+  });
+  assert.equal(proPlan.action, "portal");
+  assert.equal(proPlan.planLabel, "pro");
   assert.equal(billingMenuModel({ signedIn: false, status: "ready", entitlement: { active: true } }).showPlan, false);
 });
 
@@ -154,7 +175,7 @@ test("checkout e portal seguem o URL devolvido e mandam o intervalo", async () =
       return {
         ok: true,
         status: 200,
-        json: async () => ({ checkout: { url: "https://checkout.stripe.com/c/pay/cs_test_page" } }),
+        json: async () => ({ ok: true, url: "https://checkout.stripe.com/c/pay/cs_test_page" }),
       };
     }
     if (href.endsWith("/billing/portal")) {
@@ -173,12 +194,18 @@ test("checkout e portal seguem o URL devolvido e mandam o intervalo", async () =
     }
     return { ok: false, status: 500, json: async () => ({}) };
   }, async () => {
-    const checkout = await startBillingCheckout("annual", env);
+    const checkout = await startBillingCheckout(
+      { interval: "annual", currency: "brl", email: "ana@exemplo.com", source: "tts" },
+      env
+    );
     assert.equal(checkout.ok, true);
     assert.equal(checkout.url, "https://checkout.stripe.com/c/pay/cs_test_page");
     const checkoutInit = seen[0].init;
     assert.equal(checkoutInit.method, "POST");
-    assert.equal(checkoutInit.body, JSON.stringify({ interval: "annual" }));
+    assert.equal(
+      checkoutInit.body,
+      JSON.stringify({ interval: "year", currency: "brl", email: "ana@exemplo.com", source: "tts" })
+    );
     assert.equal(new Headers(checkoutInit.headers).get("authorization"), "Bearer jwt-session");
     assert.equal(checkoutInit.body.includes("price"), false);
     assert.equal(seen[0].url, "https://app.guiaflow.pro/billing/checkout");
@@ -189,7 +216,7 @@ test("checkout e portal seguem o URL devolvido e mandam o intervalo", async () =
 
     const entitled = await fetchBillingEntitlement("cs_test_abc123", env);
     assert.equal(entitled.entitlement.active, true);
-    assert.equal(entitled.entitlement.plan, "cloud");
+    assert.equal(entitled.entitlement.plan, "pro");
     assert.equal(
       seen[2].url,
       "https://app.guiaflow.pro/billing/entitlement?session_id=cs_test_abc123"
@@ -203,7 +230,7 @@ test("checkout e portal seguem o URL devolvido e mandam o intervalo", async () =
     const javascriptUrl = await withFetch(async () => ({
       ok: true,
       status: 200,
-      json: async () => ({ checkout: { url: "javascript:alert(1)" } }),
+      json: async () => ({ ok: true, url: "javascript:alert(1)" }),
     }), () => startBillingCheckout("monthly", env));
     assert.equal(javascriptUrl.ok, false);
     assert.equal(javascriptUrl.url, "");

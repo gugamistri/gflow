@@ -95,18 +95,21 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   }
   assert.equal(catalogs.pt["billing.monthly"], "Mensal");
   assert.equal(catalogs.pt["billing.annual"], "Anual");
-  assert.equal(catalogs.pt["billing.save"], "economize");
-  assert.equal(catalogs.pt["billing.subscribe"], "Assinar");
-  assert.equal(catalogs.pt["billing.dismiss"], "Agora não");
-  assert.equal(catalogs.pt["billing.planFree"], "Grátis");
-  assert.equal(catalogs.pt["billing.planCloud"], "Pro");
+  assert.equal(catalogs.pt["billing.savePercent"], "economize {percent}%");
+  assert.equal(catalogs.pt["billing.subscribe"], "Assinar Pro");
+  assert.equal(catalogs.pt["account.subscribeOrSignIn"], "Assinar / Entrar");
+  assert.equal(catalogs.pt["billing.planCloud"], "GuiaFlow\u00a0Pro");
   assert.equal(catalogs.pt["billing.badge"], "Pro");
   assert.equal(catalogs.pt["billing.title"], "GuiaFlow\u00a0Pro");
   assert.equal(catalogs.pt["billing.subscribeMenu"], "Assinar Pro");
+  assert.equal(catalogs.pt["billing.emailMissing"], "Esse e-mail ainda não tem GuiaFlow\u00a0Pro.");
+  assert.equal(catalogs.pt["billing.localSave"], "Salvo só neste navegador");
+  assert.match(catalogs.pt["billing.localSaveTip"], /cache/);
   assert.equal(catalogs.pt["billing.hostedAiTitle"], "Gerar texto com IA faz parte do GuiaFlow\u00a0Pro");
   assert.equal(catalogs.pt["billing.ttsTitle"], "Gerar áudio com IA faz parte do GuiaFlow\u00a0Pro");
   assert.equal(/GuiaFlow Cloud/.test(catalogs.pt["billing.message"]), false);
-  assert.match(catalogs.pt["billing.freeNote"], /grátis/i);
+  assert.equal(/grátis|gratis|free plan/i.test(catalogs.pt["billing.heroLead"]), false);
+  assert.equal(/grátis|gratis/i.test(catalogs.pt["export.removeMarkDesc"]), false);
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const start = html.indexOf('id="modal-upgrade"');
   const end = html.indexOf("</dialog>", start);
@@ -123,10 +126,12 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(html.includes(">Cloud<"), false);
   assert.match(dialog, /Mensal/);
   assert.match(dialog, /Anual/);
-  assert.match(dialog, /economize/);
-  assert.match(dialog, /Assinar/);
-  assert.match(dialog, /Agora não/);
-  assert.match(dialog, /continua grátis/);
+  assert.match(dialog, /Assinar Pro/);
+  assert.match(dialog, /Já assino\? Entrar/);
+  assert.match(dialog, /paywall-benefits/);
+  assert.equal(/grátis|gratis/i.test(dialog), false);
+  assert.match(html, /Assinar \/ Entrar/);
+  assert.match(html, /Salvo só neste navegador/);
 });
 
 test("catálogos compartilham as mesmas chaves", () => {

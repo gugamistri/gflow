@@ -67,9 +67,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/22/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/22/css/theme.css" />
-  <link rel="stylesheet" href="a/22/css/app.css" />
+  <link rel="stylesheet" href="a/23/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/23/css/theme.css" />
+  <link rel="stylesheet" href="a/23/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -342,7 +342,7 @@
             <div id="cloud-share-block" class="cloud-share-block" hidden>
               <div id="cloud-share-guest" class="cloud-share-guest" hidden>
                 <p data-i18n="share.cloud.needAccount">Entre para publicar um link permanente.</p>
-                <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="account.signIn">Entrar</button>
+                <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="billing.subscribe">Assinar Pro</button>
               </div>
               <button type="button" class="export-option" id="btn-cloud-share" hidden>
                 <strong>
@@ -379,7 +379,7 @@
                   <span data-i18n="billing.badge">Pro</span>
                 </span>
               </strong>
-              <span data-i18n="export.removeMarkDesc">O vídeo grátis mostra o logo GuiaFlow.</span>
+              <span data-i18n="export.removeMarkDesc">O vídeo mostra o logo GuiaFlow. O Pro exporta sem a marca.</span>
             </button>
             <button type="button" class="export-option" id="btn-export-json">
               <strong data-i18n="export.jsonTitle">JSON</strong>
@@ -396,7 +396,7 @@
         <input type="file" id="import-file" accept="application/json,.json" hidden />
       </div>
       <div class="account-slot" id="account-slot" hidden>
-        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.signIn">Entrar</button>
+        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.subscribeOrSignIn">Assinar / Entrar</button>
         <details class="account-chip" id="account-chip" hidden>
           <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
             <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
@@ -448,6 +448,11 @@
       <div>
         <h1 data-i18n="library.title">Projetos</h1>
         <p data-i18n="library.lead">Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
+        <p class="local-save" id="local-save-library" hidden>
+          <button type="button" class="local-save-chip" data-local-save-open data-i18n="billing.localSave">Salvo só neste navegador</button>
+          <span class="local-save-tip" role="tooltip" data-i18n="billing.localSaveTip">Se limpar o cache ou os dados do site, os projetos deste navegador somem.</span>
+          <button type="button" class="local-save-dismiss" data-local-save-dismiss data-i18n-aria="billing.localSaveDismiss" aria-label="Ocultar aviso">×</button>
+        </p>
       </div>
     </div>
     <aside class="release-notes" id="release-notes" hidden>
@@ -482,6 +487,11 @@
     <aside class="filmstrip-panel" id="filmstrip-panel">
       <div class="filmstrip-header">
         <p class="filmstrip-metrics" id="filmstrip-metrics" aria-live="polite"></p>
+        <p class="local-save" id="local-save-editor" hidden>
+          <button type="button" class="local-save-chip" data-local-save-open data-i18n="billing.localSave">Salvo só neste navegador</button>
+          <span class="local-save-tip" role="tooltip" data-i18n="billing.localSaveTip">Se limpar o cache ou os dados do site, os projetos deste navegador somem.</span>
+          <button type="button" class="local-save-dismiss" data-local-save-dismiss data-i18n-aria="billing.localSaveDismiss" aria-label="Ocultar aviso">×</button>
+        </p>
         <span class="filmstrip-multi-hint" data-i18n="filmstrip.multiHint">⌘/Ctrl+clique ou Shift para selecionar vários</span>
       </div>
       <div class="filmstrip" id="filmstrip" aria-label="Passos do demo" data-i18n-aria="filmstrip.aria"></div>
@@ -825,31 +835,61 @@
 
   <dialog class="studio-modal upgrade-modal" id="modal-upgrade" aria-labelledby="upgrade-dialog-title">
     <form class="studio-modal-body upgrade-dialog" id="upgrade-form">
-      <div class="account-dialog-head">
+      <div class="paywall-hero">
+        <div class="paywall-hero-top">
+          <span class="pro-badge paywall-hero-badge">
+            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+            <span data-i18n="billing.badge">Pro</span>
+          </span>
+          <button type="button" class="btn btn-icon" id="btn-upgrade-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+          </button>
+        </div>
         <h3 id="upgrade-dialog-title" data-i18n="billing.title">GuiaFlow&nbsp;Pro</h3>
-        <button type="button" class="btn btn-icon" id="btn-upgrade-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
+        <p id="upgrade-message" class="paywall-lead"></p>
+        <p id="upgrade-email-note" class="paywall-email-note" hidden></p>
       </div>
-      <p id="upgrade-message" class="upgrade-message"></p>
+      <ul class="paywall-benefits" id="paywall-benefits">
+        <li data-feature="account">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitAccount">Projetos salvos na sua conta, seguros mesmo se limpar o navegador</span>
+        </li>
+        <li data-feature="permanentShare">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitShare">Links permanentes</span>
+        </li>
+        <li data-feature="hostedAi">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitAi">Textos com IA</span>
+        </li>
+        <li data-feature="tts">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitTts">Áudio narrado</span>
+        </li>
+        <li data-feature="branding">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitBrand">Exportar vídeo sem a marca GuiaFlow</span>
+        </li>
+      </ul>
       <fieldset class="upgrade-intervals">
         <legend class="visually-hidden" data-i18n="billing.intervalAria">Periodicidade</legend>
         <label class="upgrade-interval">
-          <input type="radio" name="billing-interval" value="monthly" checked />
-          <span data-i18n="billing.monthly">Mensal</span>
+          <input type="radio" name="billing-interval" value="month" />
+          <span class="paywall-interval-name" data-i18n="billing.monthly">Mensal</span>
+          <strong class="paywall-price" data-price="month"></strong>
+          <span class="paywall-cadence" data-i18n="billing.perMonth">por mês</span>
         </label>
         <label class="upgrade-interval">
-          <input type="radio" name="billing-interval" value="annual" />
-          <span data-i18n="billing.annual">Anual</span>
-          <span class="upgrade-save" data-i18n="billing.save">economize</span>
+          <input type="radio" name="billing-interval" value="year" checked />
+          <span class="paywall-interval-name" data-i18n="billing.annual">Anual</span>
+          <strong class="paywall-price" data-price="year"></strong>
+          <span class="paywall-cadence" id="paywall-equiv"></span>
+          <span class="upgrade-save" id="paywall-save"></span>
         </label>
       </fieldset>
-      <p class="upgrade-free-note" data-i18n="billing.freeNote">O link temporário continua grátis.</p>
       <p id="upgrade-status" class="cloud-login-status" role="status"></p>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-upgrade-dismiss" data-i18n="billing.dismiss">Agora não</button>
-        <button type="submit" class="btn btn-primary" id="btn-upgrade-subscribe" data-i18n="billing.subscribe">Assinar</button>
-      </div>
+      <button type="submit" class="btn btn-primary paywall-cta" id="btn-upgrade-subscribe" data-i18n="billing.subscribe">Assinar Pro</button>
+      <button type="button" class="paywall-login" id="btn-upgrade-login" data-i18n="billing.already">Já assino? Entrar</button>
     </form>
   </dialog>
 
@@ -1244,7 +1284,7 @@
     </symbol>
   </svg>
 
-  <script src="a/22/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/22/js/app.js"></script>
+  <script src="a/23/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/23/js/app.js"></script>
 </body>
 </html>
