@@ -1,73 +1,105 @@
 (() => {
-  if (globalThis.__guiaBridgeInstalled) return;
-  globalThis.__guiaBridgeInstalled = true;
+  const BRIDGE_VERSION = 2;
+  if (globalThis.__guiaBridgeInstalled === BRIDGE_VERSION) return;
+  globalThis.__guiaBridgeInstalled = BRIDGE_VERSION;
 
-  const SOURCE = "guia-capture";
-  const EDITOR = "guia-editor";
-  let delivered = false;
-  let posted = false;
-  let pending = null;
-  let pendingMode = "create";
+  const deliver = globalThis.__guiaHandoffDeliver;
+  if (!deliver) return;
+
+  const { initialHandoffState, reduceHandoff } = deliver;
+  let state = initialHandoffState();
 
   function editorReady() {
     return document.documentElement?.dataset.guiaReady === "1";
   }
 
-  function askHandoff() {
-    chrome.runtime.sendMessage({ type: "HANDOFF_GET" }, (response) => {
-      if (chrome.runtime.lastError) return;
-      if (!response?.handoff?.payload) return;
-      tryDeliver(response.handoff.payload, response.handoff.mode);
+  function publish(result) {
+    state = result.state;
+    if (result.post) {
+      const message = {
+        source: "guia-capture",
+        type: result.post.type,
+        id: result.post.id,
+        payload: result.post.payload,
+      };
+      window.postMessage(message, location.origin);
+      document.dispatchEvent(new CustomEvent("guia-capture-handoff", { detail: message }));
+      chrome.runtime.sendMessage({ type: "HANDOFF_RELAY", message });
+    }
+    if (result.ack) {
+      chrome.runtime.sendMessage({
+        type: "HANDOFF_ACK",
+        id: result.ack.id,
+        ok: Boolean(result.ack.ok),
+        mode: result.ack.mode,
+        projectId: result.ack.projectId || null,
+        error: result.ack.error || null,
+      });
+    }
+  }
+
+  function apply(event) {
+    publish(reduceHandoff(state, event));
+  }
+
+  function ingest(payload, mode, id) {
+    apply({
+      type: "handoff",
+      payload,
+      mode,
+      id: id != null ? id : payload?.handoffId,
     });
   }
 
-  // invariant: postMessage only after the editor sets data-guia-ready, otherwise the listener is not bound yet and delivering stays stuck
-  function tryDeliver(payload, mode) {
-    if (delivered || posted) return;
-    if (payload) {
-      pending = payload;
-      pendingMode = mode === "append" ? "append" : "create";
-    }
-    if (!pending || !Array.isArray(pending.steps) || !editorReady()) return;
-    posted = true;
-    const type = pendingMode === "append" ? "append-steps" : "import-project";
-    window.postMessage(
-      {
-        source: SOURCE,
-        type,
-        payload: pending,
-      },
-      location.origin
-    );
+  function askHandoff() {
+    chrome.runtime.sendMessage({ type: "HANDOFF_GET" }, (response) => {
+      if (chrome.runtime.lastError) return;
+      const handoff = response?.handoff;
+      if (!handoff?.payload) return;
+      ingest(handoff.payload, handoff.mode, handoff.id != null ? handoff.id : handoff.createdAt);
+    });
   }
 
+  // guia-ready nasce na página. No mundo isolado a janela da página é outra, então a origem e o source da mensagem bastam.
   window.addEventListener("message", (event) => {
-    if (event.source !== window || event.origin !== location.origin) return;
+    if (event.origin !== location.origin) return;
     const data = event.data;
     if (!data || typeof data !== "object") return;
 
-    if (data.source === EDITOR && data.type === "guia-ready") {
+    if (data.source === "guia-editor" && data.type === "guia-ready") {
+      apply({ type: "editor-ready" });
       askHandoff();
       return;
     }
 
-    if (data.source === SOURCE && data.type === "import-ack") {
-      delivered = true;
-      chrome.runtime.sendMessage({
-        type: "HANDOFF_ACK",
-        ok: Boolean(data.ok),
-        mode: data.mode || pendingMode,
-        projectId: data.projectId || null,
-        error: data.error || null,
+    if (data.source === "guia-capture" && data.type === "import-ack") {
+      apply({
+        type: "ack",
+        id: data.id,
+        ok: data.ok,
+        mode: data.mode,
+        projectId: data.projectId,
+        error: data.error,
       });
     }
   });
 
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg?.type === "HANDOFF_PUSH" && msg.payload) {
-      tryDeliver(msg.payload, msg.mode);
+      ingest(msg.payload, msg.mode, msg.id);
     }
   });
 
+  function retryIfVisible() {
+    if (document.visibilityState === "hidden") return;
+    if (editorReady()) apply({ type: "editor-ready" });
+    apply({ type: "retry" });
+    askHandoff();
+  }
+
+  document.addEventListener("visibilitychange", retryIfVisible);
+  window.addEventListener("focus", retryIfVisible);
+
+  if (editorReady()) apply({ type: "editor-ready" });
   askHandoff();
 })();
