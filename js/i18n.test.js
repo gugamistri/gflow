@@ -82,6 +82,37 @@ test("o diálogo de entrada não mostra o host da API", () => {
   assert.equal(/nuvem|nube|Conectado como|Sair da nuvem/i.test(share), false);
   assert.equal(share.includes("cloud-account"), false);
   assert.equal(share.includes('id="cloud-login"'), false);
+  assert.match(share, /id="cloud-share-badge"/);
+});
+
+test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual", () => {
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const [key, value] of Object.entries(catalogs[loc])) {
+      if (!key.startsWith("billing.")) continue;
+      assert.equal(/nuvem|nube/i.test(value), false, `${loc} ${key}: ${value}`);
+      assert.equal(/R\$|\$\d|€/.test(value), false, `${loc} ${key}`);
+    }
+  }
+  assert.equal(catalogs.pt["billing.monthly"], "Mensal");
+  assert.equal(catalogs.pt["billing.annual"], "Anual");
+  assert.equal(catalogs.pt["billing.save"], "economize");
+  assert.equal(catalogs.pt["billing.subscribe"], "Assinar");
+  assert.equal(catalogs.pt["billing.dismiss"], "Agora não");
+  assert.equal(catalogs.pt["billing.planFree"], "Grátis");
+  assert.equal(catalogs.pt["billing.planCloud"], "Cloud");
+  assert.match(catalogs.pt["billing.freeNote"], /grátis/i);
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="modal-upgrade"');
+  const end = html.indexOf("</dialog>", start);
+  const dialog = html.slice(start, end);
+  assert.ok(start > 0 && end > start);
+  assert.equal(/nuvem/i.test(dialog), false);
+  assert.match(dialog, /Mensal/);
+  assert.match(dialog, /Anual/);
+  assert.match(dialog, /economize/);
+  assert.match(dialog, /Assinar/);
+  assert.match(dialog, /Agora não/);
+  assert.match(dialog, /continua grátis/);
 });
 
 test("catálogos compartilham as mesmas chaves", () => {

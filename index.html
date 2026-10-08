@@ -67,9 +67,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/17/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/17/css/theme.css" />
-  <link rel="stylesheet" href="a/17/css/app.css" />
+  <link rel="stylesheet" href="a/18/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/18/css/theme.css" />
+  <link rel="stylesheet" href="a/18/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -330,7 +330,10 @@
                 <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="account.signIn">Entrar</button>
               </div>
               <button type="button" class="export-option" id="btn-cloud-share" hidden>
-                <strong data-i18n="share.cloud.title">Link permanente</strong>
+                <strong>
+                  <span data-i18n="share.cloud.title">Link permanente</span>
+                  <span class="cloud-badge" id="cloud-share-badge" hidden data-i18n="billing.badge">Cloud</span>
+                </strong>
                 <span data-i18n="share.cloud.desc">Publicar link permanente</span>
               </button>
               <div class="cloud-share-result" id="cloud-share-actions" hidden>
@@ -380,6 +383,8 @@
           </summary>
           <div class="account-chip-menu">
             <p class="account-chip-email" id="account-chip-email"></p>
+            <p class="account-chip-plan" id="account-chip-plan" hidden></p>
+            <button type="button" class="account-chip-action" id="btn-account-billing" hidden></button>
             <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
           </div>
         </details>
@@ -777,6 +782,36 @@
     </div>
   </dialog>
 
+  <dialog class="studio-modal upgrade-modal" id="modal-upgrade" aria-labelledby="upgrade-dialog-title">
+    <form class="studio-modal-body upgrade-dialog" id="upgrade-form">
+      <div class="account-dialog-head">
+        <h3 id="upgrade-dialog-title" data-i18n="billing.title">GuiaFlow Cloud</h3>
+        <button type="button" class="btn btn-icon" id="btn-upgrade-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <p id="upgrade-message" class="upgrade-message"></p>
+      <fieldset class="upgrade-intervals">
+        <legend class="visually-hidden" data-i18n="billing.intervalAria">Periodicidade</legend>
+        <label class="upgrade-interval">
+          <input type="radio" name="billing-interval" value="monthly" checked />
+          <span data-i18n="billing.monthly">Mensal</span>
+        </label>
+        <label class="upgrade-interval">
+          <input type="radio" name="billing-interval" value="annual" />
+          <span data-i18n="billing.annual">Anual</span>
+          <span class="upgrade-save" data-i18n="billing.save">economize</span>
+        </label>
+      </fieldset>
+      <p class="upgrade-free-note" data-i18n="billing.freeNote">O link temporário continua grátis.</p>
+      <p id="upgrade-status" class="cloud-login-status" role="status"></p>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-upgrade-dismiss" data-i18n="billing.dismiss">Agora não</button>
+        <button type="submit" class="btn btn-primary" id="btn-upgrade-subscribe" data-i18n="billing.subscribe">Assinar</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog class="studio-modal shortcuts-modal" id="modal-shortcuts" aria-labelledby="shortcuts-title">
     <div class="studio-modal-body">
       <h3 id="shortcuts-title" data-i18n="shortcuts.title">Atalhos</h3>
@@ -1164,7 +1199,7 @@
     </symbol>
   </svg>
 
-  <script src="a/17/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/17/js/app.js"></script>
+  <script src="a/18/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/18/js/app.js"></script>
 </body>
 </html>
