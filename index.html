@@ -67,9 +67,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/18/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/18/css/theme.css" />
-  <link rel="stylesheet" href="a/18/css/app.css" />
+  <link rel="stylesheet" href="a/19/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/19/css/theme.css" />
+  <link rel="stylesheet" href="a/19/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -332,7 +332,10 @@
               <button type="button" class="export-option" id="btn-cloud-share" hidden>
                 <strong>
                   <span data-i18n="share.cloud.title">Link permanente</span>
-                  <span class="cloud-badge" id="cloud-share-badge" hidden data-i18n="billing.badge">Cloud</span>
+                  <span class="pro-badge" id="cloud-share-badge" hidden>
+                    <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                    <span data-i18n="billing.badge">Pro</span>
+                  </span>
                 </strong>
                 <span data-i18n="share.cloud.desc">Publicar link permanente</span>
               </button>
@@ -352,6 +355,16 @@
             <button type="button" class="export-option" id="btn-export-video">
               <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
               <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
+            </button>
+            <button type="button" class="export-option" id="btn-export-unbrand" hidden>
+              <strong>
+                <span data-i18n="export.removeMark">Remover marca GuiaFlow</span>
+                <span class="pro-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
+              </strong>
+              <span data-i18n="export.removeMarkDesc">O vídeo grátis mostra o logo GuiaFlow.</span>
             </button>
             <button type="button" class="export-option" id="btn-export-json">
               <strong data-i18n="export.jsonTitle">JSON</strong>
@@ -619,6 +632,10 @@
       >
         <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
         <span id="btn-generate-copy-label" data-i18n="props.generateCopyShort">Gerar textos</span>
+        <span class="pro-badge" id="pro-badge-copy" hidden>
+          <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+          <span data-i18n="billing.badge">Pro</span>
+        </span>
       </button>
       <label><span data-i18n="props.title">Título</span>
         <input type="text" id="prop-title" />
@@ -638,6 +655,10 @@
           <button type="button" class="btn btn-sm btn-generate-caption" id="btn-generate-caption" hidden data-i18n-aria="props.generateAudio" aria-label="Gerar áudio">
             <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
             <span id="btn-generate-caption-label" data-i18n="props.generateAudio">Gerar áudio</span>
+            <span class="pro-badge" id="pro-badge-audio" hidden>
+              <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+              <span data-i18n="billing.badge">Pro</span>
+            </span>
           </button>
           <button type="button" class="btn btn-sm" id="btn-upload-caption" hidden data-i18n="props.uploadAudio">Enviar áudio</button>
           <button type="button" class="btn btn-sm" id="btn-clear-caption-audio" hidden data-i18n="props.removeAudio">Remover</button>
@@ -785,7 +806,7 @@
   <dialog class="studio-modal upgrade-modal" id="modal-upgrade" aria-labelledby="upgrade-dialog-title">
     <form class="studio-modal-body upgrade-dialog" id="upgrade-form">
       <div class="account-dialog-head">
-        <h3 id="upgrade-dialog-title" data-i18n="billing.title">GuiaFlow Cloud</h3>
+        <h3 id="upgrade-dialog-title" data-i18n="billing.title">GuiaFlow&nbsp;Pro</h3>
         <button type="button" class="btn btn-icon" id="btn-upgrade-close" aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
@@ -1171,6 +1192,10 @@
     <symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="6" y="6" width="12" height="12" rx="1"/>
     </symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m3 8 4 4 5-8 5 8 4-4-2 10H5L3 8z"/>
+      <path d="M5 20h14"/>
+    </symbol>
     <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
       <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
@@ -1199,7 +1224,7 @@
     </symbol>
   </svg>
 
-  <script src="a/18/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/18/js/app.js"></script>
+  <script src="a/19/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/19/js/app.js"></script>
 </body>
 </html>

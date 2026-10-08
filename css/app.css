@@ -1359,10 +1359,12 @@ textarea {
   color: var(--ns-ink);
 }
 
-.cloud-badge {
-  display: inline-block;
+.pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: 6px;
-  padding: 0 6px;
+  padding: 0 6px 0 4px;
   border-radius: 999px;
   font-size: 0.62rem;
   font-weight: 750;
@@ -1372,6 +1374,19 @@ textarea {
   color: var(--ns-ink);
   background: color-mix(in srgb, var(--ns-accent) 24%, var(--ns-panel));
   border: 1px solid color-mix(in srgb, var(--ns-accent) 48%, var(--ns-border));
+}
+
+.pro-badge-crown {
+  width: 0.9em;
+  height: 0.9em;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.upgrade-modal .account-dialog-head h3 {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .upgrade-modal {
@@ -1674,7 +1689,10 @@ body.view-share .topbar .logo {
 }
 
 .export-option strong {
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   color: var(--ns-ink);
   font-size: 0.85rem;
 }
@@ -1686,6 +1704,37 @@ body.view-share .topbar .logo {
   margin-top: 2px;
   font-weight: 400;
   line-height: 1.35;
+}
+
+.export-option strong > span:not(.pro-badge) {
+  display: inline;
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.export-option .pro-badge {
+  display: inline-flex;
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: 0;
+  margin-left: 0;
+  color: var(--ns-ink);
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.export-option .pro-badge span {
+  display: inline;
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 .export-overlay {
