@@ -443,11 +443,12 @@ function paintChrome() {
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
   if (navEditor) navEditor.hidden = view !== "editor" || presenting || compact;
-  const editorMenuHidden = view !== "editor" || presenting || compact;
-  if (moreEditorOnly) moreEditorOnly.hidden = editorMenuHidden;
+  const inEditor = view === "editor" && !presenting;
+  if (moreEditorOnly) moreEditorOnly.hidden = !inEditor;
   document.querySelectorAll(".more-editor-pref").forEach((el) => {
-    el.hidden = editorMenuHidden;
-    if (editorMenuHidden) el.open = false;
+    const hidePrefs = !inEditor || compact;
+    el.hidden = hidePrefs;
+    if (hidePrefs) el.open = false;
   });
   if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
   if (presentClose) presentClose.hidden = !presenting || view !== "editor" || !compact;
@@ -502,17 +503,12 @@ function exitPresentation() {
     player.stop?.();
     return;
   }
-  const returnToLibrary = isCompactTouch() && Boolean(project);
   presenting = false;
   player.stop?.();
   document.body.classList.remove("is-presenting");
   document.getElementById("view-editor")?.classList.remove("is-presenting");
   document.getElementById("hotspot")?.classList.remove("is-previewing");
   paintChrome();
-  if (returnToLibrary) {
-    void closeProject();
-    return;
-  }
   if (project && chromeView === "editor") editor.refresh();
 }
 
@@ -895,22 +891,13 @@ async function openProject(id, { autoPreview = false } = {}) {
     await setActiveProjectId(id);
     syncThemeUi();
 
+    openEditor();
     if (isCompactTouch()) {
-      if (!loaded.steps.length) {
-        toast(t("player.noSteps"));
-        await closeProject();
-        return;
-      }
-      setChrome("editor");
-      // why: o palco precisa do layout is-presenting antes do Driver medir o hotspot
-      requestAnimationFrame(() => {
-        enterPresentation({ from: 0, autoplay: true });
-      });
-      if (autoPreview) toast(t("toast.watchExample"));
+      if (autoPreview && loaded.steps.length) toast(t("toast.editOnTouch"), 4200);
+      else toast(t("toast.opened", { name: loaded.name }));
       return;
     }
 
-    openEditor();
     if (autoPreview && loaded.steps.length) {
       // why: deixa o editor pintar o palco antes do tour automático da primeira visita
       requestAnimationFrame(() => {
