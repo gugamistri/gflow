@@ -136,6 +136,9 @@ ${css}
       </label>
       <span class="player-progress" id="player-progress">${t("player.ready")}</span>
     </div>
+    <div class="present-progress" id="present-progress" hidden aria-hidden="true">
+      <div class="present-progress-fill" id="present-progress-fill"></div>
+    </div>
     <div class="player-stage" id="player-stage">
       <div class="player-frame" id="player-frame">
         <img id="player-image" alt="Demo" hidden />

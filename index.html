@@ -78,38 +78,34 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-menu"></use></svg>
         </summary>
         <div class="more-panel-body" id="more-panel-body">
-          <div class="more-row topbar-appearance">
-            <label class="locale-select">
-              <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
-              <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
-                <option value="pt">PT</option>
-                <option value="es">ES</option>
-                <option value="en">EN</option>
-              </select>
-            </label>
-            <button type="button" class="btn btn-ghost btn-icon" id="btn-appearance" title="Seguindo o sistema" aria-label="Aparência: Sistema">
-              <svg class="btn-ico" aria-hidden="true"><use id="btn-appearance-icon" href="#i-appearance"></use></svg>
-            </button>
-          </div>
-          <div class="more-account" id="more-account" hidden>
-            <button type="button" class="more-item more-item-signin" id="btn-menu-signin">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-user"></use></svg>
-              <span data-i18n="account.signIn">Entrar</span>
-            </button>
-            <div id="more-account-in" hidden>
-              <p class="more-account-email" id="more-account-email"></p>
-              <button type="button" class="more-item" id="btn-menu-signout">
-                <span data-i18n="account.signOut">Sair</span>
+          <div class="more-group more-group-actions">
+            <div class="more-editor-only" id="more-editor-only" hidden>
+              <button type="button" class="more-item" id="btn-menu-projects">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+                <span data-i18n="topbar.projects">Projetos</span>
               </button>
             </div>
+            <button type="button" class="more-item" id="btn-shortcuts">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-keyboard"></use></svg>
+              <span data-i18n="shortcuts.title">Atalhos</span>
+            </button>
+            <button type="button" class="more-item" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
+              <span data-i18n="topbar.feedback">Feedback</span>
+            </button>
+            <a class="more-item" id="btn-help" href="ajuda.html" target="_blank" rel="noopener noreferrer">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
+              <span data-i18n="topbar.help">Ajuda</span>
+            </a>
           </div>
-          <div class="more-editor-only" id="more-editor-only" hidden>
-            <details class="more-section theme-panel" id="narration-panel">
+          <hr class="more-divider" />
+          <div class="more-group more-group-prefs">
+            <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
               <summary>
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
-                <span data-i18n="topbar.settings">Ajustes</span>
+                <span data-i18n="topbar.settings">Preferências</span>
               </summary>
-              <div class="more-section-body theme-panel-body theme-panel-wide">
+              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
                 <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
                 <label class="checkbox">
                   <input type="checkbox" id="narration-enabled" checked />
@@ -220,12 +216,12 @@
                 </details>
               </div>
             </details>
-            <details class="more-section theme-panel" id="theme-panel">
+            <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
               <summary>
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
-                <span data-i18n="topbar.themeGuide">Tema do guia</span>
+                <span data-i18n="topbar.themeGuide">Temas</span>
               </summary>
-              <div class="more-section-body theme-panel-body theme-panel-wide">
+              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
                 <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
                 <div class="theme-presets" id="theme-presets"></div>
                 <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
@@ -255,26 +251,34 @@
                 <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
               </div>
             </details>
+            <div class="more-pref-row more-theme-row">
+              <span class="more-pref-label" data-i18n="appearance.theme">Modo</span>
+              <div class="appearance-segment" id="appearance-segment" role="radiogroup" aria-label="Modo" data-i18n-aria="appearance.theme">
+                <button type="button" class="appearance-opt" data-mode="documento" title="Claro" aria-label="Claro" aria-pressed="false" data-i18n-title="appearance.light" data-i18n-aria="appearance.light">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <button type="button" class="appearance-opt" data-mode="social" title="Escuro" aria-label="Escuro" aria-pressed="false" data-i18n-title="appearance.dark" data-i18n-aria="appearance.dark">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-moon"></use></svg>
+                </button>
+                <button type="button" class="appearance-opt" data-mode="system" title="Sistema" aria-label="Sistema" aria-pressed="false" data-i18n-title="appearance.system" data-i18n-aria="appearance.system">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-appearance"></use></svg>
+                </button>
+              </div>
+            </div>
+            <label class="locale-select more-locale">
+              <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
+              <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+                <option value="pt">Português</option>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+            </label>
           </div>
-          <button type="button" class="more-item" id="btn-shortcuts">
-            <span data-i18n="shortcuts.title">Atalhos</span>
-          </button>
-          <button type="button" class="more-item" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
-            <span data-i18n="topbar.feedback">Feedback</span>
-          </button>
-          <a class="more-item" id="btn-help" href="ajuda.html" target="_blank" rel="noopener noreferrer">
-            <span data-i18n="topbar.help">Ajuda</span>
-          </a>
         </div>
       </details>
     <div class="topbar-brand">
       <span class="logo">Guia<span>Flow</span></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
-        <button type="button" class="btn btn-ghost btn-nav-back" id="btn-projects" title="Projetos" data-i18n-title="topbar.projects">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-          <span data-i18n="topbar.projects">Projetos</span>
-        </button>
-        <span class="topbar-nav-sep" aria-hidden="true">/</span>
         <span
           class="topbar-project"
           id="topbar-project"
@@ -293,22 +297,6 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
           <span data-i18n="topbar.capture">Capturar</span>
         </button>
-        <div class="preview-split">
-          <button type="button" class="btn btn-primary btn-icon" id="btn-play-from" title="Preview (P)" aria-label="Preview" data-i18n-title="toolbar.previewTitle" data-i18n-aria="toolbar.preview">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-preview"></use></svg>
-          </button>
-          <details class="preview-menu">
-            <summary class="btn btn-primary preview-menu-toggle" aria-label="Mais opções de preview" data-i18n-aria="toolbar.previewMore">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
-            </summary>
-            <div class="preview-menu-body">
-              <button type="button" class="preview-menu-option" id="btn-watch-from" title="Preview automático (Shift+P)" data-i18n-title="toolbar.autoPreviewTitle">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
-                <span data-i18n="toolbar.autoPreview">Preview automático</span>
-              </button>
-            </div>
-          </details>
-        </div>
         <details class="export-panel">
           <summary class="btn-icon" aria-label="Compartilhar" title="Compartilhar" data-i18n-aria="topbar.share" data-i18n-title="topbar.share">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
@@ -464,51 +452,54 @@
     <section class="canvas-wrap">
       <div class="canvas-toolbar" role="toolbar" aria-label="Edição" data-i18n-aria="toolbar.aria">
         <div class="toolbar-group" role="group" aria-label="Adicionar" data-i18n-aria="toolbar.groupAdd">
-          <button type="button" class="btn btn-sm" id="btn-add-scene">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-scene" title="Cena" aria-label="Cena" data-i18n-title="toolbar.scene" data-i18n-aria="toolbar.scene">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
-            <span data-i18n="toolbar.scene">Cena</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-add-step">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-step" title="Passo" aria-label="Passo" data-i18n-title="toolbar.step" data-i18n-aria="toolbar.step">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-            <span data-i18n="toolbar.step">Passo</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-add-slide">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-slide" title="Slide" aria-label="Slide" data-i18n-title="toolbar.slide" data-i18n-aria="toolbar.slide">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-            <span data-i18n="toolbar.slide">Slide</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-add-images">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-images" title="Imagens" aria-label="Imagens" data-i18n-title="toolbar.images" data-i18n-aria="toolbar.images">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-            <span data-i18n="toolbar.images">Imagens</span>
           </button>
         </div>
         <span class="toolbar-divider" aria-hidden="true"></span>
         <div class="toolbar-group" role="group" aria-label="Editar" data-i18n-aria="toolbar.groupEdit">
-          <button type="button" class="btn btn-sm" id="btn-dup-step" title="Duplicar (⌘D)" data-i18n-title="toolbar.duplicateTitle">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-dup-step" title="Duplicar (⌘D)" aria-label="Duplicar" data-i18n-title="toolbar.duplicateTitle" data-i18n-aria="toolbar.duplicate">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-duplicate"></use></svg>
-            <span data-i18n="toolbar.duplicate">Duplicar</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-copy-step" title="Copiar (⌘C)" data-i18n-title="toolbar.copyTitle">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-copy-step" title="Copiar (⌘C)" aria-label="Copiar" data-i18n-title="toolbar.copyTitle" data-i18n-aria="toolbar.copy">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-            <span data-i18n="toolbar.copy">Copiar</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-paste-step" title="Colar (⌘V)" data-i18n-title="toolbar.pasteTitle">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-paste-step" title="Colar (⌘V)" aria-label="Colar" data-i18n-title="toolbar.pasteTitle" data-i18n-aria="toolbar.paste">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-paste"></use></svg>
-            <span data-i18n="toolbar.paste">Colar</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
             <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
-            <span data-i18n="topbar.undo">Desfazer</span>
           </button>
-          <button type="button" class="btn btn-sm" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
             <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
-            <span data-i18n="topbar.redo">Refazer</span>
+          </button>
+        </div>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <div class="toolbar-group toolbar-group-preview" role="group" aria-label="Preview" data-i18n-aria="toolbar.preview">
+          <button type="button" class="btn btn-sm btn-icon btn-primary" id="btn-play-from" title="Preview (P)" aria-label="Preview" data-i18n-title="toolbar.previewTitle" data-i18n-aria="toolbar.preview">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+          </button>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-watch-from" title="Preview automático (Shift+P)" aria-label="Preview automático" data-i18n-title="toolbar.autoPreviewTitle" data-i18n-aria="toolbar.autoPreview">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
           </button>
         </div>
       </div>
-      <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Clique fora para parar · Esc sai</p>
+      <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Clique fora ou Esc para sair</p>
       <button type="button" class="present-close" id="present-close" hidden aria-label="Fechar" data-i18n-aria="present.close">
         <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
       </button>
+      <div class="present-progress" id="present-progress" hidden aria-hidden="true">
+        <div class="present-progress-fill" id="present-progress-fill"></div>
+      </div>
       <p class="rotate-hint" id="rotate-hint" hidden data-i18n="present.rotateHint">Gire o celular para ver a tela inteira</p>
       <input type="file" id="images-file" accept="image/*" multiple hidden />
       <div class="canvas-stage" id="canvas-stage">
@@ -1012,11 +1003,6 @@
     <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 7h16M4 12h16M4 17h16"/>
     </symbol>
-    <symbol id="i-preview" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 3h16"/>
-      <path d="M6 3v10h12V3"/>
-      <path d="m8 21 4-6 4 6"/>
-    </symbol>
     <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
     </symbol>
@@ -1063,13 +1049,25 @@
       <circle cx="12" cy="12" r="4"/>
       <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
     </symbol>
-    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"/>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
     </symbol>
     <symbol id="i-appearance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="9"/>
       <path d="M12 3v18"/>
-      <path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none" opacity="0.35"/>
+      <path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none" opacity="0.65"/>
+    </symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="2"/>
+      <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>
+    </symbol>
+    <symbol id="i-message" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </symbol>
+    <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2-3 4"/>
+      <path d="M12 17h.01"/>
     </symbol>
     <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 2a10 10 0 1 0 10 10c0-1.5-1.2-2-2.5-2H16a2 2 0 0 0-2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 4 4 0 0 1 4-4h.5"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="14" cy="7" r="1"/>

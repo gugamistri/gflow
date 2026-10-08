@@ -373,7 +373,9 @@ function gfT(key, vars) {
         stopSpeech();
         duck(false);
         const clips = playableCaptionClips(step);
-        if (!speak || !clips.length) {
+        // why: HTML exportado também respeita narration.enabled do tour
+        const narrationOn = demo?.narration?.enabled !== false;
+        if (!speak || !narrationOn || !clips.length) {
           speakDone = Promise.resolve();
           return speakDone;
         }
@@ -535,9 +537,43 @@ function gfT(key, vars) {
     return !!chkAutoplay?.checked;
   }
 
+  let presentProgressAnim = null;
+
+  function hidePresentProgress() {
+    presentProgressAnim?.cancel?.();
+    presentProgressAnim = null;
+    const el = document.getElementById("present-progress");
+    const bar = document.getElementById("present-progress-fill");
+    if (el) el.hidden = true;
+    if (bar) {
+      bar.style.transform = "scaleX(0)";
+      bar.getAnimations?.().forEach((a) => a.cancel());
+    }
+  }
+
+  function startPresentProgress(durationMs) {
+    const el = document.getElementById("present-progress");
+    const bar = document.getElementById("present-progress-fill");
+    const ms = Math.max(0, Number(durationMs) || 0);
+    if (!el || !bar || ms <= 0) {
+      hidePresentProgress();
+      return;
+    }
+    presentProgressAnim?.cancel?.();
+    bar.getAnimations?.().forEach((a) => a.cancel());
+    el.hidden = false;
+    bar.style.transform = "scaleX(0)";
+    void bar.offsetWidth;
+    presentProgressAnim = bar.animate(
+      [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
+      { duration: ms, easing: "linear", fill: "forwards" }
+    );
+  }
+
   function clearAutoplay() {
     clearTimeout(autoplayTimer);
     autoplayTimer = null;
+    hidePresentProgress();
   }
 
   function armAutoplay() {
@@ -546,11 +582,13 @@ function gfT(key, vars) {
     const step = demo.steps[activeIndex];
     if (!step) return;
     const speechDone = narration.whenSpeechDone();
+    const delay = holdMs(step);
+    startPresentProgress(delay);
     autoplayTimer = setTimeout(async () => {
       await speechDone;
       const btn = document.querySelector(".driver-popover-next-btn");
       if (btn) btn.click();
-    }, holdMs(step));
+    }, delay);
   }
 
   function placeHotspot(hotspot) {

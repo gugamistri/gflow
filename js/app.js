@@ -36,7 +36,6 @@ import {
   getAppearancePreference,
   setAppearancePreference,
   resolveAppearanceMode,
-  cycleAppearancePreference,
 } from "./themes.js";
 import { createEditor } from "./editor.js";
 import { isTypingTarget } from "./canvasEdit.js";
@@ -97,48 +96,19 @@ let appearancePreference = getAppearancePreference();
 const toastEl = document.getElementById("toast");
 let toastTimer = null;
 
-const APPEARANCE_LABELS = () => ({
-  system: t("appearance.system"),
-  documento: t("appearance.light"),
-  social: t("appearance.dark"),
-});
-
-const APPEARANCE_ICONS = {
-  system: "#i-appearance",
-  documento: "#i-sun",
-  social: "#i-moon",
-};
-
 function applyChromeAppearance(mode = resolveAppearanceMode(appearancePreference)) {
   document.documentElement.setAttribute("data-appearance", mode);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
-  const btn = document.getElementById("btn-appearance");
-  const icon = document.getElementById("btn-appearance-icon");
-  const labels = APPEARANCE_LABELS();
-  const prefLabel = labels[appearancePreference] || t("appearance.system");
-  const effective = labels[mode] || mode;
-  if (icon) {
-    const href = APPEARANCE_ICONS[appearancePreference] || APPEARANCE_ICONS.system;
-    icon.setAttribute("href", href);
-    icon.setAttribute("xlink:href", href);
+  const segment = document.getElementById("appearance-segment");
+  if (segment) {
+    segment.querySelectorAll(".appearance-opt").forEach((btn) => {
+      // why: data-appearance no botão herdava tokens do tema escuro ([data-appearance=social])
+      const value = btn.getAttribute("data-mode");
+      const pressed = value === appearancePreference;
+      btn.setAttribute("aria-pressed", pressed ? "true" : "false");
+    });
   }
-  if (btn) {
-    btn.title =
-      appearancePreference === "system"
-        ? t("appearance.followSystem", { effective, next: cycleHint(appearancePreference) })
-        : t("appearance.fixed", { label: prefLabel, next: cycleHint(appearancePreference) });
-    btn.setAttribute("aria-label", t("appearance.aria", { label: prefLabel }));
-  }
-}
-
-function cycleHint(current) {
-  const next = {
-    system: t("appearance.light"),
-    documento: t("appearance.dark"),
-    social: t("appearance.system"),
-  };
-  return next[current] || t("appearance.nextMode");
 }
 
 /** Aparência do site — não altera o tema do tour (slides/popover) */
@@ -473,7 +443,12 @@ function paintChrome() {
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
   if (navEditor) navEditor.hidden = view !== "editor" || presenting || compact;
-  if (moreEditorOnly) moreEditorOnly.hidden = view !== "editor" || presenting || compact;
+  const editorMenuHidden = view !== "editor" || presenting || compact;
+  if (moreEditorOnly) moreEditorOnly.hidden = editorMenuHidden;
+  document.querySelectorAll(".more-editor-pref").forEach((el) => {
+    el.hidden = editorMenuHidden;
+    if (editorMenuHidden) el.open = false;
+  });
   if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
   if (presentClose) presentClose.hidden = !presenting || view !== "editor" || !compact;
   if (rotateHint) {
@@ -585,21 +560,13 @@ function paintAccount() {
   const avatar = document.getElementById("account-avatar");
   const emailEl = document.getElementById("account-chip-email");
   const toggle = document.getElementById("account-chip-toggle");
-  const more = document.getElementById("more-account");
-  const menuSignIn = document.getElementById("btn-menu-signin");
-  const menuIn = document.getElementById("more-account-in");
-  const menuEmail = document.getElementById("more-account-email");
   if (slot) slot.hidden = !enabled;
-  if (more) more.hidden = !enabled;
   if (signInBtn) signInBtn.hidden = !enabled || signedIn;
   if (chip) {
     chip.hidden = !signedIn;
     if (!signedIn) chip.open = false;
   }
-  if (menuSignIn) menuSignIn.hidden = !enabled || signedIn;
-  if (menuIn) menuIn.hidden = !signedIn;
   if (emailEl) emailEl.textContent = label;
-  if (menuEmail) menuEmail.textContent = label;
   if (avatar) avatar.textContent = signedIn ? accountInitial(account.email) : "";
   if (toggle && signedIn) {
     toggle.setAttribute("aria-label", label);
@@ -994,7 +961,11 @@ function escapeAttr(str) {
 }
 
 function bindChrome() {
-  document.getElementById("btn-projects").addEventListener("click", () => closeProject());
+  document.getElementById("btn-menu-projects")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    closeProject();
+  });
   document.getElementById("btn-shortcuts")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
     if (more) more.open = false;
@@ -1047,11 +1018,155 @@ function bindChrome() {
     if (document.visibilityState === "hidden") persistOnLeave();
   });
 
-  document.getElementById("btn-appearance")?.addEventListener("click", () => {
-    appearancePreference = cycleAppearancePreference(appearancePreference);
+  document.getElementById("appearance-segment")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".appearance-opt");
+    if (!btn) return;
+    const next = btn.getAttribute("data-mode");
+    if (!next || next === appearancePreference) return;
+    appearancePreference = next;
     setAppearancePreference(appearancePreference);
     syncAppearanceOnly();
   });
+
+  const flyouts = [
+    document.getElementById("narration-panel"),
+    document.getElementById("theme-panel"),
+  ].filter(Boolean);
+  const settingsFolds = [
+    document.getElementById("settings-tts"),
+    document.getElementById("settings-llm"),
+  ].filter(Boolean);
+  const flyoutHoverMq =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(hover: hover) and (min-width: 701px)")
+      : null;
+  const flyoutHover = () => Boolean(flyoutHoverMq?.matches);
+  /** @type {Map<HTMLElement, ReturnType<typeof setTimeout>>} */
+  const flyoutCloseTimers = new Map();
+
+  function clearFlyoutPlacement(body) {
+    if (!body) return;
+    body.style.top = "";
+    body.style.maxHeight = "";
+  }
+
+  /** why: Preferências/Temas com top:0 estouravam a viewport ao expandir Cartesia/IA */
+  function placeMoreFlyout(panel) {
+    const body = panel?.querySelector(":scope > .more-flyout-body");
+    if (!body) return;
+    if (!flyoutHover() || !panel.open) {
+      clearFlyoutPlacement(body);
+      return;
+    }
+    const pad = 12;
+    const vh = window.innerHeight;
+    const cap = Math.min(560, Math.floor(vh * 0.7));
+    body.style.top = "0px";
+    body.style.maxHeight = `${cap}px`;
+    const panelRect = panel.getBoundingClientRect();
+    const spaceBelow = vh - pad - panelRect.top;
+    const spaceAbove = panelRect.bottom - pad;
+    let maxH;
+    let top;
+    if (spaceBelow >= 200 || spaceBelow >= spaceAbove) {
+      maxH = Math.min(cap, Math.max(140, spaceBelow));
+      top = 0;
+      if (panelRect.top + maxH > vh - pad) {
+        top = vh - pad - maxH - panelRect.top;
+        if (panelRect.top + top < pad) {
+          top = pad - panelRect.top;
+          maxH = Math.max(120, vh - pad * 2);
+        }
+      }
+    } else {
+      maxH = Math.min(cap, Math.max(140, spaceAbove));
+      top = panelRect.height - maxH;
+      const absTop = panelRect.top + top;
+      if (absTop < pad) {
+        top = pad - panelRect.top;
+        maxH = Math.max(120, panelRect.bottom - pad);
+      }
+    }
+    body.style.top = `${Math.round(top)}px`;
+    body.style.maxHeight = `${Math.max(120, Math.round(maxH))}px`;
+  }
+
+  function placeOpenFlyouts() {
+    for (const panel of flyouts) placeMoreFlyout(panel);
+  }
+
+  for (const panel of flyouts) {
+    panel.addEventListener("toggle", () => {
+      if (!panel.open) {
+        clearFlyoutPlacement(panel.querySelector(":scope > .more-flyout-body"));
+        return;
+      }
+      for (const other of flyouts) {
+        if (other !== panel) other.open = false;
+      }
+      requestAnimationFrame(placeOpenFlyouts);
+    });
+    const summary = panel.querySelector(":scope > summary");
+    summary?.addEventListener("click", (e) => {
+      // why: no desktop o submenu abre no hover; o clique nativo do details atrapalhava
+      if (!flyoutHover()) return;
+      e.preventDefault();
+    });
+    // why: Excalidraw abre Preferences no hover — sem precisar clicar
+    panel.addEventListener("pointerenter", () => {
+      if (!flyoutHover()) return;
+      const pending = flyoutCloseTimers.get(panel);
+      if (pending) {
+        clearTimeout(pending);
+        flyoutCloseTimers.delete(panel);
+      }
+      for (const other of flyouts) {
+        if (other !== panel) other.open = false;
+      }
+      panel.open = true;
+      requestAnimationFrame(placeOpenFlyouts);
+    });
+    panel.addEventListener("pointerleave", () => {
+      if (!flyoutHover()) return;
+      const pending = flyoutCloseTimers.get(panel);
+      if (pending) clearTimeout(pending);
+      flyoutCloseTimers.set(
+        panel,
+        setTimeout(() => {
+          panel.open = false;
+          flyoutCloseTimers.delete(panel);
+        }, 160),
+      );
+    });
+  }
+
+  for (const fold of settingsFolds) {
+    const foldSummary = fold.querySelector(":scope > summary");
+    foldSummary?.addEventListener("click", (e) => {
+      if (!flyoutHover()) return;
+      e.preventDefault();
+    });
+    fold.addEventListener("pointerenter", () => {
+      if (!flyoutHover()) return;
+      for (const other of settingsFolds) {
+        if (other !== fold) other.open = false;
+      }
+      fold.open = true;
+    });
+    fold.addEventListener("toggle", () => {
+      if (!fold.open) return;
+      for (const other of settingsFolds) {
+        if (other !== fold) other.open = false;
+      }
+      const host = fold.closest(".more-flyout");
+      requestAnimationFrame(() => {
+        placeMoreFlyout(host);
+        fold.scrollIntoView({ block: "nearest", inline: "nearest" });
+      });
+    });
+  }
+
+  window.addEventListener("resize", placeOpenFlyouts);
 
   if (window.matchMedia) {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1093,7 +1208,7 @@ function bindChrome() {
   document.addEventListener("pointerdown", (e) => {
     document
       .querySelectorAll(
-        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.preview-menu[open], details.account-chip[open]",
+        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.account-chip[open]",
       )
       .forEach((panel) => {
         if (!panel.contains(e.target)) panel.open = false;
@@ -1449,17 +1564,10 @@ function bindChrome() {
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
     showAccountDialog();
   });
-  document.getElementById("btn-menu-signin")?.addEventListener("click", () => {
-    closeAccountMenus();
-    showAccountDialog();
-  });
   document.getElementById("btn-cloud-share-signin")?.addEventListener("click", () => {
     showAccountDialog({ publish: Boolean(project?.id) });
   });
   document.getElementById("btn-account-signout")?.addEventListener("click", () => {
-    void signOutAccount();
-  });
-  document.getElementById("btn-menu-signout")?.addEventListener("click", () => {
     void signOutAccount();
   });
   document.getElementById("btn-account-dialog-close")?.addEventListener("click", () => {

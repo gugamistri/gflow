@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   DEFAULT_HOLD_SECONDS,
+  createNarrationController,
   defaultNarration,
   defaultPlayback,
   ensureNarration,
@@ -217,4 +218,22 @@ test("defaultNarration traz campos esperados", () => {
   assert.equal(n.voiceURI, "");
   assert.equal(n.rate, 1);
   assert.equal(n.background, null);
+});
+
+test("enterStep não reproduz áudio quando narration.enabled é false", async () => {
+  const captionEl = { textContent: "", hidden: true };
+  const ctrl = createNarrationController({ captionEl });
+  const step = {
+    caption: "Olá",
+    showCaption: true,
+    narrationAudio: {
+      source: "upload",
+      clips: ["data:audio/mpeg;base64,YQ=="],
+      playbackRate: 1,
+    },
+  };
+  const demo = { narration: { enabled: false, voiceURI: "", rate: 1, background: null } };
+  await ctrl.enterStep(step, demo, { speak: true });
+  assert.equal(captionEl.textContent, "Olá");
+  assert.equal(captionEl.hidden, false);
 });

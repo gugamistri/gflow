@@ -513,7 +513,9 @@ export function createNarrationController({ captionEl } = {}) {
       duck(false);
 
       const clips = playableNarrationClips(step, demo);
-      if (!speak || !clips.length) {
+      // why: «Falar no avanço automático» grava narration.enabled — o player ignorava e falava sempre
+      const narrationOn = demo?.narration?.enabled !== false;
+      if (!speak || !narrationOn || !clips.length) {
         speakDone = Promise.resolve();
         return speakDone;
       }
