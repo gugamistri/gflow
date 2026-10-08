@@ -20,14 +20,14 @@ test("texto e áudio com chave própria ficam livres", () => {
   assert.equal(shouldShowProBadge({ cloudEnabled: true, hasByok: true, signedIn: false }), false);
 });
 
-test("sem sessão o recurso hospedado pede entrada e mostra o selo Pro", () => {
+test("sem sessão o recurso hospedado abre o Pro e mostra o selo", () => {
   const anon = { cloudEnabled: true, signedIn: false, status: "idle", active: false, hasByok: false };
-  assert.equal(hostedAccess(anon), "login");
+  assert.equal(hostedAccess(anon), "upgrade");
   assert.equal(shouldShowProBadge(anon), true);
   assert.equal(exportShowsWatermark(anon), true);
 });
 
-test("plano grátis abre o upgrade e o assinante segue", () => {
+test("sem assinatura abre o upgrade e o assinante segue", () => {
   const free = { cloudEnabled: true, signedIn: true, status: "ready", active: false, hasByok: false };
   const pro = { cloudEnabled: true, signedIn: true, status: "ready", active: true, hasByok: false };
   assert.equal(hostedAccess(free), "upgrade");

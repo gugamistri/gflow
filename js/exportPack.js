@@ -1082,7 +1082,7 @@ function renderFrame(ctx, scene, theme) {
   ctx.fillRect(0, H - 6, W * ((index + progress) / total), 6);
 }
 
-/** Cabeçalho do vídeo. O plano grátis mostra o logo; o Pro mostra o título do projeto. */
+/** Cabeçalho do vídeo. Sem assinatura mostra o logo; o Pro mostra o título do projeto. */
 export function drawExportHeader(ctx, { showBrand = true, projectTitle = "", accent = "#2A9D8F" } = {}) {
   ctx.save();
   ctx.textAlign = "left";

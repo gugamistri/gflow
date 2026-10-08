@@ -80,6 +80,7 @@ import {
   completeCloudAuthCallback,
   endCloudSession,
   establishCloudSession,
+  exchangeCloudAuthCode,
   getCloudAccount,
   getCloudFlags,
   isCloudEnabled,
@@ -104,6 +105,14 @@ import {
   stripBillingReturn,
   upgradeCopyKeys,
 } from "./billing.js";
+import {
+  formatPaywallAmount,
+  isSubscriptionRequired,
+  paywallCurrency,
+  paywallFeatureOrder,
+  paywallOffer,
+  shouldShowLocalSave,
+} from "./paywall.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -567,8 +576,12 @@ let billingEntitlement = emptyEntitlement();
 let billingTicket = 0;
 let upgradeCustomMessage = "";
 let upgradeFeature = "";
+let upgradeEmail = "";
+let upgradeEmailNote = false;
+let upgradeHandoffToLogin = false;
 let pendingHostedResume = null;
 let pendingHostedFeature = "";
+const LOCAL_SAVE_DISMISS_KEY = "guiaflow.localSaveDismissed";
 
 function accountInitial(email) {
   const ch = String(email || "").trim().charAt(0);
@@ -606,11 +619,11 @@ function paintAccount() {
   const planEl = document.getElementById("account-chip-plan");
   const billingBtn = document.getElementById("btn-account-billing");
   if (planEl) {
+    const pending = menu.planLabel === "past_due";
     planEl.hidden = !menu.showPlan;
-    if (menu.showPlan) {
-      const name = menu.planLabel === "cloud" ? t("billing.planCloud") : t("billing.planFree");
-      planEl.textContent = t("billing.planLine", { plan: name });
-    }
+    planEl.classList.toggle("is-pending", pending);
+    if (pending) planEl.textContent = t("billing.pastDue");
+    else if (menu.showPlan) planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
   }
   if (billingBtn) {
     billingBtn.hidden = !menu.showAction;
@@ -620,6 +633,7 @@ function paintAccount() {
   }
   editor.paintHostedBadges?.();
   paintExportMark();
+  paintLocalSave();
 }
 
 function resetBillingView() {
@@ -651,13 +665,65 @@ async function refreshEntitlement(sessionId = "") {
   return result;
 }
 
+function localSaveDismissed() {
+  try {
+    return localStorage.getItem(LOCAL_SAVE_DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function paintLocalSave() {
+  const signedIn = Boolean(getCloudAccount().signedIn);
+  const show = shouldShowLocalSave({
+    signedIn,
+    active: Boolean(billingEntitlement.active),
+    billingReady: !signedIn || billingView.status === "ready" || billingView.status === "hidden",
+    dismissed: localSaveDismissed(),
+  });
+  for (const id of ["local-save-library", "local-save-editor"]) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !show;
+  }
+}
+
 function paintUpgradeCopy() {
+  const featured = upgradeFeature && upgradeFeature !== "account";
   const copy = upgradeCopyKeys(upgradeFeature);
   const title = document.getElementById("upgrade-dialog-title");
-  if (title) title.textContent = t(copy.title);
+  if (title) title.textContent = featured ? t(copy.title) : t("billing.title");
   const msg = document.getElementById("upgrade-message");
-  if (!msg) return;
-  msg.textContent = (upgradeCustomMessage || t(copy.subtitle)).slice(0, 500);
+  if (msg) {
+    const lead = upgradeCustomMessage || (featured ? t(copy.subtitle) : t("billing.heroLead"));
+    msg.textContent = String(lead || "").slice(0, 500);
+  }
+  const note = document.getElementById("upgrade-email-note");
+  if (note) {
+    note.hidden = !upgradeEmailNote;
+    note.textContent = upgradeEmailNote ? t("billing.emailMissing") : "";
+  }
+  const currency = paywallCurrency(getLocale());
+  const offer = paywallOffer(currency);
+  for (const node of document.querySelectorAll("[data-price]")) {
+    const amount = node.getAttribute("data-price") === "year" ? offer.year : offer.month;
+    node.textContent = formatPaywallAmount(amount, currency);
+  }
+  const save = document.getElementById("paywall-save");
+  if (save) save.textContent = t("billing.savePercent", { percent: offer.percent });
+  const equiv = document.getElementById("paywall-equiv");
+  if (equiv) equiv.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.monthEquiv, currency) });
+  const list = document.getElementById("paywall-benefits");
+  if (list) {
+    const order = paywallFeatureOrder(upgradeFeature);
+    for (const id of order) {
+      const item = list.querySelector(`[data-feature="${id}"]`);
+      if (item) list.appendChild(item);
+    }
+    const highlight = upgradeFeature ? order[0] : "";
+    for (const item of list.querySelectorAll("[data-feature]")) {
+      item.classList.toggle("is-highlight", item.dataset.feature === highlight);
+    }
+  }
 }
 
 function billingSnapshot() {
@@ -681,18 +747,14 @@ function paintExportMark() {
 
 async function ensureHostedFeature(feature, resume) {
   if (!isCloudEnabled()) return "unavailable";
-  if (!getCloudAccount().signedIn) {
-    pendingHostedFeature = feature;
-    pendingHostedResume = typeof resume === "function" ? resume : null;
-    showAccountDialog();
-    return "blocked";
-  }
-  if (billingView.status !== "ready" && billingView.status !== "hidden") {
+  if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
     await refreshEntitlement();
   }
   const access = hostedAccess({ ...billingSnapshot(), hasByok: false });
   if (access === "upgrade") {
-    showUpgradeDialog({ feature });
+    pendingHostedFeature = feature;
+    pendingHostedResume = typeof resume === "function" ? resume : null;
+    openFeatureGate(feature);
     return "blocked";
   }
   return "proceed";
@@ -702,7 +764,7 @@ function presentHostedFailure(result, feature) {
   const gate = classifyCloudGate(result);
   const which = gate.feature || feature;
   if (gate.kind === "subscription_required") {
-    showUpgradeDialog({ feature: which, message: gate.message });
+    openFeatureGate(which);
     return true;
   }
   if (gate.kind === "quota_exceeded") {
@@ -738,10 +800,12 @@ function setUpgradeStatus(message, tone = "") {
   status.classList.toggle("is-ok", tone === "ok");
 }
 
-function showUpgradeDialog({ message = "", feature = "" } = {}) {
+function showUpgradeDialog({ message = "", feature = "", email = "", emailNote = false } = {}) {
   if (!isCloudEnabled()) return;
   upgradeFeature = feature || "";
   upgradeCustomMessage = String(message || "").trim();
+  upgradeEmail = String(email || "").trim();
+  upgradeEmailNote = Boolean(emailNote && upgradeEmail);
   const dialog = document.getElementById("modal-upgrade");
   if (!dialog) return;
   paintUpgradeCopy();
@@ -749,7 +813,6 @@ function showUpgradeDialog({ message = "", feature = "" } = {}) {
   const button = document.getElementById("btn-upgrade-subscribe");
   if (button) button.disabled = false;
   if (!dialog.open) dialog.showModal();
-  dialog.querySelector('input[name="billing-interval"]')?.focus();
 }
 
 function closeUpgradeDialog() {
@@ -758,23 +821,60 @@ function closeUpgradeDialog() {
 }
 
 function cloudShareNeedsUpgrade() {
-  return billingView.status === "ready" && !billingEntitlement.active;
+  return billingView.status === "ready" && !billingEntitlement.active && billingEntitlement.status !== "past_due";
+}
+
+function isPastDue() {
+  return billingView.status === "ready" && billingEntitlement.status === "past_due";
+}
+
+function openFeatureGate(feature) {
+  if (isPastDue()) {
+    toast(t("billing.pastDueHint"), 4200);
+    void openBillingPortal();
+    return;
+  }
+  showUpgradeDialog({ feature });
 }
 
 async function consumeBillingReturn() {
   const found = readBillingReturn(location.href);
-  if (found.kind) applyCloudAuthHref(stripBillingReturn(location.href));
-  if (!isCloudEnabled()) return;
-  if (found.kind === "cancel") toast(t("billing.toastCancel"), 4200);
-  if (!getCloudAccount().signedIn) {
-    if (found.kind === "success") showAccountDialog();
+  if (!isCloudEnabled() || !found.kind) return;
+  if (found.kind === "welcome" && found.code) {
+    const session = await exchangeCloudAuthCode(found.code);
+    if (session?.error === "network") {
+      toast(t("share.cloud.network"), 4200);
+      return;
+    }
+    applyCloudAuthHref(stripBillingReturn(location.href));
+    if (isSubscriptionRequired(session)) {
+      showUpgradeDialog({ feature: "account" });
+      return;
+    }
+    if (!session?.ok) {
+      toast(session?.message || t("share.cloud.invalidToken"), 4800);
+      return;
+    }
+    paintCloudShare();
+    await refreshEntitlement();
+    toast(t("billing.toastWelcome"), 5200);
     return;
   }
-  const sessionId = found.kind === "success" ? found.sessionId : "";
-  const result = await refreshEntitlement(sessionId);
-  if (found.kind !== "success") return;
-  if (result?.entitlement?.active) toast(t("billing.toastActive"), 4800);
-  else if (result?.ok && !result.unavailable) toast(t("billing.toastPending"), 4800);
+  applyCloudAuthHref(stripBillingReturn(location.href));
+  if (found.kind === "cancel") {
+    toast(t("billing.toastCancel"), 4200);
+    return;
+  }
+  if (found.kind === "pending") {
+    toast(t("billing.toastPending"), 4800);
+    return;
+  }
+  if (found.kind === "welcome") {
+    if (getCloudAccount().signedIn) await refreshEntitlement(found.sessionId || "");
+    toast(t("billing.toastWelcome"), 5200);
+    return;
+  }
+  if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
 }
 
 async function openBillingPortal() {
@@ -799,7 +899,19 @@ async function submitUpgrade(interval) {
   if (button) button.disabled = true;
   setUpgradeStatus("");
   try {
-    const result = await startBillingCheckout(interval);
+    const result = await startBillingCheckout({
+      interval,
+      currency: paywallCurrency(getLocale()),
+      email: upgradeEmail || getCloudAccount().email || "",
+      source: upgradeFeature || "account",
+    });
+    if (result?.status === 400 && (result.error === "invalid_interval" || result.error === "invalid_currency")) {
+      setUpgradeStatus(
+        result.error === "invalid_currency" ? t("billing.invalidCurrency") : t("billing.invalidInterval"),
+        "error"
+      );
+      return;
+    }
     if (result?.status === 401 || result?.error === "unauthorized") {
       closeUpgradeDialog();
       await endCloudSession();
@@ -871,12 +983,9 @@ function paintCloudShare() {
   if (result) result.hidden = !url;
   if (urlInput) urlInput.value = url;
   const badge = document.getElementById("cloud-share-badge");
-  const menu = billingMenuModel({
-    signedIn,
-    status: billingView.status,
-    entitlement: billingEntitlement,
-  });
-  if (badge) badge.hidden = !(menu.showPlan && menu.planLabel === "free" && !url);
+  if (badge) {
+    badge.hidden = Boolean(url) || !shouldShowProBadge({ ...billingSnapshot(), hasByok: false });
+  }
   paintAccount();
 }
 
@@ -1742,17 +1851,8 @@ function bindChrome() {
 
   document.getElementById("btn-export-unbrand")?.addEventListener("click", () => {
     closeExportMenu();
-    if (!getCloudAccount().signedIn) {
-      pendingHostedFeature = "branding";
-      pendingHostedResume = async () => {
-        if (billingView.status === "ready" && !billingEntitlement.active) {
-          showUpgradeDialog({ feature: "branding" });
-        }
-      };
-      showAccountDialog();
-      return;
-    }
-    showUpgradeDialog({ feature: "branding" });
+    pendingHostedFeature = "branding";
+    openFeatureGate("branding");
   });
 
   document.getElementById("btn-export-video").addEventListener("click", async () => {
@@ -1850,27 +1950,56 @@ function bindChrome() {
     }
   });
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
-    showAccountDialog();
+    showUpgradeDialog({ feature: "account" });
   });
   document.getElementById("btn-cloud-share-signin")?.addEventListener("click", () => {
-    showAccountDialog({ publish: Boolean(project?.id) });
+    showUpgradeDialog({ feature: "permanentShare" });
   });
   document.getElementById("btn-account-signout")?.addEventListener("click", () => {
     void signOutAccount();
   });
   document.getElementById("btn-account-billing")?.addEventListener("click", () => {
     closeAccountMenus();
-    if (billingView.status === "ready" && billingEntitlement.active) void openBillingPortal();
-    else showUpgradeDialog();
+    if (billingView.status === "ready" && (billingEntitlement.active || billingEntitlement.status === "past_due")) {
+      void openBillingPortal();
+    } else showUpgradeDialog();
   });
   document.getElementById("btn-upgrade-close")?.addEventListener("click", () => {
     closeUpgradeDialog();
   });
-  document.getElementById("btn-upgrade-dismiss")?.addEventListener("click", () => {
+  document.getElementById("btn-upgrade-login")?.addEventListener("click", () => {
+    upgradeHandoffToLogin = true;
+    const email = upgradeEmail || document.getElementById("cloud-email")?.value || "";
     closeUpgradeDialog();
+    showAccountDialog();
+    const input = document.getElementById("cloud-email");
+    if (input && email && !input.value) input.value = email;
+  });
+  document.getElementById("modal-upgrade")?.addEventListener("close", () => {
+    if (upgradeHandoffToLogin) {
+      upgradeHandoffToLogin = false;
+      return;
+    }
+    pendingHostedResume = null;
+    pendingHostedFeature = "";
   });
   document.getElementById("modal-upgrade")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) e.currentTarget.close();
+  });
+  document.querySelectorAll("[data-local-save-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showUpgradeDialog({ feature: "account" });
+    });
+  });
+  document.querySelectorAll("[data-local-save-dismiss]").forEach((button) => {
+    button.addEventListener("click", () => {
+      try {
+        localStorage.setItem(LOCAL_SAVE_DISMISS_KEY, "1");
+      } catch {
+        /* o aviso some nesta visita */
+      }
+      paintLocalSave();
+    });
   });
   document.getElementById("upgrade-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1891,8 +2020,12 @@ function bindChrome() {
 
   document.getElementById("btn-cloud-share")?.addEventListener("click", () => {
     if (!project || !cloudShareEnabled()) return;
-    if (!getCloudAccount().signedIn) {
-      showAccountDialog({ publish: true });
+    if (isPastDue()) {
+      openFeatureGate("permanentShare");
+      return;
+    }
+    if (!getCloudAccount().signedIn || cloudShareNeedsUpgrade()) {
+      showUpgradeDialog({ feature: "permanentShare" });
       return;
     }
     clearCloudPublishIntent();
@@ -1950,6 +2083,10 @@ function bindChrome() {
     editor.paintHostedBadges?.();
     paintExportMark();
     if (resume) {
+      if (isPastDue()) {
+        openFeatureGate(feature);
+        return;
+      }
       if (billingView.status === "ready" && !billingEntitlement.active) {
         showUpgradeDialog({ feature });
         return;
@@ -1988,6 +2125,14 @@ function bindChrome() {
         emailHint: parsed.email,
         forceKind,
       });
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({
+          feature: pendingHostedFeature || "account",
+          email: parsed.email || "",
+          emailNote: Boolean(parsed.email),
+        });
+        return;
+      }
       if (!session.ok) {
         showAccountDialog();
         setCloudLoginStatus(permanentShareErrorMessage(session), "error");
@@ -2004,6 +2149,11 @@ function bindChrome() {
     setCloudLoginStatus("");
     try {
       const result = await requestMagicLink(email);
+      if (isSubscriptionRequired(result)) {
+        showUpgradeDialog({ feature: pendingHostedFeature || "account", email, emailNote: true });
+        closeAccountDialog();
+        return;
+      }
       if (!result.ok) {
         setCloudLoginStatus(permanentShareErrorMessage(result), "error");
         return;
@@ -2026,6 +2176,11 @@ function bindChrome() {
     setCloudLoginStatus("");
     try {
       const session = await loginWithPassword(email, password);
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({ feature: pendingHostedFeature || "account", email, emailNote: true });
+        closeAccountDialog();
+        return;
+      }
       if (!session.ok) {
         setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
@@ -2048,6 +2203,15 @@ function bindChrome() {
     if (button) button.disabled = true;
     try {
       const session = await establishCloudSession(pasted, undefined, { emailHint });
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({
+          feature: pendingHostedFeature || "account",
+          email: emailHint,
+          emailNote: Boolean(String(emailHint || "").trim()),
+        });
+        closeAccountDialog();
+        return;
+      }
       if (!session.ok) {
         setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
@@ -2075,8 +2239,12 @@ function bindChrome() {
       showAccountDialog({ publish: true });
       return;
     }
+    if (isPastDue()) {
+      openFeatureGate("permanentShare");
+      return;
+    }
     if (cloudShareNeedsUpgrade()) {
-      showUpgradeDialog();
+      showUpgradeDialog({ feature: "permanentShare" });
       return;
     }
     project.theme = formToTheme(project.theme);
@@ -2127,7 +2295,7 @@ function bindChrome() {
         return;
       }
       if (gate.kind === "subscription_required") {
-        showUpgradeDialog({ message: gate.message || err?.message });
+        openFeatureGate("permanentShare");
         return;
       }
       if (gate.kind === "quota_exceeded") {
