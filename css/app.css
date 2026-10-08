@@ -1958,6 +1958,10 @@ body.is-presenting #topbar-actions-editor {
   right: 4px;
 }
 
+.film-action-move {
+  display: none;
+}
+
 .film-scene.is-drop-target .film-scene-label {
   background: var(--ns-hover);
   color: var(--ns-ink);
@@ -4182,12 +4186,139 @@ body.standalone .caption-bar,
     min-height: 44px;
   }
 
-  #topbar-actions-editor,
+  /* Novo projeto fica oculto: a captura nasce no computador. Importar continua. */
   #btn-new-project,
   #btn-capture-desktop,
   #btn-capture-desktop-lib,
   .project-card-close,
   .project-card-actions {
+    display: none !important;
+  }
+
+  .export-panel > summary {
+    width: 44px;
+    height: 44px;
+  }
+
+  .export-option {
+    min-height: 44px;
+  }
+
+  .view-editor:not(.is-presenting) {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(168px, 36vh);
+  }
+
+  .view-editor:not(.is-presenting) .canvas-wrap {
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .view-editor:not(.is-presenting) #filmstrip-panel {
+    grid-row: 2;
+    min-height: 0;
+    border-right: 0;
+    border-top: 1px solid var(--ns-border);
+  }
+
+  .view-editor:not(.is-presenting) #props-panel {
+    display: none !important;
+  }
+
+  .filmstrip-multi-hint,
+  .canvas-toolbar > .toolbar-group:first-child,
+  .canvas-toolbar > .toolbar-group:first-child + .toolbar-divider,
+  #btn-dup-step,
+  #btn-copy-step,
+  #btn-paste-step {
+    display: none !important;
+  }
+
+  .film-item {
+    grid-template-columns: 56px minmax(0, 1fr);
+    padding: 8px;
+    cursor: default;
+  }
+
+  .film-grip {
+    display: none;
+  }
+
+  .film-actions {
+    position: static;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    grid-column: 1 / -1;
+    pointer-events: auto;
+    margin-top: 4px;
+  }
+
+  .film-actions button,
+  .film-action-move {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid var(--ns-border);
+    background: var(--ns-surface);
+    font-size: 1.15rem;
+  }
+
+  .view-editor:not(.is-presenting) #canvas-frame:has(#canvas-slide:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-editor:not(.is-presenting) #canvas-slide {
+    height: auto !important;
+    max-height: none;
+    aspect-ratio: auto;
+    min-height: 168px;
+  }
+
+  .view-editor:not(.is-presenting) #canvas-slide:not([hidden]) ~ #canvas-caption {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    max-width: 100%;
+    margin-top: 8px;
+  }
+
+  .view-editor:not(.is-presenting) #canvas-popover-body,
+  .view-editor:not(.is-presenting) #canvas-caption,
+  .view-editor:not(.is-presenting) #canvas-slide-body {
+    font-size: 16px;
+  }
+
+  .view-editor:not(.is-presenting) #canvas-popover-title {
+    font-size: max(16px, 1rem);
+  }
+
+  .view-editor:not(.is-presenting) .editor-popover {
+    touch-action: manipulation;
+    cursor: default;
+    user-select: text;
+  }
+
+  .view-editor:not(.is-presenting) .hotspot {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .view-editor:not(.is-presenting) .hotspot-handle,
+  .view-editor:not(.is-presenting) .hotspot-label,
+  .view-editor:not(.is-presenting) .click-point,
+  .view-editor:not(.is-presenting) .editor-popover-grip {
     display: none !important;
   }
 
@@ -4301,5 +4432,9 @@ body.standalone .caption-bar,
   body.is-presenting .canvas-frame img,
   body.is-presenting .slide-card {
     max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 8px);
+  }
+
+  .view-editor:not(.is-presenting) {
+    grid-template-rows: minmax(0, 1fr) minmax(112px, 40vh);
   }
 }
