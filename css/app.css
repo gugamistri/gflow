@@ -1689,7 +1689,10 @@ body.view-share .topbar .logo {
 }
 
 .export-option strong {
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   color: var(--ns-ink);
   font-size: 0.85rem;
 }
@@ -1701,6 +1704,37 @@ body.view-share .topbar .logo {
   margin-top: 2px;
   font-weight: 400;
   line-height: 1.35;
+}
+
+.export-option strong > span:not(.pro-badge) {
+  display: inline;
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.export-option .pro-badge {
+  display: inline-flex;
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: 0;
+  margin-left: 0;
+  color: var(--ns-ink);
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.export-option .pro-badge span {
+  display: inline;
+  width: auto;
+  margin-top: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 .export-overlay {

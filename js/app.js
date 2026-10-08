@@ -710,7 +710,15 @@ function presentHostedFailure(result, feature) {
     setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
     return true;
   }
-  if (gate.kind === "unavailable" || gate.kind === "not_found") {
+  if (result?.status === 503 || result?.error === "config_missing" || gate.kind === "unavailable") {
+    toast(t("billing.unconfigured"));
+    return true;
+  }
+  if (result?.status === 502) {
+    toast(gate.message || t("billing.unavailable"));
+    return true;
+  }
+  if (gate.kind === "not_found") {
     toast(t("billing.unavailable"));
     return true;
   }

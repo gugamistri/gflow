@@ -21,7 +21,7 @@ import {
   snapPopoverPlacement,
 } from "./canvasEdit.js";
 import { isCompactTouch } from "./compact.js";
-import { isPlausibleApiKey, defaultVoiceURI, narrationLang } from "./cartesia.js";
+import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
   buildChatMessages,
@@ -3410,7 +3410,7 @@ export function createEditor(ctx) {
             });
           } else {
             const hosted = await synthesizeHostedSpeech(text, {
-              locale: narrationLang(demo.narration.voiceURI),
+              voice: demo.narration.voiceURI,
             });
             if (!hosted.ok) {
               if (presentHostedFailure?.(hosted, "tts")) {

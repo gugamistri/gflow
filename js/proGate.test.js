@@ -8,9 +8,8 @@ import {
   shouldShowProBadge,
   upgradeCopyKeys,
 } from "./billing.js";
-import { cloudFetch } from "./cloudConfig.js";
-import { drawBrandWatermark } from "./exportPack.js";
-import { completeHostedCopy, readHostedAudio, readHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
+import { drawExportHeader } from "./exportPack.js";
+import { completeHostedCopy, parseHostedResult, readHostedAudio, synthesizeHostedSpeech } from "./hosted.js";
 
 setLocale("pt", { persist: false });
 
@@ -55,88 +54,118 @@ test("os títulos do diálogo falam de GuiaFlow Pro", () => {
   assert.equal(quotaMessageKey("permanentShare"), "billing.quota");
 });
 
-test("402 de texto e áudio preserva a feature e 429 não é assinatura", async () => {
-  const prev = globalThis.fetch;
-  globalThis.fetch = async (url) => {
-    const href = String(url);
-    if (href.endsWith("/ai/complete")) {
-      return {
-        ok: false,
-        status: 402,
-        json: async () => ({ ok: false, error: "subscription_required", feature: "hostedAi" }),
-      };
-    }
-    if (href.endsWith("/tts/synthesize")) {
-      return {
-        ok: false,
-        status: 429,
-        json: async () => ({ ok: false, error: "quota_exceeded", feature: "tts", message: "Limite do mês." }),
-      };
-    }
-    throw new Error(href);
-  };
-  try {
-    const ai = await completeHostedCopy([{ role: "user", content: "oi" }], env);
-    assert.equal(ai.status, 402);
-    assert.equal(ai.error, "subscription_required");
-    assert.equal(ai.data.feature, "hostedAi");
-    const tts = await synthesizeHostedSpeech("olá", { locale: "pt-BR" }, env);
-    assert.equal(tts.status, 429);
-    assert.equal(tts.error, "quota_exceeded");
-    assert.equal(tts.message, "Limite do mês.");
-  } finally {
-    globalThis.fetch = prev;
-  }
-});
-
-test("a resposta hospedada vira texto e áudio", async () => {
-  assert.deepEqual(
-    readHostedCopy({ content: '{"title":"Um","description":"Dois","narration":"Três"}' }),
-    { title: "Um", description: "Dois", narration: "Três" }
+test("o prompt é uma string e o áudio lê audio.base64", async () => {
+  const fenced = '```json\n{"title":"Um","description":"Dois","narration":"Três"}\n```';
+  assert.deepEqual(parseHostedResult(fenced), {
+    ok: true,
+    title: "Um",
+    description: "Dois",
+    narration: "Três",
+  });
+  assert.equal(parseHostedResult("só narração", ["narration"]).narration, "só narração");
+  assert.equal(parseHostedResult("sem json").ok, false);
+  assert.equal(
+    readHostedAudio({ audio: { contentType: "audio/mpeg", base64: "QUJDRA==" }, seconds: 1, usage: {} }),
+    "data:audio/mpeg;base64,QUJDRA=="
   );
-  assert.equal(readHostedAudio({ audioBase64: "QUJDRA==", mime: "audio/mpeg" }), "data:audio/mpeg;base64,QUJDRA==");
+
   const prev = globalThis.fetch;
-  let body = null;
-  globalThis.fetch = async (_url, init) => {
-    body = JSON.parse(init.body);
+  const seen = [];
+  globalThis.fetch = async (url, init) => {
+    seen.push({ url: String(url), body: JSON.parse(init.body) });
+    if (String(url).endsWith("/ai/complete")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          result: '{"title":"Título","description":"Descrição","narration":"Narração"}',
+          usage: { total: 1 },
+        }),
+      };
+    }
     return {
       ok: true,
       status: 200,
-      json: async () => ({ title: "Título", description: "Descrição", narration: "Narração" }),
+      json: async () => ({
+        ok: true,
+        audio: { contentType: "audio/wav", base64: "QUJDRA==" },
+        seconds: 1,
+        usage: {},
+      }),
     };
   };
   try {
-    const done = await completeHostedCopy([{ role: "user", content: "passo" }], env);
+    const done = await completeHostedCopy(
+      [{ role: "user", content: [{ type: "text", text: "passo" }, { type: "image_url", image_url: { url: "data:image/png;base64,AAAA" } }] }],
+      env
+    );
     assert.equal(done.copy.title, "Título");
-    assert.equal(body.messages[0].content, "passo");
-    assert.equal(body.locale, "pt");
+    assert.equal(Object.keys(seen[0].body).join(","), "prompt");
+    assert.equal(seen[0].body.prompt.includes("passo"), true);
+    assert.equal(seen[0].body.prompt.includes("data:image"), false);
+    assert.equal(seen[0].body.prompt.includes('{"title"'), true);
+    assert.ok(seen[0].body.prompt.length <= 8000);
+
+    const speech = await synthesizeHostedSpeech("olá tour", { voice: "pt-BR" }, env);
+    assert.equal(speech.clip, "data:audio/wav;base64,QUJDRA==");
+    assert.deepEqual(seen[1].body, { text: "olá tour", voice: "pt-BR" });
   } finally {
     globalThis.fetch = prev;
   }
 });
 
-test("a marca fica no canto e diz Feito com GuiaFlow", () => {
+test("503 config_missing não é o diálogo de assinatura e 502 usa a mensagem", async () => {
+  const prev = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    if (String(url).endsWith("/tts/synthesize")) {
+      return {
+        ok: false,
+        status: 503,
+        json: async () => ({ ok: false, error: "config_missing" }),
+      };
+    }
+    return {
+      ok: false,
+      status: 502,
+      json: async () => ({ ok: false, message: "O modelo não respondeu." }),
+    };
+  };
+  try {
+    const tts = await synthesizeHostedSpeech("oi", {}, env);
+    assert.equal(tts.status, 503);
+    assert.equal(tts.error, "config_missing");
+    const ai = await completeHostedCopy([{ role: "user", content: "oi" }], env);
+    assert.equal(ai.status, 502);
+    assert.equal(ai.message, "O modelo não respondeu.");
+  } finally {
+    globalThis.fetch = prev;
+  }
+});
+
+function headerPaints(opts) {
   const paints = [];
   const ctx = {
     canvas: { width: 1280, height: 720 },
     save() {},
     restore() {},
-    beginPath() {},
-    moveTo() {},
-    arcTo() {},
-    closePath() {},
-    fill() {},
-    measureText() {
-      return { width: 180 };
+    measureText(text) {
+      return { width: String(text).length * 14 };
     },
-    fillText(text, x, y) {
-      paints.push({ text, x, y });
+    fillText(text) {
+      paints.push(text);
     },
   };
-  drawBrandWatermark(ctx);
-  assert.equal(paints.length, 1);
-  assert.equal(paints[0].text, "Feito com GuiaFlow");
-  assert.ok(paints[0].x > 640);
-  assert.ok(paints[0].y > 600);
-  assert.equal(/nuvem/i.test(paints[0].text), false);
+  drawExportHeader(ctx, opts);
+  return paints;
+}
+
+test("o vídeo grátis mostra o logo e o Pro mostra o título", () => {
+  const free = headerPaints({ showBrand: true, projectTitle: "Meu tour" });
+  assert.deepEqual(free.slice(0, 2), ["Guia", "Flow"]);
+  assert.equal(free.includes("Meu tour"), false);
+  const pro = headerPaints({ showBrand: false, projectTitle: "Meu tour" });
+  assert.deepEqual(pro, ["Meu tour"]);
+  assert.equal(pro.includes("Guia"), false);
+  assert.deepEqual(headerPaints({ showBrand: false, projectTitle: "" }), []);
 });

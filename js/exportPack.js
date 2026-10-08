@@ -527,7 +527,8 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
         total: steps.length,
         img: images[i],
         at,
-        watermark: Boolean(demo.exportWatermark),
+        showBrand: demo.exportWatermark !== false,
+        projectTitle: String(demo.name || "").trim(),
         ...timing,
       };
       renderFrame(ctx, scene, theme);
@@ -612,6 +613,8 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
     cursorEnd: 1,
     clickEnd: 1,
     holdEnd: 1,
+    showBrand: demo.exportWatermark !== false,
+    projectTitle: String(demo.name || "").trim(),
   };
   let looping = true;
 
@@ -636,7 +639,8 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
         total: steps.length,
         img: images[i],
         at: 0,
-        watermark: Boolean(demo.exportWatermark),
+        showBrand: demo.exportWatermark !== false,
+        projectTitle: String(demo.name || "").trim(),
         ...timing,
       };
       onProgress?.(t("export.recordStep", { i: i + 1, n: steps.length }));
@@ -663,7 +667,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   return { size: blob.size, ext };
 }
 
-export async function exportVideo(demo, { onProgress, canvas, signal, watermark = false } = {}) {
+export async function exportVideo(demo, { onProgress, canvas, signal, watermark = true } = {}) {
   const steps = demo.steps || [];
   if (!steps.length) throw new Error(t("err.noStepsRecord"));
   const framed = { ...demo, exportWatermark: Boolean(watermark) };
@@ -688,31 +692,6 @@ export async function exportVideo(demo, { onProgress, canvas, signal, watermark 
   }
 
   return exportVideoMediaRecorder(framed, { onProgress, canvas, signal, images, audioBuffer });
-}
-
-/** Marca discreta no canto. why: o plano grátis leva "Feito com GuiaFlow"; o Pro não. */
-export function drawBrandWatermark(ctx) {
-  const label = t("export.watermark");
-  const W = ctx.canvas.width;
-  const H = ctx.canvas.height;
-  ctx.save();
-  ctx.font = "600 22px Segoe UI, Helvetica Neue, Arial, sans-serif";
-  const padX = 14;
-  const textW = ctx.measureText(label).width;
-  const boxW = textW + padX * 2;
-  const boxH = 36;
-  const x = W - boxW - 28;
-  const y = H - boxH - 22;
-  ctx.globalAlpha = 0.72;
-  ctx.fillStyle = "rgba(15, 23, 42, 0.55)";
-  roundRect(ctx, x, y, boxW, boxH, 8);
-  ctx.fill();
-  ctx.globalAlpha = 0.88;
-  ctx.fillStyle = "#f8fafc";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillText(label, x + padX, y + 24);
-  ctx.restore();
 }
 
 function wrapText(ctx, text, maxWidth) {
@@ -967,14 +946,11 @@ function renderFrame(ctx, scene, theme) {
 
   ctx.fillStyle = "#111827";
   ctx.fillRect(0, 0, W, 56);
-  ctx.fillStyle = accent;
-  ctx.font = "800 26px Segoe UI, Helvetica Neue, Arial, sans-serif";
-  ctx.fillText("Guia", 32, 38);
-  ctx.fillStyle = "#fff";
-  ctx.fillText("Flow", 98, 38);
-  ctx.font = "500 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
-  ctx.fillStyle = "#9ca3af";
-  ctx.fillText(t("player.narratedTour"), 248, 38);
+  drawExportHeader(ctx, {
+    showBrand: scene.showBrand !== false,
+    projectTitle: scene.projectTitle,
+    accent,
+  });
   ctx.textAlign = "right";
   ctx.fillStyle = "#e5e7eb";
   ctx.font = "600 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
@@ -1104,5 +1080,30 @@ function renderFrame(ctx, scene, theme) {
   ctx.fillRect(0, H - 6, W, 6);
   ctx.fillStyle = accent;
   ctx.fillRect(0, H - 6, W * ((index + progress) / total), 6);
-  if (scene.watermark) drawBrandWatermark(ctx);
+}
+
+/** Cabeçalho do vídeo. O plano grátis mostra o logo; o Pro mostra o título do projeto. */
+export function drawExportHeader(ctx, { showBrand = true, projectTitle = "", accent = "#2A9D8F" } = {}) {
+  ctx.save();
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "800 26px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  if (showBrand) {
+    ctx.fillStyle = accent;
+    ctx.fillText("Guia", 32, 38);
+    ctx.fillStyle = "#fff";
+    ctx.fillText("Flow", 98, 38);
+    ctx.font = "500 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.fillStyle = "#9ca3af";
+    ctx.fillText(t("player.narratedTour"), 248, 38);
+  } else {
+    const title = String(projectTitle || "").trim();
+    if (title) {
+      ctx.fillStyle = "#fff";
+      const maxW = Math.max(80, ctx.canvas.width - 160);
+      const line = ctx.measureText(title).width > maxW ? `${title.slice(0, 42)}…` : title;
+      ctx.fillText(line, 32, 38);
+    }
+  }
+  ctx.restore();
 }
