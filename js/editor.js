@@ -222,6 +222,8 @@ export function createEditor(ctx) {
     ensureHostedFeature,
     presentHostedFailure,
     showHostedBadge,
+    prefersHostedGeneration,
+    noteHostedUsage,
   } = ctx;
 
   function onChange() {
@@ -3213,11 +3215,12 @@ export function createEditor(ctx) {
       focus,
       stepType: isSlide ? "slide" : "screen",
     });
-    const bridge = llmBridge();
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const bridge = hostedFirst ? null : llmBridge();
     let result;
     if (bridge?.llmComplete) {
       result = await bridge.llmComplete({ messages });
-    } else if (llmConfigured) {
+    } else if (!hostedFirst && llmConfigured) {
       const settings = await readLlmSettings();
       result = await chatCompletions({
         apiKey: settings.apiKey,
@@ -3236,6 +3239,7 @@ export function createEditor(ctx) {
         };
       }
       writeGeneratedCopy(step, hosted.copy);
+      noteHostedUsage?.(hosted.data?.usage);
       return { ok: true };
     }
     if (!result?.ok) return { ok: false, reason: "request", error: result?.error || "" };
@@ -3252,7 +3256,8 @@ export function createEditor(ctx) {
       demo.steps.length
     );
     if (!list.length) return;
-    const ownLlm = Boolean(llmBridge() || llmConfigured);
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const ownLlm = !hostedFirst && Boolean(llmBridge() || llmConfigured);
     if (!ownLlm) {
       const gate = await ensureHostedFeature?.("hostedAi", () => generateStepCopy(indices));
       if (gate === "blocked") return;
@@ -3382,7 +3387,8 @@ export function createEditor(ctx) {
       toast(t("toast.needCaptionText"));
       return;
     }
-    const ownTts = await hasOwnTts();
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const ownTts = !hostedFirst && (await hasOwnTts());
     if (!ownTts) {
       const gate = await ensureHostedFeature?.("tts", () => generateCaptionAudio(indices));
       if (gate === "blocked") return;
@@ -3420,6 +3426,7 @@ export function createEditor(ctx) {
               throw new Error(hosted.message || t("toast.audioGenFail"));
             }
             clips = [hosted.clip];
+            noteHostedUsage?.(hosted.data?.usage);
           }
           const durations = await measureClipDurations(clips);
           const playbackRate = normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate);

@@ -97,7 +97,9 @@ import {
   exportShowsWatermark,
   fetchBillingEntitlement,
   hostedAccess,
-  quotaMessageKey,
+  hostedQuotaCopy,
+  hostedUsageMeters,
+  shouldShowByokSettings,
   readBillingReturn,
   shouldShowProBadge,
   startBillingCheckout,
@@ -438,6 +440,8 @@ const editor = createEditor({
   ensureHostedFeature,
   presentHostedFailure,
   showHostedBadge,
+  prefersHostedGeneration,
+  noteHostedUsage: rememberHostedUsage,
 });
 
 const player = createPlayer({
@@ -634,6 +638,8 @@ function paintAccount() {
   editor.paintHostedBadges?.();
   paintExportMark();
   paintLocalSave();
+  paintByokSettings();
+  paintHostedUsage();
 }
 
 function resetBillingView() {
@@ -735,6 +741,53 @@ function billingSnapshot() {
   };
 }
 
+let hostedMeters = { texts: null, textLimit: 100, audioMinutes: null, audioLimit: 30 };
+
+function prefersHostedGeneration() {
+  const snap = billingSnapshot();
+  return Boolean(snap.signedIn && snap.status === "ready" && snap.active);
+}
+
+function rememberHostedUsage(usage) {
+  const next = hostedUsageMeters(usage);
+  if (!next) return;
+  if (next.texts != null) {
+    hostedMeters.texts = next.texts;
+    hostedMeters.textLimit = next.textLimit;
+  }
+  if (next.audioMinutes != null) {
+    hostedMeters.audioMinutes = next.audioMinutes;
+    hostedMeters.audioLimit = next.audioLimit;
+  }
+  paintHostedUsage();
+}
+
+function paintHostedUsage() {
+  const el = document.getElementById("account-chip-usage");
+  if (!el) return;
+  const snap = billingSnapshot();
+  const pro = snap.signedIn && snap.status === "ready" && snap.active;
+  const lines = [];
+  if (pro && hostedMeters.texts != null) {
+    lines.push(t("billing.usageTexts", { used: hostedMeters.texts, limit: hostedMeters.textLimit }));
+  }
+  if (pro && hostedMeters.audioMinutes != null) {
+    lines.push(t("billing.usageAudio", { used: hostedMeters.audioMinutes, limit: hostedMeters.audioLimit }));
+  }
+  el.hidden = !lines.length;
+  el.textContent = lines.join("\n");
+}
+
+function paintByokSettings() {
+  const show = shouldShowByokSettings(billingSnapshot());
+  for (const id of ["settings-llm", "settings-tts"]) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.hidden = !show;
+    if (!show) el.open = false;
+  }
+}
+
 function showHostedBadge({ hasByok = false } = {}) {
   return shouldShowProBadge({ ...billingSnapshot(), hasByok });
 }
@@ -768,7 +821,10 @@ function presentHostedFailure(result, feature) {
     return true;
   }
   if (gate.kind === "quota_exceeded") {
-    toast(gate.message || t(quotaMessageKey(which)));
+    const usage = result?.data?.usage || result?.usage;
+    rememberHostedUsage(usage);
+    const copy = hostedQuotaCopy(which === "tts" ? "tts" : "hostedAi", usage);
+    toast(t(copy.key, copy.vars));
     return true;
   }
   if (gate.kind === "unauthorized") {
@@ -782,7 +838,7 @@ function presentHostedFailure(result, feature) {
     return true;
   }
   if (result?.status === 502) {
-    toast(gate.message || t("billing.unavailable"));
+    toast(t("billing.tryAgain"));
     return true;
   }
   if (gate.kind === "not_found") {
@@ -2609,7 +2665,10 @@ async function boot() {
     showStashedAuthError();
     if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
     else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });
-    void consumeBillingReturn();
+    void (async () => {
+      await consumeBillingReturn();
+      if (getCloudAccount().signedIn && billingView.status !== "ready") await refreshEntitlement();
+    })();
   }
 }
 
