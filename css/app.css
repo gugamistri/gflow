@@ -593,15 +593,16 @@ textarea {
   padding: 0.35em 1.75em 0.35em 0.6em;
 }
 
-.more-panel .locale-select select {
-  background-color: var(--ns-input-bg);
+/* why: --ns-input-bg é mais escuro que o painel do menu (esp. modo escuro) */
+.more-panel-body .locale-select select {
+  background-color: var(--ns-panel);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23666' stroke-width='1.6' stroke-linecap='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
   color: var(--ns-ink);
   border-color: var(--ns-border);
   color-scheme: inherit;
 }
 
-.more-panel .locale-select select option {
+.more-panel-body .locale-select select option {
   background: var(--ns-panel);
   color: var(--ns-ink);
 }
@@ -728,10 +729,10 @@ textarea {
   overflow: visible;
 }
 
-/* why: Preferências e Temas compartilhavam tokens mistos (0.72/0.75/0.82) e gaps distintos */
+/* why: Preferências/Temas — densidade alta, label+controle na mesma linha */
 .more-flyout-body {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   font-size: 0.8125rem;
   line-height: 1.35;
   color: var(--ns-ink);
@@ -739,7 +740,7 @@ textarea {
 
 .more-flyout-body .theme-section-label {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -755,30 +756,37 @@ textarea {
   line-height: 1.35;
 }
 
-.more-flyout-body .checkbox {
-  gap: 8px;
+.more-flyout-body .checkbox,
+.theme-panel-body .checkbox {
+  justify-content: flex-start !important;
+  gap: 8px !important;
 }
 
 .more-flyout-body label:not(.checkbox) {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font-weight: 500;
+  min-height: 28px;
 }
 
 .more-flyout-body label:not(.checkbox) > span:first-child {
-  font-size: 0.8125rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40%;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ns-ink);
+  line-height: 1.2;
 }
 
 .theme-panel .more-flyout-body .settings-fold {
   margin: 0;
   border: 1px solid var(--ns-border);
-  border-radius: 8px;
-  background: var(--ns-surface);
+  border-radius: 7px;
+  background: transparent;
 }
 
 /* why: `.theme-panel summary` pinta topbar + texto de botão; Cartesia/IA são folds do painel */
@@ -787,17 +795,17 @@ textarea {
   width: 100%;
   box-sizing: border-box;
   min-height: 0;
-  padding: 10px 12px;
+  padding: 7px 10px;
   font: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  line-height: 1.35;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.3;
   color: var(--ns-ink);
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: 7px;
   justify-content: flex-start;
 }
 
@@ -807,18 +815,18 @@ textarea {
 }
 
 .theme-panel .more-flyout-body .settings-fold[open] > summary {
-  border-radius: 8px 8px 0 0;
+  border-radius: 7px 7px 0 0;
   color: var(--ns-ink);
   background: transparent;
 }
 
 .more-flyout-body .settings-fold-body {
-  gap: 10px;
-  padding: 10px 12px 12px;
+  gap: 8px;
+  padding: 8px 10px 10px;
 }
 
 .more-flyout-body .settings-fold-body > label:not(.checkbox) {
-  gap: 6px;
+  gap: 10px;
   font-size: 0.8125rem;
 }
 
@@ -857,21 +865,60 @@ textarea {
 .more-flyout-body input[type="url"],
 .more-flyout-body select,
 .more-flyout-body .settings-secret {
-  width: 100%;
-  min-height: 32px;
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 62%;
+  min-height: 28px;
   font: inherit;
-  font-size: 0.8125rem;
-  background: var(--ns-input-bg);
+  font-size: 0.75rem;
+  background: var(--ns-panel);
   color: var(--ns-ink);
   border: 1px solid var(--ns-border);
   border-radius: 6px;
-  padding: 0.35em 0.6em;
+  padding: 0.3em 0.55em;
   box-sizing: border-box;
+}
+
+.more-flyout-body label:not(.checkbox) > input[type="number"] {
+  flex: 0 0 3.75rem;
+  max-width: 3.75rem;
+  width: 3.75rem;
+  text-align: center;
+}
+
+.more-flyout-body label:has(> input[type="range"]) > input[type="range"] {
+  flex: 1 1 auto;
+  max-width: none;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.more-flyout-body label:has(> input[type="range"]) > span:last-child {
+  flex: 0 0 2.4rem;
+  max-width: none;
+  text-align: right;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ns-muted);
+  font-weight: 600;
+}
+
+.more-flyout-body .settings-key-row .settings-secret,
+.more-flyout-body .settings-fold-body > .settings-key-row input,
+.more-flyout-body .settings-fold-body .settings-secret {
+  max-width: none;
+  width: 100%;
+  flex: 1 1 auto;
 }
 
 .more-flyout-body input[type="color"] {
   width: 2.25rem;
   height: 1.75rem;
+  flex: none;
+  max-width: none;
   padding: 2px;
   border-radius: 6px;
 }
@@ -883,6 +930,10 @@ textarea {
   gap: 12px;
 }
 
+.more-flyout-body label:has(input[type="color"]) > span:first-child {
+  max-width: none;
+}
+
 @media (hover: hover) and (min-width: 701px) {
   /* why: fundo no próprio painel — ::before com z-index:-1 ficava transparente ao scrollar */
   .more-flyout > .more-flyout-body.theme-panel-body,
@@ -890,9 +941,9 @@ textarea {
     position: absolute;
     left: calc(100% + 8px);
     top: 0;
-    width: min(320px, calc(100vw - 48px));
+    width: min(280px, calc(100vw - 48px));
     min-width: 0;
-    max-width: min(320px, calc(100vw - 48px));
+    max-width: min(280px, calc(100vw - 48px));
     max-height: min(70vh, 560px);
     overflow-x: hidden;
     overflow-y: auto;
@@ -988,9 +1039,10 @@ textarea {
 
 .settings-fold-body > label:not(.checkbox) {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font-size: 0.82rem;
 }
 
@@ -1016,13 +1068,13 @@ textarea {
 }
 
 .more-flyout-body.theme-panel-body {
-  gap: 10px;
+  gap: 8px;
   font-size: 0.8125rem;
 }
 
 .theme-panel-body.theme-panel-wide {
-  min-width: 280px;
-  max-width: 320px;
+  min-width: 260px;
+  max-width: 280px;
   max-height: min(70vh, 560px);
   overflow: auto;
 }
@@ -1031,22 +1083,15 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 0.82rem;
   color: var(--ns-ink);
 }
 
 .theme-panel-body input[type="color"] {
   border: 1px solid var(--ns-border);
-  background: var(--ns-input-bg);
+  background: var(--ns-panel);
   border-radius: 4px;
-}
-
-#narration-panel .theme-panel-body > label:not(.checkbox) {
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 6px;
 }
 
 /* why: type=password dispara o Password Manager do Chrome ao salvar a chave */
