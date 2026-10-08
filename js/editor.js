@@ -15,10 +15,12 @@ import { createClickFxController } from "./clickFx.js";
 import { clickDriverNext } from "./popoverFooter.js";
 import {
   isTypingTarget,
+  keyboardInsetShift,
   placePopoverBox,
   readInlineText,
   snapPopoverPlacement,
 } from "./canvasEdit.js";
+import { isCompactTouch } from "./compact.js";
 import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
@@ -452,6 +454,10 @@ export function createEditor(ctx) {
     let html = "";
     let lastScene = null;
     const filmPairs = [];
+    const lastIndex = demo.steps.length - 1;
+    const upLabel = escapeAttr(t("filmstrip.moveUp"));
+    const downLabel = escapeAttr(t("filmstrip.moveDown"));
+    const removeLabel = escapeAttr(t("filmstrip.remove"));
 
     demo.steps.forEach((step, index) => {
       if (step.scene !== lastScene) {
@@ -497,7 +503,9 @@ export function createEditor(ctx) {
             <span>#${index + 1}</span>
           </div>
           <div class="film-actions">
-            <button type="button" class="film-action-close" data-action="delete" title="${escapeAttr(t("filmstrip.remove"))}" aria-label="${escapeAttr(t("filmstrip.remove"))}">×</button>
+            <button type="button" class="film-action-move" data-action="up" ${index === 0 ? "disabled" : ""} title="${upLabel}" aria-label="${upLabel}">↑</button>
+            <button type="button" class="film-action-move" data-action="down" ${index === lastIndex ? "disabled" : ""} title="${downLabel}" aria-label="${downLabel}">↓</button>
+            <button type="button" class="film-action-close" data-action="delete" title="${removeLabel}" aria-label="${removeLabel}">×</button>
           </div>
         </div>`;
     });
@@ -1210,8 +1218,16 @@ export function createEditor(ctx) {
       side,
       align
     );
-    pop.style.left = `${box.left}px`;
-    pop.style.top = `${box.top}px`;
+    let left = box.left;
+    let top = box.top;
+    if (isCompactTouch()) {
+      const maxLeft = Math.max(4, (els.canvasFrame.clientWidth || 0) - pop.offsetWidth - 4);
+      const maxTop = Math.max(4, (els.canvasFrame.clientHeight || 0) - pop.offsetHeight - 4);
+      left = Math.min(Math.max(4, left), maxLeft);
+      top = Math.min(Math.max(4, top), maxTop);
+    }
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
   }
 
   function pointerInFrame(e) {
@@ -1355,13 +1371,59 @@ export function createEditor(ctx) {
         if (e.inputType === "insertParagraph" && el.dataset.inline === "title") e.preventDefault();
       });
     }
+    bindInlineKeyboardInset();
+  }
+
+  function bindInlineKeyboardInset() {
+    const stage = document.getElementById("canvas-stage");
+    const wrap = stage?.closest(".canvas-wrap");
+    const vv = window.visualViewport;
+    if (!stage || !wrap || !vv) return;
+
+    const reset = () => {
+      wrap.style.paddingBottom = "";
+      stage.style.transform = "";
+      delete stage.dataset.kbShift;
+    };
+
+    const place = () => {
+      const el = document.activeElement;
+      const editing =
+        isCompactTouch() &&
+        el?.dataset?.inline &&
+        stage.contains(el) &&
+        !document.body.classList.contains("is-presenting");
+      if (!editing) {
+        reset();
+        return;
+      }
+      wrap.style.paddingBottom = "";
+      stage.style.transform = "";
+      const visibleBottom = vv.offsetTop + vv.height;
+      const cover = Math.max(0, wrap.getBoundingClientRect().bottom - visibleBottom);
+      if (cover > 0) wrap.style.paddingBottom = `${Math.round(cover)}px`;
+      const shift = keyboardInsetShift(el.getBoundingClientRect(), vv);
+      stage.dataset.kbShift = String(Math.round(shift));
+      stage.style.transform = shift ? `translateY(${-Math.round(shift)}px)` : "";
+    };
+
+    vv.addEventListener("resize", place);
+    vv.addEventListener("scroll", place);
+    document.addEventListener("focusin", (e) => {
+      if (e.target?.dataset?.inline) requestAnimationFrame(place);
+    });
+    document.addEventListener("focusout", () => {
+      requestAnimationFrame(() => {
+        if (!document.activeElement?.dataset?.inline) reset();
+      });
+    });
   }
 
   function bindPopoverDrag() {
     const pop = els.editorPopover;
     if (!pop) return;
     pop.addEventListener("pointerdown", (e) => {
-      if (!editingCanvas() || pop.hidden) return;
+      if (!editingCanvas() || pop.hidden || isCompactTouch()) return;
       if (e.target.closest("[data-inline]")) return;
       if (e.button != null && e.button !== 0) return;
       popoverDrag = { pointerId: e.pointerId };
@@ -2695,6 +2757,7 @@ export function createEditor(ctx) {
           if (!selectedIndices.includes(index) || selectedIndices.length <= 1) {
             applySelection([index], index);
           }
+          if (isCompactTouch() && !window.confirm(t("filmstrip.confirmRemove"))) return;
           deleteStep();
         }
         return;
@@ -2723,7 +2786,7 @@ export function createEditor(ctx) {
     }
 
     els.hotspot.addEventListener("pointerdown", (e) => {
-      if (presenting() || els.hotspot.classList.contains("is-previewing")) return;
+      if (presenting() || els.hotspot.classList.contains("is-previewing") || isCompactTouch()) return;
       if (e.target.dataset.handle) {
         dragMode = e.target.dataset.handle;
       } else {
@@ -2803,7 +2866,7 @@ export function createEditor(ctx) {
     });
 
     els.clickPoint.addEventListener("pointerdown", (e) => {
-      if (presenting()) return;
+      if (presenting() || isCompactTouch()) return;
       clickPointDragging = true;
       els.clickPoint.setPointerCapture(e.pointerId);
       e.preventDefault();
@@ -2827,7 +2890,7 @@ export function createEditor(ctx) {
     });
 
     els.canvasImage.addEventListener("click", (e) => {
-      if (presenting()) return;
+      if (presenting() || isCompactTouch()) return;
       const step = currentStep();
       if (!step || step.type === "slide") return;
 
