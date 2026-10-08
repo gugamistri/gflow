@@ -55,6 +55,7 @@ import {
   initLocale,
   applyI18n,
   bindLocaleSelect,
+  getLocale,
   t,
   themePresetName,
 } from "./i18n.js";
@@ -66,6 +67,7 @@ import {
 import {
   RELEASE_NOTES_DISMISS_KEY,
   RELEASE_NOTES_VERSION,
+  releaseNotesMonth,
   shouldShowReleaseNotes,
 } from "./releaseNotes.js";
 import { COMPACT_LANDSCAPE_MQ, COMPACT_TOUCH_MQ, isCompactLandscape, isCompactTouch } from "./compact.js";
@@ -1017,15 +1019,17 @@ function renderLibrary() {
   const empty = document.getElementById("library-empty");
   const projects = index.projects || [];
 
+  const hint = document.getElementById("library-import-hint");
+  const compact = isCompactTouch();
   if (!projects.length) {
     grid.innerHTML = "";
-    empty.hidden = false;
-    const emptyKey = isCompactTouch() ? "library.emptyCompact" : "library.empty";
-    empty.dataset.i18n = emptyKey;
-    empty.textContent = t(emptyKey);
+    empty.hidden = compact;
+    if (!compact) empty.textContent = t("library.empty");
+    if (hint) hint.hidden = !compact;
     return;
   }
   empty.hidden = true;
+  if (hint) hint.hidden = true;
 
   grid.innerHTML = projects
     .map((p) => {
@@ -1528,8 +1532,8 @@ function bindChrome() {
     await openProject(created.id);
   });
 
-  document.getElementById("btn-import-library").addEventListener("click", () => {
-    document.getElementById("import-file").click();
+  document.getElementById("library-import-hint")?.addEventListener("click", () => {
+    document.getElementById("import-file")?.click();
   });
 
   document.getElementById("import-file").addEventListener("change", async (e) => {
@@ -2284,9 +2288,19 @@ function bindExtensionBanner() {
   sync();
 }
 
+function paintReleaseNotesTitle() {
+  const title = document.getElementById("release-notes-title");
+  if (!title) return;
+  title.textContent = t("releaseNotes.title", {
+    version: RELEASE_NOTES_VERSION,
+    month: releaseNotesMonth(getLocale()),
+  });
+}
+
 function bindReleaseNotes() {
   const banner = document.getElementById("release-notes");
   if (!banner) return;
+  paintReleaseNotesTitle();
 
   const sync = () => {
     let dismissedVersion = null;
@@ -2332,6 +2346,7 @@ async function boot() {
     paintChrome();
     paintShareMenu();
     paintUpgradeCopy();
+    paintReleaseNotesTitle();
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();
