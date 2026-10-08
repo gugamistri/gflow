@@ -26,6 +26,7 @@ import {
 } from "./projects.js";
 import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
+import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
 import { renumberScenes } from "./scenes.js";
 import {
   THEME_PRESETS,
@@ -105,6 +106,8 @@ import {
 } from "./billing.js";
 
 let project = null;
+let captureGeneration = 0;
+const captureClaims = createCaptureClaim();
 let selectedIndex = 0;
 let selectedNewThemeId = THEME_PRESETS[0].id;
 let themeSelection = { kind: "preset", id: THEME_PRESETS[0].id };
@@ -2196,51 +2199,90 @@ function signalGuiaReady() {
   window.postMessage({ source: "guia-editor", type: "guia-ready" }, location.origin);
 }
 
-function bindCaptureInbox() {
-  window.addEventListener("message", async (event) => {
-    if (event.source !== window || event.origin !== location.origin) return;
-    const data = event.data;
-    if (!data || data.source !== "guia-capture") return;
-    if (data.type !== "import-project" && data.type !== "append-steps") return;
+function postCaptureAck({ id, ok, mode, projectId, error }) {
+  window.postMessage(
+    {
+      source: "guia-capture",
+      type: "import-ack",
+      id: id ?? null,
+      ok,
+      mode,
+      projectId: projectId || null,
+      error: error || null,
+    },
+    location.origin
+  );
+}
 
-    const mode = data.type === "append-steps" ? "append" : "create";
-    try {
-      if (!Array.isArray(data.payload?.steps)) {
-        throw new Error(t("err.captureNoSteps"));
-      }
-      let result;
-      if (mode === "append") {
-        result = await appendCapturePayload(data.payload);
-        toast(t("toast.stepsAppended"));
-      } else {
-        result = await importCapturePayload(data.payload);
-        toast(t("toast.projectCreated", { name: result.name }));
-      }
-      window.postMessage(
-        {
-          source: "guia-capture",
-          type: "import-ack",
-          ok: true,
-          mode,
-          projectId: result.id,
-        },
-        location.origin
-      );
-    } catch (err) {
-      console.error(err);
-      window.postMessage(
-        {
-          source: "guia-capture",
-          type: "import-ack",
-          ok: false,
-          mode,
-          error: err?.message || t("err.createProjectFail"),
-        },
-        location.origin
-      );
-      toast(err?.message || t("toast.captureCreateFail"));
+async function receiveCapture(data) {
+  if (!data || data.source !== "guia-capture") return;
+  if (data.type !== "import-project" && data.type !== "append-steps") return;
+  const mode = data.type === "append-steps" ? "append" : "create";
+  const claim = captureClaims.claim(data);
+  if (claim === "done") {
+    postCaptureAck({ id: data.id, ok: true, mode, projectId: project?.id || null });
+    return;
+  }
+  if (claim !== "fresh") return;
+  captureGeneration += 1;
+  const generation = captureGeneration;
+  try {
+    if (!Array.isArray(data.payload?.steps)) {
+      throw new Error(t("err.captureNoSteps"));
     }
+    const plan = planCaptureHandoff({
+      mode,
+      openProjectId: project?.id || null,
+      activeProjectId: readIndex().activeProjectId || null,
+    });
+    if (plan.action === "reject") throw new Error(t("ext.appendNoProject"));
+    if (plan.flushFirst) await flushAutosave();
+    if (presenting) exitPresentation();
+
+    let result;
+    if (plan.action === "create") {
+      result = await importCapturePayload(data.payload);
+      toast(t("toast.projectCreated", { name: result.name }));
+    } else {
+      if (plan.action === "append-saved") {
+        await openProject(plan.projectId);
+        if (!project?.id) throw new Error(t("ext.appendNoProject"));
+      }
+      result = await appendCapturePayload(data.payload);
+      toast(t("toast.stepsAppended"));
+    }
+    captureClaims.commit(data);
+    postCaptureAck({ id: data.id, ok: true, mode, projectId: result.id });
+  } catch (err) {
+    console.error(err);
+    captureClaims.release(data);
+    if (captureGeneration === generation) captureGeneration -= 1;
+    postCaptureAck({
+      id: data.id,
+      ok: false,
+      mode,
+      error: err?.message || t("err.createProjectFail"),
+    });
+    toast(err?.message || t("toast.captureCreateFail"));
+  }
+}
+
+function bindCaptureInbox() {
+  window.addEventListener("message", (event) => {
+    if (event.origin !== location.origin) return;
+    void receiveCapture(event.data);
   });
+
+  document.addEventListener("guia-capture-handoff", (event) => {
+    void receiveCapture(event.detail);
+  });
+
+  const nudge = () => {
+    if (document.visibilityState === "hidden") return;
+    signalGuiaReady();
+  };
+  document.addEventListener("visibilitychange", nudge);
+  window.addEventListener("focus", nudge);
 
   window.addEventListener("guia-desktop-import", async (event) => {
     try {
@@ -2367,25 +2409,31 @@ async function boot() {
   bindCaptureInbox();
 
   const index = readIndex();
+  const bootGeneration = captureGeneration;
   try {
-    if (index.activeProjectId) {
+    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration) && index.activeProjectId) {
       const loaded = await getProject(index.activeProjectId);
-      if (loaded) {
+      if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
+        /* a captura já abriu o projeto enquanto este carregava */
+      } else if (loaded) {
         await openProject(loaded.id, { autoPreview: seeded && (loaded.steps || []).length > 0 });
         return;
+      } else {
+        await setActiveProjectId(null);
       }
-      await setActiveProjectId(null);
     }
+
+    if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) return;
 
     if (seeded) {
       const first = (readIndex().projects || [])[0];
-      if (first?.id) {
+      if (first?.id && !bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
         await openProject(first.id, { autoPreview: true });
         return;
       }
     }
 
-    showLibrary();
+    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) showLibrary();
   } finally {
     if (authCallback.consumed) applyCloudAuthHref(authCallback.href);
     clearBootGate();
