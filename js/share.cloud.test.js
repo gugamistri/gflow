@@ -157,7 +157,7 @@ test("402 subscription_required abre o gate sem dizer nuvem", async () => {
 test("share_limit, 401 e rede têm mensagens claras", async () => {
   assert.equal(
     permanentShareErrorMessage({ error: "share_limit", data: { plan: "free" } }),
-    "Limite de links do plano Free"
+    "Limite de links da conta"
   );
   assert.equal(
     permanentShareErrorMessage({ error: "share_limit", data: { plan: "cloud", limit: 25 } }),
@@ -180,7 +180,7 @@ test("share_limit, 401 e rede têm mensagens claras", async () => {
           env,
           buildSnapshot: async () => ({ name: "Tour", steps: [] }),
         }),
-      (err) => err.code === "share_limit" && err.message === "Limite de links do plano Free"
+      (err) => err.code === "share_limit" && err.message === "Limite de links da conta"
     );
   } finally {
     if (prev === undefined) delete globalThis.fetch;

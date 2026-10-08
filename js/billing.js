@@ -5,6 +5,7 @@
  */
 
 import { cloudFetch } from "./cloudConfig.js";
+import { buildCheckoutBody, readBillingReturn, stripBillingReturn } from "./paywall.js";
 
 export const BILLING_CHECKOUT_PATH = "/billing/checkout";
 export const BILLING_PORTAL_PATH = "/billing/portal";
@@ -14,7 +15,7 @@ const SESSION_ID_RE = /^cs_[A-Za-z0-9_]+$/;
 const SUBSCRIBED_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 export function emptyEntitlement() {
-  return { plan: "free", status: "none", interval: "", active: false };
+  return { plan: "none", status: "none", interval: "", active: false };
 }
 
 /** Intervalo que o checkout aceita. month/year da resposta não voltam no pedido. */
@@ -36,40 +37,12 @@ export function safeCheckoutSessionId(value) {
   return raw;
 }
 
-/**
- * Regresso do Checkout e do Portal em guiaflow.pro.
- * @returns {{ kind: "" | "success" | "cancel" | "portal", sessionId: string }}
- */
-export function readBillingReturn(href) {
-  let url;
-  try {
-    url = new URL(String(href || ""), "https://guiaflow.pro/");
-  } catch {
-    return { kind: "", sessionId: "" };
-  }
-  const billing = url.searchParams.get("billing") || "";
-  const kind = billing === "success" || billing === "cancel" || billing === "portal" ? billing : "";
-  const sessionId = kind === "success" ? safeCheckoutSessionId(url.searchParams.get("session_id")) : "";
-  return { kind, sessionId };
-}
-
-/** Tira billing e session_id da barra. O resto da query fica. */
-export function stripBillingReturn(href) {
-  let url;
-  try {
-    url = new URL(String(href || ""), "https://guiaflow.pro/");
-  } catch {
-    return String(href || "");
-  }
-  url.searchParams.delete("billing");
-  url.searchParams.delete("session_id");
-  return url.toString();
-}
+export { readBillingReturn, stripBillingReturn };
 
 function planRank(value) {
   const raw = String(value ?? "").trim().toLowerCase();
-  if (raw === "cloud" || raw === "pro" || raw === "paid") return "cloud";
-  return "free";
+  if (raw === "pro" || raw === "cloud" || raw === "paid") return "pro";
+  return "none";
 }
 
 /**
@@ -88,9 +61,9 @@ export function parseEntitlement(data) {
   let active;
   if (typeof src.active === "boolean") active = src.active;
   else if (typeof src.entitled === "boolean") active = src.entitled;
-  else active = plan === "cloud" && (status === "" || SUBSCRIBED_STATUSES.has(status));
-  if (!active) return { plan: "free", status: status || "none", interval, active: false };
-  return { plan: "cloud", status: status || "active", interval, active: true };
+  else active = plan === "pro" && (status === "" || SUBSCRIBED_STATUSES.has(status));
+  if (!active) return { plan: "none", status: status || "none", interval, active: false };
+  return { plan: "pro", status: status || "active", interval, active: true };
 }
 
 /**
@@ -124,9 +97,9 @@ export function billingMenuModel({ signedIn = false, status = "idle", entitlemen
   if (!ready) return { showPlan: false, showAction: false, planLabel: "", action: "" };
   const active = Boolean(entitlement.active);
   return {
-    showPlan: true,
+    showPlan: active,
     showAction: true,
-    planLabel: active ? "cloud" : "free",
+    planLabel: active ? "pro" : "none",
     action: active ? "portal" : "checkout",
   };
 }
@@ -138,9 +111,9 @@ export function billingMenuModel({ signedIn = false, status = "idle", entitlemen
 export function hostedAccess({ cloudEnabled = false, signedIn = false, status = "idle", active = false, hasByok = false } = {}) {
   if (hasByok) return "byok";
   if (!cloudEnabled) return "unavailable";
-  if (!signedIn) return "login";
-  if (status === "ready" && active) return "proceed";
-  if (status === "ready" && !active) return "upgrade";
+  if (signedIn && status === "ready" && active) return "proceed";
+  if (signedIn && status === "ready" && !active) return "upgrade";
+  if (!signedIn) return "upgrade";
   return "proceed";
 }
 
@@ -152,7 +125,7 @@ export function shouldShowProBadge({ cloudEnabled = false, signedIn = false, sta
   return true;
 }
 
-/** Marca no vídeo: anônimo e plano grátis. Assinante ativo exporta limpo. */
+/** Marca no vídeo: quem não assina. Assinante ativo exporta limpo. */
 export function exportShowsWatermark({ cloudEnabled = false, signedIn = false, status = "idle", active = false } = {}) {
   if (!cloudEnabled) return false;
   if (!signedIn) return true;
@@ -204,19 +177,21 @@ export async function fetchBillingEntitlement(sessionId, env) {
   };
 }
 
-export async function startBillingCheckout(interval, env) {
-  const normalized = checkoutInterval(interval);
-  if (!normalized) return { ok: false, error: "invalid_interval", message: "", unavailable: false };
+export async function startBillingCheckout(input, env) {
+  const opts = typeof input === "string" ? { interval: input, currency: "usd" } : { currency: "usd", ...(input || {}) };
+  const body = buildCheckoutBody(opts);
+  if (!body) return { ok: false, error: "invalid_interval", message: "", unavailable: false };
   const result = await cloudFetch(
     BILLING_CHECKOUT_PATH,
     {
       method: "POST",
-      body: JSON.stringify({ interval: normalized }),
+      auth: false,
+      body: JSON.stringify(body),
     },
     env
   );
   if (!result.ok) return { ...result, unavailable: unavailableResult(result), url: "" };
-  const url = redirectUrl(result.data?.checkout?.url);
+  const url = redirectUrl(result.data?.url || result.data?.checkout?.url);
   if (!url) return { ok: false, error: "invalid_response", message: "", unavailable: false, url: "" };
   return { ok: true, status: result.status, url, unavailable: false };
 }
