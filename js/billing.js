@@ -12,7 +12,7 @@ export const BILLING_PORTAL_PATH = "/billing/portal";
 export const BILLING_ENTITLEMENT_PATH = "/billing/entitlement";
 
 const SESSION_ID_RE = /^cs_[A-Za-z0-9_]+$/;
-const SUBSCRIBED_STATUSES = new Set(["active", "trialing", "past_due"]);
+const SUBSCRIBED_STATUSES = new Set(["active", "trialing"]);
 
 export function emptyEntitlement() {
   return { plan: "none", status: "none", interval: "", active: false };
@@ -58,6 +58,9 @@ export function parseEntitlement(data) {
   const plan = planRank(src.plan ?? src.tier ?? src.product);
   const status = String(src.status ?? "").trim().toLowerCase();
   const interval = normalizeBillingInterval(src.interval);
+  if (status === "past_due") {
+    return { plan: "none", status: "past_due", interval, active: false };
+  }
   let active;
   if (typeof src.active === "boolean") active = src.active;
   else if (typeof src.entitled === "boolean") active = src.entitled;
@@ -95,6 +98,9 @@ export function classifyCloudGate(result) {
 export function billingMenuModel({ signedIn = false, status = "idle", entitlement = null } = {}) {
   const ready = Boolean(signedIn && status === "ready" && entitlement);
   if (!ready) return { showPlan: false, showAction: false, planLabel: "", action: "" };
+  if (entitlement.status === "past_due") {
+    return { showPlan: true, showAction: true, planLabel: "past_due", action: "portal" };
+  }
   const active = Boolean(entitlement.active);
   return {
     showPlan: active,
@@ -185,7 +191,6 @@ export async function startBillingCheckout(input, env) {
     BILLING_CHECKOUT_PATH,
     {
       method: "POST",
-      auth: false,
       body: JSON.stringify(body),
     },
     env

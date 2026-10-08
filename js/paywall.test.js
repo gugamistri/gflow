@@ -74,22 +74,25 @@ test("402 de quem não assina abre o caminho do diálogo", () => {
   assert.equal(isSubscriptionRequired({ ok: false, error: "network" }), false);
 });
 
-test("welcome, cancelamento e pagamento pendente saem do endereço", () => {
-  const welcome = "https://guiaflow.pro/?welcome=pro&tema=1#passo";
-  assert.deepEqual(readBillingReturn(welcome), { kind: "welcome", sessionId: "" });
+test("welcome troca o code e tira welcome e code do endereço", () => {
+  const welcome = "https://guiaflow.pro/?welcome=pro&code=handoff-1&tema=1#passo";
+  assert.deepEqual(readBillingReturn(welcome), { kind: "welcome", sessionId: "", code: "handoff-1" });
   assert.equal(stripBillingReturn(welcome), "https://guiaflow.pro/?tema=1#passo");
+  assert.equal(readBillingReturn("https://guiaflow.pro/?welcome=pro").code, "");
 
   const cancel = "https://guiaflow.pro/?checkout=cancel";
-  assert.deepEqual(readBillingReturn(cancel), { kind: "cancel", sessionId: "" });
+  assert.deepEqual(readBillingReturn(cancel), { kind: "cancel", sessionId: "", code: "" });
   assert.equal(stripBillingReturn(cancel), "https://guiaflow.pro/");
 
   const pending = "https://guiaflow.pro/?checkout=pending";
-  assert.equal(readBillingReturn(pending).kind, "pending");
+  assert.deepEqual(readBillingReturn(pending), { kind: "pending", sessionId: "", code: "" });
+  assert.equal(pending.includes("code="), false);
   assert.equal(stripBillingReturn(pending), "https://guiaflow.pro/");
 
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=success&session_id=cs_test_abc123"), {
     kind: "welcome",
     sessionId: "cs_test_abc123",
+    code: "",
   });
   assert.equal(readBillingReturn("https://guiaflow.pro/?checkout=nope").kind, "");
 });

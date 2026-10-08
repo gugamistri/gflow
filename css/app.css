@@ -1359,6 +1359,11 @@ textarea {
   color: var(--ns-ink);
 }
 
+.account-chip-plan.is-pending {
+  color: var(--ns-muted);
+  font-weight: 650;
+}
+
 .pro-badge {
   display: inline-flex;
   align-items: center;

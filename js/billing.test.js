@@ -28,32 +28,37 @@ function withFetch(handler, run) {
 }
 
 test("o regresso de billing lê o tipo e limpa a query", () => {
-  const success = "https://guiaflow.pro/?welcome=pro&tema=1#passo";
-  assert.deepEqual(readBillingReturn(success), { kind: "welcome", sessionId: "" });
+  const success = "https://guiaflow.pro/?welcome=pro&code=handoff-1&tema=1#passo";
+  assert.deepEqual(readBillingReturn(success), { kind: "welcome", sessionId: "", code: "handoff-1" });
   assert.equal(stripBillingReturn(success), "https://guiaflow.pro/?tema=1#passo");
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?checkout=cancel"), {
     kind: "cancel",
     sessionId: "",
+    code: "",
   });
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?checkout=pending"), {
     kind: "pending",
     sessionId: "",
+    code: "",
   });
   assert.equal(stripBillingReturn("https://guiaflow.pro/?checkout=pending"), "https://guiaflow.pro/");
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=success&session_id=cs_test_abc123"), {
     kind: "welcome",
     sessionId: "cs_test_abc123",
+    code: "",
   });
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=portal&session_id=cs_should_not_stick"), {
     kind: "portal",
     sessionId: "",
+    code: "",
   });
   assert.equal(stripBillingReturn("https://guiaflow.pro/?billing=portal&session_id=cs_should_not_stick"), "https://guiaflow.pro/");
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/?billing=success&session_id=javascript:alert(1)"), {
     kind: "welcome",
     sessionId: "",
+    code: "",
   });
-  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?outra=1"), { kind: "", sessionId: "" });
+  assert.deepEqual(readBillingReturn("https://guiaflow.pro/?outra=1"), { kind: "", sessionId: "", code: "" });
   assert.equal(readBillingReturn("https://guiaflow.pro/").kind, "");
 });
 
@@ -80,7 +85,14 @@ test("entitlement lê plan e status, no corpo ou aninhado", () => {
   assert.equal(parseEntitlement({ plan: "free", status: "none" }).plan, "none");
   assert.equal(parseEntitlement({ plan: "pro", status: "canceled" }).active, false);
   assert.equal(parseEntitlement({ plan: "pro", status: "active", active: false }).active, false);
-  assert.equal(parseEntitlement({ subscription: { plan: "pro", status: "past_due", interval: "year" } }).active, true);
+  const late = parseEntitlement({ plan: "pro", status: "past_due", interval: "year", active: true });
+  assert.equal(late.active, false);
+  assert.equal(late.plan, "none");
+  assert.equal(late.status, "past_due");
+  assert.deepEqual(
+    billingMenuModel({ signedIn: true, status: "ready", entitlement: late }),
+    { showPlan: true, showAction: true, planLabel: "past_due", action: "portal" }
+  );
 });
 
 test("o menu esconde o plano quando o billing não está disponível", () => {
@@ -194,7 +206,7 @@ test("checkout e portal seguem o URL devolvido e mandam o intervalo", async () =
       checkoutInit.body,
       JSON.stringify({ interval: "year", currency: "brl", email: "ana@exemplo.com", source: "tts" })
     );
-    assert.equal(new Headers(checkoutInit.headers).get("authorization"), null);
+    assert.equal(new Headers(checkoutInit.headers).get("authorization"), "Bearer jwt-session");
     assert.equal(checkoutInit.body.includes("price"), false);
     assert.equal(seen[0].url, "https://app.guiaflow.pro/billing/checkout");
 

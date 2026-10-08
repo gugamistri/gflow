@@ -79,6 +79,7 @@ import {
   completeCloudAuthCallback,
   endCloudSession,
   establishCloudSession,
+  exchangeCloudAuthCode,
   getCloudAccount,
   getCloudFlags,
   isCloudEnabled,
@@ -615,10 +616,11 @@ function paintAccount() {
   const planEl = document.getElementById("account-chip-plan");
   const billingBtn = document.getElementById("btn-account-billing");
   if (planEl) {
+    const pending = menu.planLabel === "past_due";
     planEl.hidden = !menu.showPlan;
-    if (menu.showPlan) {
-      planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
-    }
+    planEl.classList.toggle("is-pending", pending);
+    if (pending) planEl.textContent = t("billing.pastDue");
+    else if (menu.showPlan) planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
   }
   if (billingBtn) {
     billingBtn.hidden = !menu.showAction;
@@ -749,7 +751,7 @@ async function ensureHostedFeature(feature, resume) {
   if (access === "upgrade") {
     pendingHostedFeature = feature;
     pendingHostedResume = typeof resume === "function" ? resume : null;
-    showUpgradeDialog({ feature });
+    openFeatureGate(feature);
     return "blocked";
   }
   return "proceed";
@@ -759,7 +761,7 @@ function presentHostedFailure(result, feature) {
   const gate = classifyCloudGate(result);
   const which = gate.feature || feature;
   if (gate.kind === "subscription_required") {
-    showUpgradeDialog({ feature: which, message: gate.message });
+    openFeatureGate(which);
     return true;
   }
   if (gate.kind === "quota_exceeded") {
@@ -816,22 +818,60 @@ function closeUpgradeDialog() {
 }
 
 function cloudShareNeedsUpgrade() {
-  return billingView.status === "ready" && !billingEntitlement.active;
+  return billingView.status === "ready" && !billingEntitlement.active && billingEntitlement.status !== "past_due";
+}
+
+function isPastDue() {
+  return billingView.status === "ready" && billingEntitlement.status === "past_due";
+}
+
+function openFeatureGate(feature) {
+  if (isPastDue()) {
+    toast(t("billing.pastDueHint"), 4200);
+    void openBillingPortal();
+    return;
+  }
+  showUpgradeDialog({ feature });
 }
 
 async function consumeBillingReturn() {
   const found = readBillingReturn(location.href);
-  if (found.kind) applyCloudAuthHref(stripBillingReturn(location.href));
   if (!isCloudEnabled() || !found.kind) return;
+  if (found.kind === "welcome" && found.code) {
+    const session = await exchangeCloudAuthCode(found.code);
+    if (session?.error === "network") {
+      toast(t("share.cloud.network"), 4200);
+      return;
+    }
+    applyCloudAuthHref(stripBillingReturn(location.href));
+    if (isSubscriptionRequired(session)) {
+      showUpgradeDialog({ feature: "account" });
+      return;
+    }
+    if (!session?.ok) {
+      toast(session?.message || t("share.cloud.invalidToken"), 4800);
+      return;
+    }
+    paintCloudShare();
+    await refreshEntitlement();
+    toast(t("billing.toastWelcome"), 5200);
+    return;
+  }
+  applyCloudAuthHref(stripBillingReturn(location.href));
   if (found.kind === "cancel") {
     toast(t("billing.toastCancel"), 4200);
     return;
   }
-  if (getCloudAccount().signedIn && (found.kind === "welcome" || found.kind === "pending" || found.kind === "portal")) {
-    await refreshEntitlement(found.sessionId || "");
+  if (found.kind === "pending") {
+    toast(t("billing.toastPending"), 4800);
+    return;
   }
-  if (found.kind === "welcome") toast(t("billing.toastWelcome"), 4800);
-  else if (found.kind === "pending") toast(t("billing.toastPending"), 4800);
+  if (found.kind === "welcome") {
+    if (getCloudAccount().signedIn) await refreshEntitlement(found.sessionId || "");
+    toast(t("billing.toastWelcome"), 5200);
+    return;
+  }
+  if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
 }
 
 async function openBillingPortal() {
@@ -862,6 +902,13 @@ async function submitUpgrade(interval) {
       email: upgradeEmail || getCloudAccount().email || "",
       source: upgradeFeature || "account",
     });
+    if (result?.status === 400 && (result.error === "invalid_interval" || result.error === "invalid_currency")) {
+      setUpgradeStatus(
+        result.error === "invalid_currency" ? t("billing.invalidCurrency") : t("billing.invalidInterval"),
+        "error"
+      );
+      return;
+    }
     if (result?.status === 401 || result?.error === "unauthorized") {
       closeUpgradeDialog();
       await endCloudSession();
@@ -1802,7 +1849,7 @@ function bindChrome() {
   document.getElementById("btn-export-unbrand")?.addEventListener("click", () => {
     closeExportMenu();
     pendingHostedFeature = "branding";
-    showUpgradeDialog({ feature: "branding" });
+    openFeatureGate("branding");
   });
 
   document.getElementById("btn-export-video").addEventListener("click", async () => {
@@ -1910,8 +1957,9 @@ function bindChrome() {
   });
   document.getElementById("btn-account-billing")?.addEventListener("click", () => {
     closeAccountMenus();
-    if (billingView.status === "ready" && billingEntitlement.active) void openBillingPortal();
-    else showUpgradeDialog();
+    if (billingView.status === "ready" && (billingEntitlement.active || billingEntitlement.status === "past_due")) {
+      void openBillingPortal();
+    } else showUpgradeDialog();
   });
   document.getElementById("btn-upgrade-close")?.addEventListener("click", () => {
     closeUpgradeDialog();
@@ -1969,6 +2017,10 @@ function bindChrome() {
 
   document.getElementById("btn-cloud-share")?.addEventListener("click", () => {
     if (!project || !cloudShareEnabled()) return;
+    if (isPastDue()) {
+      openFeatureGate("permanentShare");
+      return;
+    }
     if (!getCloudAccount().signedIn || cloudShareNeedsUpgrade()) {
       showUpgradeDialog({ feature: "permanentShare" });
       return;
@@ -2028,6 +2080,10 @@ function bindChrome() {
     editor.paintHostedBadges?.();
     paintExportMark();
     if (resume) {
+      if (isPastDue()) {
+        openFeatureGate(feature);
+        return;
+      }
       if (billingView.status === "ready" && !billingEntitlement.active) {
         showUpgradeDialog({ feature });
         return;
@@ -2066,6 +2122,14 @@ function bindChrome() {
         emailHint: parsed.email,
         forceKind,
       });
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({
+          feature: pendingHostedFeature || "account",
+          email: parsed.email || "",
+          emailNote: Boolean(parsed.email),
+        });
+        return;
+      }
       if (!session.ok) {
         showAccountDialog();
         setCloudLoginStatus(permanentShareErrorMessage(session), "error");
@@ -2136,6 +2200,15 @@ function bindChrome() {
     if (button) button.disabled = true;
     try {
       const session = await establishCloudSession(pasted, undefined, { emailHint });
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({
+          feature: pendingHostedFeature || "account",
+          email: emailHint,
+          emailNote: Boolean(String(emailHint || "").trim()),
+        });
+        closeAccountDialog();
+        return;
+      }
       if (!session.ok) {
         setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
@@ -2163,8 +2236,12 @@ function bindChrome() {
       showAccountDialog({ publish: true });
       return;
     }
+    if (isPastDue()) {
+      openFeatureGate("permanentShare");
+      return;
+    }
     if (cloudShareNeedsUpgrade()) {
-      showUpgradeDialog();
+      showUpgradeDialog({ feature: "permanentShare" });
       return;
     }
     project.theme = formToTheme(project.theme);
@@ -2215,7 +2292,7 @@ function bindChrome() {
         return;
       }
       if (gate.kind === "subscription_required") {
-        showUpgradeDialog({ message: gate.message || err?.message });
+        openFeatureGate("permanentShare");
         return;
       }
       if (gate.kind === "quota_exceeded") {

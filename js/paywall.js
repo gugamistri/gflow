@@ -92,31 +92,39 @@ export function isSubscriptionRequired(result) {
   return Number(result?.status) === 402 || code === "subscription_required";
 }
 
+function handoffCode(url) {
+  const raw = String(url.searchParams.get("code") || "").trim();
+  if (!raw || raw.length > 512) return "";
+  return raw;
+}
+
 /**
- * Volta do Checkout. welcome=pro, checkout=cancel e checkout=pending.
- * billing=success antigo conta como boas-vindas.
+ * Volta do Checkout.
+ * Pago: /?welcome=pro&code= (troca em POST /auth/callback, uso único, 2 min).
+ * Sem pagamento confirmado: /?checkout=pending. Cancelou: /?checkout=cancel.
  */
 export function readBillingReturn(href) {
+  const empty = { kind: "", sessionId: "", code: "" };
   let url;
   try {
     url = new URL(String(href || ""), "https://guiaflow.pro/");
   } catch {
-    return { kind: "", sessionId: "" };
+    return empty;
   }
   const welcome = url.searchParams.get("welcome") || "";
   const checkout = url.searchParams.get("checkout") || "";
-  if (welcome === "pro") return { kind: "welcome", sessionId: "" };
-  if (checkout === "cancel") return { kind: "cancel", sessionId: "" };
-  if (checkout === "pending") return { kind: "pending", sessionId: "" };
+  if (welcome === "pro") return { kind: "welcome", sessionId: "", code: handoffCode(url) };
+  if (checkout === "cancel") return { kind: "cancel", sessionId: "", code: "" };
+  if (checkout === "pending") return { kind: "pending", sessionId: "", code: "" };
   const billing = url.searchParams.get("billing") || "";
   if (billing === "success") {
     const raw = String(url.searchParams.get("session_id") || "").trim();
     const sessionId = /^cs_[A-Za-z0-9_]+$/.test(raw) && raw.length <= 255 ? raw : "";
-    return { kind: "welcome", sessionId };
+    return { kind: "welcome", sessionId, code: "" };
   }
-  if (billing === "cancel") return { kind: "cancel", sessionId: "" };
-  if (billing === "portal") return { kind: "portal", sessionId: "" };
-  return { kind: "", sessionId: "" };
+  if (billing === "cancel") return { kind: "cancel", sessionId: "", code: "" };
+  if (billing === "portal") return { kind: "portal", sessionId: "", code: "" };
+  return empty;
 }
 
 export function stripBillingReturn(href) {
@@ -127,6 +135,7 @@ export function stripBillingReturn(href) {
     return String(href || "");
   }
   url.searchParams.delete("welcome");
+  url.searchParams.delete("code");
   url.searchParams.delete("checkout");
   url.searchParams.delete("billing");
   url.searchParams.delete("session_id");
