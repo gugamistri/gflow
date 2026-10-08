@@ -574,13 +574,20 @@ function paintAccount() {
   }
 }
 
+function setCloudLoginStatus(message, tone = "") {
+  const status = document.getElementById("cloud-login-status");
+  if (!status) return;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", tone === "error");
+  status.classList.toggle("is-ok", tone === "ok");
+}
+
 function showAccountDialog({ publish = false } = {}) {
   if (!isCloudEnabled()) return;
   accountDialogWantsPublish = publish;
   const dialog = document.getElementById("modal-account");
   if (!dialog) return;
-  const status = document.getElementById("cloud-login-status");
-  if (status) status.textContent = "";
+  setCloudLoginStatus("");
   if (!dialog.open) dialog.showModal();
   document.getElementById("cloud-email")?.focus();
 }
@@ -637,8 +644,7 @@ function showStashedAuthError() {
   const code = takeCloudAuthError();
   if (!code) return;
   showAccountDialog();
-  const status = document.getElementById("cloud-login-status");
-  if (status) status.textContent = permanentShareErrorMessage({ error: code });
+  setCloudLoginStatus(permanentShareErrorMessage({ error: code }), "error");
 }
 
 async function finishCloudAuthCallback(callback) {
@@ -646,8 +652,7 @@ async function finishCloudAuthCallback(callback) {
   paintCloudShare();
   if (!callback.ok) {
     showAccountDialog();
-    const status = document.getElementById("cloud-login-status");
-    if (status) status.textContent = permanentShareErrorMessage(callback);
+    setCloudLoginStatus(permanentShareErrorMessage(callback), "error");
     return;
   }
   closeAccountDialog();
@@ -1654,8 +1659,7 @@ function bindChrome() {
       });
       if (!session.ok) {
         showAccountDialog();
-        const status = document.getElementById("cloud-login-status");
-        if (status) status.textContent = permanentShareErrorMessage(session);
+        setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
       }
       await afterAccountSignedIn();
@@ -1663,38 +1667,36 @@ function bindChrome() {
   });
 
   async function sendCloudMagicLink() {
-    const status = document.getElementById("cloud-login-status");
     const email = document.getElementById("cloud-email")?.value || "";
     const button = document.getElementById("btn-cloud-magic");
     if (button) button.disabled = true;
-    if (status) status.textContent = "";
+    setCloudLoginStatus("");
     try {
       const result = await requestMagicLink(email);
       if (!result.ok) {
-        if (status) status.textContent = permanentShareErrorMessage(result);
+        setCloudLoginStatus(permanentShareErrorMessage(result), "error");
         return;
       }
       if (accountDialogWantsPublish && project?.id) writeCloudPublishIntent(project.id);
-      if (status) status.textContent = t("share.cloud.sent", { email: String(email).trim() });
+      setCloudLoginStatus(t("share.cloud.sent", { email: String(email).trim() }), "ok");
     } catch (err) {
       console.error(err);
-      if (status) status.textContent = t("share.cloud.network");
+      setCloudLoginStatus(t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
     }
   }
 
   async function sendCloudPassword() {
-    const status = document.getElementById("cloud-login-status");
     const email = document.getElementById("cloud-email")?.value || "";
     const password = document.getElementById("cloud-password")?.value || "";
     const button = document.getElementById("btn-cloud-password");
     if (button) button.disabled = true;
-    if (status) status.textContent = "";
+    setCloudLoginStatus("");
     try {
       const session = await loginWithPassword(email, password);
       if (!session.ok) {
-        if (status) status.textContent = permanentShareErrorMessage(session);
+        setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
       }
       const field = document.getElementById("cloud-password");
@@ -1702,14 +1704,13 @@ function bindChrome() {
       await afterAccountSignedIn();
     } catch (err) {
       console.error(err);
-      if (status) status.textContent = t("share.cloud.network");
+      setCloudLoginStatus(t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
     }
   }
 
   async function continueCloudLogin() {
-    const status = document.getElementById("cloud-login-status");
     const pasted = document.getElementById("cloud-paste")?.value || "";
     const emailHint = document.getElementById("cloud-email")?.value || "";
     const button = document.getElementById("btn-cloud-continue");
@@ -1717,16 +1718,16 @@ function bindChrome() {
     try {
       const session = await establishCloudSession(pasted, undefined, { emailHint });
       if (!session.ok) {
-        if (status) status.textContent = permanentShareErrorMessage(session);
+        setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
       }
       const paste = document.getElementById("cloud-paste");
       if (paste) paste.value = "";
-      if (status) status.textContent = "";
+      setCloudLoginStatus("");
       await afterAccountSignedIn();
     } catch (err) {
       console.error(err);
-      if (status) status.textContent = err?.message || t("share.cloud.network");
+      setCloudLoginStatus(err?.message || t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
     }
@@ -1774,8 +1775,7 @@ function bindChrome() {
         await endCloudSession();
         paintCloudShare();
         showAccountDialog({ publish: true });
-        const status = document.getElementById("cloud-login-status");
-        if (status) status.textContent = err?.message || t("share.cloud.unauthorized");
+        setCloudLoginStatus(err?.message || t("share.cloud.unauthorized"), "error");
       }
       toast(err?.message || t("share.cloud.generic"));
     }
