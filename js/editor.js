@@ -2314,10 +2314,6 @@ export function createEditor(ctx) {
 
   function playFromSelected(opts = {}) {
     closeFilmContextMenu();
-    if (opts.autoplay) {
-      const previewMenu = document.querySelector(".preview-menu");
-      if (previewMenu) previewMenu.open = false;
-    }
     if (!onPlayFrom) return;
     const indices = Array.isArray(opts.indices)
       ? normalizeIndices(opts.indices, getDemo().steps.length)
@@ -2912,9 +2908,7 @@ export function createEditor(ctx) {
     // why: abre Mais e fecha outros details para o painel de Ajustes ficar visível.
     if (more) more.open = true;
     document
-      .querySelectorAll(
-        "details.theme-panel, details.export-panel, details.preview-menu",
-      )
+      .querySelectorAll("details.theme-panel, details.export-panel")
       .forEach((el) => {
         if (el !== panel && el !== more) el.open = false;
       });

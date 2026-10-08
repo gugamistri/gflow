@@ -487,26 +487,110 @@ textarea {
   color: var(--ns-ink);
   border: 1px solid var(--ns-border);
   border-radius: 10px;
-  padding: 10px;
+  padding: 8px;
   display: grid;
-  gap: 6px;
-  min-width: min(280px, calc(100vw - 24px));
-  width: min(400px, calc(100vw - 24px));
-  max-width: min(400px, calc(100vw - 24px));
+  gap: 4px;
+  min-width: min(260px, calc(100vw - 24px));
+  width: min(280px, calc(100vw - 24px));
+  max-width: min(280px, calc(100vw - 24px));
   max-height: min(85vh, 760px);
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* why: flyouts Preferências/Temas abrem à direita — overflow clipped cortava o submenu */
+  overflow: visible;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   z-index: 60;
 }
 
-.more-row {
+.more-group {
+  display: grid;
+  gap: 2px;
+}
+
+.more-divider {
+  border: 0;
+  border-top: 1px solid var(--ns-border);
+  margin: 6px 4px;
+}
+
+.more-pref-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 4px 8px;
-  border-bottom: 1px solid var(--ns-border);
-  margin-bottom: 4px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.more-pref-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ns-ink);
+  flex: none;
+  line-height: 1.2;
+}
+
+.appearance-segment {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ns-surface);
+  flex: none;
+}
+
+/* why: botões usam data-mode (não data-appearance) p/ não herdar tokens do tema escuro */
+.more-panel-body .appearance-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--ns-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ns-ink);
+  cursor: pointer;
+}
+
+.more-panel-body .appearance-opt:last-child {
+  border-right: 0;
+}
+
+.more-panel-body .appearance-opt:hover {
+  background: var(--ns-hover);
+  color: var(--ns-ink);
+}
+
+.more-panel-body .appearance-opt[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ns-accent) 22%, var(--ns-surface));
+  color: var(--ns-accent-dark);
+}
+
+.more-panel-body .appearance-opt .btn-ico {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: inherit;
+  opacity: 1;
+}
+
+.more-panel-body .appearance-opt[aria-pressed="true"] .btn-ico {
+  color: var(--ns-accent-dark);
+}
+
+.more-locale {
+  display: block;
+  padding: 4px 12px 8px;
+}
+
+.more-locale select {
+  width: 100%;
+  min-height: 32px;
+  font-size: 0.8125rem;
+  border-radius: 6px;
+  padding: 0.35em 1.75em 0.35em 0.6em;
 }
 
 .more-panel .locale-select select {
@@ -551,22 +635,75 @@ textarea {
 }
 
 .more-section {
-  border: 1px solid var(--ns-border);
-  border-radius: 8px;
-  background: var(--ns-input-bg);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
-.more-section > summary {
+/* why: `.theme-panel summary` pinta a topbar; precisa vencer essa regra no menu Mais */
+.more-panel-body .more-section > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
   width: 100%;
   box-sizing: border-box;
+  min-height: 0;
   background: transparent;
   color: var(--ns-ink);
   border: 0;
   border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
   justify-content: flex-start;
+  text-align: left;
+  line-height: 1.2;
 }
 
-.more-section-body.theme-panel-body {
+.more-panel-body .more-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.more-panel-body .more-section > summary::before {
+  content: "";
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 150ms ease;
+  flex: none;
+  order: 2;
+  margin-left: auto;
+}
+
+.more-panel-body .more-section[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.more-panel-body .more-section > summary:hover {
+  background: var(--ns-hover);
+}
+
+/* why: border-right+bottom em -45deg = chevron >; open do accordion não pode virar ▼ */
+.more-panel-body .more-flyout > summary::before,
+.more-panel-body .more-flyout[open] > summary::before {
+  transform: rotate(-45deg);
+}
+
+.more-panel-body .more-flyout[open] > summary {
+  background: var(--ns-hover);
+}
+
+.more-flyout {
+  position: relative;
+}
+
+.more-section-body.theme-panel-body,
+.more-flyout-body.theme-panel-body {
   position: static;
   right: auto;
   top: auto;
@@ -576,17 +713,231 @@ textarea {
   overflow: visible;
   box-shadow: none;
   border: 0;
-  border-top: 1px solid var(--ns-border);
-  border-radius: 0 0 8px 8px;
-  background: var(--ns-panel);
+  border-radius: 8px;
+  margin: 0 4px 4px;
+  padding: 10px 12px;
+  background: var(--ns-input-bg);
 }
 
 /* why: .theme-panel-wide força max-height/overflow e gerava scroll duplo dentro de Mais */
-.more-section-body.theme-panel-body.theme-panel-wide {
+.more-section-body.theme-panel-body.theme-panel-wide,
+.more-flyout-body.theme-panel-body.theme-panel-wide {
   min-width: 0;
   max-width: none;
   max-height: none;
   overflow: visible;
+}
+
+/* why: Preferências e Temas compartilhavam tokens mistos (0.72/0.75/0.82) e gaps distintos */
+.more-flyout-body {
+  display: grid;
+  gap: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--ns-ink);
+}
+
+.more-flyout-body .theme-section-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ns-muted);
+}
+
+.more-flyout-body label,
+.more-flyout-body .checkbox,
+.more-flyout-body .theme-swatch-name,
+.more-flyout-body .props-meta,
+.more-flyout-body .theme-empty {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.more-flyout-body .checkbox {
+  gap: 8px;
+}
+
+.more-flyout-body label:not(.checkbox) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.more-flyout-body label:not(.checkbox) > span:first-child {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ns-ink);
+}
+
+.theme-panel .more-flyout-body .settings-fold {
+  margin: 0;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-surface);
+}
+
+/* why: `.theme-panel summary` pinta topbar + texto de botão; Cartesia/IA são folds do painel */
+.theme-panel .more-flyout-body .settings-fold > summary {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  color: var(--ns-ink);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  justify-content: flex-start;
+}
+
+.theme-panel .more-flyout-body .settings-fold > summary:hover {
+  background: var(--ns-hover);
+  color: var(--ns-ink);
+}
+
+.theme-panel .more-flyout-body .settings-fold[open] > summary {
+  border-radius: 8px 8px 0 0;
+  color: var(--ns-ink);
+  background: transparent;
+}
+
+.more-flyout-body .settings-fold-body {
+  gap: 10px;
+  padding: 10px 12px 12px;
+}
+
+.more-flyout-body .settings-fold-body > label:not(.checkbox) {
+  gap: 6px;
+  font-size: 0.8125rem;
+}
+
+.more-flyout-body .theme-presets,
+.more-flyout-body .theme-customs {
+  gap: 6px;
+}
+
+.more-flyout-body .theme-swatch {
+  padding: 8px 10px;
+  gap: 10px;
+  border-radius: 8px;
+}
+
+.more-flyout-body .theme-custom-actions {
+  gap: 8px;
+}
+
+.more-flyout-body .theme-custom-actions .btn {
+  font-size: 0.75rem;
+  min-height: 32px;
+}
+
+.more-flyout-body .theme-divider {
+  margin: 2px 0;
+}
+
+.more-flyout-body .props-meta {
+  margin: 0;
+  color: var(--ns-muted);
+}
+
+.more-flyout-body input[type="range"],
+.more-flyout-body input[type="number"],
+.more-flyout-body input[type="text"],
+.more-flyout-body input[type="url"],
+.more-flyout-body select,
+.more-flyout-body .settings-secret {
+  width: 100%;
+  min-height: 32px;
+  font: inherit;
+  font-size: 0.8125rem;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  border: 1px solid var(--ns-border);
+  border-radius: 6px;
+  padding: 0.35em 0.6em;
+  box-sizing: border-box;
+}
+
+.more-flyout-body input[type="color"] {
+  width: 2.25rem;
+  height: 1.75rem;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.more-flyout-body label:has(input[type="color"]) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (hover: hover) and (min-width: 701px) {
+  /* why: fundo no próprio painel — ::before com z-index:-1 ficava transparente ao scrollar */
+  .more-flyout > .more-flyout-body.theme-panel-body,
+  .more-flyout > .more-flyout-body.theme-panel-body.theme-panel-wide {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 0;
+    width: min(320px, calc(100vw - 48px));
+    min-width: 0;
+    max-width: min(320px, calc(100vw - 48px));
+    max-height: min(70vh, 560px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0;
+    padding: 12px;
+    background: var(--ns-panel);
+    border: 1px solid var(--ns-border);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    z-index: 70;
+  }
+
+  /* why: ponte de hover no gap — no summary, não no body (senão some no scroll) */
+  .more-flyout[open]::after {
+    content: "";
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    z-index: 69;
+  }
+}
+
+@media (hover: none), (max-width: 700px) {
+  .more-panel-body {
+    max-height: min(85vh, 760px);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .more-flyout > .more-flyout-body {
+    position: static;
+    max-height: none;
+    margin: 0 4px 4px;
+    background: var(--ns-input-bg);
+    border: 0;
+    box-shadow: none;
+    padding-left: 12px;
+  }
+
+  .more-panel-body .more-flyout[open] > summary::before {
+    transform: rotate(45deg);
+  }
 }
 
 .settings-fold {
@@ -648,84 +999,6 @@ textarea {
   gap: 4px;
 }
 
-.preview-split {
-  position: relative;
-  display: inline-flex;
-  align-items: stretch;
-  border-radius: 7px;
-  /* why: overflow:hidden recortava o menu que abre abaixo da seta */
-  overflow: visible;
-}
-
-.preview-split > .btn-primary {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  border-right: 0;
-}
-
-.preview-menu {
-  /* why: position fica no .preview-split para o menu alinhar ao botão inteiro, não só à seta */
-  position: static;
-}
-
-.preview-menu > summary {
-  list-style: none;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  padding-inline: 0.45em;
-  min-width: 32px;
-  /* why: separador suave no split — evita a linha escura que “parte” o botão */
-  border-left: 1px solid color-mix(in srgb, #fff 28%, transparent);
-  box-shadow: none;
-}
-
-.preview-menu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.preview-menu[open] > summary {
-  background: color-mix(in srgb, #000 14%, var(--ns-button));
-}
-
-.preview-menu-body {
-  position: absolute;
-  left: 0;
-  right: auto;
-  top: calc(100% + 4px);
-  background: var(--ns-panel);
-  color: var(--ns-ink);
-  border: 1px solid var(--ns-border);
-  border-radius: 10px;
-  padding: 4px;
-  min-width: 100%;
-  width: max-content;
-  max-width: min(280px, calc(100vw - 24px));
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
-  z-index: 55;
-}
-
-.preview-menu-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--ns-ink);
-  padding: 9px 11px;
-  border-radius: 8px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.preview-menu-option:hover {
-  background: var(--ns-hover);
-}
-
 .theme-panel-body {
   position: absolute;
   right: 0;
@@ -740,6 +1013,11 @@ textarea {
   min-width: 200px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   z-index: 50;
+}
+
+.more-flyout-body.theme-panel-body {
+  gap: 10px;
+  font-size: 0.8125rem;
 }
 
 .theme-panel-body.theme-panel-wide {
@@ -768,21 +1046,7 @@ textarea {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 4px;
-}
-
-#narration-panel input[type="range"],
-#narration-panel input[type="number"],
-#narration-panel input[type="password"],
-#narration-panel input[type="text"],
-#narration-panel input[type="url"],
-#narration-panel select,
-#narration-panel .settings-secret {
-  width: 100%;
-  background: var(--ns-input-bg);
-  color: var(--ns-ink);
-  border: 1px solid var(--ns-border);
-  border-radius: 4px;
+  gap: 6px;
 }
 
 /* why: type=password dispara o Password Manager do Chrome ao salvar a chave */
@@ -1010,8 +1274,7 @@ textarea {
   display: grid;
 }
 
-.account-chip-email,
-.more-account-email {
+.account-chip-email {
   margin: 0;
   padding: 8px 12px 4px;
   font-size: 0.75rem;
@@ -1038,18 +1301,6 @@ textarea {
 
 .account-chip-signout:hover {
   background: var(--ns-hover);
-}
-
-.more-account {
-  display: grid;
-  gap: 2px;
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid var(--ns-border);
-}
-
-.more-item-signin {
-  color: var(--ns-accent);
 }
 
 .account-dialog-head {
@@ -1284,9 +1535,8 @@ img.is-broken {
 .more-panel > summary:focus-visible,
 .account-chip-toggle:focus-visible,
 .account-chip-signout:focus-visible,
-.preview-menu > summary:focus-visible,
 .more-item:focus-visible,
-.preview-menu-option:focus-visible {
+.more-panel-body .more-section > summary:focus-visible {
   outline: 2px solid var(--ns-accent);
   outline-offset: 2px;
 }
@@ -1428,6 +1678,32 @@ body.is-presenting #topbar-actions-editor {
 .present-hint[hidden] {
   display: none !important;
 }
+
+/* why: pista sutil do hold no autoplay — o apresentador vê quanto falta p/ o próximo passo */
+.present-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  z-index: 1000000004;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--ns-button-text) 10%, transparent);
+}
+
+.present-progress[hidden] {
+  display: none !important;
+}
+
+.present-progress-fill {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: color-mix(in srgb, var(--ns-accent) 80%, var(--ns-button-text));
+  opacity: 0.9;
+}
+
 
 .filmstrip-panel {
   display: flex;
@@ -1890,6 +2166,14 @@ body.is-presenting #topbar-actions-editor {
   min-height: 24px;
   background: color-mix(in srgb, var(--ns-muted) 55%, var(--ns-border));
   margin: 0 4px;
+}
+
+.canvas-toolbar .btn-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
 }
 
 .canvas-toolbar .btn:disabled {
@@ -3769,7 +4053,8 @@ body.standalone .caption-bar,
   }
 
   .topbar-actions .btn-icon,
-  .more-panel > summary {
+  .more-panel > summary,
+  .canvas-toolbar .btn-icon {
     min-width: 44px;
     min-height: 44px;
   }

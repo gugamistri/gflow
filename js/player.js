@@ -14,9 +14,11 @@ import {
 } from "./playback.js";
 import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
+import { createPresentProgress } from "./presentProgress.js";
 
 export function createPlayer(ctx) {
   const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit, presentHintKey } = ctx;
+  const presentProgress = createPresentProgress();
 
   const els = {
     stage: document.getElementById("canvas-stage"),
@@ -62,7 +64,6 @@ export function createPlayer(ctx) {
   let autoplayTimer = null;
   let autoplayEnabled = false;
   let running = false;
-  let exitOnOutsideClick = false;
   let suppressExitArm = false;
 
   function presentHintEl() {
@@ -81,11 +82,6 @@ export function createPlayer(ctx) {
     return isCompactTouch() ? "present.touchHint" : "present.escHint";
   }
 
-  function presentAgainHintKey() {
-    if (presentHintKey) return presentHintKey;
-    return isCompactTouch() ? "present.touchAgainHint" : "present.clickAgainHint";
-  }
-
   function autoplayOn() {
     return autoplayEnabled;
   }
@@ -93,6 +89,7 @@ export function createPlayer(ctx) {
   function clearAutoplay() {
     clearTimeout(autoplayTimer);
     autoplayTimer = null;
+    presentProgress.hide();
   }
 
   function armAutoplay() {
@@ -106,6 +103,7 @@ export function createPlayer(ctx) {
     // why: o áudio já começou em showStepVisual; aqui só esperamos para avançar
     const speechDone = narration.whenSpeechDone();
     const delay = holdMs(step, demo);
+    presentProgress.start(delay);
     autoplayTimer = setTimeout(async () => {
       await speechDone.catch(() => {});
       document.querySelector(".driver-popover-next-btn")?.click();
@@ -349,7 +347,6 @@ export function createPlayer(ctx) {
     }
 
     running = true;
-    exitOnOutsideClick = false;
     setPresentHint(presentStopHintKey());
     // why: sem índices a lista é o tour inteiro (volta antes do início);
     // com índices, só a seleção, em ordem, e para no último.
@@ -461,11 +458,10 @@ export function createPlayer(ctx) {
         animating = false;
         running = false;
         if (suppressExitArm) return;
-        // why: o mesmo clique no overlay não deve sair; só o próximo clique fora.
+        // why: overlay/Done/fechar saem no mesmo gesto — dois cliques deixavam limbo confuso
         queueMicrotask(() => {
           if (!isPresenting()) return;
-          exitOnOutsideClick = true;
-          setPresentHint(presentAgainHintKey());
+          onRequestExit?.();
         });
       },
     });
@@ -494,7 +490,6 @@ export function createPlayer(ctx) {
     restoreCaptionEl();
     animating = false;
     running = false;
-    exitOnOutsideClick = false;
     if (!silent) setProgress(t("player.stopped"));
   }
 
@@ -532,26 +527,16 @@ export function createPlayer(ctx) {
         if (!isPresenting()) return;
         e.preventDefault();
         e.stopPropagation();
-        exitOnOutsideClick = false;
         onRequestExit?.();
       },
       true
     );
-
-    // why: 1º clique fora para o tour; 2º clique fora volta ao editor (sem depender só do Esc).
-    els.stage?.addEventListener("click", (e) => {
-      if (!isPresenting() || driverObj || !exitOnOutsideClick) return;
-      if (e.target.closest(".canvas-frame, .driver-popover, #present-chrome")) return;
-      exitOnOutsideClick = false;
-      onRequestExit?.();
-    });
 
     window.addEventListener("keydown", (e) => {
       if (!isPresenting()) return;
       if (e.key === "Escape") {
         if (document.querySelector("dialog[open]")) return;
         e.preventDefault();
-        exitOnOutsideClick = false;
         onRequestExit?.();
         return;
       }
