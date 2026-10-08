@@ -1364,6 +1364,15 @@ textarea {
   font-weight: 650;
 }
 
+.account-chip-usage {
+  margin: 0;
+  padding: 0 12px 8px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--ns-muted);
+  white-space: pre-line;
+}
+
 .pro-badge {
   display: inline-flex;
   align-items: center;

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { setLocale } from "./i18n.js";
+import { setLocale, t } from "./i18n.js";
 import {
   exportShowsWatermark,
   hostedAccess,
+  hostedQuotaCopy,
   quotaMessageKey,
+  shouldShowByokSettings,
   shouldShowProBadge,
   upgradeCopyKeys,
 } from "./billing.js";
@@ -18,6 +20,41 @@ const env = { baseUrl: "https://app.guiaflow.pro", accessToken: "jwt-session" };
 test("texto e áudio com chave própria ficam livres", () => {
   assert.equal(hostedAccess({ cloudEnabled: true, hasByok: true, signedIn: false }), "byok");
   assert.equal(shouldShowProBadge({ cloudEnabled: true, hasByok: true, signedIn: false }), false);
+  assert.equal(shouldShowByokSettings({ signedIn: false, status: "idle", active: false }), true);
+});
+
+test("Pro ativo usa a API hospedada e esconde as chaves, mesmo com BYOK salvo", () => {
+  const pro = { cloudEnabled: true, signedIn: true, status: "ready", active: true, hasByok: true };
+  assert.equal(hostedAccess(pro), "proceed");
+  assert.equal(shouldShowProBadge(pro), false);
+  assert.equal(shouldShowByokSettings(pro), false);
+});
+
+test("plano none e pagamento pendente mantêm chave própria e o selo", () => {
+  const none = { cloudEnabled: true, signedIn: true, status: "ready", active: false, hasByok: false };
+  const late = { cloudEnabled: true, signedIn: true, status: "ready", active: false, hasByok: true };
+  assert.equal(hostedAccess(none), "upgrade");
+  assert.equal(shouldShowProBadge(none), true);
+  assert.equal(shouldShowByokSettings(none), true);
+  assert.equal(hostedAccess(late), "byok");
+  assert.equal(shouldShowProBadge(late), false);
+  assert.equal(shouldShowByokSettings(late), true);
+});
+
+test("cota mensal usa os números da resposta quando existem", () => {
+  assert.deepEqual(hostedQuotaCopy("hostedAi", null), { key: "billing.quotaAi", vars: {} });
+  assert.equal(t("billing.quotaAi"), "O limite de 100 textos deste mês acabou.");
+  assert.deepEqual(hostedQuotaCopy("hostedAi", { texts: 100, textLimit: 100 }), {
+    key: "billing.quotaAiUsed",
+    vars: { used: 100, limit: 100 },
+  });
+  assert.deepEqual(hostedQuotaCopy("tts", { audioSeconds: 1800 }), {
+    key: "billing.quotaTtsUsed",
+    vars: { used: 30, limit: 30 },
+  });
+  assert.equal(t("billing.quotaTts"), "O limite de 30 min de áudio deste mês acabou.");
+  assert.equal(t("billing.tryAgain"), "Não deu certo. Tente de novo.");
+  assert.match(t("billing.unconfigured"), /ainda não está disponível/i);
 });
 
 test("sem sessão o recurso hospedado abre o Pro e mostra o selo", () => {

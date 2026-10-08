@@ -110,25 +110,80 @@ export function billingMenuModel({ signedIn = false, status = "idle", entitlemen
   };
 }
 
+export const HOSTED_TEXT_LIMIT = 100;
+export const HOSTED_AUDIO_MINUTES = 30;
+
 /**
- * Caminho da geração hospedada. BYOK devolve "byok" e fica livre.
+ * Caminho da geração. Pro ativo usa a API hospedada mesmo com chave salva.
  * @returns {"byok"|"unavailable"|"login"|"upgrade"|"proceed"}
  */
 export function hostedAccess({ cloudEnabled = false, signedIn = false, status = "idle", active = false, hasByok = false } = {}) {
+  if (signedIn && status === "ready" && active) return "proceed";
   if (hasByok) return "byok";
   if (!cloudEnabled) return "unavailable";
-  if (signedIn && status === "ready" && active) return "proceed";
   if (signedIn && status === "ready" && !active) return "upgrade";
   if (!signedIn) return "upgrade";
   return "proceed";
 }
 
+/** Inteligência e Cartesia só aparecem quando o plano não é Pro ativo. */
+export function shouldShowByokSettings({ signedIn = false, status = "idle", active = false } = {}) {
+  return !(signedIn && status === "ready" && active);
+}
+
 /** Selo Pro só quando o clique usaria o plano pago. */
 export function shouldShowProBadge({ cloudEnabled = false, signedIn = false, status = "idle", active = false, hasByok = false } = {}) {
-  if (hasByok || !cloudEnabled) return false;
+  if (!cloudEnabled) return false;
   if (signedIn && status === "ready" && active) return false;
+  if (hasByok) return false;
   if (signedIn && status !== "ready") return false;
   return true;
+}
+
+function firstFinite(...values) {
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+/** Limite mensal. Se a resposta trouxer uso, os números entram na frase. */
+export function hostedQuotaCopy(feature, usage) {
+  const src = usage && typeof usage === "object" ? usage : null;
+  if (feature === "tts") {
+    const seconds = src ? firstFinite(src.audioSeconds, src.seconds, src.usedSeconds, src.audio?.seconds) : null;
+    if (seconds == null) return { key: "billing.quotaTts", vars: {} };
+    const limitSec = firstFinite(src.audioLimitSeconds, src.limitSeconds, src.audio?.limitSeconds) ?? HOSTED_AUDIO_MINUTES * 60;
+    return {
+      key: "billing.quotaTtsUsed",
+      vars: {
+        used: Math.max(0, Math.round(seconds / 60)),
+        limit: Math.max(1, Math.round(limitSec / 60)),
+      },
+    };
+  }
+  const used = src ? firstFinite(src.texts, src.textCount, src.textsUsed, src.used, src.count) : null;
+  if (used == null) return { key: "billing.quotaAi", vars: {} };
+  const limit = firstFinite(src.textLimit, src.limit, src.textsLimit) ?? HOSTED_TEXT_LIMIT;
+  return { key: "billing.quotaAiUsed", vars: { used, limit } };
+}
+
+/** Números para o menu da conta. Null se a resposta não trouxe uso. */
+export function hostedUsageMeters(usage) {
+  const src = usage && typeof usage === "object" ? usage : null;
+  if (!src) return null;
+  const texts = firstFinite(src.texts, src.textCount, src.textsUsed);
+  const seconds = firstFinite(src.audioSeconds, src.seconds, src.usedSeconds, src.audio?.seconds);
+  if (texts == null && seconds == null) return null;
+  const textLimit = firstFinite(src.textLimit, src.textsLimit, src.limit) ?? HOSTED_TEXT_LIMIT;
+  const audioLimitSec = firstFinite(src.audioLimitSeconds, src.limitSeconds, src.audio?.limitSeconds) ?? HOSTED_AUDIO_MINUTES * 60;
+  return {
+    texts,
+    textLimit: texts == null ? null : textLimit,
+    audioMinutes: seconds == null ? null : Math.max(0, Math.round(seconds / 60)),
+    audioLimit: seconds == null ? null : Math.max(1, Math.round(audioLimitSec / 60)),
+  };
 }
 
 /** Marca no vídeo: quem não assina. Assinante ativo exporta limpo. */
