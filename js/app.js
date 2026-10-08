@@ -1140,19 +1140,8 @@ function bindChrome() {
     });
   }
 
+  // why: Cartesia/IA só no clique — hover automático atrapalhava ao passar pelo painel
   for (const fold of settingsFolds) {
-    const foldSummary = fold.querySelector(":scope > summary");
-    foldSummary?.addEventListener("click", (e) => {
-      if (!flyoutHover()) return;
-      e.preventDefault();
-    });
-    fold.addEventListener("pointerenter", () => {
-      if (!flyoutHover()) return;
-      for (const other of settingsFolds) {
-        if (other !== fold) other.open = false;
-      }
-      fold.open = true;
-    });
     fold.addEventListener("toggle", () => {
       if (!fold.open) return;
       for (const other of settingsFolds) {
