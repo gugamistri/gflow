@@ -1328,7 +1328,8 @@ textarea {
   word-break: break-all;
 }
 
-.account-chip-signout {
+.account-chip-signout,
+.account-chip-action {
   display: flex;
   align-items: center;
   width: 100%;
@@ -1344,8 +1345,126 @@ textarea {
   font-weight: 600;
 }
 
-.account-chip-signout:hover {
+.account-chip-signout:hover,
+.account-chip-action:hover {
   background: var(--ns-hover);
+}
+
+.account-chip-plan {
+  margin: 0;
+  padding: 0 12px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ns-ink);
+}
+
+.cloud-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  line-height: 1.65;
+  vertical-align: 1px;
+  color: var(--ns-ink);
+  background: color-mix(in srgb, var(--ns-accent) 24%, var(--ns-panel));
+  border: 1px solid color-mix(in srgb, var(--ns-accent) 48%, var(--ns-border));
+}
+
+.upgrade-modal {
+  max-width: 420px;
+  max-height: min(640px, calc(100dvh - 24px));
+  overflow: auto;
+}
+
+.upgrade-dialog {
+  gap: 14px;
+}
+
+.upgrade-message,
+.upgrade-free-note {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ns-muted);
+}
+
+.upgrade-free-note {
+  font-size: 0.8rem;
+}
+
+.upgrade-intervals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.upgrade-interval {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  align-content: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  background: var(--ns-input-bg);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ns-ink);
+}
+
+.upgrade-interval input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.upgrade-interval:has(input:checked) {
+  border-color: var(--ns-accent);
+  background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
+}
+
+.upgrade-interval:focus-within {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.upgrade-save {
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--ns-muted);
+}
+
+.upgrade-modal .btn {
+  min-height: 44px;
+}
+
+.upgrade-modal .studio-modal-actions {
+  margin-top: 0;
+}
+
+@media (max-width: 520px) {
+  .upgrade-modal .studio-modal-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .upgrade-modal .studio-modal-actions .btn {
+    width: 100%;
+  }
 }
 
 .account-dialog-head {
@@ -1658,6 +1777,7 @@ img.is-broken {
 .more-panel > summary:focus-visible,
 .account-chip-toggle:focus-visible,
 .account-chip-signout:focus-visible,
+.account-chip-action:focus-visible,
 .more-item:focus-visible,
 .more-panel-body .more-section > summary:focus-visible {
   outline: 2px solid var(--ns-accent);
