@@ -1,6 +1,6 @@
-# GuiaFlow Cloud
+# GuiaFlow Pro
 
-Este arquivo marca a fronteira entre o editor aberto e o companheiro privado **GuiaFlow Cloud**. Este repositório não embute chave paga. A nuvem só é chamada quando há um URL base configurado.
+Este arquivo marca a fronteira entre o editor aberto e o plano pago **GuiaFlow Pro**. O código do companheiro continua no repositório `guiaflow-cloud`. Este repositório não embute chave paga. A base HTTP só é chamada quando está configurada.
 
 O editor público está em [https://guiaflow.pro](https://guiaflow.pro). O host antigo `guiaflow-seven.vercel.app` redireciona para esse domínio, preservando caminho e query.
 
@@ -12,7 +12,7 @@ O editor público está em [https://guiaflow.pro](https://guiaflow.pro). O host 
 
 **BYOK continua aqui.** Quem quiser IA ou voz traz a própria chave pelos módulos que já existem: `js/llm.js`, `js/cartesia.js` e os stores `js/llm-store.js` e `js/cartesia-store.js`. O Cloud não remove nem quebra esse caminho.
 
-**GuiaFlow Cloud** é um companheiro privado, noutro código, fora deste repositório MIT (o nome do produto é `guiaflow-cloud`). Ele é opcional. Pode acrescentar:
+**GuiaFlow Pro** é o plano pago. O código fica noutro repositório, fora deste MIT (o repositório chama-se `guiaflow-cloud`). Ele é opcional. Pode acrescentar:
 
 - IA sem BYOK (hospedada)
 - TTS hospedado
@@ -75,7 +75,7 @@ O browser, depois de confirmar o email ou de entrar com senha na nuvem, abre `ht
 
 Noutro aparelho, «O link abriu noutro aparelho?» ainda aceita colar um link antigo. Esse atalho não é o caminho principal.
 
-Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` que a nuvem devolve, com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Cloud». `401` apaga a sessão e pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
+Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` que a nuvem devolve, com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Pro». `401` apaga a sessão e pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
 
 O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JSON local não depende da nuvem.
 
@@ -83,7 +83,7 @@ O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JS
 
 ### Assinatura
 
-O editor não calcula preço e não guarda segredo de pagamento. Com sessão, o menu da conta lê `GET /billing/entitlement`. Plano `cloud` com assinatura ativa mostra **Cloud** e **Gerenciar assinatura** (`POST /billing/portal` → `{ "portal": { "url" } }`). Plano livre mostra **Grátis** e **Assinar Cloud**.
+O editor não calcula preço e não guarda segredo de pagamento. Com sessão, o menu da conta lê `GET /billing/entitlement`. Plano `cloud` com assinatura ativa mostra **Pro** e **Gerenciar assinatura** (`POST /billing/portal` → `{ "portal": { "url" } }`). Plano livre mostra **Grátis** e **Assinar Pro**. Na interface o plano pago chama-se GuiaFlow Pro. O campo da API continua `plan: "cloud"`.
 
 `POST /billing/checkout` com `{ "interval": "monthly" | "annual" }` devolve `{ "checkout": { "url" } }`. O browser segue esse URL se for `http:` ou `https:`.
 
@@ -145,6 +145,6 @@ Um email antigo que ainda aponte para `{AUTH_BASE_URL}/auth/verify?token=` conti
 
 **BYOK stays in this OSS repo.** AI and TTS keep using your own keys through `js/llm.js`, `js/cartesia.js`, and their stores. Cloud must not remove or break that path.
 
-**GuiaFlow Cloud** is a private companion (not part of this MIT repo; product name `guiaflow-cloud`). It may later add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics.
+**GuiaFlow Pro** is the paid plan. The companion code stays outside this MIT repo (repository name `guiaflow-cloud`). It may add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics. The editor copy says GuiaFlow Pro; entitlement `plan` stays `cloud`.
 
 With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://app.guiaflow.pro` for operators; that host is not shown in the product UI. Apex `guiaflow.pro` stays the free editor. A global set earlier stays in place, including a previous host. Meta and `guiaflow.cloud.baseUrl` apply when the global is unset. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips sign-in and publishes immediately («Connected as …»). Otherwise the Entrar dialog posts `{ email, password }` to `/auth/login`. **Sign in without a password** posts `{ email, redirect }` to `/auth/magic-link`, with `redirect` ending in `/auth/callback`; the same link creates the account. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged. A `402` `subscription_required` opens the upgrade dialog. Checkout, the billing portal, and `GET /billing/entitlement` are UI hooks only; a `404` on entitlement hides the plan line. Return URLs are `/?billing=success&session_id=cs_…`, `/?billing=cancel`, and `/?billing=portal`.
