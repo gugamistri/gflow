@@ -527,6 +527,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
         total: steps.length,
         img: images[i],
         at,
+        watermark: Boolean(demo.exportWatermark),
         ...timing,
       };
       renderFrame(ctx, scene, theme);
@@ -635,6 +636,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
         total: steps.length,
         img: images[i],
         at: 0,
+        watermark: Boolean(demo.exportWatermark),
         ...timing,
       };
       onProgress?.(t("export.recordStep", { i: i + 1, n: steps.length }));
@@ -661,13 +663,14 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   return { size: blob.size, ext };
 }
 
-export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
+export async function exportVideo(demo, { onProgress, canvas, signal, watermark = false } = {}) {
   const steps = demo.steps || [];
   if (!steps.length) throw new Error(t("err.noStepsRecord"));
+  const framed = { ...demo, exportWatermark: Boolean(watermark) };
 
-  const images = await loadDemoImages(demo, onProgress);
+  const images = await loadDemoImages(framed, onProgress);
   onProgress?.(t("export.prepNarration"));
-  const audioBuffer = await renderExportAudio(demo);
+  const audioBuffer = await renderExportAudio(framed);
   const W = 1920;
   const H = 1080;
 
@@ -676,7 +679,7 @@ export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
   if (codec && (!audioBuffer || aac)) {
     try {
       onProgress?.(t("export.encodeMp4"));
-      return await exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer });
+      return await exportVideoWebCodecs(framed, { onProgress, canvas, signal, images, codec, audioBuffer });
     } catch (err) {
       if (err?.name === "AbortError") throw err;
       console.warn("WebCodecs MP4 falhou, tentando MediaRecorder", err);
@@ -684,7 +687,32 @@ export async function exportVideo(demo, { onProgress, canvas, signal } = {}) {
     }
   }
 
-  return exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images, audioBuffer });
+  return exportVideoMediaRecorder(framed, { onProgress, canvas, signal, images, audioBuffer });
+}
+
+/** Marca discreta no canto. why: o plano grátis leva "Feito com GuiaFlow"; o Pro não. */
+export function drawBrandWatermark(ctx) {
+  const label = t("export.watermark");
+  const W = ctx.canvas.width;
+  const H = ctx.canvas.height;
+  ctx.save();
+  ctx.font = "600 22px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  const padX = 14;
+  const textW = ctx.measureText(label).width;
+  const boxW = textW + padX * 2;
+  const boxH = 36;
+  const x = W - boxW - 28;
+  const y = H - boxH - 22;
+  ctx.globalAlpha = 0.72;
+  ctx.fillStyle = "rgba(15, 23, 42, 0.55)";
+  roundRect(ctx, x, y, boxW, boxH, 8);
+  ctx.fill();
+  ctx.globalAlpha = 0.88;
+  ctx.fillStyle = "#f8fafc";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(label, x + padX, y + 24);
+  ctx.restore();
 }
 
 function wrapText(ctx, text, maxWidth) {
@@ -1076,4 +1104,5 @@ function renderFrame(ctx, scene, theme) {
   ctx.fillRect(0, H - 6, W, 6);
   ctx.fillStyle = accent;
   ctx.fillRect(0, H - 6, W * ((index + progress) / total), 6);
+  if (scene.watermark) drawBrandWatermark(ctx);
 }

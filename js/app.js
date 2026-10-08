@@ -90,11 +90,16 @@ import {
   billingMenuModel,
   classifyCloudGate,
   emptyEntitlement,
+  exportShowsWatermark,
   fetchBillingEntitlement,
+  hostedAccess,
+  quotaMessageKey,
   readBillingReturn,
+  shouldShowProBadge,
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
+  upgradeCopyKeys,
 } from "./billing.js";
 
 let project = null;
@@ -416,6 +421,9 @@ const editor = createEditor({
       indices: opts.indices,
     });
   },
+  ensureHostedFeature,
+  presentHostedFailure,
+  showHostedBadge,
 });
 
 const player = createPlayer({
@@ -553,6 +561,9 @@ let billingView = { status: "idle" };
 let billingEntitlement = emptyEntitlement();
 let billingTicket = 0;
 let upgradeCustomMessage = "";
+let upgradeFeature = "";
+let pendingHostedResume = null;
+let pendingHostedFeature = "";
 
 function accountInitial(email) {
   const ch = String(email || "").trim().charAt(0);
@@ -602,6 +613,8 @@ function paintAccount() {
       billingBtn.textContent = menu.action === "portal" ? t("billing.manage") : t("billing.subscribeMenu");
     }
   }
+  editor.paintHostedBadges?.();
+  paintExportMark();
 }
 
 function resetBillingView() {
@@ -628,13 +641,80 @@ async function refreshEntitlement(sessionId = "") {
   }
   paintAccount();
   paintCloudShare();
+  editor.paintHostedBadges?.();
+  paintExportMark();
   return result;
 }
 
 function paintUpgradeCopy() {
+  const copy = upgradeCopyKeys(upgradeFeature);
+  const title = document.getElementById("upgrade-dialog-title");
+  if (title) title.textContent = t(copy.title);
   const msg = document.getElementById("upgrade-message");
   if (!msg) return;
-  msg.textContent = (upgradeCustomMessage || t("billing.message")).slice(0, 500);
+  msg.textContent = (upgradeCustomMessage || t(copy.subtitle)).slice(0, 500);
+}
+
+function billingSnapshot() {
+  return {
+    cloudEnabled: isCloudEnabled(),
+    signedIn: getCloudAccount().signedIn,
+    status: billingView.status,
+    active: Boolean(billingEntitlement.active),
+  };
+}
+
+function showHostedBadge({ hasByok = false } = {}) {
+  return shouldShowProBadge({ ...billingSnapshot(), hasByok });
+}
+
+function paintExportMark() {
+  const btn = document.getElementById("btn-export-unbrand");
+  if (!btn) return;
+  btn.hidden = !exportShowsWatermark(billingSnapshot());
+}
+
+async function ensureHostedFeature(feature, resume) {
+  if (!isCloudEnabled()) return "unavailable";
+  if (!getCloudAccount().signedIn) {
+    pendingHostedFeature = feature;
+    pendingHostedResume = typeof resume === "function" ? resume : null;
+    showAccountDialog();
+    return "blocked";
+  }
+  if (billingView.status !== "ready" && billingView.status !== "hidden") {
+    await refreshEntitlement();
+  }
+  const access = hostedAccess({ ...billingSnapshot(), hasByok: false });
+  if (access === "upgrade") {
+    showUpgradeDialog({ feature });
+    return "blocked";
+  }
+  return "proceed";
+}
+
+function presentHostedFailure(result, feature) {
+  const gate = classifyCloudGate(result);
+  const which = gate.feature || feature;
+  if (gate.kind === "subscription_required") {
+    showUpgradeDialog({ feature: which, message: gate.message });
+    return true;
+  }
+  if (gate.kind === "quota_exceeded") {
+    toast(gate.message || t(quotaMessageKey(which)));
+    return true;
+  }
+  if (gate.kind === "unauthorized") {
+    pendingHostedFeature = which;
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return true;
+  }
+  if (gate.kind === "unavailable" || gate.kind === "not_found") {
+    toast(t("billing.unavailable"));
+    return true;
+  }
+  return false;
 }
 
 function setUpgradeStatus(message, tone = "") {
@@ -645,8 +725,9 @@ function setUpgradeStatus(message, tone = "") {
   status.classList.toggle("is-ok", tone === "ok");
 }
 
-function showUpgradeDialog({ message = "" } = {}) {
+function showUpgradeDialog({ message = "", feature = "" } = {}) {
   if (!isCloudEnabled()) return;
+  upgradeFeature = feature || "";
   upgradeCustomMessage = String(message || "").trim();
   const dialog = document.getElementById("modal-upgrade");
   if (!dialog) return;
@@ -1621,15 +1702,35 @@ function bindChrome() {
     }
   });
 
+  document.getElementById("btn-export-unbrand")?.addEventListener("click", () => {
+    closeExportMenu();
+    if (!getCloudAccount().signedIn) {
+      pendingHostedFeature = "branding";
+      pendingHostedResume = async () => {
+        if (billingView.status === "ready" && !billingEntitlement.active) {
+          showUpgradeDialog({ feature: "branding" });
+        }
+      };
+      showAccountDialog();
+      return;
+    }
+    showUpgradeDialog({ feature: "branding" });
+  });
+
   document.getElementById("btn-export-video").addEventListener("click", async () => {
     closeExportMenu();
     if (!project) return;
     project.theme = formToTheme(project.theme);
+    if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
+      await refreshEntitlement();
+    }
+    const watermark = exportShowsWatermark(billingSnapshot());
     exportAbort = new AbortController();
     showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
     overlayStatus.textContent = t("export.overlayVideoHint");
     try {
       const result = await exportVideo(project, {
+        watermark,
         canvas: previewCanvas,
         signal: exportAbort.signal,
         onProgress: (msg) => {
@@ -1743,6 +1844,8 @@ function bindChrome() {
   });
   document.getElementById("modal-account")?.addEventListener("close", () => {
     accountDialogWantsPublish = false;
+    pendingHostedResume = null;
+    pendingHostedFeature = "";
   });
   document.getElementById("modal-account")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) e.currentTarget.close();
@@ -1798,10 +1901,24 @@ function bindChrome() {
 
   async function afterAccountSignedIn() {
     const publishNow = accountDialogWantsPublish;
+    const resume = pendingHostedResume;
+    const feature = pendingHostedFeature;
     accountDialogWantsPublish = false;
+    pendingHostedResume = null;
+    pendingHostedFeature = "";
     closeAccountDialog();
     paintCloudShare();
     await refreshEntitlement();
+    editor.paintHostedBadges?.();
+    paintExportMark();
+    if (resume) {
+      if (billingView.status === "ready" && !billingEntitlement.active) {
+        showUpgradeDialog({ feature });
+        return;
+      }
+      await resume();
+      return;
+    }
     if (publishNow && project?.id && cloudShareEnabled()) {
       clearCloudPublishIntent();
       await runCloudPublish();

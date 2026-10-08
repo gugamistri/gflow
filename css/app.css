@@ -1359,10 +1359,12 @@ textarea {
   color: var(--ns-ink);
 }
 
-.cloud-badge {
-  display: inline-block;
+.pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   margin-left: 6px;
-  padding: 0 6px;
+  padding: 0 6px 0 4px;
   border-radius: 999px;
   font-size: 0.62rem;
   font-weight: 750;
@@ -1372,6 +1374,19 @@ textarea {
   color: var(--ns-ink);
   background: color-mix(in srgb, var(--ns-accent) 24%, var(--ns-panel));
   border: 1px solid color-mix(in srgb, var(--ns-accent) 48%, var(--ns-border));
+}
+
+.pro-badge-crown {
+  width: 0.9em;
+  height: 0.9em;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.upgrade-modal .account-dialog-head h3 {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .upgrade-modal {

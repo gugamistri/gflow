@@ -131,6 +131,48 @@ export function billingMenuModel({ signedIn = false, status = "idle", entitlemen
   };
 }
 
+/**
+ * Caminho da geração hospedada. BYOK devolve "byok" e fica livre.
+ * @returns {"byok"|"unavailable"|"login"|"upgrade"|"proceed"}
+ */
+export function hostedAccess({ cloudEnabled = false, signedIn = false, status = "idle", active = false, hasByok = false } = {}) {
+  if (hasByok) return "byok";
+  if (!cloudEnabled) return "unavailable";
+  if (!signedIn) return "login";
+  if (status === "ready" && active) return "proceed";
+  if (status === "ready" && !active) return "upgrade";
+  return "proceed";
+}
+
+/** Selo Pro só quando o clique usaria o plano pago. */
+export function shouldShowProBadge({ cloudEnabled = false, signedIn = false, status = "idle", active = false, hasByok = false } = {}) {
+  if (hasByok || !cloudEnabled) return false;
+  if (signedIn && status === "ready" && active) return false;
+  if (signedIn && status !== "ready") return false;
+  return true;
+}
+
+/** Marca no vídeo: anônimo e plano grátis. Assinante ativo exporta limpo. */
+export function exportShowsWatermark({ cloudEnabled = false, signedIn = false, status = "idle", active = false } = {}) {
+  if (!cloudEnabled) return false;
+  if (!signedIn) return true;
+  if (status === "ready") return !active;
+  return false;
+}
+
+export function upgradeCopyKeys(feature) {
+  if (feature === "hostedAi") return { title: "billing.hostedAiTitle", subtitle: "billing.hostedAiSubtitle" };
+  if (feature === "tts") return { title: "billing.ttsTitle", subtitle: "billing.ttsSubtitle" };
+  if (feature === "branding") return { title: "billing.brandTitle", subtitle: "billing.brandSubtitle" };
+  return { title: "billing.title", subtitle: "billing.message" };
+}
+
+export function quotaMessageKey(feature) {
+  if (feature === "hostedAi") return "billing.quotaAi";
+  if (feature === "tts") return "billing.quotaTts";
+  return "billing.quota";
+}
+
 function redirectUrl(value) {
   try {
     const url = new URL(String(value || ""));

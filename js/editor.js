@@ -21,7 +21,7 @@ import {
   snapPopoverPlacement,
 } from "./canvasEdit.js";
 import { isCompactTouch } from "./compact.js";
-import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
+import { isPlausibleApiKey, defaultVoiceURI, narrationLang } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
   buildChatMessages,
@@ -61,6 +61,7 @@ import {
 import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
 import { getLocale, t } from "./i18n.js";
+import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
 import {
@@ -218,6 +219,9 @@ export function createEditor(ctx) {
     setSelectedIndex,
     toast,
     onPlayFrom,
+    ensureHostedFeature,
+    presentHostedFailure,
+    showHostedBadge,
   } = ctx;
 
   function onChange() {
@@ -2371,7 +2375,10 @@ export function createEditor(ctx) {
       .filter(Boolean)
       .join(" ");
     const kbd = opts.kbd ? `<kbd class="film-context-kbd">${escapeHtml(opts.kbd)}</kbd>` : "";
-    return `<button ${attrs}><span>${escapeHtml(label)}</span>${kbd}</button>`;
+    const badge = opts.badge
+      ? `<span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span>${escapeHtml(t("billing.badge"))}</span></span>`
+      : "";
+    return `<button ${attrs}><span>${escapeHtml(label)}</span>${badge}${kbd}</button>`;
   }
 
   function playFromSelected(opts = {}) {
@@ -2472,8 +2479,13 @@ export function createEditor(ctx) {
         kbd: t("shortcuts.autoPreviewChord"),
       }),
       `<div class="film-context-sep" role="separator"></div>`,
-      filmMenuButton("generate-copy", t("props.generateCopyShort"), { title: t("props.generateCopy") }),
-      filmMenuButton("generate-audio", t("props.generateAudio")),
+      filmMenuButton("generate-copy", t("props.generateCopyShort"), {
+        title: t("props.generateCopy"),
+        badge: hostedBadge(Boolean(llmBridge() || llmConfigured)),
+      }),
+      filmMenuButton("generate-audio", t("props.generateAudio"), {
+        badge: hostedBadge(Boolean(cartesiaBridge() || cartesiaConfigured)),
+      }),
       `<div class="film-context-sep" role="separator"></div>`,
       filmMenuButton("duplicate", t("toolbar.duplicate"), { title: t("toolbar.duplicateTitle") }),
       filmMenuButton("copy", t("toolbar.copy"), { title: t("toolbar.copyTitle") }),
@@ -2940,6 +2952,30 @@ export function createEditor(ctx) {
   }
 
   let llmConfigured = false;
+  let cartesiaConfigured = false;
+
+  function hostedBadge(hasByok) {
+    return Boolean(showHostedBadge?.({ hasByok }));
+  }
+
+  function paintHostedBadges() {
+    const copy = document.getElementById("pro-badge-copy");
+    const audio = document.getElementById("pro-badge-audio");
+    if (copy) copy.hidden = !hostedBadge(Boolean(llmBridge() || llmConfigured));
+    if (audio) audio.hidden = !hostedBadge(Boolean(cartesiaBridge() || cartesiaConfigured));
+  }
+
+  async function hasOwnTts() {
+    if (cartesiaBridge()) return true;
+    if (cartesiaConfigured) return true;
+    try {
+      const status = await cartesiaKeyStatus();
+      cartesiaConfigured = Boolean(status?.configured);
+    } catch {
+      cartesiaConfigured = false;
+    }
+    return cartesiaConfigured;
+  }
 
   function syncLlmProviderUi() {
     const providerEl = document.getElementById("llm-provider");
@@ -3012,6 +3048,7 @@ export function createEditor(ctx) {
       if (clearBtn) clearBtn.hidden = true;
     }
     syncGenerateCopyButton();
+    paintHostedBadges();
   }
 
   async function saveLlmSettingsFromForm() {
@@ -3180,7 +3217,7 @@ export function createEditor(ctx) {
     let result;
     if (bridge?.llmComplete) {
       result = await bridge.llmComplete({ messages });
-    } else {
+    } else if (llmConfigured) {
       const settings = await readLlmSettings();
       result = await chatCompletions({
         apiKey: settings.apiKey,
@@ -3188,6 +3225,18 @@ export function createEditor(ctx) {
         model: settings.model,
         messages,
       });
+    } else {
+      const hosted = await completeHostedCopy(messages);
+      if (!hosted.ok) {
+        const handled = presentHostedFailure?.(hosted, "hostedAi");
+        return {
+          ok: false,
+          reason: handled ? "gate" : "request",
+          error: hosted.message || "",
+        };
+      }
+      writeGeneratedCopy(step, hosted.copy);
+      return { ok: true };
     }
     if (!result?.ok) return { ok: false, reason: "request", error: result?.error || "" };
     const parsed = parseCopyJson(result.content);
@@ -3203,15 +3252,21 @@ export function createEditor(ctx) {
       demo.steps.length
     );
     if (!list.length) return;
-    if (!llmConfigured) {
-      toast(t("toast.llmNeedKey"));
-      openLlmSettings();
-      return;
+    const ownLlm = Boolean(llmBridge() || llmConfigured);
+    if (!ownLlm) {
+      const gate = await ensureHostedFeature?.("hostedAi", () => generateStepCopy(indices));
+      if (gate === "blocked") return;
+      if (gate !== "proceed") {
+        toast(t("toast.llmNeedKey"));
+        openLlmSettings();
+        return;
+      }
     }
     setGenerateBusy("copy", true);
     let ok = 0;
     let skipped = 0;
     let failed = 0;
+    let gated = false;
     let lastError = "";
     try {
       for (const idx of list) {
@@ -3223,7 +3278,10 @@ export function createEditor(ctx) {
         const outcome = await generateCopyForStep(demo, step, idx);
         if (outcome.ok) ok += 1;
         else if (outcome.reason === "image") skipped += 1;
-        else {
+        else if (outcome.reason === "gate") {
+          gated = true;
+          break;
+        } else {
           failed += 1;
           lastError = outcome.reason === "parse" ? t("llm.badCopy") : outcome.error || t("toast.llmCopyFail");
         }
@@ -3240,6 +3298,7 @@ export function createEditor(ctx) {
       renderCanvas();
       onChange();
     }
+    if (gated && !ok) return;
     if (ok && !failed && !skipped) {
       toast(ok > 1 ? t("toast.llmCopiedMany", { n: ok }) : t("toast.llmCopied"));
     } else if (ok) {
@@ -3258,11 +3317,13 @@ export function createEditor(ctx) {
     const bridge = cartesiaBridge();
     try {
       const status = bridge ? await bridge.cartesiaStatus() : await cartesiaKeyStatus();
+      cartesiaConfigured = Boolean(status?.configured);
       if (status?.configured) {
         statusEl.textContent = status.masked
           ? t("cartesia.configured", { masked: status.masked })
           : t("cartesia.configuredPlain");
         if (clearBtn) clearBtn.hidden = false;
+        paintHostedBadges();
         return;
       }
       statusEl.textContent = t("cartesia.noKey");
@@ -3271,6 +3332,7 @@ export function createEditor(ctx) {
       statusEl.textContent = t("cartesia.readFail");
       if (clearBtn) clearBtn.hidden = true;
     }
+    paintHostedBadges();
   }
 
   async function saveCartesiaKey() {
@@ -3320,9 +3382,19 @@ export function createEditor(ctx) {
       toast(t("toast.needCaptionText"));
       return;
     }
+    const ownTts = await hasOwnTts();
+    if (!ownTts) {
+      const gate = await ensureHostedFeature?.("tts", () => generateCaptionAudio(indices));
+      if (gate === "blocked") return;
+      if (gate !== "proceed") {
+        toast(t("cartesia.noKey"));
+        return;
+      }
+    }
     setGenerateBusy("audio", true);
     let ok = 0;
     let failed = 0;
+    let gated = false;
     let lastError = "";
     const skipped = list.length - workable.length;
     try {
@@ -3330,10 +3402,25 @@ export function createEditor(ctx) {
         const step = demo.steps[idx];
         const text = captionTextForStep(step, idx);
         try {
-          const clips = await generateNarrationClips(text, {
-            voiceURI: demo.narration.voiceURI,
-            rate: demo.narration.rate,
-          });
+          let clips;
+          if (ownTts) {
+            clips = await generateNarrationClips(text, {
+              voiceURI: demo.narration.voiceURI,
+              rate: demo.narration.rate,
+            });
+          } else {
+            const hosted = await synthesizeHostedSpeech(text, {
+              locale: narrationLang(demo.narration.voiceURI),
+            });
+            if (!hosted.ok) {
+              if (presentHostedFailure?.(hosted, "tts")) {
+                gated = true;
+                break;
+              }
+              throw new Error(hosted.message || t("toast.audioGenFail"));
+            }
+            clips = [hosted.clip];
+          }
           const durations = await measureClipDurations(clips);
           const playbackRate = normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate);
           step.caption = text;
@@ -3363,6 +3450,7 @@ export function createEditor(ctx) {
       renderCanvas();
       onChange();
     }
+    if (gated && !ok) return;
     if (ok && !failed && !skipped) {
       toast(ok > 1 ? t("toast.audioSavedMany", { n: ok }) : t("toast.audioSaved"));
     } else if (ok) {
@@ -3779,7 +3867,7 @@ export function createEditor(ctx) {
   bindPopoverDrag();
   bindForm();
 
-  return { refresh, selectStep, currentStep, pauseCaption, stopPreview };
+  return { refresh, selectStep, currentStep, pauseCaption, stopPreview, paintHostedBadges };
 }
 
 function getImageContentRect(img) {
