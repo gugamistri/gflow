@@ -67,9 +67,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/20/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/20/css/theme.css" />
-  <link rel="stylesheet" href="a/20/css/app.css" />
+  <link rel="stylesheet" href="a/21/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/21/css/theme.css" />
+  <link rel="stylesheet" href="a/21/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -452,11 +452,13 @@
     </div>
     <aside class="release-notes" id="release-notes" hidden>
       <div class="release-notes-body">
-        <p class="release-notes-title" data-i18n="releaseNotes.title">Novidades</p>
+        <p class="release-notes-title" id="release-notes-title">Novidades da versão 0.3.0 · outubro de 2026</p>
         <ul class="release-notes-list">
-          <li data-i18n="releaseNotes.item1">Gere título, descrição e narração a partir da captura do passo.</li>
-          <li data-i18n="releaseNotes.item2">O zoom acompanha o destaque enquanto o guia avança.</li>
-          <li data-i18n="releaseNotes.item3">A narração entra no vídeo exportado, no tempo de cada slide.</li>
+          <li data-i18n="releaseNotes.item1">Entre com email e senha, ou peça um link por email, sem senha.</li>
+          <li data-i18n="releaseNotes.item2">GuiaFlow Pro: link permanente, texto e áudio com IA, e vídeo sem o logo.</li>
+          <li data-i18n="releaseNotes.item3">No celular, revise e edite o texto de cada passo.</li>
+          <li data-i18n="releaseNotes.item4">Novo projeto fica num card. No menu: Novo, Abrir e Importar.</li>
+          <li data-i18n="releaseNotes.item5">Preview e Compartilhar ficam só com ícone. Desfazer e refazer ficam ao lado de copiar e colar.</li>
         </ul>
       </div>
       <button type="button" class="btn btn-sm" id="release-notes-dismiss" data-i18n="releaseNotes.dismiss">Entendi</button>
@@ -468,15 +470,12 @@
         </span>
         <span data-i18n="topbar.newProject">Novo projeto</span>
       </button>
-      <button type="button" class="library-action-card library-import-card" id="btn-import-library">
-        <span class="library-action-icon" aria-hidden="true">
-          <svg class="btn-ico"><use href="#i-import"></use></svg>
-        </span>
-        <span data-i18n="topbar.import">Importar</span>
+      <button type="button" class="library-import-hint" id="library-import-hint" hidden data-i18n="library.importHint">
+        Para trazer um projeto, use Importar no menu.
       </button>
       <div id="library-grid" class="library-grid-items"></div>
     </div>
-    <p class="library-empty" id="library-empty" hidden data-i18n="library.empty">Nenhum guia ainda. Crie o primeiro ou importe um arquivo.</p>
+    <p class="library-empty" id="library-empty" hidden data-i18n="library.empty">Nenhum guia ainda. Crie o primeiro.</p>
   </main>
 
   <main id="view-editor" class="view view-editor" hidden>
@@ -1245,7 +1244,7 @@
     </symbol>
   </svg>
 
-  <script src="a/20/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/20/js/app.js"></script>
+  <script src="a/21/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/21/js/app.js"></script>
 </body>
 </html>
