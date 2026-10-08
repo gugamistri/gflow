@@ -79,6 +79,24 @@ Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` que a nuvem
 
 O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JSON local não depende da nuvem.
 
+`401` apaga a sessão e abre **Entrar**. `402` com `code: "subscription_required"` abre o diálogo de assinatura (Mensal ou Anual, sem preço no editor). `429` com `quota_exceeded` avisa que a cota do mês acabou. `503` diz que está indisponível no momento. O preview de 7 dias não passa por esse gate.
+
+### Assinatura
+
+O editor não calcula preço e não guarda segredo de pagamento. Com sessão, o menu da conta lê `GET /billing/entitlement`. Plano `cloud` com assinatura ativa mostra **Cloud** e **Gerenciar assinatura** (`POST /billing/portal` → `{ "portal": { "url" } }`). Plano livre mostra **Grátis** e **Assinar Cloud**.
+
+`POST /billing/checkout` com `{ "interval": "monthly" | "annual" }` devolve `{ "checkout": { "url" } }`. O browser segue esse URL se for `http:` ou `https:`.
+
+Regresso em `https://guiaflow.pro`:
+
+- `/?billing=success&session_id={CHECKOUT_SESSION_ID}` — `GET /billing/entitlement?session_id=cs_…`. Se `active` for verdadeiro, o aviso diz que a assinatura está ativa. A query sai da barra.
+- `/?billing=cancel` — aviso neutro, sem chamar o checkout de novo.
+- `/?billing=portal` — só volta a ler o entitlement.
+
+Se `/billing/entitlement` responder `404` ou `503`, a linha do plano some e o link permanente segue o comportamento anterior. O link temporário continua grátis.
+
+Forma lida do entitlement (corpo direto ou em `entitlement` / `subscription`): `{ "plan": "free"|"cloud", "status": "active"|"trialing"|"past_due"|"canceled"|"none", "active": true|false, "interval": "monthly"|"annual"|null }`. `active: false` manda, mesmo que `plan` ainda diga `cloud`.
+
 ## Contrato para operadores (`guiaflow-cloud`)
 
 Esta secção não é cópia de produto. O host abaixo é a base HTTP; a pessoa que usa o editor não o vê.
@@ -129,4 +147,4 @@ Um email antigo que ainda aponte para `{AUTH_BASE_URL}/auth/verify?token=` conti
 
 **GuiaFlow Cloud** is a private companion (not part of this MIT repo; product name `guiaflow-cloud`). It may later add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics.
 
-With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://app.guiaflow.pro` for operators; that host is not shown in the product UI. Apex `guiaflow.pro` stays the free editor. A global set earlier stays in place, including a previous host. Meta and `guiaflow.cloud.baseUrl` apply when the global is unset. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips sign-in and publishes immediately («Connected as …»). Otherwise the Entrar dialog posts `{ email, password }` to `/auth/login`. **Sign in without a password** posts `{ email, redirect }` to `/auth/magic-link`, with `redirect` ending in `/auth/callback`; the same link creates the account. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged.
+With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://app.guiaflow.pro` for operators; that host is not shown in the product UI. Apex `guiaflow.pro` stays the free editor. A global set earlier stays in place, including a previous host. Meta and `guiaflow.cloud.baseUrl` apply when the global is unset. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips sign-in and publishes immediately («Connected as …»). Otherwise the Entrar dialog posts `{ email, password }` to `/auth/login`. **Sign in without a password** posts `{ email, redirect }` to `/auth/magic-link`, with `redirect` ending in `/auth/callback`; the same link creates the account. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged. A `402` `subscription_required` opens the upgrade dialog. Checkout, the billing portal, and `GET /billing/entitlement` are UI hooks only; a `404` on entitlement hides the plan line. Return URLs are `/?billing=success&session_id=cs_…`, `/?billing=cancel`, and `/?billing=portal`.

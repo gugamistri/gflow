@@ -86,6 +86,16 @@ import {
   takeCloudAuthError,
   writeCloudPublishIntent,
 } from "./cloudConfig.js";
+import {
+  billingMenuModel,
+  classifyCloudGate,
+  emptyEntitlement,
+  fetchBillingEntitlement,
+  readBillingReturn,
+  startBillingCheckout,
+  startBillingPortal,
+  stripBillingReturn,
+} from "./billing.js";
 
 let project = null;
 let selectedIndex = 0;
@@ -539,6 +549,10 @@ function cloudShareEnabled() {
 }
 
 let accountDialogWantsPublish = false;
+let billingView = { status: "idle" };
+let billingEntitlement = emptyEntitlement();
+let billingTicket = 0;
+let upgradeCustomMessage = "";
 
 function accountInitial(email) {
   const ch = String(email || "").trim().charAt(0);
@@ -567,6 +581,153 @@ function paintAccount() {
   if (toggle && signedIn) {
     toggle.setAttribute("aria-label", label);
     toggle.setAttribute("title", label);
+  }
+  const menu = billingMenuModel({
+    signedIn,
+    status: billingView.status,
+    entitlement: billingEntitlement,
+  });
+  const planEl = document.getElementById("account-chip-plan");
+  const billingBtn = document.getElementById("btn-account-billing");
+  if (planEl) {
+    planEl.hidden = !menu.showPlan;
+    if (menu.showPlan) {
+      const name = menu.planLabel === "cloud" ? t("billing.planCloud") : t("billing.planFree");
+      planEl.textContent = t("billing.planLine", { plan: name });
+    }
+  }
+  if (billingBtn) {
+    billingBtn.hidden = !menu.showAction;
+    if (menu.showAction) {
+      billingBtn.textContent = menu.action === "portal" ? t("billing.manage") : t("billing.subscribeMenu");
+    }
+  }
+}
+
+function resetBillingView() {
+  billingTicket += 1;
+  billingView = { status: "idle" };
+  billingEntitlement = emptyEntitlement();
+}
+
+async function refreshEntitlement(sessionId = "") {
+  if (!isCloudEnabled() || !getCloudAccount().signedIn) {
+    resetBillingView();
+    paintAccount();
+    return null;
+  }
+  const ticket = ++billingTicket;
+  const result = await fetchBillingEntitlement(sessionId);
+  if (ticket !== billingTicket) return result;
+  if (result?.ok && result.entitlement) {
+    billingView = { status: "ready" };
+    billingEntitlement = result.entitlement;
+  } else {
+    billingView = { status: "hidden" };
+    billingEntitlement = emptyEntitlement();
+  }
+  paintAccount();
+  paintCloudShare();
+  return result;
+}
+
+function paintUpgradeCopy() {
+  const msg = document.getElementById("upgrade-message");
+  if (!msg) return;
+  msg.textContent = (upgradeCustomMessage || t("billing.message")).slice(0, 500);
+}
+
+function setUpgradeStatus(message, tone = "") {
+  const status = document.getElementById("upgrade-status");
+  if (!status) return;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", tone === "error");
+  status.classList.toggle("is-ok", tone === "ok");
+}
+
+function showUpgradeDialog({ message = "" } = {}) {
+  if (!isCloudEnabled()) return;
+  upgradeCustomMessage = String(message || "").trim();
+  const dialog = document.getElementById("modal-upgrade");
+  if (!dialog) return;
+  paintUpgradeCopy();
+  setUpgradeStatus("");
+  const button = document.getElementById("btn-upgrade-subscribe");
+  if (button) button.disabled = false;
+  if (!dialog.open) dialog.showModal();
+  dialog.querySelector('input[name="billing-interval"]')?.focus();
+}
+
+function closeUpgradeDialog() {
+  const dialog = document.getElementById("modal-upgrade");
+  if (dialog?.open) dialog.close();
+}
+
+function cloudShareNeedsUpgrade() {
+  return billingView.status === "ready" && !billingEntitlement.active;
+}
+
+async function consumeBillingReturn() {
+  const found = readBillingReturn(location.href);
+  if (found.kind) applyCloudAuthHref(stripBillingReturn(location.href));
+  if (!isCloudEnabled()) return;
+  if (found.kind === "cancel") toast(t("billing.toastCancel"), 4200);
+  if (!getCloudAccount().signedIn) {
+    if (found.kind === "success") showAccountDialog();
+    return;
+  }
+  const sessionId = found.kind === "success" ? found.sessionId : "";
+  const result = await refreshEntitlement(sessionId);
+  if (found.kind !== "success") return;
+  if (result?.entitlement?.active) toast(t("billing.toastActive"), 4800);
+  else if (result?.ok && !result.unavailable) toast(t("billing.toastPending"), 4800);
+}
+
+async function openBillingPortal() {
+  const result = await startBillingPortal();
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    await endCloudSession();
+    resetBillingView();
+    paintCloudShare();
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return;
+  }
+  if (!result?.ok || !result.url) {
+    toast(result?.error === "network" ? t("share.cloud.network") : t("billing.unavailable"));
+    return;
+  }
+  location.assign(result.url);
+}
+
+async function submitUpgrade(interval) {
+  const button = document.getElementById("btn-upgrade-subscribe");
+  if (button) button.disabled = true;
+  setUpgradeStatus("");
+  try {
+    const result = await startBillingCheckout(interval);
+    if (result?.status === 401 || result?.error === "unauthorized") {
+      closeUpgradeDialog();
+      await endCloudSession();
+      resetBillingView();
+      paintCloudShare();
+      showAccountDialog();
+      setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+      return;
+    }
+    if (!result?.ok || !result.url) {
+      setUpgradeStatus(
+        result?.error === "network" ? t("share.cloud.network") : t("billing.unavailable"),
+        "error"
+      );
+      return;
+    }
+    location.assign(result.url);
+  } catch (err) {
+    console.error(err);
+    setUpgradeStatus(t("billing.unavailable"), "error");
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 
@@ -615,6 +776,13 @@ function paintCloudShare() {
   if (publishBtn) publishBtn.hidden = !signedIn || Boolean(url);
   if (result) result.hidden = !url;
   if (urlInput) urlInput.value = url;
+  const badge = document.getElementById("cloud-share-badge");
+  const menu = billingMenuModel({
+    signedIn,
+    status: billingView.status,
+    entitlement: billingEntitlement,
+  });
+  if (badge) badge.hidden = !(menu.showPlan && menu.planLabel === "free" && !url);
   paintAccount();
 }
 
@@ -1551,6 +1719,25 @@ function bindChrome() {
   document.getElementById("btn-account-signout")?.addEventListener("click", () => {
     void signOutAccount();
   });
+  document.getElementById("btn-account-billing")?.addEventListener("click", () => {
+    closeAccountMenus();
+    if (billingView.status === "ready" && billingEntitlement.active) void openBillingPortal();
+    else showUpgradeDialog();
+  });
+  document.getElementById("btn-upgrade-close")?.addEventListener("click", () => {
+    closeUpgradeDialog();
+  });
+  document.getElementById("btn-upgrade-dismiss")?.addEventListener("click", () => {
+    closeUpgradeDialog();
+  });
+  document.getElementById("modal-upgrade")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  });
+  document.getElementById("upgrade-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const picked = document.querySelector('#upgrade-form input[name="billing-interval"]:checked');
+    void submitUpgrade(picked?.value || "monthly");
+  });
   document.getElementById("btn-account-dialog-close")?.addEventListener("click", () => {
     closeAccountDialog();
   });
@@ -1604,6 +1791,7 @@ function bindChrome() {
     clearCloudPublishIntent();
     accountDialogWantsPublish = false;
     closeAccountMenus();
+    resetBillingView();
     await endCloudSession();
     paintCloudShare();
   }
@@ -1613,6 +1801,7 @@ function bindChrome() {
     accountDialogWantsPublish = false;
     closeAccountDialog();
     paintCloudShare();
+    await refreshEntitlement();
     if (publishNow && project?.id && cloudShareEnabled()) {
       clearCloudPublishIntent();
       await runCloudPublish();
@@ -1731,6 +1920,10 @@ function bindChrome() {
       showAccountDialog({ publish: true });
       return;
     }
+    if (cloudShareNeedsUpgrade()) {
+      showUpgradeDialog();
+      return;
+    }
     project.theme = formToTheme(project.theme);
     showExportOverlay(t("share.cloud.overlay"));
     try {
@@ -1758,11 +1951,37 @@ function bindChrome() {
     } catch (err) {
       console.error(err);
       hideExportOverlay();
-      if (err?.code === "unauthorized" || err?.status === 401) {
+      const gate = classifyCloudGate({
+        status: err?.status,
+        error: err?.code,
+        message: err?.message,
+        data: {
+          code: err?.code,
+          feature: err?.feature,
+          plan: err?.plan,
+          message: err?.message,
+        },
+      });
+      if (gate.kind === "unauthorized") {
         await endCloudSession();
+        resetBillingView();
         paintCloudShare();
         showAccountDialog({ publish: true });
         setCloudLoginStatus(err?.message || t("share.cloud.unauthorized"), "error");
+        toast(err?.message || t("share.cloud.generic"));
+        return;
+      }
+      if (gate.kind === "subscription_required") {
+        showUpgradeDialog({ message: gate.message || err?.message });
+        return;
+      }
+      if (gate.kind === "quota_exceeded") {
+        toast(gate.message || t("billing.quota"));
+        return;
+      }
+      if (gate.kind === "unavailable") {
+        toast(t("billing.unavailable"));
+        return;
       }
       toast(err?.message || t("share.cloud.generic"));
     }
@@ -1964,6 +2183,7 @@ async function boot() {
     applyChromeAppearance();
     paintChrome();
     paintShareMenu();
+    paintUpgradeCopy();
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();
@@ -2010,6 +2230,7 @@ async function boot() {
     showStashedAuthError();
     if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
     else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });
+    void consumeBillingReturn();
   }
 }
 
