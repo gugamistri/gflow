@@ -28,6 +28,9 @@ const server = createServer(async (req, res) => {
   if (/^\/v\/([A-Za-z0-9_-]{11}|[a-f0-9]{32})\/?$/i.test(pathname)) {
     pathname = "/view.html";
   }
+  if (/^\/p\/([A-Za-z0-9][A-Za-z0-9_-]{0,80})\/?$/.test(pathname)) {
+    pathname = "/view.html";
+  }
   if (pathname === "/auth/callback" || pathname === "/auth/callback/") {
     pathname = "/auth/callback.html";
   }

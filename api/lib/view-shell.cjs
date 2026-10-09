@@ -1,5 +1,5 @@
 /**
- * HTML da página /v/:id com meta tags para crawlers (WhatsApp, Slack, etc.).
+ * HTML das páginas /v/:id e /p/:slug com meta tags para crawlers (WhatsApp, Slack, etc.).
  */
 function escapeHtml(str) {
   return String(str || "")
@@ -9,8 +9,9 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-function renderViewPage({ id, name, origin, missing }) {
+function renderViewPage({ id, name, origin, missing, kind }) {
   const base = String(origin || "").replace(/\/$/, "");
+  const permanent = kind === "permanent";
   const title = missing
     ? "GuiaFlow"
     : name
@@ -21,7 +22,7 @@ function renderViewPage({ id, name, origin, missing }) {
     : name
       ? `Tour interativo: ${name}`
       : "Tour interativo no GuiaFlow";
-  const canonical = id ? `${base}/v/${id}` : `${base}/`;
+  const canonical = id ? `${base}/${permanent ? "p" : "v"}/${id}` : `${base}/`;
   const image = `${base}/og-share.png`;
   const safeTitle = escapeHtml(title);
   const safeDesc = escapeHtml(description);
@@ -87,10 +88,10 @@ function renderViewPage({ id, name, origin, missing }) {
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/26/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/26/css/theme.css" />
-  <link rel="stylesheet" href="/a/26/css/app.css" />
-  <script>window.__GF_SHARE = ${JSON.stringify({ id: id || null, name: name || null, missing: Boolean(missing) })};</script>
+  <link rel="stylesheet" href="/a/27/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/27/css/theme.css" />
+  <link rel="stylesheet" href="/a/27/css/app.css" />
+  <script>window.__GF_SHARE = ${JSON.stringify({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
@@ -102,7 +103,7 @@ function renderViewPage({ id, name, origin, missing }) {
 
   <main id="view-editor" class="view view-editor is-presenting">
     <section class="canvas-wrap">
-      <p class="present-hint" id="present-chrome" data-i18n="view.escHint">Clique fora ou Esc para recomeçar</p>
+      <p class="present-hint" id="present-chrome" data-i18n="present.escHint">Clique fora ou Esc para sair</p>
       <div class="canvas-stage" id="canvas-stage">
         <div class="view-share-status" id="view-share-status"${missing ? "" : ""}>
           <p id="view-share-status-text">${missing ? escapeHtml("Este link não está mais disponível.") : "Carregando o tour…"}</p>
@@ -143,8 +144,8 @@ function renderViewPage({ id, name, origin, missing }) {
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/26/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/26/js/viewApp.js"></script>
+  <script src="/a/27/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/27/js/viewApp.js"></script>
 </body>
 </html>
 `;

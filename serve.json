@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/a/:version/:path*", "destination": "/:path*" },
     { "source": "/auth/callback", "destination": "/auth/callback.html" },
-    { "source": "/v/:id", "destination": "/view" }
+    { "source": "/v/:id", "destination": "/view" },
+    { "source": "/p/:slug", "destination": "/view" }
   ]
 }

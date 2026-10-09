@@ -37,6 +37,9 @@ test("o redirect não pega guiaflow.pro e o rewrite /v continua", () => {
   assert.ok(
     rewrites.some((rule) => rule.source === "/v/:id" && rule.destination === "/api/v/:id")
   );
+  assert.ok(
+    rewrites.some((rule) => rule.source === "/p/:slug" && rule.destination === "/api/p/:slug")
+  );
   assert.ok(rewrites.some((rule) => rule.source === "/a/:version/:path*"));
   assert.ok(
     rewrites.some((rule) => rule.source === "/auth/callback" && rule.destination === "/auth/callback.html")
