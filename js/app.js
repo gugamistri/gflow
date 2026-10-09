@@ -56,6 +56,7 @@ import {
   hashSharePayload,
   permanentPublicUrl,
   permanentSlug,
+  shareBaselineHash,
   shareFreshness,
   shareRecordIsStale,
 } from "./shareLink.js";
@@ -591,6 +592,13 @@ function displayedShareUrl(record) {
 function paintShareMenu() {
   const pro = viewerIsPro();
   const record = activeShareRecord();
+  const baseline = shareBaselineHash(record, project);
+  if (baseline && record) {
+    // why: link publicado antes do hash não está desatualizado; a edição seguinte é que conta
+    record.payloadHash = baseline;
+    saveDirty = true;
+    schedulePersist();
+  }
   const hasLink = Boolean(record);
   const stale = Boolean(record && project && shareRecordIsStale(record, project));
   const expiry = document.getElementById("share-expiry-note");
