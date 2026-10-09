@@ -222,7 +222,7 @@ test("override local com o host anterior da nuvem continua a valer", () => {
   });
 });
 
-test("o HTML publicado aponta app.guiaflow.pro e os assets em a/26", () => {
+test("o HTML publicado aponta app.guiaflow.pro e os assets em a/27", () => {
   for (const file of ["../index.html", "../auth/callback.html"]) {
     const html = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(html, /__GUIAFLOW_CLOUD__ = "https:\/\/app\.guiaflow\.pro"/);
@@ -230,7 +230,8 @@ test("o HTML publicado aponta app.guiaflow.pro e os assets em a/26", () => {
   }
   for (const file of ["../index.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(text, /a\/26\//);
+    assert.match(text, /a\/27\//);
+    assert.equal(text.includes("a/26/"), false);
     assert.equal(text.includes("a/25/"), false);
     assert.equal(text.includes("a/24/"), false);
     assert.equal(text.includes("a/23/"), false);

@@ -29,7 +29,8 @@
   "rewrites": [
     { "source": "/a/:version/:path*", "destination": "/:path*" },
     { "source": "/auth/callback", "destination": "/auth/callback.html" },
-    { "source": "/v/:id", "destination": "/api/v/:id" }
+    { "source": "/v/:id", "destination": "/api/v/:id" },
+    { "source": "/p/:slug", "destination": "/api/p/:slug" }
   ],
   "crons": [
     {
