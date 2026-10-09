@@ -818,14 +818,33 @@ function paintUpgradeCopy() {
   }
   const currency = paywallCurrency(getLocale());
   const offer = paywallOffer(currency);
-  for (const node of document.querySelectorAll("[data-price]")) {
-    const amount = node.getAttribute("data-price") === "year" ? offer.year : offer.month;
-    node.textContent = formatPaywallAmount(amount, currency);
+  const monthPrice = document.getElementById("paywall-month-price");
+  if (monthPrice) monthPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.month, currency) });
+  const monthNote = document.getElementById("paywall-month-note");
+  if (monthNote) monthNote.textContent = t("billing.billedMonth");
+  const yearPrice = document.getElementById("paywall-year-price");
+  if (yearPrice) {
+    yearPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.monthEquiv, currency) });
   }
-  const save = document.getElementById("paywall-save");
-  if (save) save.textContent = t("billing.savePercent", { percent: offer.percent });
-  const equiv = document.getElementById("paywall-equiv");
-  if (equiv) equiv.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.monthEquiv, currency) });
+  const yearNote = document.getElementById("paywall-year-note");
+  if (yearNote) yearNote.textContent = t("billing.billedYear", { price: formatPaywallAmount(offer.year, currency) });
+  const free = document.getElementById("paywall-free");
+  if (free) free.textContent = t("billing.freeMonths", { n: offer.freeMonths });
+  const yearCard = document.getElementById("paywall-year-card");
+  const saveTip = t("billing.savePercent", { percent: offer.percent });
+  if (yearCard) yearCard.title = saveTip;
+  const annual = document.querySelector('#upgrade-form input[name="billing-interval"]:checked')?.value === "year";
+  const subscribe = document.getElementById("btn-upgrade-subscribe");
+  if (subscribe) {
+    const key = annual ? "billing.subscribeAnnual" : "billing.subscribeMonthly";
+    subscribe.dataset.i18n = key;
+    subscribe.textContent = t(key);
+  }
+  const payNote = document.getElementById("paywall-pay-note");
+  if (payNote) {
+    payNote.hidden = !annual;
+    payNote.textContent = annual ? t("billing.payMonths", { paid: offer.paidMonths, total: 12 }) : "";
+  }
   const list = document.getElementById("paywall-benefits");
   if (list) {
     const order = paywallFeatureOrder(upgradeFeature);
@@ -2199,6 +2218,9 @@ function bindChrome() {
       }
       paintLocalSave();
     });
+  });
+  document.getElementById("upgrade-form")?.addEventListener("change", (event) => {
+    if (event.target?.name === "billing-interval") paintUpgradeCopy();
   });
   document.getElementById("upgrade-form")?.addEventListener("submit", (event) => {
     event.preventDefault();

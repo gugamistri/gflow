@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  PAYWALL_PRICES,
   buildCheckoutBody,
   formatPaywallAmount,
   isSubscriptionRequired,
@@ -33,6 +35,31 @@ test("preços e a economia do anual", () => {
   assert.equal(formatPaywallAmount(brl.monthEquiv, "brl"), "R$29");
   assert.equal(brl.percent, 36);
   assert.equal(brl.months, 4);
+});
+
+test("meses grátis saem do preço anual dividido pelo mensal", () => {
+  for (const code of ["brl", "usd"]) {
+    const offer = paywallOffer(code);
+    const prices = PAYWALL_PRICES[code];
+    const freeMonths = Math.round(12 - prices.year / prices.month);
+    assert.equal(offer.freeMonths, freeMonths);
+    assert.equal(offer.paidMonths, 12 - freeMonths);
+  }
+  assert.equal(paywallOffer("brl").freeMonths, 4);
+  assert.equal(paywallOffer("brl").paidMonths, 8);
+  assert.equal(paywallOffer("usd").freeMonths, 4);
+  assert.equal(paywallOffer("usd").paidMonths, 8);
+});
+
+test("o diálogo começa em Mensal", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="modal-upgrade"');
+  const end = html.indexOf("</dialog>", start);
+  const dialog = html.slice(start, end);
+  assert.match(dialog, /name="billing-interval" value="month" checked/);
+  assert.equal(/name="billing-interval" value="year" checked/.test(dialog), false);
+  assert.match(dialog, /Já é assinante\? Entrar/);
+  assert.equal(/Já assino/.test(dialog), false);
 });
 
 test("o recurso que abriu o diálogo fica no topo", () => {
