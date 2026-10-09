@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /electron/
+Disallow: /extension/
+Disallow: /view
+
+Sitemap: https://guiaflow.pro/sitemap.xml
