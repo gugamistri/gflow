@@ -4,6 +4,7 @@ import {
   hashSharePayload,
   permanentPublicUrl,
   permanentSlug,
+  publishedPayloadFromShare,
   shareBaselineHash,
   shareFreshness,
   shareRecordIsStale,
@@ -47,6 +48,55 @@ test("link antigo sem hash só fica desatualizado depois de o projeto mudar", ()
   assert.equal(shareRecordIsStale(legacy, edited), true);
   assert.equal(original.share.writeToken, "segredo");
   assert.equal(JSON.stringify(baseline).includes("segredo"), false);
+});
+
+test("projeto sem edição tem o mesmo hash que o payload publicado", () => {
+  const dataUrl = "data:image/png,abc";
+  const local = {
+    name: "E2E Pro Test",
+    theme: { accent: "#111111", accentDark: "#000000" },
+    customImages: { img: { name: "tela.png", dataUrl } },
+    steps: [
+      {
+        type: "slide",
+        label: "Passo de teste",
+        image: "custom:img",
+        popover: { title: "Passo de teste", description: "Segundo passo." },
+      },
+    ],
+    sceneLabels: { 2: "Cena" },
+    share: { writeToken: "segredo" },
+    id: "local-id",
+    updatedAt: 123,
+    cloudShare: { url: "https://guiaflow.pro/p/e2e-pro-test-c61771" },
+  };
+  const response = {
+    ok: true,
+    updatedAt: "2026-10-09T12:00:00.000Z",
+    payload: {
+      narration: { background: null, rate: 1, voiceURI: "", enabled: true },
+      steps: [
+        {
+          popover: { description: "Segundo passo.", title: "Passo de teste" },
+          image: dataUrl,
+          label: "Passo de teste",
+          type: "slide",
+        },
+      ],
+      name: "E2E Pro Test",
+      customImages: {},
+      sceneLabels: { 2: "Cena" },
+      theme: { accentDark: "#000000", accent: "#111111" },
+      playback: { defaultHoldSeconds: 6 },
+    },
+  };
+  const published = publishedPayloadFromShare(response);
+  assert.equal(hashSharePayload(local), hashSharePayload(published));
+  const edited = structuredClone(local);
+  edited.steps[0].popover.title = "Título novo";
+  assert.notEqual(hashSharePayload(edited), hashSharePayload(published));
+  assert.equal(publishedPayloadFromShare({ ok: false, error: "not_found" }), null);
+  assert.equal(publishedPayloadFromShare(null), null);
 });
 
 test("a frescura do link é agora, minutos, horas ou dias", () => {

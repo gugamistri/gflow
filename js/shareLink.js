@@ -6,14 +6,50 @@ import { prepareSharePayload } from "./shareSnapshot.js";
 
 export const PUBLIC_SHARE_ORIGIN = "https://guiaflow.pro";
 
-export function hashSharePayload(project) {
-  const json = JSON.stringify(prepareSharePayload(project));
+function stableStringify(value) {
+  if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+/**
+ * O mesmo objeto para o projeto local e para o payload publicado.
+ * why: o servidor devolve as imagens já embutidas e customImages vazio; a ordem das chaves não conta.
+ */
+export function normalizeSharePayload(source) {
+  const payload = JSON.parse(JSON.stringify(prepareSharePayload(source || {})));
+  const images = payload.customImages || {};
+  for (const step of payload.steps || []) {
+    if (typeof step?.image === "string" && step.image.startsWith("custom:")) {
+      const dataUrl = images[step.image.slice(7)]?.dataUrl || "";
+      if (dataUrl) step.image = dataUrl;
+    }
+  }
+  payload.customImages = {};
+  return payload;
+}
+
+export function hashSharePayload(source) {
+  const json = stableStringify(normalizeSharePayload(source));
   let hash = 2166136261;
   for (let i = 0; i < json.length; i += 1) {
     hash ^= json.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16);
+}
+
+/** Corpo de GET /api/shares/:slug. Sem payload, não há base do servidor. */
+export function publishedPayloadFromShare(data) {
+  if (!data || typeof data !== "object" || data.ok === false) return null;
+  const payload = data.payload;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  return payload;
 }
 
 export function shareRecordIsStale(record, project) {
