@@ -1159,19 +1159,21 @@ textarea {
   display: none;
 }
 
-.export-panel summary.share-menu {
+.export-panel > summary.share-menu {
   position: relative;
+  overflow: visible;
 }
 
 .share-stale-dot {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 8px;
-  height: 8px;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #f59e0b;
   box-shadow: 0 0 0 2px var(--ns-topbar);
+  pointer-events: none;
 }
 
 .share-stale-dot[hidden] {
@@ -1215,8 +1217,17 @@ textarea {
   display: none;
 }
 
+.share-link-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .share-link-url {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  width: auto;
   font-weight: 500;
   font-size: 0.75rem;
   padding: 0.45rem 0.6rem;
@@ -1224,6 +1235,22 @@ textarea {
   border-radius: 8px;
   background: var(--ns-panel);
   color: var(--ns-ink);
+}
+
+.share-link-field .btn-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.share-link-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-link-extra[hidden] {
+  display: none;
 }
 
 .share-pro-upsell {

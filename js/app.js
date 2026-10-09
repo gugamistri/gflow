@@ -58,7 +58,6 @@ import {
   permanentSlug,
   publishedPayloadFromShare,
   shareBaselineHash,
-  shareFreshness,
   shareRecordIsStale,
 } from "./shareLink.js";
 import { permanentShareEndpoint } from "./viewShare.js";
@@ -647,7 +646,7 @@ function paintShareMenu() {
   const republish = document.getElementById("btn-share-republish");
   const revoke = document.getElementById("btn-share-revoke");
   const staleBadge = document.getElementById("share-stale");
-  const status = document.getElementById("share-link-status");
+  const extra = document.getElementById("share-link-extra");
   const urlInput = document.getElementById("share-link-url");
   const dot = document.getElementById("share-stale-dot");
   if (expiry) expiry.hidden = pro;
@@ -662,14 +661,7 @@ function paintShareMenu() {
   if (republish) republish.hidden = !stale;
   if (revoke) revoke.hidden = pro || !hasLink;
   if (staleBadge) staleBadge.hidden = !stale;
-  if (status) {
-    status.hidden = stale;
-    if (!stale) {
-      const fresh = shareFreshness(record?.publishedAt || record?.updatedAt);
-      status.textContent = fresh.n ? t(fresh.key, { n: fresh.n }) : t(fresh.key);
-      status.dataset.i18n = fresh.key;
-    }
-  }
+  if (extra) extra.hidden = Boolean(republish?.hidden) && Boolean(revoke?.hidden);
   if (dot) {
     dot.hidden = !stale;
     dot.title = t("share.staleDot");
