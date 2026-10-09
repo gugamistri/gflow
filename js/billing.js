@@ -10,12 +10,13 @@ import { buildCheckoutBody, readBillingReturn, stripBillingReturn } from "./payw
 export const BILLING_CHECKOUT_PATH = "/billing/checkout";
 export const BILLING_PORTAL_PATH = "/billing/portal";
 export const BILLING_ENTITLEMENT_PATH = "/billing/entitlement";
+export const AUTH_ME_PATH = "/auth/me";
+export const AUTH_HANDOFF_PATH = "/auth/handoff";
 
 const SESSION_ID_RE = /^cs_[A-Za-z0-9_]+$/;
-const SUBSCRIBED_STATUSES = new Set(["active", "trialing"]);
 
 export function emptyEntitlement() {
-  return { plan: "none", status: "none", interval: "", active: false };
+  return { plan: "none", status: "none", interval: "", active: false, planSource: null, isAdmin: false };
 }
 
 /** Intervalo que o checkout aceita. month/year da resposta não voltam no pedido. */
@@ -45,28 +46,48 @@ function planRank(value) {
   return "none";
 }
 
+function planSourceOf(value) {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (raw === "stripe" || raw === "comp" || raw === "superadmin") return raw;
+  return null;
+}
+
+function isCourtesySource(source) {
+  return source === "comp" || source === "superadmin";
+}
+
 /**
  * Plano atual. Aceita o corpo direto ou aninhado em entitlement/subscription.
  * why: o PR de billing devolve plan e status; o aninhamento não pode esconder isso.
  */
 export function parseEntitlement(data) {
   const body = data && typeof data === "object" ? data : {};
+  const user = body.user && typeof body.user === "object" && !Array.isArray(body.user) ? body.user : {};
   const nested = [body.entitlement, body.subscription].find(
     (value) => value && typeof value === "object" && !Array.isArray(value)
   );
-  const src = nested ? { ...body, ...nested } : body;
+  const src = { ...user, ...body, ...(nested || {}) };
+  const planSource = planSourceOf(src.planSource);
+  const isAdmin = src.isAdmin === true || user.isAdmin === true;
   const plan = planRank(src.plan ?? src.tier ?? src.product);
   const status = String(src.status ?? "").trim().toLowerCase();
   const interval = normalizeBillingInterval(src.interval);
-  if (status === "past_due") {
-    return { plan: "none", status: "past_due", interval, active: false };
+  const base = { interval, planSource, isAdmin };
+  if (isCourtesySource(planSource)) {
+    return { ...base, plan: "pro", status: status || "active", active: true };
   }
-  let active;
+  if (status === "past_due") {
+    return { ...base, plan: "none", status: "past_due", active: false };
+  }
+  if (plan === "pro") {
+    return { ...base, plan: "pro", status: status || "active", active: true };
+  }
+  let active = false;
   if (typeof src.active === "boolean") active = src.active;
   else if (typeof src.entitled === "boolean") active = src.entitled;
-  else active = plan === "pro" && (status === "" || SUBSCRIBED_STATUSES.has(status));
-  if (!active) return { plan: "none", status: status || "none", interval, active: false };
-  return { plan: "pro", status: status || "active", interval, active: true };
+  else active = false;
+  if (!active) return { ...base, plan: "none", status: status || "none", active: false };
+  return { ...base, plan: "pro", status: status || "active", active: true };
 }
 
 /**
@@ -97,9 +118,13 @@ export function classifyCloudGate(result) {
 /** Menu da conta: sem entitlement conhecido, a linha do plano some. */
 export function billingMenuModel({ signedIn = false, status = "idle", entitlement = null } = {}) {
   const ready = Boolean(signedIn && status === "ready" && entitlement);
-  if (!ready) return { showPlan: false, showAction: false, planLabel: "", action: "" };
-  if (entitlement.status === "past_due") {
-    return { showPlan: true, showAction: true, planLabel: "past_due", action: "portal" };
+  if (!ready) return { showPlan: false, showAction: false, planLabel: "", action: "", showAdmin: false };
+  const showAdmin = entitlement.isAdmin === true;
+  if (entitlement.status === "past_due" && !entitlement.active) {
+    return { showPlan: true, showAction: true, planLabel: "past_due", action: "portal", showAdmin };
+  }
+  if (entitlement.active && entitlement.planSource === "comp") {
+    return { showPlan: true, showAction: true, planLabel: "comp", action: "portal", showAdmin };
   }
   const active = Boolean(entitlement.active);
   return {
@@ -107,6 +132,7 @@ export function billingMenuModel({ signedIn = false, status = "idle", entitlemen
     showAction: true,
     planLabel: active ? "pro" : "none",
     action: active ? "portal" : "checkout",
+    showAdmin,
   };
 }
 
@@ -219,6 +245,41 @@ function redirectUrl(value) {
 
 function unavailableResult(result) {
   return Boolean(result && (result.status === 404 || result.status === 503));
+}
+
+export async function fetchAccountProfile(env) {
+  const result = await cloudFetch(AUTH_ME_PATH, { method: "GET" }, env);
+  if (!result.ok) return { ...result, profile: null };
+  return { ok: true, status: result.status, profile: parseEntitlement(result.data) };
+}
+
+export function mergeAccountAccess(entitlement, profile) {
+  const billing = entitlement || emptyEntitlement();
+  const me = profile || emptyEntitlement();
+  return parseEntitlement({
+    plan: me.plan === "pro" ? "pro" : billing.plan,
+    status: billing.status || me.status,
+    interval: billing.interval || me.interval,
+    active: billing.active || me.active,
+    planSource: me.planSource || billing.planSource,
+    isAdmin: me.isAdmin || billing.isAdmin,
+  });
+}
+
+export async function startAdminHandoff(env) {
+  const result = await cloudFetch(AUTH_HANDOFF_PATH, { method: "POST" }, env);
+  if (!result.ok) return { ...result, url: "", code: "" };
+  const url = redirectUrl(result.data?.url);
+  if (!url || !url.startsWith("https://")) {
+    return { ok: false, error: "invalid_response", message: "", url: "", code: "" };
+  }
+  return {
+    ok: true,
+    status: result.status,
+    url,
+    code: typeof result.data?.code === "string" ? result.data.code : "",
+    expiresInSec: Number(result.data?.expiresInSec) || 0,
+  };
 }
 
 export async function fetchBillingEntitlement(sessionId, env) {

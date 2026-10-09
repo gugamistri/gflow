@@ -7,6 +7,7 @@ import {
   fetchBillingEntitlement,
   parseEntitlement,
   readBillingReturn,
+  startAdminHandoff,
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
@@ -68,30 +69,63 @@ test("entitlement lê plan e status, no corpo ou aninhado", () => {
     status: "none",
     interval: "",
     active: false,
+    planSource: null,
+    isAdmin: false,
   });
   assert.deepEqual(parseEntitlement({ plan: "pro", status: "active", interval: "annual", active: true }), {
     plan: "pro",
     status: "active",
     interval: "annual",
     active: true,
+    planSource: null,
+    isAdmin: false,
   });
   assert.deepEqual(parseEntitlement({ entitlement: { plan: "pro", status: "trialing", interval: "month" } }), {
     plan: "pro",
     status: "trialing",
     interval: "monthly",
     active: true,
+    planSource: null,
+    isAdmin: false,
   });
   assert.equal(parseEntitlement({ plan: "cloud", status: "active" }).plan, "pro");
   assert.equal(parseEntitlement({ plan: "free", status: "none" }).plan, "none");
-  assert.equal(parseEntitlement({ plan: "pro", status: "canceled" }).active, false);
-  assert.equal(parseEntitlement({ plan: "pro", status: "active", active: false }).active, false);
+  assert.equal(parseEntitlement({ plan: "pro", status: "canceled" }).active, true);
+  assert.equal(parseEntitlement({ plan: "pro", status: "comp", active: false }).active, true);
   const late = parseEntitlement({ plan: "pro", status: "past_due", interval: "year", active: true });
   assert.equal(late.active, false);
   assert.equal(late.plan, "none");
   assert.equal(late.status, "past_due");
   assert.deepEqual(
     billingMenuModel({ signedIn: true, status: "ready", entitlement: late }),
-    { showPlan: true, showAction: true, planLabel: "past_due", action: "portal" }
+    { showPlan: true, showAction: true, planLabel: "past_due", action: "portal", showAdmin: false }
+  );
+});
+
+test("cortesia e superadmin são Pro mesmo sem status do Stripe", () => {
+  const comp = parseEntitlement({
+    plan: "none",
+    status: "none",
+    active: false,
+    planSource: "comp",
+    isAdmin: false,
+    user: { planSource: "comp", isAdmin: false },
+  });
+  assert.equal(comp.active, true);
+  assert.equal(comp.plan, "pro");
+  assert.equal(comp.planSource, "comp");
+  const fromUser = parseEntitlement({ user: { plan: "pro", planSource: "superadmin", isAdmin: true } });
+  assert.equal(fromUser.active, true);
+  assert.equal(fromUser.planSource, "superadmin");
+  assert.equal(fromUser.isAdmin, true);
+  assert.equal(parseEntitlement({ user: { isAdmin: true }, plan: "none" }).isAdmin, true);
+  assert.deepEqual(
+    billingMenuModel({ signedIn: true, status: "ready", entitlement: comp }),
+    { showPlan: true, showAction: true, planLabel: "comp", action: "portal", showAdmin: false }
+  );
+  assert.equal(
+    billingMenuModel({ signedIn: true, status: "ready", entitlement: fromUser }).showAdmin,
+    true
   );
 });
 
@@ -101,6 +135,7 @@ test("o menu esconde o plano quando o billing não está disponível", () => {
     showAction: false,
     planLabel: "",
     action: "",
+    showAdmin: false,
   });
   const guestPlan = billingMenuModel({
     signedIn: true,
@@ -235,4 +270,46 @@ test("checkout e portal seguem o URL devolvido e mandam o intervalo", async () =
     assert.equal(javascriptUrl.ok, false);
     assert.equal(javascriptUrl.url, "");
   });
+});
+
+test("o handoff da administração usa a sessão e só aceita https", async () => {
+  const seen = [];
+  await withFetch(async (url, init) => {
+    seen.push({ url: String(url), init });
+    const href = String(url);
+    if (href.endsWith("/auth/handoff")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          code: "once",
+          url: "https://app.guiaflow.pro/admin?code=once",
+          expiresInSec: 120,
+        }),
+      };
+    }
+    return { ok: false, status: 403, json: async () => ({ ok: false, error: "forbidden" }) };
+  }, async () => {
+    const handoff = await startAdminHandoff(env);
+    assert.equal(handoff.ok, true);
+    assert.equal(handoff.url, "https://app.guiaflow.pro/admin?code=once");
+    assert.equal(handoff.expiresInSec, 120);
+    assert.equal(seen[0].init.method, "POST");
+    assert.equal(new Headers(seen[0].init.headers).get("authorization"), "Bearer jwt-session");
+  });
+  const denied = await withFetch(async () => ({
+    ok: false,
+    status: 403,
+    json: async () => ({ ok: false, error: "forbidden" }),
+  }), () => startAdminHandoff(env));
+  assert.equal(denied.ok, false);
+  assert.equal(denied.status, 403);
+  const blocked = await withFetch(async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ ok: true, url: "javascript:alert(1)", code: "x" }),
+  }), () => startAdminHandoff(env));
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.url, "");
 });
