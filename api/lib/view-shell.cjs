@@ -88,9 +88,9 @@ function renderViewPage({ id, name, origin, missing, kind }) {
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/27/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/27/css/theme.css" />
-  <link rel="stylesheet" href="/a/27/css/app.css" />
+  <link rel="stylesheet" href="/a/28/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/28/css/theme.css" />
+  <link rel="stylesheet" href="/a/28/css/app.css" />
   <script>window.__GF_SHARE = ${JSON.stringify({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
@@ -107,6 +107,10 @@ function renderViewPage({ id, name, origin, missing, kind }) {
       <div class="canvas-stage" id="canvas-stage">
         <div class="view-share-status" id="view-share-status"${missing ? "" : ""}>
           <p id="view-share-status-text">${missing ? escapeHtml("Este link não está mais disponível.") : "Carregando o tour…"}</p>
+        </div>
+        <div class="view-share-closed" id="view-share-closed" hidden>
+          <h1 id="view-share-closed-title"></h1>
+          <button type="button" class="btn btn-primary" id="view-share-replay" data-i18n="view.replay">Ver tour novamente</button>
         </div>
         <div class="canvas-frame" id="canvas-frame" hidden>
           <img id="canvas-image" alt="" hidden />
@@ -144,8 +148,8 @@ function renderViewPage({ id, name, origin, missing, kind }) {
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/27/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/27/js/viewApp.js"></script>
+  <script src="/a/28/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/28/js/viewApp.js"></script>
 </body>
 </html>
 `;

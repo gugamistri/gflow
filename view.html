@@ -55,9 +55,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/27/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/27/css/theme.css" />
-  <link rel="stylesheet" href="/a/27/css/app.css" />
+  <link rel="stylesheet" href="/a/28/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/28/css/theme.css" />
+  <link rel="stylesheet" href="/a/28/css/app.css" />
 </head>
 <body class="view-share">
   <header class="topbar">
@@ -76,6 +76,10 @@
       <div class="canvas-stage" id="canvas-stage">
         <div class="view-share-status" id="view-share-status">
           <p id="view-share-status-text" data-i18n="view.loading">Carregando o tour…</p>
+        </div>
+        <div class="view-share-closed" id="view-share-closed" hidden>
+          <h1 id="view-share-closed-title"></h1>
+          <button type="button" class="btn btn-primary" id="view-share-replay" data-i18n="view.replay">Ver tour novamente</button>
         </div>
         <div class="canvas-frame" id="canvas-frame" hidden>
           <img id="canvas-image" alt="" hidden />
@@ -113,7 +117,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/27/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/27/js/viewApp.js"></script>
+  <script src="/a/28/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/28/js/viewApp.js"></script>
 </body>
 </html>

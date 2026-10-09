@@ -11,6 +11,8 @@ import {
   parseViewRoute,
   permanentShareEndpoint,
   sameOriginReferrer,
+  sharePageTitle,
+  shareStartIndex,
   sharedPreviewBackTarget,
   tourFromPermanentShare,
 } from "./viewShare.js";
@@ -161,36 +163,93 @@ function tryLeaveSharedPreview() {
   return false;
 }
 
+let player = null;
+let demo = null;
+let touring = false;
+
+function shareTitle(name) {
+  return sharePageTitle(name, t("view.title"));
+}
+
+function applyShareTitle(name) {
+  const label = String(name || "").trim();
+  document.title = shareTitle(label);
+  const titleEl = document.getElementById("topbar-title");
+  if (titleEl && label) titleEl.textContent = label;
+  const closedTitle = document.getElementById("view-share-closed-title");
+  if (closedTitle && label) closedTitle.textContent = label;
+}
+
+function focusShareDocument() {
+  const root = document.body;
+  if (!root) return;
+  if (root.tabIndex < 0) root.tabIndex = -1;
+  const active = document.activeElement;
+  if (active && active !== root && active !== document.documentElement) {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) || active.isContentEditable) return;
+  }
+  root.focus({ preventScroll: true });
+}
+
+function showClosedState() {
+  touring = false;
+  player?.stop?.({ silent: true });
+  document.body.classList.remove("is-presenting");
+  document.getElementById("view-editor")?.classList.remove("is-presenting");
+  const hint = document.getElementById("present-chrome");
+  if (hint) hint.hidden = true;
+  const frame = document.getElementById("canvas-frame");
+  if (frame) frame.hidden = true;
+  const status = document.getElementById("view-share-status");
+  if (status) status.hidden = true;
+  const closed = document.getElementById("view-share-closed");
+  if (closed) closed.hidden = false;
+  focusShareDocument();
+}
+
+function showTouring() {
+  touring = true;
+  const closed = document.getElementById("view-share-closed");
+  if (closed) closed.hidden = true;
+  document.body.classList.add("is-presenting");
+  document.getElementById("view-editor")?.classList.add("is-presenting");
+  document.getElementById("hotspot")?.classList.add("is-previewing");
+  const hint = document.getElementById("present-chrome");
+  if (hint) hint.hidden = false;
+  hideStatus();
+  focusShareDocument();
+}
+
+function exitSharedTour() {
+  if (!touring) return;
+  if (tryLeaveSharedPreview()) return;
+  showClosedState();
+}
+
 function onSharedEscape(event) {
   if (event.key !== "Escape") return;
+  if (!touring) return;
   const action = decideEscape({
     fullscreen: Boolean(fullscreenElement()),
     overlay: Boolean(findPlayerOverlay()),
     back: Boolean(backTarget()),
   });
+  event.preventDefault();
+  event.stopImmediatePropagation();
   if (action === "fullscreen") {
-    event.preventDefault();
-    event.stopImmediatePropagation();
     const exit = document.exitFullscreen || document.webkitExitFullscreen;
     exit?.call(document);
     return;
   }
   if (action === "overlay") {
-    event.preventDefault();
-    event.stopImmediatePropagation();
     closePlayerOverlay(findPlayerOverlay());
     return;
   }
-  if (action === "back") {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    tryLeaveSharedPreview();
-    return;
-  }
-  // why: sem destino, Esc não reinicia o tour nem sai do site
-  event.preventDefault();
-  event.stopImmediatePropagation();
+  exitSharedTour();
 }
+
+// why: Esc tem de chegar mesmo sem foco no cartão e antes do driver
+window.addEventListener("keydown", onSharedEscape, true);
 
 async function boot() {
   initLocale();
@@ -202,13 +261,8 @@ async function boot() {
     document.title = t("view.missing");
     return;
   }
-  if (shareBoot?.name) {
-    document.title = `${shareBoot.name} — GuiaFlow`;
-    const titleEl = document.getElementById("topbar-title");
-    if (titleEl) titleEl.textContent = shareBoot.name;
-  } else {
-    document.title = t("view.title");
-  }
+  if (shareBoot?.name) applyShareTitle(shareBoot.name);
+  else document.title = t("view.title");
 
   const route = viewRoute();
   if (!route) {
@@ -216,7 +270,6 @@ async function boot() {
     return;
   }
 
-  let demo;
   try {
     demo = await loadDemo(route);
   } catch (err) {
@@ -235,38 +288,37 @@ async function boot() {
   ensureNarration(demo);
   applyTheme(demo.theme);
 
-  const title = document.getElementById("topbar-title");
-  if (title) title.textContent = demo.name || t("view.title");
+  applyShareTitle(demo.name || shareBoot?.name || "");
 
-  document.body.classList.add("is-presenting");
-  document.getElementById("view-editor")?.classList.add("is-presenting");
-  document.getElementById("hotspot")?.classList.add("is-previewing");
-  document.getElementById("present-chrome").hidden = false;
-  window.addEventListener("keydown", onSharedEscape, true);
+  // why: o índice do editor no storage não pode abrir o link no passo 2
+  const initialIndex = shareStartIndex(location.search, demo.steps.length);
+  let selectedIndex = initialIndex;
 
-  hideStatus();
+  showTouring();
 
-  let selectedIndex = 0;
-  const canLeave = Boolean(backTarget());
-  const player = createPlayer({
+  player = createPlayer({
     getDemo: () => demo,
     toast,
     getSelectedIndex: () => selectedIndex,
     setSelectedIndex: (i) => {
       selectedIndex = i;
     },
-    // why: sem página anterior, o clique no véu não desmonta o tour
-    allowClose: canLeave,
+    allowClose: true,
+    ignoreAdvanceMs: 700,
     onRequestExit: () => {
-      if (tryLeaveSharedPreview()) return;
-      selectedIndex = 0;
-      player.play({ from: 0, autoplay: true });
+      exitSharedTour();
     },
+  });
+
+  document.getElementById("view-share-replay")?.addEventListener("click", () => {
+    selectedIndex = 0;
+    showTouring();
+    player.play({ from: 0, autoplay: true });
   });
 
   requestAnimationFrame(() => {
     // why: tour publicado assiste sozinho; o 1º áudio retenta no gesto se o browser bloquear
-    player.play({ from: 0, autoplay: true });
+    player.play({ from: initialIndex, autoplay: true });
   });
 }
 

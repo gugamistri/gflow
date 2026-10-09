@@ -6,6 +6,8 @@ import {
   parseViewRoute,
   permanentShareEndpoint,
   sameOriginReferrer,
+  sharePageTitle,
+  shareStartIndex,
   sharedPreviewBackTarget,
   tourFromPermanentShare,
 } from "./viewShare.js";
@@ -56,6 +58,21 @@ test("o payload permanente é o tour, e not_found não vira tour", () => {
   assert.equal(tourFromPermanentShare({ ok: true }).ok, false);
 });
 
+test("o link partilhado começa no passo 1, salvo pedido na URL", () => {
+  assert.equal(shareStartIndex("", 2), 0);
+  assert.equal(shareStartIndex("?outro=1", 2), 0);
+  assert.equal(shareStartIndex("?step=2", 2), 1);
+  assert.equal(shareStartIndex("?passo=1", 2), 0);
+  assert.equal(shareStartIndex("?step=9", 2), 1);
+  assert.equal(shareStartIndex("?step=0", 2), 0);
+  assert.equal(shareStartIndex("?step=abc", 2), 0);
+  const storage = { guiaflowStep: "1", selectedIndex: "1" };
+  assert.equal(shareStartIndex("", 2, storage), 0);
+  assert.equal(sharePageTitle("E2E Pro Test"), "E2E Pro Test — GuiaFlow");
+  assert.equal(sharePageTitle("  "), "GuiaFlow — Tour");
+  assert.equal(sharePageTitle(""), "GuiaFlow — Tour");
+});
+
 test("o endpoint do link permanente aponta para /api/shares", () => {
   assert.equal(
     permanentShareEndpoint("https://app.guiaflow.pro/", "slug-permanente"),
@@ -63,11 +80,11 @@ test("o endpoint do link permanente aponta para /api/shares", () => {
   );
 });
 
-test("Esc sai do ecrã cheio, fecha painel, volta, ou não faz nada", () => {
+test("Esc sai do ecrã cheio, fecha painel, volta, ou fecha o tour", () => {
   assert.equal(decideEscape({ fullscreen: true, overlay: true, back: true }), "fullscreen");
   assert.equal(decideEscape({ overlay: true, back: true }), "overlay");
   assert.equal(decideEscape({ back: true }), "back");
-  assert.equal(decideEscape({}), "noop");
+  assert.equal(decideEscape({}), "close");
   assert.equal(sameOriginReferrer("https://guiaflow.pro/editor", "https://guiaflow.pro"), true);
   assert.equal(sameOriginReferrer("https://example.com/", "https://guiaflow.pro"), false);
   assert.equal(
@@ -101,9 +118,11 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo — GuiaFlow"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/27\/js\/viewApp\.js/);
+  assert.match(html, /a\/28\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
+  assert.match(html, /id="view-share-replay"/);
+  assert.match(html, /Ver tour novamente/);
   assert.equal(html.includes("7 dias"), false);
   assert.equal(html.includes("expiresNote"), false);
   assert.equal(html.includes("recomeçar"), false);
