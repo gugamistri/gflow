@@ -862,7 +862,7 @@ function paintUpgradeCopy() {
       const item = list.querySelector(`[data-feature="${id}"]`);
       if (item) list.appendChild(item);
     }
-    const highlight = upgradeFeature ? order[0] : "";
+    const highlight = featured ? order[0] : "";
     for (const item of list.querySelectorAll("[data-feature]")) {
       item.classList.toggle("is-highlight", item.dataset.feature === highlight);
     }
