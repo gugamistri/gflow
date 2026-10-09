@@ -69,9 +69,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/29/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/29/css/theme.css" />
-  <link rel="stylesheet" href="a/29/css/app.css" />
+  <link rel="stylesheet" href="a/30/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/30/css/theme.css" />
+  <link rel="stylesheet" href="a/30/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -315,56 +315,43 @@
           <span data-i18n="topbar.capture">Capturar</span>
         </button>
         <details class="export-panel">
-          <summary class="btn-icon" aria-label="Compartilhar" title="Compartilhar" data-i18n-aria="topbar.share" data-i18n-title="topbar.share">
+          <summary class="btn-icon share-menu" aria-label="Compartilhar" title="Compartilhar" data-i18n-aria="topbar.share" data-i18n-title="topbar.share">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
+            <span class="share-stale-dot" id="share-stale-dot" hidden></span>
           </summary>
           <div class="export-panel-body">
-            <p class="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
+            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
             <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Preview temporário</strong>
-              <span data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
+              <strong data-i18n="share.linkTitle">Link</strong>
+              <span id="share-publish-desc" data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
             </button>
             <div class="share-link-actions" id="share-link-actions" hidden>
               <div class="share-link-meta">
-                <strong data-i18n="share.linkTitle">Preview temporário</strong>
-                <span data-i18n="share.linkReady">Link publicado</span>
+                <strong>
+                  <span data-i18n="share.linkTitle">Link</span>
+                  <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
+                </strong>
+                <span id="share-link-status" data-i18n="share.updatedNow">Atualizado agora</span>
               </div>
+              <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link" data-i18n-aria="share.linkTitle" />
               <div class="share-link-row">
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
+                <button type="button" class="btn btn-sm" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
                   <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                </button>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-update" title="Atualizar" aria-label="Atualizar" data-i18n-title="share.update" data-i18n-aria="share.update">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
+                  <span data-i18n="share.copy">Copiar</span>
                 </button>
                 <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
                   <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
                 </button>
               </div>
             </div>
-            <div id="cloud-share-block" class="cloud-share-block" hidden>
-              <div id="cloud-share-guest" class="cloud-share-guest" hidden>
-                <p data-i18n="share.cloud.needAccount">Entre para publicar um link permanente.</p>
-                <button type="button" class="btn btn-sm" id="btn-cloud-share-signin" data-i18n="billing.subscribe">Assinar Pro</button>
-              </div>
-              <button type="button" class="export-option" id="btn-cloud-share" hidden>
-                <strong>
-                  <span data-i18n="share.cloud.title">Link permanente</span>
-                  <span class="pro-badge" id="cloud-share-badge" hidden>
-                    <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                    <span data-i18n="billing.badge">Pro</span>
-                  </span>
-                </strong>
-                <span data-i18n="share.cloud.desc">Publicar link permanente</span>
-              </button>
-              <div class="cloud-share-result" id="cloud-share-actions" hidden>
-                <p class="cloud-share-heading" data-i18n="share.cloud.title">Link permanente</p>
-                <input id="cloud-share-url" type="text" readonly value="" data-i18n-aria="share.cloud.title" aria-label="Link permanente" />
-                <button type="button" class="btn btn-sm" id="btn-cloud-copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                  <span data-i18n="share.copy">Copiar</span>
-                </button>
-              </div>
-            </div>
+            <button type="button" id="cloud-share-block" class="share-pro-upsell" hidden>
+              <span class="pro-badge" id="cloud-share-badge">
+                <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                <span data-i18n="billing.badge">Pro</span>
+              </span>
+              <span data-i18n="share.upsell">Link que não expira</span>
+            </button>
             <button type="button" class="export-option" id="btn-export-html">
               <strong data-i18n="export.htmlTitle">HTML navegável</strong>
               <span data-i18n="export.htmlDesc">Tour em um arquivo para percorrer os passos ou assistir no navegador.</span>
@@ -1288,7 +1275,7 @@
     </symbol>
   </svg>
 
-  <script src="a/29/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/29/js/app.js"></script>
+  <script src="a/30/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/30/js/app.js"></script>
 </body>
 </html>
