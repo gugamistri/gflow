@@ -56,10 +56,12 @@ import {
   hashSharePayload,
   permanentPublicUrl,
   permanentSlug,
+  publishedPayloadFromShare,
   shareBaselineHash,
   shareFreshness,
   shareRecordIsStale,
 } from "./shareLink.js";
+import { permanentShareEndpoint } from "./viewShare.js";
 import {
   initLocale,
   applyI18n,
@@ -89,7 +91,9 @@ import {
   endCloudSession,
   establishCloudSession,
   exchangeCloudAuthCode,
+  PUBLISHED_CLOUD_BASE,
   getCloudAccount,
+  getCloudBaseUrl,
   getCloudFlags,
   isCloudEnabled,
   loginWithPassword,
@@ -589,15 +593,49 @@ function displayedShareUrl(record) {
   return record.id ? shareViewUrl(record.id) : "";
 }
 
+const shareServerChecked = new Set();
+const shareServerPending = new Set();
+
+function rememberShareHash(record, hash) {
+  if (!record || !hash || record.payloadHash === hash) return false;
+  record.payloadHash = hash;
+  saveDirty = true;
+  schedulePersist();
+  return true;
+}
+
+function rememberLocalShareBaseline(record) {
+  return rememberShareHash(record, shareBaselineHash(record, project));
+}
+
+async function reconcilePublishedBaseline(record) {
+  const slug = permanentSlug(record);
+  if (!slug || shareServerChecked.has(slug) || shareServerPending.has(slug)) return;
+  shareServerPending.add(slug);
+  let data = null;
+  try {
+    const endpoint = permanentShareEndpoint(getCloudBaseUrl() || PUBLISHED_CLOUD_BASE, slug);
+    const res = await fetch(endpoint);
+    data = await res.json().catch(() => null);
+    if (!res.ok && !data?.payload) data = null;
+  } catch {
+    data = null;
+  } finally {
+    shareServerPending.delete(slug);
+    shareServerChecked.add(slug);
+  }
+  const published = publishedPayloadFromShare(data);
+  const next = published ? hashSharePayload(published) : shareBaselineHash(record, project);
+  if (rememberShareHash(record, next)) paintShareMenu();
+}
+
 function paintShareMenu() {
   const pro = viewerIsPro();
   const record = activeShareRecord();
-  const baseline = shareBaselineHash(record, project);
-  if (baseline && record) {
-    // why: link publicado antes do hash não está desatualizado; a edição seguinte é que conta
-    record.payloadHash = baseline;
-    saveDirty = true;
-    schedulePersist();
+  if (record && pro && permanentSlug(record)) {
+    void reconcilePublishedBaseline(record);
+  } else if (record) {
+    rememberLocalShareBaseline(record);
   }
   const hasLink = Boolean(record);
   const stale = Boolean(record && project && shareRecordIsStale(record, project));
