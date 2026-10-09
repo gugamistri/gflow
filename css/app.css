@@ -1488,11 +1488,14 @@ textarea {
   flex: 0 0 auto;
 }
 
-.upgrade-modal {
+dialog.upgrade-modal {
   width: min(440px, calc(100vw - 24px));
   max-width: 440px;
-  max-height: min(720px, calc(100dvh - 24px));
+  height: fit-content;
+  max-height: min(720px, calc(100dvh - 16px));
+  margin: auto;
   overflow: auto;
+  overscroll-behavior: contain;
   border: 0;
   padding: 0;
 }
@@ -1611,9 +1614,10 @@ textarea {
   align-content: center;
   min-height: 96px;
   padding: 12px;
-  border: 1px solid var(--ns-border);
+  border: 2px solid var(--ns-border);
   border-radius: 12px;
   background: var(--ns-input-bg);
+  box-shadow: none;
   cursor: pointer;
   color: var(--ns-ink);
 }
@@ -1629,12 +1633,16 @@ textarea {
 .upgrade-interval:has(input:checked) {
   border-color: var(--ns-accent);
   background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
-  box-shadow: inset 0 0 0 1px var(--ns-accent);
+  box-shadow: none;
 }
 
 .upgrade-interval:focus-within {
-  outline: 2px solid var(--ns-accent);
-  outline-offset: 2px;
+  outline: none;
+}
+
+.upgrade-interval:has(input:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--ns-accent) 45%, transparent);
+  outline-offset: 3px;
 }
 
 .paywall-interval-name {
@@ -1650,15 +1658,40 @@ textarea {
   line-height: 1.1;
 }
 
-.paywall-cadence,
-.upgrade-save {
+.paywall-cadence {
   font-size: 0.75rem;
   font-weight: 650;
   color: var(--ns-muted);
+  line-height: 1.3;
 }
 
-.upgrade-interval:has(input:checked) .upgrade-save {
-  color: var(--ns-ink);
+.paywall-free {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  max-width: calc(100% - 16px);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-accent) 16%, var(--ns-panel));
+  color: var(--ns-accent);
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.paywall-pay-note {
+  margin: -6px 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--ns-muted);
+}
+
+.paywall-pay-note[hidden] {
+  display: none;
 }
 
 .paywall-cta {
@@ -1677,7 +1710,9 @@ textarea {
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 8px 8px;
+  margin-bottom: 2px;
+  scroll-margin-bottom: 12px;
 }
 
 .paywall-login:hover,
@@ -1761,9 +1796,9 @@ body.is-presenting .local-save {
 }
 
 @media (max-width: 720px) {
-  .upgrade-modal {
+  dialog.upgrade-modal {
     width: calc(100vw - 16px);
-    max-height: calc(100dvh - 16px);
+    max-height: 100dvh;
   }
 
   .upgrade-dialog {

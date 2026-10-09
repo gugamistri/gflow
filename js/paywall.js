@@ -42,6 +42,7 @@ export function paywallOffer(currency) {
   const prices = PAYWALL_PRICES[code];
   const fullYear = prices.month * 12;
   const saved = fullYear - prices.year;
+  const freeMonths = Math.round(12 - prices.year / prices.month);
   return {
     currency: code,
     month: prices.month,
@@ -50,6 +51,8 @@ export function paywallOffer(currency) {
     saved,
     percent: Math.round((saved / fullYear) * 100),
     months: Math.floor(saved / prices.month),
+    freeMonths,
+    paidMonths: 12 - freeMonths,
   };
 }
 

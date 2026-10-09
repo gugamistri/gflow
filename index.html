@@ -69,9 +69,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/33/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/33/css/theme.css" />
-  <link rel="stylesheet" href="a/33/css/app.css" />
+  <link rel="stylesheet" href="a/34/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/34/css/theme.css" />
+  <link rel="stylesheet" href="a/34/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -865,22 +865,23 @@
       <fieldset class="upgrade-intervals">
         <legend class="visually-hidden" data-i18n="billing.intervalAria">Periodicidade</legend>
         <label class="upgrade-interval">
-          <input type="radio" name="billing-interval" value="month" />
+          <input type="radio" name="billing-interval" value="month" checked />
           <span class="paywall-interval-name" data-i18n="billing.monthly">Mensal</span>
-          <strong class="paywall-price" data-price="month"></strong>
-          <span class="paywall-cadence" data-i18n="billing.perMonth">por mês</span>
+          <strong class="paywall-price" id="paywall-month-price"></strong>
+          <span class="paywall-cadence" id="paywall-month-note"></span>
         </label>
-        <label class="upgrade-interval">
-          <input type="radio" name="billing-interval" value="year" checked />
+        <label class="upgrade-interval" id="paywall-year-card">
+          <input type="radio" name="billing-interval" value="year" />
+          <span class="paywall-free" id="paywall-free"></span>
           <span class="paywall-interval-name" data-i18n="billing.annual">Anual</span>
-          <strong class="paywall-price" data-price="year"></strong>
-          <span class="paywall-cadence" id="paywall-equiv"></span>
-          <span class="upgrade-save" id="paywall-save"></span>
+          <strong class="paywall-price" id="paywall-year-price"></strong>
+          <span class="paywall-cadence" id="paywall-year-note"></span>
         </label>
       </fieldset>
       <p id="upgrade-status" class="cloud-login-status" role="status"></p>
-      <button type="submit" class="btn btn-primary paywall-cta" id="btn-upgrade-subscribe" data-i18n="billing.subscribe">Assinar Pro</button>
-      <button type="button" class="paywall-login" id="btn-upgrade-login" data-i18n="billing.already">Já assino? Entrar</button>
+      <button type="submit" class="btn btn-primary paywall-cta" id="btn-upgrade-subscribe" data-i18n="billing.subscribeMonthly">Assinar Pro mensal</button>
+      <p class="paywall-pay-note" id="paywall-pay-note" hidden></p>
+      <button type="button" class="paywall-login" id="btn-upgrade-login" data-i18n="billing.already">Já é assinante? Entrar</button>
     </form>
   </dialog>
 
@@ -1275,7 +1276,7 @@
     </symbol>
   </svg>
 
-  <script src="a/33/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/33/js/app.js"></script>
+  <script src="a/34/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/34/js/app.js"></script>
 </body>
 </html>

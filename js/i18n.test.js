@@ -96,7 +96,17 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(catalogs.pt["billing.monthly"], "Mensal");
   assert.equal(catalogs.pt["billing.annual"], "Anual");
   assert.equal(catalogs.pt["billing.savePercent"], "economize {percent}%");
+  assert.equal(catalogs.pt["billing.already"], "Já é assinante? Entrar");
+  for (const [key, value] of Object.entries(catalogs.pt)) {
+    assert.equal(/Já assino/.test(String(value)), false, key);
+  }
+  assert.equal(catalogs.pt["billing.billedMonth"], "cobrado todo mês");
+  assert.equal(catalogs.pt["billing.billedYear"], "cobrado {price} por ano");
+  assert.equal(catalogs.pt["billing.freeMonths"], "{n} meses grátis");
+  assert.equal(catalogs.pt["billing.payMonths"], "Pague {paid} meses, use {total}");
   assert.equal(catalogs.pt["billing.subscribe"], "Assinar Pro");
+  assert.equal(catalogs.pt["billing.subscribeMonthly"], "Assinar Pro mensal");
+  assert.equal(catalogs.pt["billing.subscribeAnnual"], "Assinar Pro anual");
   assert.equal(catalogs.pt["account.subscribeOrSignIn"], "Assinar / Entrar");
   assert.equal(catalogs.pt["billing.planCloud"], "GuiaFlow\u00a0Pro");
   assert.equal(catalogs.pt["billing.badge"], "Pro");
@@ -126,8 +136,11 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(html.includes(">Cloud<"), false);
   assert.match(dialog, /Mensal/);
   assert.match(dialog, /Anual/);
-  assert.match(dialog, /Assinar Pro/);
-  assert.match(dialog, /Já assino\? Entrar/);
+  assert.match(dialog, /Assinar Pro mensal/);
+  assert.match(dialog, /Já é assinante\? Entrar/);
+  assert.equal(/Já assino/.test(dialog), false);
+  assert.match(dialog, /name="billing-interval" value="month" checked/);
+  assert.equal(/name="billing-interval" value="year" checked/.test(dialog), false);
   assert.match(dialog, /paywall-benefits/);
   assert.equal(/grátis|gratis/i.test(dialog), false);
   assert.match(html, /Assinar \/ Entrar/);
