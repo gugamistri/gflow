@@ -4,7 +4,6 @@
 import { t } from "./i18n.js";
 import {
   cloudFetch,
-  getCloudBaseUrl,
   getCloudFlags,
   isCloudEnabled,
 } from "./cloudConfig.js";
@@ -13,6 +12,7 @@ import {
   buildShareSnapshot,
   shareViewUrl,
 } from "./shareSnapshot.js";
+import { permanentPublicUrl, permanentSlug, shouldRecreatePermanent } from "./shareLink.js";
 
 const BLOB_API = "https://vercel.com/api/blob";
 const BLOB_API_VERSION = "12";
@@ -195,28 +195,52 @@ function readPermanentPayload(data) {
   const body = data && typeof data === "object" ? data : {};
   const nested = body.share && typeof body.share === "object" ? body.share : null;
   const url = String(nested?.url || body.url || "").trim();
-  const id = String(nested?.id || body.id || nested?.slug || body.slug || "").trim();
-  return { url, id };
+  const slug = String(nested?.slug || body.slug || "").trim();
+  const id = String(nested?.id || body.id || slug || "").trim();
+  const updatedAt = Date.parse(nested?.updatedAt || body.updatedAt || "");
+  return { url, id, slug, updatedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now() };
 }
 
-function absoluteCloudUrl(url, env) {
-  const raw = String(url || "").trim();
-  if (!raw) return "";
-  try {
-    // why: https://guiaflow.pro/p/… já é absoluto e fica como a API mandou
-    if (/^https?:\/\//i.test(raw)) return new URL(raw).toString();
-    const base = getCloudBaseUrl(env);
-    return new URL(raw, base ? `${base}/` : undefined).toString();
-  } catch {
-    return raw;
+function permanentRequestBody(project, snapshot) {
+  const title = String(project?.name || snapshot?.name || "").trim().slice(0, 200);
+  const body = { tour: snapshot };
+  // why: no POST o título é obrigatório; no PUT um título vazio deixaria o nome atual
+  if (title) body.title = title;
+  return JSON.stringify(body);
+}
+
+function permanentFailure(result) {
+  const err = new Error(permanentShareErrorMessage(result));
+  err.code = result.error || result.reason || "share_failed";
+  err.status = result.status;
+  const body = result.data && typeof result.data === "object" ? result.data : {};
+  err.feature = typeof body.feature === "string" ? body.feature : "";
+  err.plan = typeof body.plan === "string" ? body.plan : "";
+  return err;
+}
+
+function permanentShareFromResult(result) {
+  const payload = readPermanentPayload(result.data);
+  const slug = permanentSlug({ url: payload.url, slug: payload.slug, id: payload.id });
+  const url = permanentPublicUrl({ url: payload.url, slug: payload.slug, id: payload.id });
+  if (!url) {
+    const err = new Error(t("share.cloud.generic"));
+    err.code = "share_failed";
+    throw err;
   }
+  return {
+    id: slug || payload.id,
+    slug: slug || payload.id,
+    url,
+    updatedAt: payload.updatedAt || Date.now(),
+  };
 }
 
 /**
- * Publica um link permanente em POST /shares.
- * why: o preview de 7 dias continua em publishShareLink; este caminho é opcional.
+ * Publica ou atualiza o link permanente.
+ * why: o primeiro envio é POST /shares; republicar é PUT /shares/:slug e, se o slug já não for nosso, cria outro.
  */
-export async function publishPermanentShare(project, { onProgress, env, buildSnapshot = buildShareSnapshot } = {}) {
+export async function publishPermanentShare(project, { onProgress, env, slug = "", buildSnapshot = buildShareSnapshot } = {}) {
   if (!isCloudEnabled(env) || !getCloudFlags(env).permanentShare) {
     const err = new Error(permanentShareErrorMessage({ reason: "cloud-not-configured" }));
     err.code = "cloud-not-configured";
@@ -231,38 +255,16 @@ export async function publishPermanentShare(project, { onProgress, env, buildSna
     throw err;
   }
   onProgress?.(t("share.cloud.progress"));
-  const result = await cloudFetch(
-    "/shares",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        title: String(project?.name || snapshot?.name || "").slice(0, 200),
-        tour: snapshot,
-      }),
-    },
-    env
-  );
-  if (!result.ok) {
-    const err = new Error(permanentShareErrorMessage(result));
-    err.code = result.error || result.reason || "share_failed";
-    err.status = result.status;
-    const body = result.data && typeof result.data === "object" ? result.data : {};
-    err.feature = typeof body.feature === "string" ? body.feature : "";
-    err.plan = typeof body.plan === "string" ? body.plan : "";
-    throw err;
+  const body = permanentRequestBody(project, snapshot);
+  const current = String(slug || "").trim();
+  if (current) {
+    const put = await cloudFetch(`/shares/${encodeURIComponent(current)}`, { method: "PUT", body }, env);
+    if (put.ok) return permanentShareFromResult(put);
+    if (!shouldRecreatePermanent(put)) throw permanentFailure(put);
   }
-  const payload = readPermanentPayload(result.data);
-  const url = absoluteCloudUrl(payload.url, env);
-  if (!url) {
-    const err = new Error(t("share.cloud.generic"));
-    err.code = "share_failed";
-    throw err;
-  }
-  return {
-    id: payload.id,
-    url,
-    updatedAt: Date.now(),
-  };
+  const result = await cloudFetch("/shares", { method: "POST", body }, env);
+  if (!result.ok) throw permanentFailure(result);
+  return permanentShareFromResult(result);
 }
 
 function copyWithTextarea(text) {
