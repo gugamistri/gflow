@@ -51,6 +51,62 @@ test("meses grátis saem do preço anual dividido pelo mensal", () => {
   assert.equal(paywallOffer("usd").paidMonths, 8);
 });
 
+function cssRules(source) {
+  const text = source.replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [];
+  let i = 0;
+  while (i < text.length) {
+    const open = text.indexOf("{", i);
+    if (open < 0) break;
+    let depth = 1;
+    let j = open + 1;
+    while (j < text.length && depth > 0) {
+      if (text[j] === "{") depth += 1;
+      else if (text[j] === "}") depth -= 1;
+      j += 1;
+    }
+    const selector = text.slice(i, open).trim();
+    const body = text.slice(open + 1, j - 1);
+    if (selector.startsWith("@")) {
+      rules.push(...cssRules(body));
+    } else if (selector) {
+      rules.push({ selector, body });
+    }
+    i = j;
+  }
+  return rules;
+}
+
+test("o diálogo Pro fica oculto até abrir, e os outros modais também", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+  for (const id of ["modal-upgrade", "modal-subscription", "modal-account"]) {
+    const at = html.indexOf(`id="${id}"`);
+    const tagStart = html.lastIndexOf("<dialog", at);
+    const tag = html.slice(tagStart, html.indexOf(">", tagStart));
+    assert.equal(/\sopen(\s|=|$)/.test(tag), false, id);
+  }
+  const shareAt = html.indexOf('class="export-panel"');
+  const shareTag = html.slice(html.lastIndexOf("<details", shareAt), html.indexOf(">", shareAt));
+  assert.equal(/\sopen(\s|=|$)/.test(shareTag), false);
+
+  const rules = cssRules(css);
+  const closed = rules.find((rule) => rule.selector.replace(/\s/g, "") === "dialog:not([open])");
+  assert.ok(closed, "falta a regra que esconde o diálogo fechado");
+  assert.match(closed.body, /display:\s*none\s*!important/);
+
+  const openUpgrade = rules.find((rule) => rule.selector.replace(/\s/g, "") === "dialog.upgrade-modal[open]");
+  assert.ok(openUpgrade);
+  assert.match(openUpgrade.body, /display:\s*flex/);
+
+  for (const rule of rules) {
+    const selector = rule.selector.replace(/\s/g, "");
+    if (!/(^|,)dialog(?![-\w])/.test(selector)) continue;
+    if (selector.includes("[open]") && !selector.includes(":not([open])")) continue;
+    assert.equal(/display\s*:\s*(flex|block|grid|inline)/.test(rule.body), false, rule.selector);
+  }
+});
+
 test("o diálogo começa em Mensal", () => {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const start = html.indexOf('id="modal-upgrade"');

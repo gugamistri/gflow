@@ -8,6 +8,11 @@
   display: none !important;
 }
 
+/* why: display no seletor do diálogo ganha do display:none do UA e vaza o modal fechado. */
+dialog:not([open]) {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -1488,8 +1493,11 @@ textarea {
   flex: 0 0 auto;
 }
 
-dialog.upgrade-modal {
+dialog.upgrade-modal[open] {
   display: flex;
+}
+
+dialog.upgrade-modal {
   flex-direction: column;
   width: min(440px, calc(100vw - 24px));
   max-width: 440px;
