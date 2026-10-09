@@ -60,14 +60,78 @@ test("o diálogo de entrada não mostra o host da API", () => {
   assert.equal(/api\.guiaflow\.pro/i.test(panel), false);
   assert.equal(/app\.guiaflow\.pro/i.test(panel), false);
   assert.equal(panel.includes("cloud-open-site"), false);
-  assert.match(panel, /link de confirmação do GuiaFlow/);
+  assert.match(panel, /Entre com email e senha/);
+  assert.match(panel, /id="cloud-email"/);
+  assert.match(panel, /id="cloud-password"/);
+  assert.match(panel, /id="btn-cloud-password"/);
+  assert.ok(panel.indexOf('id="cloud-password"') < panel.indexOf('id="btn-cloud-magic"'));
+  assert.ok(panel.indexOf('id="btn-cloud-password"') < panel.indexOf("cloud-login-or"));
+  assert.match(panel, /Entrar sem senha/);
+  assert.match(panel, />ou</);
+  assert.match(panel, /Também cria a conta/);
+  assert.equal(panel.includes("cloud-password-fallback"), false);
+  assert.equal(/nuvem/i.test(panel), false);
   assert.match(panel, /O link abriu noutro aparelho/);
+  assert.match(catalogs.pt["share.cloud.sent"], /Enviamos um link para \{email\}\./);
+  assert.match(catalogs.pt["share.cloud.badLogin"], /Entrar sem senha/);
+  assert.match(catalogs.es["share.cloud.send"], /sin contraseña/i);
+  assert.match(catalogs.en["share.cloud.send"], /without a password/i);
   const shareStart = html.indexOf('id="cloud-share-block"');
   const shareEnd = html.indexOf('id="btn-export-html"');
   const share = html.slice(shareStart, shareEnd);
   assert.equal(/nuvem|nube|Conectado como|Sair da nuvem/i.test(share), false);
   assert.equal(share.includes("cloud-account"), false);
   assert.equal(share.includes('id="cloud-login"'), false);
+  assert.match(share, /id="cloud-share-badge"/);
+});
+
+test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual", () => {
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const [key, value] of Object.entries(catalogs[loc])) {
+      if (!key.startsWith("billing.")) continue;
+      assert.equal(/nuvem|nube/i.test(value), false, `${loc} ${key}: ${value}`);
+      assert.equal(/R\$|\$\d|€/.test(value), false, `${loc} ${key}`);
+    }
+  }
+  assert.equal(catalogs.pt["billing.monthly"], "Mensal");
+  assert.equal(catalogs.pt["billing.annual"], "Anual");
+  assert.equal(catalogs.pt["billing.savePercent"], "economize {percent}%");
+  assert.equal(catalogs.pt["billing.subscribe"], "Assinar Pro");
+  assert.equal(catalogs.pt["account.subscribeOrSignIn"], "Assinar / Entrar");
+  assert.equal(catalogs.pt["billing.planCloud"], "GuiaFlow\u00a0Pro");
+  assert.equal(catalogs.pt["billing.badge"], "Pro");
+  assert.equal(catalogs.pt["billing.title"], "GuiaFlow\u00a0Pro");
+  assert.equal(catalogs.pt["billing.subscribeMenu"], "Assinar Pro");
+  assert.equal(catalogs.pt["billing.emailMissing"], "Esse e-mail ainda não tem GuiaFlow\u00a0Pro.");
+  assert.equal(catalogs.pt["billing.localSave"], "Salvo só neste navegador");
+  assert.match(catalogs.pt["billing.localSaveTip"], /cache/);
+  assert.equal(catalogs.pt["billing.hostedAiTitle"], "Gerar texto com IA faz parte do GuiaFlow\u00a0Pro");
+  assert.equal(catalogs.pt["billing.ttsTitle"], "Gerar áudio com IA faz parte do GuiaFlow\u00a0Pro");
+  assert.equal(/GuiaFlow Cloud/.test(catalogs.pt["billing.message"]), false);
+  assert.equal(/grátis|gratis|free plan/i.test(catalogs.pt["billing.heroLead"]), false);
+  assert.equal(/grátis|gratis/i.test(catalogs.pt["export.removeMarkDesc"]), false);
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="modal-upgrade"');
+  const end = html.indexOf("</dialog>", start);
+  const dialog = html.slice(start, end);
+  assert.ok(start > 0 && end > start);
+  assert.equal(/nuvem/i.test(dialog), false);
+  assert.match(dialog, /GuiaFlow(?:&nbsp;|\s)Pro/);
+  assert.equal(dialog.includes("GuiaFlow Cloud"), false);
+  assert.match(html, /id="i-crown"/);
+  assert.match(html, /id="pro-badge-copy"/);
+  assert.match(html, /id="pro-badge-audio"/);
+  assert.match(html, /id="btn-export-unbrand"/);
+  assert.match(html, /Remover marca GuiaFlow/);
+  assert.equal(html.includes(">Cloud<"), false);
+  assert.match(dialog, /Mensal/);
+  assert.match(dialog, /Anual/);
+  assert.match(dialog, /Assinar Pro/);
+  assert.match(dialog, /Já assino\? Entrar/);
+  assert.match(dialog, /paywall-benefits/);
+  assert.equal(/grátis|gratis/i.test(dialog), false);
+  assert.match(html, /Assinar \/ Entrar/);
+  assert.match(html, /Salvo só neste navegador/);
 });
 
 test("catálogos compartilham as mesmas chaves", () => {

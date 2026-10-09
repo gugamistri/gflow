@@ -58,7 +58,7 @@ node --test extension/lib/*.test.js scripts/*.test.js
 
 ## Cloud
 
-O editor e o player deste repositório continuam MIT e gratuitos. IA e narração seguem com a sua própria chave. O GuiaFlow Cloud é um companheiro privado opcional, noutro código. Sem URL base, nada é chamado. Com URL base, o editor só publica o link permanente. Detalhes em [`docs/CLOUD.md`](docs/CLOUD.md).
+O editor e o player deste repositório continuam MIT e gratuitos. IA e narração com a sua própria chave continuam livres. GuiaFlow Pro é o plano pago opcional, noutro código. Sem URL base, nada é chamado. Com URL base, o editor publica o link permanente e oferece texto, áudio e vídeo sem marca para quem assina. Detalhes em [`docs/CLOUD.md`](docs/CLOUD.md).
 
 ## Licença
 

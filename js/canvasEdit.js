@@ -94,3 +94,21 @@ function normalizeRect(rect) {
     height: Math.max(0, Number(rect?.height) || 0),
   };
 }
+
+/**
+ * Deslocamento para o campo editável ficar dentro do visualViewport (acima do teclado).
+ * Medir o campo depois de zerar o deslocamento anterior — o retorno já é o total, não um delta acumulado.
+ * @param {{ top?: number, bottom?: number }} rect
+ * @param {{ offsetTop?: number, height?: number }} viewport
+ */
+export function keyboardInsetShift(rect, viewport) {
+  const offsetTop = Number(viewport?.offsetTop) || 0;
+  const height = Number(viewport?.height) || 0;
+  const topLimit = offsetTop + 8;
+  const bottomLimit = offsetTop + height - 12;
+  const fieldTop = Number(rect?.top) || 0;
+  const fieldBottom = Number(rect?.bottom) || 0;
+  if (fieldBottom > bottomLimit) return fieldBottom - bottomLimit;
+  if (fieldTop < topLimit) return 0;
+  return 0;
+}
