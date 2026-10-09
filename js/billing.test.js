@@ -17,6 +17,7 @@ import {
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
+  subscriptionConflictKey,
   subscriptionScreen,
 } from "./billing.js";
 
@@ -328,7 +329,7 @@ const MONTHLY = {
   status: "active",
   interval: "month",
   currency: "brl",
-  amount: 4500,
+  amount: 45,
   currentPeriodEnd: "2026-11-09T15:00:00.000Z",
   cancelAtPeriodEnd: false,
   compUntil: null,
@@ -350,13 +351,14 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(monthly.canResume, false);
   assert.equal(monthly.showPortal, true);
 
-  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 34800 }, "pt");
+  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 348 }, "pt");
   assert.equal(annual.planKey, "billing.subPlanAnnual");
   assert.equal(annual.price, "R$348");
   assert.equal(annual.priceKey, "billing.yearAmount");
 
-  const usd = subscriptionScreen({ ...MONTHLY, currency: "usd", amount: 900 }, "en");
+  const usd = subscriptionScreen({ ...MONTHLY, currency: "usd", amount: 9 }, "en");
   assert.equal(usd.price, "US$9");
+  assert.equal(usd.price.includes("0,09"), false);
 
   const scheduled = subscriptionScreen(
     { ...MONTHLY, cancelAtPeriodEnd: true, canCancel: false, canResume: true },
@@ -390,13 +392,19 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(comp.showPortal, false);
   assert.equal(comp.price, "");
 
-  const forever = subscriptionScreen({ plan: "pro", planSource: "superadmin", compUntil: null, canCancel: true }, "pt");
+  const forever = subscriptionScreen(
+    { plan: "pro", planSource: "superadmin", status: "active", compUntil: null, canCancel: false },
+    "pt"
+  );
   assert.equal(forever.kind, "courtesy");
+  assert.equal(forever.planKey, "billing.planComp");
   assert.equal(forever.whenKey, "billing.subNoEnd");
+  assert.equal(forever.whenDate, "");
   assert.equal(forever.canCancel, false);
+  assert.equal(forever.showPortal, false);
 
   assert.equal(subscriptionScreen({ plan: "none", planSource: null }, "pt").kind, "none");
-  assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 4500);
+  assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 45);
   assert.equal(parseSubscription({ amount: "nope" }).amount, null);
 });
 
@@ -436,7 +444,7 @@ test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
   const scheduled = { ...MONTHLY, cancelAtPeriodEnd: true, canCancel: false, canResume: true };
   const resumed = { ...MONTHLY, cancelAtPeriodEnd: false, canCancel: true, canResume: false };
   await withFetch(async (url, init) => {
-    seen.push({ url: String(url), method: init?.method });
+    seen.push({ url: String(url), method: init?.method, body: init?.body });
     const href = String(url);
     if (href.endsWith("/billing/subscription")) {
       return { ok: true, status: 200, json: async () => MONTHLY };
@@ -452,7 +460,7 @@ test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
     const loaded = await fetchSubscription(env);
     assert.equal(loaded.ok, true);
     assert.equal(loaded.subscription.interval, "month");
-    assert.equal(loaded.subscription.amount, 4500);
+    assert.equal(loaded.subscription.amount, 45);
     assert.equal(seen[0].url, "https://app.guiaflow.pro/billing/subscription");
     assert.equal(seen[0].method, "GET");
 
@@ -460,11 +468,37 @@ test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
     assert.equal(canceled.subscription.cancelAtPeriodEnd, true);
     assert.equal(seen[1].url, "https://app.guiaflow.pro/billing/cancel");
     assert.equal(seen[1].method, "POST");
+    assert.equal(seen[1].body, undefined);
 
     const kept = await resumeSubscription(env);
     assert.equal(kept.subscription.canResume, false);
     assert.equal(kept.subscription.canCancel, true);
     assert.equal(seen[2].url, "https://app.guiaflow.pro/billing/resume");
     assert.equal(seen[2].method, "POST");
+    assert.equal(seen[2].body, undefined);
+  });
+
+  await withFetch(async (url) => {
+    const href = String(url);
+    if (href.endsWith("/billing/cancel")) {
+      return { ok: false, status: 409, json: async () => ({ ok: false, error: "cancel_unavailable" }) };
+    }
+    if (href.endsWith("/billing/resume")) {
+      return { ok: false, status: 409, json: async () => ({ ok: false, code: "resume_unavailable" }) };
+    }
+    return { ok: false, status: 500, json: async () => ({}) };
+  }, async () => {
+    const denied = await cancelSubscription(env);
+    assert.equal(denied.ok, false);
+    assert.equal(denied.status, 409);
+    assert.equal(denied.error, "cancel_unavailable");
+    assert.equal(denied.subscription, null);
+    assert.equal(subscriptionConflictKey(denied), "billing.subCancelUnavailable");
+
+    const blocked = await resumeSubscription(env);
+    assert.equal(blocked.status, 409);
+    assert.equal(blocked.error, "resume_unavailable");
+    assert.equal(subscriptionConflictKey(blocked), "billing.subResumeUnavailable");
+    assert.equal(subscriptionConflictKey({ status: 500, error: "http_500" }), "");
   });
 });

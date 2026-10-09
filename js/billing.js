@@ -419,7 +419,7 @@ export function subscriptionScreen(data, locale = "pt") {
   let price = "";
   let priceKey = "";
   if (sub.amount != null && (sub.interval === "month" || sub.interval === "year")) {
-    price = formatPaywallAmount(sub.amount / 100, currency);
+    price = formatPaywallAmount(sub.amount, currency);
     priceKey = sub.interval === "year" ? "billing.yearAmount" : "billing.monthEquiv";
   }
   const planKey =
@@ -457,4 +457,11 @@ export function cancelSubscription(env) {
 
 export function resumeSubscription(env) {
   return subscriptionResult(BILLING_RESUME_PATH, "POST", env);
+}
+
+/** 409 quando cancelar ou retomar não é possível. A tela avisa e busca de novo. */
+export function subscriptionConflictKey(result) {
+  if (result?.error === "cancel_unavailable") return "billing.subCancelUnavailable";
+  if (result?.error === "resume_unavailable") return "billing.subResumeUnavailable";
+  return "";
 }

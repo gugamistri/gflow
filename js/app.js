@@ -123,6 +123,7 @@ import {
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
+  subscriptionConflictKey,
   subscriptionScreen,
   upgradeCopyKeys,
 } from "./billing.js";
@@ -1224,6 +1225,12 @@ async function changeSubscription(action) {
     paintCloudShare();
     showAccountDialog();
     setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return;
+  }
+  const conflict = subscriptionConflictKey(result);
+  if (conflict) {
+    toast(t(conflict));
+    await loadSubscription();
     return;
   }
   if (!result?.ok || !result.subscription) {

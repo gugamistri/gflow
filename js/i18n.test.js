@@ -120,7 +120,9 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(catalogs.pt["billing.subRenews"], "Renova em {date}");
   assert.equal(catalogs.pt["billing.subAccessUntil"], "Acesso Pro até {date}; não será renovada");
   assert.equal(catalogs.pt["billing.subCancel"], "Cancelar assinatura");
+  assert.equal(catalogs.pt["billing.subCancelUnavailable"], "Não é possível cancelar esta assinatura.");
   assert.equal(catalogs.pt["billing.subResume"], "Manter assinatura");
+  assert.equal(catalogs.pt["billing.subResumeUnavailable"], "Não é possível reativar esta assinatura.");
   assert.equal(catalogs.pt["billing.subPortal"], "Pagamento e faturas");
   assert.equal(catalogs.pt["billing.subValidUntil"], "Válida até {date}");
   assert.equal(catalogs.pt["billing.subNoEnd"], "Sem data de término");
