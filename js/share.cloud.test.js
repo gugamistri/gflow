@@ -105,6 +105,30 @@ test("POST /shares devolve o URL e não leva o bearer no corpo", async () => {
   }
 });
 
+test("URL absoluta em guiaflow.pro/p fica como a API devolveu", async () => {
+  const prev = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 201,
+    json: async () => ({
+      ok: true,
+      share: { id: "slug-permanente", slug: "slug-permanente", url: "https://guiaflow.pro/p/slug-permanente" },
+    }),
+  });
+  try {
+    const share = await publishPermanentShare(project(), {
+      env,
+      buildSnapshot: async () => ({ name: "Tour da nuvem", steps: [{ title: "Um" }] }),
+    });
+    assert.equal(share.url, "https://guiaflow.pro/p/slug-permanente");
+    assert.equal(share.url.includes("app.guiaflow.pro"), false);
+    assert.equal(share.id, "slug-permanente");
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
 test("402 subscription_required abre o gate sem dizer nuvem", async () => {
   const message =
     "Disponível no GuiaFlow Cloud. Assine para gerar links permanentes e textos/áudios com IA.";

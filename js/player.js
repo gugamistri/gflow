@@ -374,7 +374,7 @@ export function createPlayer(ctx) {
       popoverClass: "demo-popover",
       showProgress: true,
       animate: true,
-      allowClose: true,
+      allowClose: ctx.allowClose !== false,
       // why: setas tratadas em keydown abaixo — o keyup nativo do driver falhava no próximo com onNextClick async.
       allowKeyboardControl: false,
       overlayColor: veil.color,

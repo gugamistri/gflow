@@ -203,6 +203,8 @@ function absoluteCloudUrl(url, env) {
   const raw = String(url || "").trim();
   if (!raw) return "";
   try {
+    // why: https://guiaflow.pro/p/… já é absoluto e fica como a API mandou
+    if (/^https?:\/\//i.test(raw)) return new URL(raw).toString();
     const base = getCloudBaseUrl(env);
     return new URL(raw, base ? `${base}/` : undefined).toString();
   } catch {
