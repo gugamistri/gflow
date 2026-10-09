@@ -80,6 +80,30 @@ export function sharePageTitle(name, fallback = "GuiaFlow — Tour") {
   return label ? `${label} — GuiaFlow` : fallback;
 }
 
+/** Cartão do passo (slide ou popover) e o destaque da tela. */
+export const TOUR_CARD_SELECTOR = [
+  "#canvas-slide",
+  ".slide-card",
+  ".driver-popover:not(.is-slide-hidden)",
+  "#hotspot",
+  ".driver-active-element",
+].join(", ");
+
+/** Controlos fora do cartão, como o logótipo, que não fecham o tour. */
+export const TOUR_CHROME_SELECTOR = "a, button, input, textarea, select, summary";
+
+/**
+ * Clique na área escurecida, fora do cartão.
+ * why: o véu do Driver tem pointer-events no path, mas o clique nem sempre chega ao handler dele.
+ */
+export function clickClosesSharedTour(target) {
+  const node = target?.nodeType === 3 ? target.parentElement : target;
+  if (!node || typeof node.closest !== "function") return false;
+  if (node.closest(TOUR_CARD_SELECTOR)) return false;
+  if (node.closest(TOUR_CHROME_SELECTOR)) return false;
+  return true;
+}
+
 export function sameOriginReferrer(referrer, origin) {
   if (!referrer || !origin) return false;
   try {

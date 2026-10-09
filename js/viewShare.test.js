@@ -6,6 +6,7 @@ import {
   parseViewRoute,
   permanentShareEndpoint,
   sameOriginReferrer,
+  clickClosesSharedTour,
   sharePageTitle,
   shareStartIndex,
   sharedPreviewBackTarget,
@@ -56,6 +57,31 @@ test("o payload permanente é o tour, e not_found não vira tour", () => {
     error: "not_found",
   });
   assert.equal(tourFromPermanentShare({ ok: true }).ok, false);
+});
+
+function mockTarget(...selectors) {
+  const set = new Set(selectors);
+  const node = {
+    nodeType: 1,
+    closest(selector) {
+      return selector.split(",").some((part) => set.has(part.trim())) ? node : null;
+    },
+  };
+  return node;
+}
+
+test("clique fora do cartão fecha; clique no cartão ou num controlo não", () => {
+  assert.equal(clickClosesSharedTour(mockTarget("path")), true);
+  assert.equal(clickClosesSharedTour(mockTarget("div")), true);
+  assert.equal(clickClosesSharedTour(mockTarget("#canvas-slide")), false);
+  assert.equal(clickClosesSharedTour(mockTarget(".slide-card")), false);
+  assert.equal(clickClosesSharedTour(mockTarget(".driver-popover:not(.is-slide-hidden)")), false);
+  assert.equal(clickClosesSharedTour(mockTarget(".driver-popover.is-slide-hidden")), true);
+  assert.equal(clickClosesSharedTour(mockTarget("#hotspot")), false);
+  assert.equal(clickClosesSharedTour(mockTarget(".driver-active-element")), false);
+  assert.equal(clickClosesSharedTour(mockTarget("button")), false);
+  assert.equal(clickClosesSharedTour(mockTarget("a")), false);
+  assert.equal(clickClosesSharedTour(null), false);
 });
 
 test("o link partilhado começa no passo 1, salvo pedido na URL", () => {
@@ -118,7 +144,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo — GuiaFlow"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/28\/js\/viewApp\.js/);
+  assert.match(html, /a\/29\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);
