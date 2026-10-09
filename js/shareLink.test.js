@@ -4,6 +4,7 @@ import {
   hashSharePayload,
   permanentPublicUrl,
   permanentSlug,
+  shareBaselineHash,
   shareFreshness,
   shareRecordIsStale,
   shouldRecreatePermanent,
@@ -33,17 +34,19 @@ test("o endereço permanente mostrado é sempre guiaflow.pro/p", () => {
   assert.equal(permanentSlug({ url: "https://app.guiaflow.pro/v/demo-rcv-90bc01" }), "demo-rcv-90bc01");
 });
 
-test("o hash muda com o projeto e o link sem hash fica desatualizado", () => {
+test("link antigo sem hash só fica desatualizado depois de o projeto mudar", () => {
   const original = project();
-  const hash = hashSharePayload(original);
-  assert.equal(hashSharePayload(original), hash);
-  assert.equal(shareRecordIsStale({ payloadHash: hash }, original), false);
-  assert.equal(shareRecordIsStale({ url: "https://guiaflow.pro/p/x" }, original), true);
+  const legacy = { url: "https://guiaflow.pro/p/x" };
+  assert.equal(shareRecordIsStale(legacy, original), false);
+  const baseline = shareBaselineHash(legacy, original);
+  assert.equal(baseline, hashSharePayload(original));
+  legacy.payloadHash = baseline;
+  assert.equal(shareBaselineHash(legacy, original), "");
+  assert.equal(shareRecordIsStale(legacy, original), false);
   const edited = project("Outro nome");
-  assert.notEqual(hashSharePayload(edited), hash);
-  assert.equal(shareRecordIsStale({ payloadHash: hash }, edited), true);
+  assert.equal(shareRecordIsStale(legacy, edited), true);
   assert.equal(original.share.writeToken, "segredo");
-  assert.equal(JSON.stringify(hash).includes("segredo"), false);
+  assert.equal(JSON.stringify(baseline).includes("segredo"), false);
 });
 
 test("a frescura do link é agora, minutos, horas ou dias", () => {

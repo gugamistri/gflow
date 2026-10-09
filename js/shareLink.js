@@ -19,8 +19,14 @@ export function hashSharePayload(project) {
 export function shareRecordIsStale(record, project) {
   if (!record || !project) return false;
   const stored = String(record.payloadHash || "");
-  if (!stored) return true;
+  if (!stored) return false;
   return stored !== hashSharePayload(project);
+}
+
+/** Hash a gravar na primeira vez que um link antigo, sem hash, é aberto. */
+export function shareBaselineHash(record, project) {
+  if (!record || !project || record.payloadHash) return "";
+  return hashSharePayload(project);
 }
 
 export function slugFromShareUrl(url) {
