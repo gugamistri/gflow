@@ -65,6 +65,9 @@ export function createPlayer(ctx) {
   let autoplayEnabled = false;
   let running = false;
   let suppressExitArm = false;
+  let driveToken = 0;
+  // why: um clique que chega junto com o arranque não pode saltar para o passo 2
+  let advanceArmedAt = 0;
 
   function presentHintEl() {
     return document.getElementById("present-chrome");
@@ -324,7 +327,15 @@ export function createPlayer(ctx) {
     await clickFx.animateTo(clickTarget(step), { pressHotspot: true });
   }
 
+  function advanceAllowed() {
+    const wait = Number(ctx.ignoreAdvanceMs) || 0;
+    if (!wait) return true;
+    return performance.now() >= advanceArmedAt;
+  }
+
   async function buildAndDrive(startIndex = 0, opts = {}) {
+    const token = ++driveToken;
+    advanceArmedAt = Infinity;
     stop({ silent: true });
     if (typeof opts.autoplay === "boolean") {
       autoplayEnabled = opts.autoplay;
@@ -360,10 +371,13 @@ export function createPlayer(ctx) {
     if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
     els.hotspot?.classList.add("is-previewing");
     await narration.startTour(demo);
+    if (token !== driveToken) return;
     elevateCaption();
     await showStepVisual(steps[activeIndex], { speak: true });
+    if (token !== driveToken) return;
     // why: is-presenting muda o grid; o driver precisa do hotspot já no layout final (ainda em 1×)
     await prepareStepCamera(steps[activeIndex]);
+    if (token !== driveToken) return;
 
     if (demo?.theme) applyTheme(demo.theme);
 
@@ -400,13 +414,14 @@ export function createPlayer(ctx) {
           side: step.popover?.side || "bottom",
           align: step.popover?.align || "center",
           onNextClick: async (_el, _step, navOpts) => {
-            if (animating) return;
+            if (animating || token !== driveToken) return;
             animating = true;
             clearAutoplay();
             const current = steps[activeIndex];
             const drv = navOpts.driver;
             try {
               await animateClick(current);
+              if (token !== driveToken) return;
               const nextPos = playlistPos + 1;
               if (nextPos >= playOrder.length) {
                 drv.destroy();
@@ -420,7 +435,9 @@ export function createPlayer(ctx) {
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(stepProgress());
               await showStepVisual(steps[activeIndex], { speak: true });
+              if (token !== driveToken) return;
               await prepareStepCamera(steps[activeIndex]);
+              if (token !== driveToken) return;
               drv.moveNext();
               await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
@@ -428,7 +445,7 @@ export function createPlayer(ctx) {
             }
           },
           onPrevClick: async (_el, _step, navOpts) => {
-            if (animating || playlistPos <= 0) return;
+            if (animating || playlistPos <= 0 || token !== driveToken) return;
             animating = true;
             clearAutoplay();
             const drv = navOpts.driver;
@@ -438,7 +455,9 @@ export function createPlayer(ctx) {
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(stepProgress());
               await showStepVisual(steps[activeIndex], { speak: true });
+              if (token !== driveToken) return;
               await prepareStepCamera(steps[activeIndex]);
+              if (token !== driveToken) return;
               drv.movePrevious();
               await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
@@ -469,6 +488,8 @@ export function createPlayer(ctx) {
     setProgress(t("player.stepOf", { current: playlistPos + 1, total: playOrder.length }));
     driverObj.drive(playlistPos);
     await zoomAfterHighlightVisible(steps[activeIndex]);
+    if (token !== driveToken) return;
+    advanceArmedAt = performance.now() + (Number(ctx.ignoreAdvanceMs) || 0);
   }
 
   function stop({ silent = false } = {}) {
@@ -504,6 +525,7 @@ export function createPlayer(ctx) {
       if (e.target.closest(".slide-card-play, .slide-card-close")) return;
       e.preventDefault();
       e.stopPropagation();
+      if (!advanceAllowed()) return;
       clickDriverNext();
     }
 
@@ -516,6 +538,7 @@ export function createPlayer(ctx) {
         if (!isPresenting() || !driverObj) return;
         e.preventDefault();
         e.stopPropagation();
+        if (!advanceAllowed()) return;
         clickDriverNext();
       },
       true

@@ -1907,6 +1907,33 @@ body.view-share .topbar .logo {
   display: none;
 }
 
+.view-share-closed {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  min-height: 50vh;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.view-share-closed[hidden] {
+  display: none;
+}
+
+.view-share-closed h1 {
+  margin: 0;
+  max-width: 24ch;
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--ns-ink);
+}
+
+body.view-share:focus {
+  outline: none;
+}
+
 .export-option strong {
   display: flex;
   align-items: center;
