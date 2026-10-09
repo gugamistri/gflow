@@ -69,9 +69,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/34/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/34/css/theme.css" />
-  <link rel="stylesheet" href="a/34/css/app.css" />
+  <link rel="stylesheet" href="a/35/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/35/css/theme.css" />
+  <link rel="stylesheet" href="a/35/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -885,6 +885,48 @@
     </form>
   </dialog>
 
+  <dialog class="studio-modal subscription-modal" id="modal-subscription" aria-labelledby="subscription-title">
+    <div class="studio-modal-body subscription-dialog">
+      <div class="account-dialog-head">
+        <h3 id="subscription-title" data-i18n="billing.manage">Gerenciar assinatura</h3>
+        <button type="button" class="btn btn-icon" id="btn-subscription-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <p id="subscription-loading" class="subscription-loading" role="status" data-i18n="billing.subLoading">Carregando a assinatura…</p>
+      <div id="subscription-error" hidden>
+        <p class="subscription-when" data-i18n="billing.subLoadError">Não foi possível carregar a assinatura.</p>
+        <button type="button" class="btn" id="btn-subscription-retry" data-i18n="billing.subRetry">Tentar de novo</button>
+      </div>
+      <div id="subscription-ready" hidden>
+        <div id="subscription-facts">
+          <p class="subscription-kicker" data-i18n="billing.subPlanLabel">Plano</p>
+          <p class="subscription-plan" id="subscription-plan"></p>
+          <p class="subscription-price" id="subscription-price"></p>
+          <p class="subscription-kicker" id="subscription-status-label" data-i18n="billing.subStatusLabel">Status</p>
+          <p class="subscription-state" id="subscription-state"></p>
+          <p class="subscription-when" id="subscription-when"></p>
+        </div>
+        <div id="subscription-none" hidden>
+          <p class="subscription-when" data-i18n="billing.subNoneLead">Você ainda não tem o GuiaFlow Pro.</p>
+        </div>
+        <div class="subscription-actions">
+          <button type="button" class="btn btn-danger" id="btn-subscription-cancel" hidden data-i18n="billing.subCancel">Cancelar assinatura</button>
+          <button type="button" class="btn btn-primary" id="btn-subscription-resume" hidden data-i18n="billing.subResume">Manter assinatura</button>
+          <button type="button" class="btn btn-primary" id="btn-subscription-upsell" hidden data-i18n="billing.subscribe">Assinar Pro</button>
+          <button type="button" class="subscription-portal" id="btn-subscription-portal" hidden data-i18n="billing.subPortal">Pagamento e faturas</button>
+        </div>
+      </div>
+      <div id="subscription-confirm" hidden>
+        <p class="subscription-when" id="subscription-confirm-copy"></p>
+        <div class="subscription-actions">
+          <button type="button" class="btn btn-danger" id="btn-subscription-confirm" data-i18n="billing.subCancel">Cancelar assinatura</button>
+          <button type="button" class="subscription-portal" id="btn-subscription-back" data-i18n="billing.subBack">Voltar</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="studio-modal shortcuts-modal" id="modal-shortcuts" aria-labelledby="shortcuts-title">
     <div class="studio-modal-body">
       <h3 id="shortcuts-title" data-i18n="shortcuts.title">Atalhos</h3>
@@ -1276,7 +1318,7 @@
     </symbol>
   </svg>
 
-  <script src="a/34/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/34/js/app.js"></script>
+  <script src="a/35/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/35/js/app.js"></script>
 </body>
 </html>
