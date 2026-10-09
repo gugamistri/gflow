@@ -49,12 +49,35 @@ export function tourFromPermanentShare(data) {
 /**
  * Esc no player compartilhado, na mesma ordem do preview do editor.
  * overlay = lista de passos, ajuda ou partilha — não o véu do tour.
+ * Sem página anterior, fecha o tour nesta página.
  */
 export function decideEscape({ fullscreen = false, overlay = false, back = false } = {}) {
   if (fullscreen) return "fullscreen";
   if (overlay) return "overlay";
   if (back) return "back";
-  return "noop";
+  return "close";
+}
+
+/**
+ * Passo inicial do link partilhado. Só a URL manda; storage do editor não entra.
+ * `?step=2` e `?passo=2` são 1-based. Sem pedido explícito, começa no passo 1.
+ */
+export function shareStartIndex(search, stepCount) {
+  const params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
+  const raw = params.get("step") ?? params.get("passo");
+  if (raw == null || String(raw).trim() === "") return 0;
+  const n = Number(String(raw).trim());
+  if (!Number.isFinite(n)) return 0;
+  const index = Math.trunc(n) >= 1 ? Math.trunc(n) - 1 : 0;
+  const max = Math.max(0, Number(stepCount) || 0);
+  if (!max) return 0;
+  return Math.max(0, Math.min(max - 1, index));
+}
+
+/** Título do separador, igual em /v e /p: «Nome — GuiaFlow». */
+export function sharePageTitle(name, fallback = "GuiaFlow — Tour") {
+  const label = String(name || "").trim();
+  return label ? `${label} — GuiaFlow` : fallback;
 }
 
 export function sameOriginReferrer(referrer, origin) {
