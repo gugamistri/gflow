@@ -143,8 +143,8 @@
   align-items: center;
   justify-content: center;
   background: transparent !important;
-  color: var(--ns-ink) !important;
-  border: none !important;
+  color: var(--demo-popover-title) !important;
+  border: 1.5px solid color-mix(in srgb, var(--demo-popover-title) 55%, transparent) !important;
   box-shadow: none !important;
   min-width: 28px;
   width: 28px;
@@ -152,7 +152,7 @@
   padding: 0 !important;
   margin: 0 !important;
   line-height: 0;
-  border-radius: 0;
+  border-radius: 4px;
 }
 
 .driver-popover.demo-popover .driver-popover-prev-btn svg {
@@ -162,14 +162,16 @@
 }
 
 .driver-popover.demo-popover .driver-popover-prev-btn:hover {
-  background: transparent !important;
-  color: var(--demo-accent) !important;
+  background: color-mix(in srgb, var(--demo-popover-title) 10%, transparent) !important;
+  color: var(--demo-popover-title) !important;
+  border-color: var(--demo-popover-title) !important;
 }
 
 .driver-popover.demo-popover .driver-popover-prev-btn:disabled,
 .driver-popover.demo-popover .driver-popover-prev-btn.driver-popover-btn-disabled {
-  opacity: 0.3;
+  opacity: 0.45;
   cursor: default;
+  color: var(--demo-popover-title) !important;
 }
 
 .driver-popover.demo-popover .driver-popover-next-btn {
