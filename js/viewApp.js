@@ -11,6 +11,7 @@ import {
   parseViewRoute,
   permanentShareEndpoint,
   sameOriginReferrer,
+  clickClosesSharedTour,
   sharePageTitle,
   shareStartIndex,
   sharedPreviewBackTarget,
@@ -250,6 +251,20 @@ function onSharedEscape(event) {
 
 // why: Esc tem de chegar mesmo sem foco no cartão e antes do driver
 window.addEventListener("keydown", onSharedEscape, true);
+
+// why: o listener do Driver só fecha se o alvo for o path do SVG; no slide o clique
+// cai na área escura e é engolido. Na janela, em captura, corre antes disso.
+window.addEventListener(
+  "pointerdown",
+  (event) => {
+    if (!touring || event.button !== 0) return;
+    if (!clickClosesSharedTour(event.target)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    exitSharedTour();
+  },
+  true
+);
 
 async function boot() {
   initLocale();
