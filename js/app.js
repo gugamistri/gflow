@@ -26,6 +26,7 @@ import {
 } from "./projects.js";
 import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
+import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
 import { renumberScenes } from "./scenes.js";
 import {
   THEME_PRESETS,
@@ -55,6 +56,7 @@ import {
   initLocale,
   applyI18n,
   bindLocaleSelect,
+  getLocale,
   t,
   themePresetName,
 } from "./i18n.js";
@@ -66,6 +68,7 @@ import {
 import {
   RELEASE_NOTES_DISMISS_KEY,
   RELEASE_NOTES_VERSION,
+  releaseNotesMonth,
   shouldShowReleaseNotes,
 } from "./releaseNotes.js";
 import { COMPACT_LANDSCAPE_MQ, COMPACT_TOUCH_MQ, isCompactLandscape, isCompactTouch } from "./compact.js";
@@ -77,6 +80,7 @@ import {
   completeCloudAuthCallback,
   endCloudSession,
   establishCloudSession,
+  exchangeCloudAuthCode,
   getCloudAccount,
   getCloudFlags,
   isCloudEnabled,
@@ -86,8 +90,35 @@ import {
   takeCloudAuthError,
   writeCloudPublishIntent,
 } from "./cloudConfig.js";
+import {
+  billingMenuModel,
+  classifyCloudGate,
+  emptyEntitlement,
+  exportShowsWatermark,
+  fetchBillingEntitlement,
+  hostedAccess,
+  hostedQuotaCopy,
+  hostedUsageMeters,
+  shouldShowByokSettings,
+  readBillingReturn,
+  shouldShowProBadge,
+  startBillingCheckout,
+  startBillingPortal,
+  stripBillingReturn,
+  upgradeCopyKeys,
+} from "./billing.js";
+import {
+  formatPaywallAmount,
+  isSubscriptionRequired,
+  paywallCurrency,
+  paywallFeatureOrder,
+  paywallOffer,
+  shouldShowLocalSave,
+} from "./paywall.js";
 
 let project = null;
+let captureGeneration = 0;
+const captureClaims = createCaptureClaim();
 let selectedIndex = 0;
 let selectedNewThemeId = THEME_PRESETS[0].id;
 let themeSelection = { kind: "preset", id: THEME_PRESETS[0].id };
@@ -406,6 +437,11 @@ const editor = createEditor({
       indices: opts.indices,
     });
   },
+  ensureHostedFeature,
+  presentHostedFailure,
+  showHostedBadge,
+  prefersHostedGeneration,
+  noteHostedUsage: rememberHostedUsage,
 });
 
 const player = createPlayer({
@@ -443,11 +479,12 @@ function paintChrome() {
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
   if (navEditor) navEditor.hidden = view !== "editor" || presenting || compact;
-  const editorMenuHidden = view !== "editor" || presenting || compact;
-  if (moreEditorOnly) moreEditorOnly.hidden = editorMenuHidden;
+  const inEditor = view === "editor" && !presenting;
+  if (moreEditorOnly) moreEditorOnly.hidden = !inEditor;
   document.querySelectorAll(".more-editor-pref").forEach((el) => {
-    el.hidden = editorMenuHidden;
-    if (editorMenuHidden) el.open = false;
+    const hidePrefs = !inEditor || compact;
+    el.hidden = hidePrefs;
+    if (hidePrefs) el.open = false;
   });
   if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
   if (presentClose) presentClose.hidden = !presenting || view !== "editor" || !compact;
@@ -502,17 +539,12 @@ function exitPresentation() {
     player.stop?.();
     return;
   }
-  const returnToLibrary = isCompactTouch() && Boolean(project);
   presenting = false;
   player.stop?.();
   document.body.classList.remove("is-presenting");
   document.getElementById("view-editor")?.classList.remove("is-presenting");
   document.getElementById("hotspot")?.classList.remove("is-previewing");
   paintChrome();
-  if (returnToLibrary) {
-    void closeProject();
-    return;
-  }
   if (project && chromeView === "editor") editor.refresh();
 }
 
@@ -543,6 +575,17 @@ function cloudShareEnabled() {
 }
 
 let accountDialogWantsPublish = false;
+let billingView = { status: "idle" };
+let billingEntitlement = emptyEntitlement();
+let billingTicket = 0;
+let upgradeCustomMessage = "";
+let upgradeFeature = "";
+let upgradeEmail = "";
+let upgradeEmailNote = false;
+let upgradeHandoffToLogin = false;
+let pendingHostedResume = null;
+let pendingHostedFeature = "";
+const LOCAL_SAVE_DISMISS_KEY = "guiaflow.localSaveDismissed";
 
 function accountInitial(email) {
   const ch = String(email || "").trim().charAt(0);
@@ -572,6 +615,390 @@ function paintAccount() {
     toggle.setAttribute("aria-label", label);
     toggle.setAttribute("title", label);
   }
+  const menu = billingMenuModel({
+    signedIn,
+    status: billingView.status,
+    entitlement: billingEntitlement,
+  });
+  const planEl = document.getElementById("account-chip-plan");
+  const billingBtn = document.getElementById("btn-account-billing");
+  if (planEl) {
+    const pending = menu.planLabel === "past_due";
+    planEl.hidden = !menu.showPlan;
+    planEl.classList.toggle("is-pending", pending);
+    if (pending) planEl.textContent = t("billing.pastDue");
+    else if (menu.showPlan) planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
+  }
+  if (billingBtn) {
+    billingBtn.hidden = !menu.showAction;
+    if (menu.showAction) {
+      billingBtn.textContent = menu.action === "portal" ? t("billing.manage") : t("billing.subscribeMenu");
+    }
+  }
+  editor.paintHostedBadges?.();
+  paintExportMark();
+  paintLocalSave();
+  paintByokSettings();
+  paintHostedUsage();
+}
+
+function resetBillingView() {
+  billingTicket += 1;
+  billingView = { status: "idle" };
+  billingEntitlement = emptyEntitlement();
+}
+
+async function refreshEntitlement(sessionId = "") {
+  if (!isCloudEnabled() || !getCloudAccount().signedIn) {
+    resetBillingView();
+    paintAccount();
+    return null;
+  }
+  const ticket = ++billingTicket;
+  const result = await fetchBillingEntitlement(sessionId);
+  if (ticket !== billingTicket) return result;
+  if (result?.ok && result.entitlement) {
+    billingView = { status: "ready" };
+    billingEntitlement = result.entitlement;
+  } else {
+    billingView = { status: "hidden" };
+    billingEntitlement = emptyEntitlement();
+  }
+  paintAccount();
+  paintCloudShare();
+  editor.paintHostedBadges?.();
+  paintExportMark();
+  return result;
+}
+
+function localSaveDismissed() {
+  try {
+    return localStorage.getItem(LOCAL_SAVE_DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function paintLocalSave() {
+  const signedIn = Boolean(getCloudAccount().signedIn);
+  const show = shouldShowLocalSave({
+    signedIn,
+    active: Boolean(billingEntitlement.active),
+    billingReady: !signedIn || billingView.status === "ready" || billingView.status === "hidden",
+    dismissed: localSaveDismissed(),
+  });
+  for (const id of ["local-save-library", "local-save-editor"]) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !show;
+  }
+}
+
+function paintUpgradeCopy() {
+  const featured = upgradeFeature && upgradeFeature !== "account";
+  const copy = upgradeCopyKeys(upgradeFeature);
+  const title = document.getElementById("upgrade-dialog-title");
+  if (title) title.textContent = featured ? t(copy.title) : t("billing.title");
+  const msg = document.getElementById("upgrade-message");
+  if (msg) {
+    const lead = upgradeCustomMessage || (featured ? t(copy.subtitle) : t("billing.heroLead"));
+    msg.textContent = String(lead || "").slice(0, 500);
+  }
+  const note = document.getElementById("upgrade-email-note");
+  if (note) {
+    note.hidden = !upgradeEmailNote;
+    note.textContent = upgradeEmailNote ? t("billing.emailMissing") : "";
+  }
+  const currency = paywallCurrency(getLocale());
+  const offer = paywallOffer(currency);
+  for (const node of document.querySelectorAll("[data-price]")) {
+    const amount = node.getAttribute("data-price") === "year" ? offer.year : offer.month;
+    node.textContent = formatPaywallAmount(amount, currency);
+  }
+  const save = document.getElementById("paywall-save");
+  if (save) save.textContent = t("billing.savePercent", { percent: offer.percent });
+  const equiv = document.getElementById("paywall-equiv");
+  if (equiv) equiv.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.monthEquiv, currency) });
+  const list = document.getElementById("paywall-benefits");
+  if (list) {
+    const order = paywallFeatureOrder(upgradeFeature);
+    for (const id of order) {
+      const item = list.querySelector(`[data-feature="${id}"]`);
+      if (item) list.appendChild(item);
+    }
+    const highlight = upgradeFeature ? order[0] : "";
+    for (const item of list.querySelectorAll("[data-feature]")) {
+      item.classList.toggle("is-highlight", item.dataset.feature === highlight);
+    }
+  }
+}
+
+function billingSnapshot() {
+  return {
+    cloudEnabled: isCloudEnabled(),
+    signedIn: getCloudAccount().signedIn,
+    status: billingView.status,
+    active: Boolean(billingEntitlement.active),
+  };
+}
+
+let hostedMeters = { texts: null, textLimit: 100, audioMinutes: null, audioLimit: 30 };
+
+function prefersHostedGeneration() {
+  const snap = billingSnapshot();
+  return Boolean(snap.signedIn && snap.status === "ready" && snap.active);
+}
+
+function rememberHostedUsage(usage) {
+  const next = hostedUsageMeters(usage);
+  if (!next) return;
+  if (next.texts != null) {
+    hostedMeters.texts = next.texts;
+    hostedMeters.textLimit = next.textLimit;
+  }
+  if (next.audioMinutes != null) {
+    hostedMeters.audioMinutes = next.audioMinutes;
+    hostedMeters.audioLimit = next.audioLimit;
+  }
+  paintHostedUsage();
+}
+
+function paintHostedUsage() {
+  const el = document.getElementById("account-chip-usage");
+  if (!el) return;
+  const snap = billingSnapshot();
+  const pro = snap.signedIn && snap.status === "ready" && snap.active;
+  const lines = [];
+  if (pro && hostedMeters.texts != null) {
+    lines.push(t("billing.usageTexts", { used: hostedMeters.texts, limit: hostedMeters.textLimit }));
+  }
+  if (pro && hostedMeters.audioMinutes != null) {
+    lines.push(t("billing.usageAudio", { used: hostedMeters.audioMinutes, limit: hostedMeters.audioLimit }));
+  }
+  el.hidden = !lines.length;
+  el.textContent = lines.join("\n");
+}
+
+function paintByokSettings() {
+  const show = shouldShowByokSettings(billingSnapshot());
+  for (const id of ["settings-llm", "settings-tts"]) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.hidden = !show;
+    if (!show) el.open = false;
+  }
+}
+
+function showHostedBadge({ hasByok = false } = {}) {
+  return shouldShowProBadge({ ...billingSnapshot(), hasByok });
+}
+
+function paintExportMark() {
+  const btn = document.getElementById("btn-export-unbrand");
+  if (!btn) return;
+  btn.hidden = !exportShowsWatermark(billingSnapshot());
+}
+
+async function ensureHostedFeature(feature, resume) {
+  if (!isCloudEnabled()) return "unavailable";
+  if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
+    await refreshEntitlement();
+  }
+  const access = hostedAccess({ ...billingSnapshot(), hasByok: false });
+  if (access === "upgrade") {
+    pendingHostedFeature = feature;
+    pendingHostedResume = typeof resume === "function" ? resume : null;
+    openFeatureGate(feature);
+    return "blocked";
+  }
+  return "proceed";
+}
+
+function presentHostedFailure(result, feature) {
+  const gate = classifyCloudGate(result);
+  const which = gate.feature || feature;
+  if (gate.kind === "subscription_required") {
+    openFeatureGate(which);
+    return true;
+  }
+  if (gate.kind === "quota_exceeded") {
+    const usage = result?.data?.usage || result?.usage;
+    rememberHostedUsage(usage);
+    const copy = hostedQuotaCopy(which === "tts" ? "tts" : "hostedAi", usage);
+    toast(t(copy.key, copy.vars));
+    return true;
+  }
+  if (gate.kind === "unauthorized") {
+    pendingHostedFeature = which;
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return true;
+  }
+  if (result?.status === 503 || result?.error === "config_missing" || gate.kind === "unavailable") {
+    toast(t("billing.unconfigured"));
+    return true;
+  }
+  if (result?.status === 502) {
+    toast(t("billing.tryAgain"));
+    return true;
+  }
+  if (gate.kind === "not_found") {
+    toast(t("billing.unavailable"));
+    return true;
+  }
+  return false;
+}
+
+function setUpgradeStatus(message, tone = "") {
+  const status = document.getElementById("upgrade-status");
+  if (!status) return;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", tone === "error");
+  status.classList.toggle("is-ok", tone === "ok");
+}
+
+function showUpgradeDialog({ message = "", feature = "", email = "", emailNote = false } = {}) {
+  if (!isCloudEnabled()) return;
+  upgradeFeature = feature || "";
+  upgradeCustomMessage = String(message || "").trim();
+  upgradeEmail = String(email || "").trim();
+  upgradeEmailNote = Boolean(emailNote && upgradeEmail);
+  const dialog = document.getElementById("modal-upgrade");
+  if (!dialog) return;
+  paintUpgradeCopy();
+  setUpgradeStatus("");
+  const button = document.getElementById("btn-upgrade-subscribe");
+  if (button) button.disabled = false;
+  if (!dialog.open) dialog.showModal();
+}
+
+function closeUpgradeDialog() {
+  const dialog = document.getElementById("modal-upgrade");
+  if (dialog?.open) dialog.close();
+}
+
+function cloudShareNeedsUpgrade() {
+  return billingView.status === "ready" && !billingEntitlement.active && billingEntitlement.status !== "past_due";
+}
+
+function isPastDue() {
+  return billingView.status === "ready" && billingEntitlement.status === "past_due";
+}
+
+function openFeatureGate(feature) {
+  if (isPastDue()) {
+    toast(t("billing.pastDueHint"), 4200);
+    void openBillingPortal();
+    return;
+  }
+  showUpgradeDialog({ feature });
+}
+
+async function consumeBillingReturn() {
+  const found = readBillingReturn(location.href);
+  if (!isCloudEnabled() || !found.kind) return;
+  if (found.kind === "welcome" && found.code) {
+    const session = await exchangeCloudAuthCode(found.code);
+    if (session?.error === "network") {
+      toast(t("share.cloud.network"), 4200);
+      return;
+    }
+    applyCloudAuthHref(stripBillingReturn(location.href));
+    if (isSubscriptionRequired(session)) {
+      showUpgradeDialog({ feature: "account" });
+      return;
+    }
+    if (!session?.ok) {
+      toast(session?.message || t("share.cloud.invalidToken"), 4800);
+      return;
+    }
+    paintCloudShare();
+    await refreshEntitlement();
+    toast(t("billing.toastWelcome"), 5200);
+    return;
+  }
+  applyCloudAuthHref(stripBillingReturn(location.href));
+  if (found.kind === "cancel") {
+    toast(t("billing.toastCancel"), 4200);
+    return;
+  }
+  if (found.kind === "pending") {
+    toast(t("billing.toastPending"), 4800);
+    return;
+  }
+  if (found.kind === "welcome") {
+    if (getCloudAccount().signedIn) await refreshEntitlement(found.sessionId || "");
+    toast(t("billing.toastWelcome"), 5200);
+    return;
+  }
+  if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
+}
+
+async function openBillingPortal() {
+  const result = await startBillingPortal();
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    await endCloudSession();
+    resetBillingView();
+    paintCloudShare();
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return;
+  }
+  if (!result?.ok || !result.url) {
+    toast(result?.error === "network" ? t("share.cloud.network") : t("billing.unavailable"));
+    return;
+  }
+  location.assign(result.url);
+}
+
+async function submitUpgrade(interval) {
+  const button = document.getElementById("btn-upgrade-subscribe");
+  if (button) button.disabled = true;
+  setUpgradeStatus("");
+  try {
+    const result = await startBillingCheckout({
+      interval,
+      currency: paywallCurrency(getLocale()),
+      email: upgradeEmail || getCloudAccount().email || "",
+      source: upgradeFeature || "account",
+    });
+    if (result?.status === 400 && (result.error === "invalid_interval" || result.error === "invalid_currency")) {
+      setUpgradeStatus(
+        result.error === "invalid_currency" ? t("billing.invalidCurrency") : t("billing.invalidInterval"),
+        "error"
+      );
+      return;
+    }
+    if (result?.status === 401 || result?.error === "unauthorized") {
+      closeUpgradeDialog();
+      await endCloudSession();
+      resetBillingView();
+      paintCloudShare();
+      showAccountDialog();
+      setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+      return;
+    }
+    if (!result?.ok || !result.url) {
+      setUpgradeStatus(
+        result?.error === "network" ? t("share.cloud.network") : t("billing.unavailable"),
+        "error"
+      );
+      return;
+    }
+    location.assign(result.url);
+  } catch (err) {
+    console.error(err);
+    setUpgradeStatus(t("billing.unavailable"), "error");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function setCloudLoginStatus(message, tone = "") {
+  const status = document.getElementById("cloud-login-status");
+  if (!status) return;
+  status.textContent = message || "";
+  status.classList.toggle("is-error", tone === "error");
+  status.classList.toggle("is-ok", tone === "ok");
 }
 
 function showAccountDialog({ publish = false } = {}) {
@@ -579,8 +1006,7 @@ function showAccountDialog({ publish = false } = {}) {
   accountDialogWantsPublish = publish;
   const dialog = document.getElementById("modal-account");
   if (!dialog) return;
-  const status = document.getElementById("cloud-login-status");
-  if (status) status.textContent = "";
+  setCloudLoginStatus("");
   if (!dialog.open) dialog.showModal();
   document.getElementById("cloud-email")?.focus();
 }
@@ -612,6 +1038,10 @@ function paintCloudShare() {
   if (publishBtn) publishBtn.hidden = !signedIn || Boolean(url);
   if (result) result.hidden = !url;
   if (urlInput) urlInput.value = url;
+  const badge = document.getElementById("cloud-share-badge");
+  if (badge) {
+    badge.hidden = Boolean(url) || !shouldShowProBadge({ ...billingSnapshot(), hasByok: false });
+  }
   paintAccount();
 }
 
@@ -637,8 +1067,7 @@ function showStashedAuthError() {
   const code = takeCloudAuthError();
   if (!code) return;
   showAccountDialog();
-  const status = document.getElementById("cloud-login-status");
-  if (status) status.textContent = permanentShareErrorMessage({ error: code });
+  setCloudLoginStatus(permanentShareErrorMessage({ error: code }), "error");
 }
 
 async function finishCloudAuthCallback(callback) {
@@ -646,8 +1075,7 @@ async function finishCloudAuthCallback(callback) {
   paintCloudShare();
   if (!callback.ok) {
     showAccountDialog();
-    const status = document.getElementById("cloud-login-status");
-    if (status) status.textContent = permanentShareErrorMessage(callback);
+    setCloudLoginStatus(permanentShareErrorMessage(callback), "error");
     return;
   }
   closeAccountDialog();
@@ -759,15 +1187,17 @@ function renderLibrary() {
   const empty = document.getElementById("library-empty");
   const projects = index.projects || [];
 
+  const hint = document.getElementById("library-import-hint");
+  const compact = isCompactTouch();
   if (!projects.length) {
     grid.innerHTML = "";
-    empty.hidden = false;
-    const emptyKey = isCompactTouch() ? "library.emptyCompact" : "library.empty";
-    empty.dataset.i18n = emptyKey;
-    empty.textContent = t(emptyKey);
+    empty.hidden = compact;
+    if (!compact) empty.textContent = t("library.empty");
+    if (hint) hint.hidden = !compact;
     return;
   }
   empty.hidden = true;
+  if (hint) hint.hidden = true;
 
   grid.innerHTML = projects
     .map((p) => {
@@ -890,22 +1320,13 @@ async function openProject(id, { autoPreview = false } = {}) {
     await setActiveProjectId(id);
     syncThemeUi();
 
+    openEditor();
     if (isCompactTouch()) {
-      if (!loaded.steps.length) {
-        toast(t("player.noSteps"));
-        await closeProject();
-        return;
-      }
-      setChrome("editor");
-      // why: o palco precisa do layout is-presenting antes do Driver medir o hotspot
-      requestAnimationFrame(() => {
-        enterPresentation({ from: 0, autoplay: true });
-      });
-      if (autoPreview) toast(t("toast.watchExample"));
+      if (autoPreview && loaded.steps.length) toast(t("toast.editOnTouch"), 4200);
+      else toast(t("toast.opened", { name: loaded.name }));
       return;
     }
 
-    openEditor();
     if (autoPreview && loaded.steps.length) {
       // why: deixa o editor pintar o palco antes do tour automático da primeira visita
       requestAnimationFrame(() => {
@@ -940,6 +1361,13 @@ async function closeProject() {
   showLibrary();
 }
 
+function openNewProjectDialog() {
+  selectedNewThemeId = resolveAppearanceMode(appearancePreference);
+  document.getElementById("new-project-name").value = "";
+  renderNewProjectThemes();
+  document.getElementById("modal-new-project").showModal();
+}
+
 function showLibrary() {
   exitPresentation();
   player.stop?.();
@@ -965,6 +1393,25 @@ function bindChrome() {
     const more = document.getElementById("more-panel");
     if (more) more.open = false;
     closeProject();
+  });
+  document.getElementById("btn-menu-new")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    openNewProjectDialog();
+  });
+  document.getElementById("btn-menu-open")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    if (chromeView === "library") {
+      document.getElementById("library-board")?.focus();
+      return;
+    }
+    void closeProject();
+  });
+  document.getElementById("btn-menu-import")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    document.getElementById("import-file")?.click();
   });
   document.getElementById("btn-shortcuts")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
@@ -1232,10 +1679,7 @@ function bindChrome() {
   }
 
   document.getElementById("btn-new-project").addEventListener("click", () => {
-    selectedNewThemeId = resolveAppearanceMode(appearancePreference);
-    document.getElementById("new-project-name").value = "";
-    renderNewProjectThemes();
-    document.getElementById("modal-new-project").showModal();
+    openNewProjectDialog();
   });
 
   document.getElementById("btn-cancel-new-project").addEventListener("click", () => {
@@ -1256,8 +1700,8 @@ function bindChrome() {
     await openProject(created.id);
   });
 
-  document.getElementById("btn-import-library").addEventListener("click", () => {
-    document.getElementById("import-file").click();
+  document.getElementById("library-import-hint")?.addEventListener("click", () => {
+    document.getElementById("import-file")?.click();
   });
 
   document.getElementById("import-file").addEventListener("change", async (e) => {
@@ -1461,15 +1905,26 @@ function bindChrome() {
     }
   });
 
+  document.getElementById("btn-export-unbrand")?.addEventListener("click", () => {
+    closeExportMenu();
+    pendingHostedFeature = "branding";
+    openFeatureGate("branding");
+  });
+
   document.getElementById("btn-export-video").addEventListener("click", async () => {
     closeExportMenu();
     if (!project) return;
     project.theme = formToTheme(project.theme);
+    if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
+      await refreshEntitlement();
+    }
+    const watermark = exportShowsWatermark(billingSnapshot());
     exportAbort = new AbortController();
     showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
     overlayStatus.textContent = t("export.overlayVideoHint");
     try {
       const result = await exportVideo(project, {
+        watermark,
         canvas: previewCanvas,
         signal: exportAbort.signal,
         onProgress: (msg) => {
@@ -1551,19 +2006,69 @@ function bindChrome() {
     }
   });
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
-    showAccountDialog();
+    showUpgradeDialog({ feature: "account" });
   });
   document.getElementById("btn-cloud-share-signin")?.addEventListener("click", () => {
-    showAccountDialog({ publish: Boolean(project?.id) });
+    showUpgradeDialog({ feature: "permanentShare" });
   });
   document.getElementById("btn-account-signout")?.addEventListener("click", () => {
     void signOutAccount();
+  });
+  document.getElementById("btn-account-billing")?.addEventListener("click", () => {
+    closeAccountMenus();
+    if (billingView.status === "ready" && (billingEntitlement.active || billingEntitlement.status === "past_due")) {
+      void openBillingPortal();
+    } else showUpgradeDialog();
+  });
+  document.getElementById("btn-upgrade-close")?.addEventListener("click", () => {
+    closeUpgradeDialog();
+  });
+  document.getElementById("btn-upgrade-login")?.addEventListener("click", () => {
+    upgradeHandoffToLogin = true;
+    const email = upgradeEmail || document.getElementById("cloud-email")?.value || "";
+    closeUpgradeDialog();
+    showAccountDialog();
+    const input = document.getElementById("cloud-email");
+    if (input && email && !input.value) input.value = email;
+  });
+  document.getElementById("modal-upgrade")?.addEventListener("close", () => {
+    if (upgradeHandoffToLogin) {
+      upgradeHandoffToLogin = false;
+      return;
+    }
+    pendingHostedResume = null;
+    pendingHostedFeature = "";
+  });
+  document.getElementById("modal-upgrade")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  });
+  document.querySelectorAll("[data-local-save-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      showUpgradeDialog({ feature: "account" });
+    });
+  });
+  document.querySelectorAll("[data-local-save-dismiss]").forEach((button) => {
+    button.addEventListener("click", () => {
+      try {
+        localStorage.setItem(LOCAL_SAVE_DISMISS_KEY, "1");
+      } catch {
+        /* o aviso some nesta visita */
+      }
+      paintLocalSave();
+    });
+  });
+  document.getElementById("upgrade-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const picked = document.querySelector('#upgrade-form input[name="billing-interval"]:checked');
+    void submitUpgrade(picked?.value || "monthly");
   });
   document.getElementById("btn-account-dialog-close")?.addEventListener("click", () => {
     closeAccountDialog();
   });
   document.getElementById("modal-account")?.addEventListener("close", () => {
     accountDialogWantsPublish = false;
+    pendingHostedResume = null;
+    pendingHostedFeature = "";
   });
   document.getElementById("modal-account")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) e.currentTarget.close();
@@ -1571,8 +2076,12 @@ function bindChrome() {
 
   document.getElementById("btn-cloud-share")?.addEventListener("click", () => {
     if (!project || !cloudShareEnabled()) return;
-    if (!getCloudAccount().signedIn) {
-      showAccountDialog({ publish: true });
+    if (isPastDue()) {
+      openFeatureGate("permanentShare");
+      return;
+    }
+    if (!getCloudAccount().signedIn || cloudShareNeedsUpgrade()) {
+      showUpgradeDialog({ feature: "permanentShare" });
       return;
     }
     clearCloudPublishIntent();
@@ -1612,15 +2121,35 @@ function bindChrome() {
     clearCloudPublishIntent();
     accountDialogWantsPublish = false;
     closeAccountMenus();
+    resetBillingView();
     await endCloudSession();
     paintCloudShare();
   }
 
   async function afterAccountSignedIn() {
     const publishNow = accountDialogWantsPublish;
+    const resume = pendingHostedResume;
+    const feature = pendingHostedFeature;
     accountDialogWantsPublish = false;
+    pendingHostedResume = null;
+    pendingHostedFeature = "";
     closeAccountDialog();
     paintCloudShare();
+    await refreshEntitlement();
+    editor.paintHostedBadges?.();
+    paintExportMark();
+    if (resume) {
+      if (isPastDue()) {
+        openFeatureGate(feature);
+        return;
+      }
+      if (billingView.status === "ready" && !billingEntitlement.active) {
+        showUpgradeDialog({ feature });
+        return;
+      }
+      await resume();
+      return;
+    }
     if (publishNow && project?.id && cloudShareEnabled()) {
       clearCloudPublishIntent();
       await runCloudPublish();
@@ -1652,10 +2181,17 @@ function bindChrome() {
         emailHint: parsed.email,
         forceKind,
       });
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({
+          feature: pendingHostedFeature || "account",
+          email: parsed.email || "",
+          emailNote: Boolean(parsed.email),
+        });
+        return;
+      }
       if (!session.ok) {
         showAccountDialog();
-        const status = document.getElementById("cloud-login-status");
-        if (status) status.textContent = permanentShareErrorMessage(session);
+        setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
       }
       await afterAccountSignedIn();
@@ -1663,38 +2199,46 @@ function bindChrome() {
   });
 
   async function sendCloudMagicLink() {
-    const status = document.getElementById("cloud-login-status");
     const email = document.getElementById("cloud-email")?.value || "";
     const button = document.getElementById("btn-cloud-magic");
     if (button) button.disabled = true;
-    if (status) status.textContent = "";
+    setCloudLoginStatus("");
     try {
       const result = await requestMagicLink(email);
+      if (isSubscriptionRequired(result)) {
+        showUpgradeDialog({ feature: pendingHostedFeature || "account", email, emailNote: true });
+        closeAccountDialog();
+        return;
+      }
       if (!result.ok) {
-        if (status) status.textContent = permanentShareErrorMessage(result);
+        setCloudLoginStatus(permanentShareErrorMessage(result), "error");
         return;
       }
       if (accountDialogWantsPublish && project?.id) writeCloudPublishIntent(project.id);
-      if (status) status.textContent = t("share.cloud.sent", { email: String(email).trim() });
+      setCloudLoginStatus(t("share.cloud.sent", { email: String(email).trim() }), "ok");
     } catch (err) {
       console.error(err);
-      if (status) status.textContent = t("share.cloud.network");
+      setCloudLoginStatus(t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
     }
   }
 
   async function sendCloudPassword() {
-    const status = document.getElementById("cloud-login-status");
     const email = document.getElementById("cloud-email")?.value || "";
     const password = document.getElementById("cloud-password")?.value || "";
     const button = document.getElementById("btn-cloud-password");
     if (button) button.disabled = true;
-    if (status) status.textContent = "";
+    setCloudLoginStatus("");
     try {
       const session = await loginWithPassword(email, password);
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({ feature: pendingHostedFeature || "account", email, emailNote: true });
+        closeAccountDialog();
+        return;
+      }
       if (!session.ok) {
-        if (status) status.textContent = permanentShareErrorMessage(session);
+        setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
       }
       const field = document.getElementById("cloud-password");
@@ -1702,31 +2246,39 @@ function bindChrome() {
       await afterAccountSignedIn();
     } catch (err) {
       console.error(err);
-      if (status) status.textContent = t("share.cloud.network");
+      setCloudLoginStatus(t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
     }
   }
 
   async function continueCloudLogin() {
-    const status = document.getElementById("cloud-login-status");
     const pasted = document.getElementById("cloud-paste")?.value || "";
     const emailHint = document.getElementById("cloud-email")?.value || "";
     const button = document.getElementById("btn-cloud-continue");
     if (button) button.disabled = true;
     try {
       const session = await establishCloudSession(pasted, undefined, { emailHint });
+      if (isSubscriptionRequired(session)) {
+        showUpgradeDialog({
+          feature: pendingHostedFeature || "account",
+          email: emailHint,
+          emailNote: Boolean(String(emailHint || "").trim()),
+        });
+        closeAccountDialog();
+        return;
+      }
       if (!session.ok) {
-        if (status) status.textContent = permanentShareErrorMessage(session);
+        setCloudLoginStatus(permanentShareErrorMessage(session), "error");
         return;
       }
       const paste = document.getElementById("cloud-paste");
       if (paste) paste.value = "";
-      if (status) status.textContent = "";
+      setCloudLoginStatus("");
       await afterAccountSignedIn();
     } catch (err) {
       console.error(err);
-      if (status) status.textContent = err?.message || t("share.cloud.network");
+      setCloudLoginStatus(err?.message || t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
     }
@@ -1741,6 +2293,14 @@ function bindChrome() {
     }
     if (!getCloudAccount().signedIn) {
       showAccountDialog({ publish: true });
+      return;
+    }
+    if (isPastDue()) {
+      openFeatureGate("permanentShare");
+      return;
+    }
+    if (cloudShareNeedsUpgrade()) {
+      showUpgradeDialog({ feature: "permanentShare" });
       return;
     }
     project.theme = formToTheme(project.theme);
@@ -1770,12 +2330,37 @@ function bindChrome() {
     } catch (err) {
       console.error(err);
       hideExportOverlay();
-      if (err?.code === "unauthorized" || err?.status === 401) {
+      const gate = classifyCloudGate({
+        status: err?.status,
+        error: err?.code,
+        message: err?.message,
+        data: {
+          code: err?.code,
+          feature: err?.feature,
+          plan: err?.plan,
+          message: err?.message,
+        },
+      });
+      if (gate.kind === "unauthorized") {
         await endCloudSession();
+        resetBillingView();
         paintCloudShare();
         showAccountDialog({ publish: true });
-        const status = document.getElementById("cloud-login-status");
-        if (status) status.textContent = err?.message || t("share.cloud.unauthorized");
+        setCloudLoginStatus(err?.message || t("share.cloud.unauthorized"), "error");
+        toast(err?.message || t("share.cloud.generic"));
+        return;
+      }
+      if (gate.kind === "subscription_required") {
+        openFeatureGate("permanentShare");
+        return;
+      }
+      if (gate.kind === "quota_exceeded") {
+        toast(gate.message || t("billing.quota"));
+        return;
+      }
+      if (gate.kind === "unavailable") {
+        toast(t("billing.unavailable"));
+        return;
       }
       toast(err?.message || t("share.cloud.generic"));
     }
@@ -1838,51 +2423,90 @@ function signalGuiaReady() {
   window.postMessage({ source: "guia-editor", type: "guia-ready" }, location.origin);
 }
 
-function bindCaptureInbox() {
-  window.addEventListener("message", async (event) => {
-    if (event.source !== window || event.origin !== location.origin) return;
-    const data = event.data;
-    if (!data || data.source !== "guia-capture") return;
-    if (data.type !== "import-project" && data.type !== "append-steps") return;
+function postCaptureAck({ id, ok, mode, projectId, error }) {
+  window.postMessage(
+    {
+      source: "guia-capture",
+      type: "import-ack",
+      id: id ?? null,
+      ok,
+      mode,
+      projectId: projectId || null,
+      error: error || null,
+    },
+    location.origin
+  );
+}
 
-    const mode = data.type === "append-steps" ? "append" : "create";
-    try {
-      if (!Array.isArray(data.payload?.steps)) {
-        throw new Error(t("err.captureNoSteps"));
-      }
-      let result;
-      if (mode === "append") {
-        result = await appendCapturePayload(data.payload);
-        toast(t("toast.stepsAppended"));
-      } else {
-        result = await importCapturePayload(data.payload);
-        toast(t("toast.projectCreated", { name: result.name }));
-      }
-      window.postMessage(
-        {
-          source: "guia-capture",
-          type: "import-ack",
-          ok: true,
-          mode,
-          projectId: result.id,
-        },
-        location.origin
-      );
-    } catch (err) {
-      console.error(err);
-      window.postMessage(
-        {
-          source: "guia-capture",
-          type: "import-ack",
-          ok: false,
-          mode,
-          error: err?.message || t("err.createProjectFail"),
-        },
-        location.origin
-      );
-      toast(err?.message || t("toast.captureCreateFail"));
+async function receiveCapture(data) {
+  if (!data || data.source !== "guia-capture") return;
+  if (data.type !== "import-project" && data.type !== "append-steps") return;
+  const mode = data.type === "append-steps" ? "append" : "create";
+  const claim = captureClaims.claim(data);
+  if (claim === "done") {
+    postCaptureAck({ id: data.id, ok: true, mode, projectId: project?.id || null });
+    return;
+  }
+  if (claim !== "fresh") return;
+  captureGeneration += 1;
+  const generation = captureGeneration;
+  try {
+    if (!Array.isArray(data.payload?.steps)) {
+      throw new Error(t("err.captureNoSteps"));
     }
+    const plan = planCaptureHandoff({
+      mode,
+      openProjectId: project?.id || null,
+      activeProjectId: readIndex().activeProjectId || null,
+    });
+    if (plan.action === "reject") throw new Error(t("ext.appendNoProject"));
+    if (plan.flushFirst) await flushAutosave();
+    if (presenting) exitPresentation();
+
+    let result;
+    if (plan.action === "create") {
+      result = await importCapturePayload(data.payload);
+      toast(t("toast.projectCreated", { name: result.name }));
+    } else {
+      if (plan.action === "append-saved") {
+        await openProject(plan.projectId);
+        if (!project?.id) throw new Error(t("ext.appendNoProject"));
+      }
+      result = await appendCapturePayload(data.payload);
+      toast(t("toast.stepsAppended"));
+    }
+    captureClaims.commit(data);
+    postCaptureAck({ id: data.id, ok: true, mode, projectId: result.id });
+  } catch (err) {
+    console.error(err);
+    captureClaims.release(data);
+    if (captureGeneration === generation) captureGeneration -= 1;
+    postCaptureAck({
+      id: data.id,
+      ok: false,
+      mode,
+      error: err?.message || t("err.createProjectFail"),
+    });
+    toast(err?.message || t("toast.captureCreateFail"));
+  }
+}
+
+function bindCaptureInbox() {
+  window.addEventListener("message", (event) => {
+    if (event.origin !== location.origin) return;
+    void receiveCapture(event.data);
   });
+
+  document.addEventListener("guia-capture-handoff", (event) => {
+    void receiveCapture(event.detail);
+  });
+
+  const nudge = () => {
+    if (document.visibilityState === "hidden") return;
+    signalGuiaReady();
+  };
+  document.addEventListener("visibilitychange", nudge);
+  window.addEventListener("focus", nudge);
 
   window.addEventListener("guia-desktop-import", async (event) => {
     try {
@@ -1930,9 +2554,19 @@ function bindExtensionBanner() {
   sync();
 }
 
+function paintReleaseNotesTitle() {
+  const title = document.getElementById("release-notes-title");
+  if (!title) return;
+  title.textContent = t("releaseNotes.title", {
+    version: RELEASE_NOTES_VERSION,
+    month: releaseNotesMonth(getLocale()),
+  });
+}
+
 function bindReleaseNotes() {
   const banner = document.getElementById("release-notes");
   if (!banner) return;
+  paintReleaseNotesTitle();
 
   const sync = () => {
     let dismissedVersion = null;
@@ -1977,6 +2611,8 @@ async function boot() {
     applyChromeAppearance();
     paintChrome();
     paintShareMenu();
+    paintUpgradeCopy();
+    paintReleaseNotesTitle();
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();
@@ -1997,25 +2633,31 @@ async function boot() {
   bindCaptureInbox();
 
   const index = readIndex();
+  const bootGeneration = captureGeneration;
   try {
-    if (index.activeProjectId) {
+    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration) && index.activeProjectId) {
       const loaded = await getProject(index.activeProjectId);
-      if (loaded) {
+      if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
+        /* a captura já abriu o projeto enquanto este carregava */
+      } else if (loaded) {
         await openProject(loaded.id, { autoPreview: seeded && (loaded.steps || []).length > 0 });
         return;
+      } else {
+        await setActiveProjectId(null);
       }
-      await setActiveProjectId(null);
     }
+
+    if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) return;
 
     if (seeded) {
       const first = (readIndex().projects || [])[0];
-      if (first?.id) {
+      if (first?.id && !bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
         await openProject(first.id, { autoPreview: true });
         return;
       }
     }
 
-    showLibrary();
+    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) showLibrary();
   } finally {
     if (authCallback.consumed) applyCloudAuthHref(authCallback.href);
     clearBootGate();
@@ -2023,6 +2665,10 @@ async function boot() {
     showStashedAuthError();
     if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
     else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });
+    void (async () => {
+      await consumeBillingReturn();
+      if (getCloudAccount().signedIn && billingView.status !== "ready") await refreshEntitlement();
+    })();
   }
 }
 

@@ -15,10 +15,12 @@ import { createClickFxController } from "./clickFx.js";
 import { clickDriverNext } from "./popoverFooter.js";
 import {
   isTypingTarget,
+  keyboardInsetShift,
   placePopoverBox,
   readInlineText,
   snapPopoverPlacement,
 } from "./canvasEdit.js";
+import { isCompactTouch } from "./compact.js";
 import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
@@ -59,6 +61,7 @@ import {
 import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
 import { getLocale, t } from "./i18n.js";
+import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
 import {
@@ -216,6 +219,11 @@ export function createEditor(ctx) {
     setSelectedIndex,
     toast,
     onPlayFrom,
+    ensureHostedFeature,
+    presentHostedFailure,
+    showHostedBadge,
+    prefersHostedGeneration,
+    noteHostedUsage,
   } = ctx;
 
   function onChange() {
@@ -452,6 +460,10 @@ export function createEditor(ctx) {
     let html = "";
     let lastScene = null;
     const filmPairs = [];
+    const lastIndex = demo.steps.length - 1;
+    const upLabel = escapeAttr(t("filmstrip.moveUp"));
+    const downLabel = escapeAttr(t("filmstrip.moveDown"));
+    const removeLabel = escapeAttr(t("filmstrip.remove"));
 
     demo.steps.forEach((step, index) => {
       if (step.scene !== lastScene) {
@@ -497,7 +509,9 @@ export function createEditor(ctx) {
             <span>#${index + 1}</span>
           </div>
           <div class="film-actions">
-            <button type="button" class="film-action-close" data-action="delete" title="${escapeAttr(t("filmstrip.remove"))}" aria-label="${escapeAttr(t("filmstrip.remove"))}">×</button>
+            <button type="button" class="film-action-move" data-action="up" ${index === 0 ? "disabled" : ""} title="${upLabel}" aria-label="${upLabel}">↑</button>
+            <button type="button" class="film-action-move" data-action="down" ${index === lastIndex ? "disabled" : ""} title="${downLabel}" aria-label="${downLabel}">↓</button>
+            <button type="button" class="film-action-close" data-action="delete" title="${removeLabel}" aria-label="${removeLabel}">×</button>
           </div>
         </div>`;
     });
@@ -1210,8 +1224,16 @@ export function createEditor(ctx) {
       side,
       align
     );
-    pop.style.left = `${box.left}px`;
-    pop.style.top = `${box.top}px`;
+    let left = box.left;
+    let top = box.top;
+    if (isCompactTouch()) {
+      const maxLeft = Math.max(4, (els.canvasFrame.clientWidth || 0) - pop.offsetWidth - 4);
+      const maxTop = Math.max(4, (els.canvasFrame.clientHeight || 0) - pop.offsetHeight - 4);
+      left = Math.min(Math.max(4, left), maxLeft);
+      top = Math.min(Math.max(4, top), maxTop);
+    }
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
   }
 
   function pointerInFrame(e) {
@@ -1355,13 +1377,59 @@ export function createEditor(ctx) {
         if (e.inputType === "insertParagraph" && el.dataset.inline === "title") e.preventDefault();
       });
     }
+    bindInlineKeyboardInset();
+  }
+
+  function bindInlineKeyboardInset() {
+    const stage = document.getElementById("canvas-stage");
+    const wrap = stage?.closest(".canvas-wrap");
+    const vv = window.visualViewport;
+    if (!stage || !wrap || !vv) return;
+
+    const reset = () => {
+      wrap.style.paddingBottom = "";
+      stage.style.transform = "";
+      delete stage.dataset.kbShift;
+    };
+
+    const place = () => {
+      const el = document.activeElement;
+      const editing =
+        isCompactTouch() &&
+        el?.dataset?.inline &&
+        stage.contains(el) &&
+        !document.body.classList.contains("is-presenting");
+      if (!editing) {
+        reset();
+        return;
+      }
+      wrap.style.paddingBottom = "";
+      stage.style.transform = "";
+      const visibleBottom = vv.offsetTop + vv.height;
+      const cover = Math.max(0, wrap.getBoundingClientRect().bottom - visibleBottom);
+      if (cover > 0) wrap.style.paddingBottom = `${Math.round(cover)}px`;
+      const shift = keyboardInsetShift(el.getBoundingClientRect(), vv);
+      stage.dataset.kbShift = String(Math.round(shift));
+      stage.style.transform = shift ? `translateY(${-Math.round(shift)}px)` : "";
+    };
+
+    vv.addEventListener("resize", place);
+    vv.addEventListener("scroll", place);
+    document.addEventListener("focusin", (e) => {
+      if (e.target?.dataset?.inline) requestAnimationFrame(place);
+    });
+    document.addEventListener("focusout", () => {
+      requestAnimationFrame(() => {
+        if (!document.activeElement?.dataset?.inline) reset();
+      });
+    });
   }
 
   function bindPopoverDrag() {
     const pop = els.editorPopover;
     if (!pop) return;
     pop.addEventListener("pointerdown", (e) => {
-      if (!editingCanvas() || pop.hidden) return;
+      if (!editingCanvas() || pop.hidden || isCompactTouch()) return;
       if (e.target.closest("[data-inline]")) return;
       if (e.button != null && e.button !== 0) return;
       popoverDrag = { pointerId: e.pointerId };
@@ -2309,7 +2377,10 @@ export function createEditor(ctx) {
       .filter(Boolean)
       .join(" ");
     const kbd = opts.kbd ? `<kbd class="film-context-kbd">${escapeHtml(opts.kbd)}</kbd>` : "";
-    return `<button ${attrs}><span>${escapeHtml(label)}</span>${kbd}</button>`;
+    const badge = opts.badge
+      ? `<span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span>${escapeHtml(t("billing.badge"))}</span></span>`
+      : "";
+    return `<button ${attrs}><span>${escapeHtml(label)}</span>${badge}${kbd}</button>`;
   }
 
   function playFromSelected(opts = {}) {
@@ -2410,8 +2481,13 @@ export function createEditor(ctx) {
         kbd: t("shortcuts.autoPreviewChord"),
       }),
       `<div class="film-context-sep" role="separator"></div>`,
-      filmMenuButton("generate-copy", t("props.generateCopyShort"), { title: t("props.generateCopy") }),
-      filmMenuButton("generate-audio", t("props.generateAudio")),
+      filmMenuButton("generate-copy", t("props.generateCopyShort"), {
+        title: t("props.generateCopy"),
+        badge: hostedBadge(Boolean(llmBridge() || llmConfigured)),
+      }),
+      filmMenuButton("generate-audio", t("props.generateAudio"), {
+        badge: hostedBadge(Boolean(cartesiaBridge() || cartesiaConfigured)),
+      }),
       `<div class="film-context-sep" role="separator"></div>`,
       filmMenuButton("duplicate", t("toolbar.duplicate"), { title: t("toolbar.duplicateTitle") }),
       filmMenuButton("copy", t("toolbar.copy"), { title: t("toolbar.copyTitle") }),
@@ -2695,6 +2771,7 @@ export function createEditor(ctx) {
           if (!selectedIndices.includes(index) || selectedIndices.length <= 1) {
             applySelection([index], index);
           }
+          if (isCompactTouch() && !window.confirm(t("filmstrip.confirmRemove"))) return;
           deleteStep();
         }
         return;
@@ -2723,7 +2800,7 @@ export function createEditor(ctx) {
     }
 
     els.hotspot.addEventListener("pointerdown", (e) => {
-      if (presenting() || els.hotspot.classList.contains("is-previewing")) return;
+      if (presenting() || els.hotspot.classList.contains("is-previewing") || isCompactTouch()) return;
       if (e.target.dataset.handle) {
         dragMode = e.target.dataset.handle;
       } else {
@@ -2803,7 +2880,7 @@ export function createEditor(ctx) {
     });
 
     els.clickPoint.addEventListener("pointerdown", (e) => {
-      if (presenting()) return;
+      if (presenting() || isCompactTouch()) return;
       clickPointDragging = true;
       els.clickPoint.setPointerCapture(e.pointerId);
       e.preventDefault();
@@ -2827,7 +2904,7 @@ export function createEditor(ctx) {
     });
 
     els.canvasImage.addEventListener("click", (e) => {
-      if (presenting()) return;
+      if (presenting() || isCompactTouch()) return;
       const step = currentStep();
       if (!step || step.type === "slide") return;
 
@@ -2877,6 +2954,30 @@ export function createEditor(ctx) {
   }
 
   let llmConfigured = false;
+  let cartesiaConfigured = false;
+
+  function hostedBadge(hasByok) {
+    return Boolean(showHostedBadge?.({ hasByok }));
+  }
+
+  function paintHostedBadges() {
+    const copy = document.getElementById("pro-badge-copy");
+    const audio = document.getElementById("pro-badge-audio");
+    if (copy) copy.hidden = !hostedBadge(Boolean(llmBridge() || llmConfigured));
+    if (audio) audio.hidden = !hostedBadge(Boolean(cartesiaBridge() || cartesiaConfigured));
+  }
+
+  async function hasOwnTts() {
+    if (cartesiaBridge()) return true;
+    if (cartesiaConfigured) return true;
+    try {
+      const status = await cartesiaKeyStatus();
+      cartesiaConfigured = Boolean(status?.configured);
+    } catch {
+      cartesiaConfigured = false;
+    }
+    return cartesiaConfigured;
+  }
 
   function syncLlmProviderUi() {
     const providerEl = document.getElementById("llm-provider");
@@ -2949,6 +3050,7 @@ export function createEditor(ctx) {
       if (clearBtn) clearBtn.hidden = true;
     }
     syncGenerateCopyButton();
+    paintHostedBadges();
   }
 
   async function saveLlmSettingsFromForm() {
@@ -3113,11 +3215,12 @@ export function createEditor(ctx) {
       focus,
       stepType: isSlide ? "slide" : "screen",
     });
-    const bridge = llmBridge();
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const bridge = hostedFirst ? null : llmBridge();
     let result;
     if (bridge?.llmComplete) {
       result = await bridge.llmComplete({ messages });
-    } else {
+    } else if (!hostedFirst && llmConfigured) {
       const settings = await readLlmSettings();
       result = await chatCompletions({
         apiKey: settings.apiKey,
@@ -3125,6 +3228,19 @@ export function createEditor(ctx) {
         model: settings.model,
         messages,
       });
+    } else {
+      const hosted = await completeHostedCopy(messages);
+      if (!hosted.ok) {
+        const handled = presentHostedFailure?.(hosted, "hostedAi");
+        return {
+          ok: false,
+          reason: handled ? "gate" : "request",
+          error: hosted.message || "",
+        };
+      }
+      writeGeneratedCopy(step, hosted.copy);
+      noteHostedUsage?.(hosted.data?.usage);
+      return { ok: true };
     }
     if (!result?.ok) return { ok: false, reason: "request", error: result?.error || "" };
     const parsed = parseCopyJson(result.content);
@@ -3140,15 +3256,22 @@ export function createEditor(ctx) {
       demo.steps.length
     );
     if (!list.length) return;
-    if (!llmConfigured) {
-      toast(t("toast.llmNeedKey"));
-      openLlmSettings();
-      return;
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const ownLlm = !hostedFirst && Boolean(llmBridge() || llmConfigured);
+    if (!ownLlm) {
+      const gate = await ensureHostedFeature?.("hostedAi", () => generateStepCopy(indices));
+      if (gate === "blocked") return;
+      if (gate !== "proceed") {
+        toast(t("toast.llmNeedKey"));
+        openLlmSettings();
+        return;
+      }
     }
     setGenerateBusy("copy", true);
     let ok = 0;
     let skipped = 0;
     let failed = 0;
+    let gated = false;
     let lastError = "";
     try {
       for (const idx of list) {
@@ -3160,7 +3283,10 @@ export function createEditor(ctx) {
         const outcome = await generateCopyForStep(demo, step, idx);
         if (outcome.ok) ok += 1;
         else if (outcome.reason === "image") skipped += 1;
-        else {
+        else if (outcome.reason === "gate") {
+          gated = true;
+          break;
+        } else {
           failed += 1;
           lastError = outcome.reason === "parse" ? t("llm.badCopy") : outcome.error || t("toast.llmCopyFail");
         }
@@ -3177,6 +3303,7 @@ export function createEditor(ctx) {
       renderCanvas();
       onChange();
     }
+    if (gated && !ok) return;
     if (ok && !failed && !skipped) {
       toast(ok > 1 ? t("toast.llmCopiedMany", { n: ok }) : t("toast.llmCopied"));
     } else if (ok) {
@@ -3195,11 +3322,13 @@ export function createEditor(ctx) {
     const bridge = cartesiaBridge();
     try {
       const status = bridge ? await bridge.cartesiaStatus() : await cartesiaKeyStatus();
+      cartesiaConfigured = Boolean(status?.configured);
       if (status?.configured) {
         statusEl.textContent = status.masked
           ? t("cartesia.configured", { masked: status.masked })
           : t("cartesia.configuredPlain");
         if (clearBtn) clearBtn.hidden = false;
+        paintHostedBadges();
         return;
       }
       statusEl.textContent = t("cartesia.noKey");
@@ -3208,6 +3337,7 @@ export function createEditor(ctx) {
       statusEl.textContent = t("cartesia.readFail");
       if (clearBtn) clearBtn.hidden = true;
     }
+    paintHostedBadges();
   }
 
   async function saveCartesiaKey() {
@@ -3257,9 +3387,20 @@ export function createEditor(ctx) {
       toast(t("toast.needCaptionText"));
       return;
     }
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const ownTts = !hostedFirst && (await hasOwnTts());
+    if (!ownTts) {
+      const gate = await ensureHostedFeature?.("tts", () => generateCaptionAudio(indices));
+      if (gate === "blocked") return;
+      if (gate !== "proceed") {
+        toast(t("cartesia.noKey"));
+        return;
+      }
+    }
     setGenerateBusy("audio", true);
     let ok = 0;
     let failed = 0;
+    let gated = false;
     let lastError = "";
     const skipped = list.length - workable.length;
     try {
@@ -3267,10 +3408,26 @@ export function createEditor(ctx) {
         const step = demo.steps[idx];
         const text = captionTextForStep(step, idx);
         try {
-          const clips = await generateNarrationClips(text, {
-            voiceURI: demo.narration.voiceURI,
-            rate: demo.narration.rate,
-          });
+          let clips;
+          if (ownTts) {
+            clips = await generateNarrationClips(text, {
+              voiceURI: demo.narration.voiceURI,
+              rate: demo.narration.rate,
+            });
+          } else {
+            const hosted = await synthesizeHostedSpeech(text, {
+              voice: demo.narration.voiceURI,
+            });
+            if (!hosted.ok) {
+              if (presentHostedFailure?.(hosted, "tts")) {
+                gated = true;
+                break;
+              }
+              throw new Error(hosted.message || t("toast.audioGenFail"));
+            }
+            clips = [hosted.clip];
+            noteHostedUsage?.(hosted.data?.usage);
+          }
           const durations = await measureClipDurations(clips);
           const playbackRate = normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate);
           step.caption = text;
@@ -3300,6 +3457,7 @@ export function createEditor(ctx) {
       renderCanvas();
       onChange();
     }
+    if (gated && !ok) return;
     if (ok && !failed && !skipped) {
       toast(ok > 1 ? t("toast.audioSavedMany", { n: ok }) : t("toast.audioSaved"));
     } else if (ok) {
@@ -3716,7 +3874,7 @@ export function createEditor(ctx) {
   bindPopoverDrag();
   bindForm();
 
-  return { refresh, selectStep, currentStep, pauseCaption, stopPreview };
+  return { refresh, selectStep, currentStep, pauseCaption, stopPreview, paintHostedBadges };
 }
 
 function getImageContentRect(img) {

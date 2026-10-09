@@ -347,7 +347,11 @@ export function joinCloudUrl(baseUrl, path) {
 
 function cloudErrorCode(data, status) {
   if (data && typeof data.error === "string" && data.error) return data.error;
+  // why: o gate de assinatura manda `code`, não `error` (402 subscription_required, 429 quota_exceeded).
+  if (data && typeof data.code === "string" && data.code) return data.code;
   if (status === 401) return "unauthorized";
+  if (status === 402) return "subscription_required";
+  if (status === 429) return "quota_exceeded";
   return status ? `http_${status}` : "request_failed";
 }
 

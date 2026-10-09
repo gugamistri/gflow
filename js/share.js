@@ -170,7 +170,7 @@ function cloudPlanLimitMessage(data) {
  */
 export function permanentShareErrorMessage(result) {
   const data = result?.data && typeof result.data === "object" ? result.data : {};
-  const code = String(result?.error || result?.reason || data.error || "");
+  const code = String(result?.error || result?.reason || data.error || data.code || "");
   if (code === "share_limit" || data.error === "share_limit") return cloudPlanLimitMessage(data);
   if (code === "invalid_credentials" || code === "invalid_password") return t("share.cloud.badLogin");
   if (result?.status === 401 || code === "unauthorized") return t("share.cloud.unauthorized");
@@ -179,6 +179,15 @@ export function permanentShareErrorMessage(result) {
   if (code === "email_failed" || code === "config_missing") return t("share.cloud.emailFailed");
   if (code === "cloud-not-configured") return t("share.cloud.off");
   if (code === "network" || code === "invalid_path") return t("share.cloud.network");
+  if (result?.status === 503) return t("billing.unavailable");
+  if (result?.status === 402 || code === "subscription_required") {
+    const message = typeof result?.message === "string" ? result.message.trim() : "";
+    return message || t("billing.message");
+  }
+  if (result?.status === 429 || code === "quota_exceeded") {
+    const message = typeof result?.message === "string" ? result.message.trim() : "";
+    return message || t("billing.quota");
+  }
   return t("share.cloud.generic");
 }
 
@@ -235,6 +244,9 @@ export async function publishPermanentShare(project, { onProgress, env, buildSna
     const err = new Error(permanentShareErrorMessage(result));
     err.code = result.error || result.reason || "share_failed";
     err.status = result.status;
+    const body = result.data && typeof result.data === "object" ? result.data : {};
+    err.feature = typeof body.feature === "string" ? body.feature : "";
+    err.plan = typeof body.plan === "string" ? body.plan : "";
     throw err;
   }
   const payload = readPermanentPayload(result.data);

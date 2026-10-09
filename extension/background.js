@@ -16,6 +16,7 @@ chrome.storage.local.get(LOCALE_KEY).then((stored) => {
 
 const SCRIPT_ID = "guia-capture";
 const BRIDGE_ID = "guia-bridge";
+const BRIDGE_FILES = ["lib/handoff-deliver.js", "bridge.js"];
 const STORAGE_KEY = "guiaCapture";
 const SETTINGS_KEY = "guiaCaptureSettings";
 const HANDOFF_KEY = "guiaCaptureHandoff";
@@ -138,7 +139,7 @@ async function ensureBridge(origin) {
   await chrome.scripting.registerContentScripts([
     {
       id: BRIDGE_ID,
-      js: ["bridge.js"],
+      js: BRIDGE_FILES,
       matches: [pattern],
       runAt: "document_idle",
       persistAcrossSessions: false,
@@ -165,8 +166,27 @@ async function inject(tabId) {
 async function injectBridge(tabId) {
   await chrome.scripting.executeScript({
     target: { tabId },
-    files: ["bridge.js"],
+    files: BRIDGE_FILES,
   });
+}
+
+async function relayHandoff(message, sender) {
+  const tabId = sender?.tab?.id;
+  if (!tabId || !message?.payload) return { ok: false };
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      world: "MAIN",
+      args: [message],
+      func: (data) => {
+        window.postMessage(data, location.origin);
+        document.dispatchEvent(new CustomEvent("guia-capture-handoff", { detail: data }));
+      },
+    });
+  } catch {
+    return { ok: false };
+  }
+  return { ok: true };
 }
 
 async function broadcast(state) {
@@ -420,8 +440,9 @@ async function deliverHandoff({ name, editorOrigin, mode } = {}) {
   }
 
   const handoffMode = mode === "append" ? "append" : "create";
+  const handoffId = Date.now();
   await chrome.storage.local.set({
-    [HANDOFF_KEY]: { payload, mode: handoffMode, createdAt: Date.now(), origin },
+    [HANDOFF_KEY]: { id: handoffId, payload, mode: handoffMode, createdAt: handoffId, origin },
   });
 
   let tab = await findEditorTab(origin);
@@ -439,7 +460,7 @@ async function deliverHandoff({ name, editorOrigin, mode } = {}) {
     }
     await injectBridge(tab.id);
     await chrome.tabs
-      .sendMessage(tab.id, { type: "HANDOFF_PUSH", payload, mode: handoffMode })
+      .sendMessage(tab.id, { type: "HANDOFF_PUSH", id: handoffId, payload, mode: handoffMode })
       .catch(() => {});
   } catch {
     return publicState({
@@ -574,6 +595,8 @@ async function handle(msg, sender) {
       return createProject();
     case "HANDOFF_GET":
       return getHandoff();
+    case "HANDOFF_RELAY":
+      return relayHandoff(msg.message, sender);
     case "HANDOFF_ACK":
       return onHandoffAck(msg);
     default:

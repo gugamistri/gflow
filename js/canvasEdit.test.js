@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   POPOVER_GAP,
   isTypingTarget,
+  keyboardInsetShift,
   placePopoverBox,
   readInlineText,
   snapPopoverPlacement,
@@ -18,6 +19,13 @@ test("isTypingTarget ignora o palco e respeita campo e contenteditable", () => {
   assert.equal(isTypingTarget({ tagName: "SELECT" }), true);
   assert.equal(isTypingTarget({ tagName: "DIV", isContentEditable: true }), true);
   assert.equal(isTypingTarget({ tagName: "DIV", isContentEditable: false }), false);
+});
+
+test("keyboardInsetShift sobe o campo que o teclado cobriria", () => {
+  const viewport = { offsetTop: 0, height: 400 };
+  assert.equal(keyboardInsetShift({ top: 120, bottom: 160 }, viewport), 0);
+  assert.equal(keyboardInsetShift({ top: 300, bottom: 460 }, viewport), 72);
+  assert.equal(keyboardInsetShift({ top: -20, bottom: 40 }, viewport), 0);
 });
 
 test("readInlineText tira o newline final do contenteditable", () => {
