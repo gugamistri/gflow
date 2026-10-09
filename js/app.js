@@ -95,13 +95,16 @@ import {
   classifyCloudGate,
   emptyEntitlement,
   exportShowsWatermark,
+  fetchAccountProfile,
   fetchBillingEntitlement,
   hostedAccess,
+  mergeAccountAccess,
   hostedQuotaCopy,
   hostedUsageMeters,
   shouldShowByokSettings,
   readBillingReturn,
   shouldShowProBadge,
+  startAdminHandoff,
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
@@ -627,8 +630,11 @@ function paintAccount() {
     planEl.hidden = !menu.showPlan;
     planEl.classList.toggle("is-pending", pending);
     if (pending) planEl.textContent = t("billing.pastDue");
+    else if (menu.planLabel === "comp") planEl.textContent = t("billing.planLine", { plan: t("billing.planComp") });
     else if (menu.showPlan) planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
   }
+  const adminBtn = document.getElementById("btn-account-admin");
+  if (adminBtn) adminBtn.hidden = !menu.showAdmin;
   if (billingBtn) {
     billingBtn.hidden = !menu.showAction;
     if (menu.showAction) {
@@ -655,11 +661,17 @@ async function refreshEntitlement(sessionId = "") {
     return null;
   }
   const ticket = ++billingTicket;
-  const result = await fetchBillingEntitlement(sessionId);
+  const [result, profile] = await Promise.all([
+    fetchBillingEntitlement(sessionId),
+    fetchAccountProfile(),
+  ]);
   if (ticket !== billingTicket) return result;
-  if (result?.ok && result.entitlement) {
+  if (result?.ok || profile?.ok) {
     billingView = { status: "ready" };
-    billingEntitlement = result.entitlement;
+    billingEntitlement = mergeAccountAccess(
+      result?.ok ? result.entitlement : null,
+      profile?.ok ? profile.profile : null
+    );
   } else {
     billingView = { status: "hidden" };
     billingEntitlement = emptyEntitlement();
@@ -931,6 +943,39 @@ async function consumeBillingReturn() {
     return;
   }
   if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
+}
+
+function openAdmin() {
+  const tab = window.open("about:blank", "_blank");
+  if (!tab) {
+    toast(t("account.adminFail"));
+    return;
+  }
+  void (async () => {
+    try {
+      const result = await startAdminHandoff();
+      if (result?.status === 401 || result?.error === "unauthorized") {
+        tab.close();
+        toast(t("share.cloud.unauthorized"));
+        return;
+      }
+      if (result?.status === 403) {
+        tab.close();
+        toast(t("account.adminDenied"));
+        return;
+      }
+      if (!result?.ok || !result.url) {
+        tab.close();
+        toast(t("account.adminFail"));
+        return;
+      }
+      tab.location.href = result.url;
+    } catch (err) {
+      console.error(err);
+      tab.close();
+      toast(t("account.adminFail"));
+    }
+  })();
 }
 
 async function openBillingPortal() {
@@ -2019,6 +2064,10 @@ function bindChrome() {
     if (billingView.status === "ready" && (billingEntitlement.active || billingEntitlement.status === "past_due")) {
       void openBillingPortal();
     } else showUpgradeDialog();
+  });
+  document.getElementById("btn-account-admin")?.addEventListener("click", () => {
+    closeAccountMenus();
+    openAdmin();
   });
   document.getElementById("btn-upgrade-close")?.addEventListener("click", () => {
     closeUpgradeDialog();
