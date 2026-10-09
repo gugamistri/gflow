@@ -89,8 +89,8 @@ test("POST /shares devolve o URL e não leva o bearer no corpo", async () => {
       env,
       buildSnapshot: async () => ({ name: "Tour da nuvem", steps: [{ title: "Um" }] }),
     });
-    assert.equal(share.url, "https://app.guiaflow.pro/v/slug-permanente");
-    assert.equal(share.id, "sh_1");
+    assert.equal(share.url, "https://guiaflow.pro/p/slug-permanente");
+    assert.equal(share.slug, "slug-permanente");
     assert.equal(seen.url, "https://app.guiaflow.pro/shares");
     assert.equal(new Headers(seen.init.headers).get("authorization"), "Bearer jwt-session");
     const body = JSON.parse(seen.init.body);
@@ -123,6 +123,138 @@ test("URL absoluta em guiaflow.pro/p fica como a API devolveu", async () => {
     assert.equal(share.url, "https://guiaflow.pro/p/slug-permanente");
     assert.equal(share.url.includes("app.guiaflow.pro"), false);
     assert.equal(share.id, "slug-permanente");
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
+test("PUT /shares/:slug atualiza no lugar e 404 ou 403 criam outro", async () => {
+  const prev = globalThis.fetch;
+  const cases = [
+    { status: 404, body: { ok: false, error: "not_found" } },
+    { status: 403, body: { ok: false, error: "not_owner" } },
+  ];
+  try {
+    for (const item of cases) {
+      const seen = [];
+      globalThis.fetch = async (url, init) => {
+        seen.push({ url: String(url), method: init.method, body: init.body });
+        if (init.method === "PUT") {
+          return { ok: false, status: item.status, json: async () => item.body };
+        }
+        return {
+          ok: true,
+          status: 201,
+          json: async () => ({
+            ok: true,
+            share: { slug: "novo-slug", url: "https://app.guiaflow.pro/v/novo-slug", createdAt: "2026-10-09T00:00:00.000Z", updatedAt: "2026-10-09T00:00:00.000Z" },
+          }),
+        };
+      };
+      const share = await publishPermanentShare(project(), {
+        env,
+        slug: "slug-velho",
+        buildSnapshot: async () => ({ name: "Tour", steps: [{ title: "Um" }] }),
+      });
+      assert.equal(seen[0].method, "PUT");
+      assert.equal(seen[0].url, "https://app.guiaflow.pro/shares/slug-velho");
+      assert.equal(JSON.parse(seen[0].body).tour.steps[0].title, "Um");
+      assert.equal(seen[1].method, "POST");
+      assert.equal(seen[1].url, "https://app.guiaflow.pro/shares");
+      assert.equal(share.url, "https://guiaflow.pro/p/novo-slug");
+      assert.equal(share.slug, "novo-slug");
+    }
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
+test("PUT 200 reescreve app.guiaflow.pro/v para guiaflow.pro/p e 500 não cria outro", async () => {
+  const prev = globalThis.fetch;
+  try {
+    let calls = 0;
+    globalThis.fetch = async (url, init) => {
+      calls += 1;
+      assert.equal(init.method, "PUT");
+      assert.equal(String(url), "https://app.guiaflow.pro/shares/demo-rcv-90bc01");
+      const sent = JSON.parse(init.body);
+      assert.equal(sent.title, "Tour da nuvem");
+      assert.ok(sent.tour);
+      assert.equal(sent.payloadRef, undefined);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          share: {
+            slug: "demo-rcv-90bc01",
+            url: "https://app.guiaflow.pro/v/demo-rcv-90bc01",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-10-09T12:00:00.000Z",
+          },
+        }),
+      };
+    };
+    const share = await publishPermanentShare(project(), {
+      env,
+      slug: "demo-rcv-90bc01",
+      buildSnapshot: async () => ({ name: "Tour", steps: [] }),
+    });
+    assert.equal(calls, 1);
+    assert.equal(share.url, "https://guiaflow.pro/p/demo-rcv-90bc01");
+    assert.equal(share.updatedAt, Date.parse("2026-10-09T12:00:00.000Z"));
+
+    calls = 0;
+    globalThis.fetch = async (_url, init) => {
+      calls += 1;
+      assert.equal(init.method, "PUT");
+      return { ok: false, status: 500, json: async () => ({ ok: false, error: "failed" }) };
+    };
+    await assert.rejects(
+      () =>
+        publishPermanentShare(project(), {
+          env,
+          slug: "demo-rcv-90bc01",
+          buildSnapshot: async () => ({ name: "Tour", steps: [] }),
+        }),
+      (err) => err.status === 500
+    );
+    assert.equal(calls, 1);
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
+test("401 e 402 no PUT não criam outro link", async () => {
+  const prev = globalThis.fetch;
+  try {
+    for (const status of [401, 402]) {
+      let posts = 0;
+      globalThis.fetch = async (_url, init) => {
+        if (init.method === "POST") posts += 1;
+        return {
+          ok: false,
+          status,
+          json: async () => ({
+            ok: false,
+            error: status === 401 ? "unauthorized" : "subscription_required",
+          }),
+        };
+      };
+      await assert.rejects(
+        () =>
+          publishPermanentShare(project(), {
+            env,
+            slug: "demo-rcv-90bc01",
+            buildSnapshot: async () => ({ name: "Tour", steps: [{ title: "Um" }] }),
+          }),
+        (err) => err.status === status
+      );
+      assert.equal(posts, 0);
+    }
   } finally {
     if (prev === undefined) delete globalThis.fetch;
     else globalThis.fetch = prev;

@@ -53,6 +53,13 @@ import {
 } from "./share.js";
 import { shareViewUrl } from "./shareSnapshot.js";
 import {
+  hashSharePayload,
+  permanentPublicUrl,
+  permanentSlug,
+  shareFreshness,
+  shareRecordIsStale,
+} from "./shareLink.js";
+import {
   initLocale,
   applyI18n,
   bindLocaleSelect,
@@ -364,6 +371,7 @@ function commitPendingEdit() {
   settleTimer = null;
   if (project && !historyLock) history.settle(project);
   updateHistoryButtons();
+  paintShareMenu();
 }
 
 function applyHistoryState(next) {
@@ -564,13 +572,63 @@ function openEditor() {
   paintShareMenu();
 }
 
+function viewerIsPro() {
+  return billingEntitlement.plan === "pro";
+}
+
+function activeShareRecord() {
+  if (!project) return null;
+  if (viewerIsPro()) return project.cloudShare || null;
+  return project.share?.id && project.share?.writeToken ? project.share : null;
+}
+
+function displayedShareUrl(record) {
+  if (!record) return "";
+  if (viewerIsPro()) return permanentPublicUrl(record);
+  return record.id ? shareViewUrl(record.id) : "";
+}
+
 function paintShareMenu() {
+  const pro = viewerIsPro();
+  const record = activeShareRecord();
+  const hasLink = Boolean(record);
+  const stale = Boolean(record && project && shareRecordIsStale(record, project));
+  const expiry = document.getElementById("share-expiry-note");
+  const upsell = document.getElementById("cloud-share-block");
   const publishBtn = document.getElementById("btn-share-publish");
+  const publishDesc = document.getElementById("share-publish-desc");
   const actions = document.getElementById("share-link-actions");
-  const hasShare = Boolean(project?.share?.id && project?.share?.writeToken);
-  if (publishBtn) publishBtn.hidden = hasShare;
-  if (actions) actions.hidden = !hasShare;
-  paintCloudShare();
+  const republish = document.getElementById("btn-share-republish");
+  const revoke = document.getElementById("btn-share-revoke");
+  const staleBadge = document.getElementById("share-stale");
+  const status = document.getElementById("share-link-status");
+  const urlInput = document.getElementById("share-link-url");
+  const dot = document.getElementById("share-stale-dot");
+  if (expiry) expiry.hidden = pro;
+  if (upsell) upsell.hidden = pro || !isCloudEnabled();
+  if (publishBtn) publishBtn.hidden = hasLink;
+  if (publishDesc) {
+    publishDesc.textContent = t(pro ? "share.proDesc" : "share.linkDesc");
+    publishDesc.dataset.i18n = pro ? "share.proDesc" : "share.linkDesc";
+  }
+  if (actions) actions.hidden = !hasLink;
+  if (urlInput) urlInput.value = displayedShareUrl(record);
+  if (republish) republish.hidden = !stale;
+  if (revoke) revoke.hidden = pro || !hasLink;
+  if (staleBadge) staleBadge.hidden = !stale;
+  if (status) {
+    status.hidden = stale;
+    if (!stale) {
+      const fresh = shareFreshness(record?.publishedAt || record?.updatedAt);
+      status.textContent = fresh.n ? t(fresh.key, { n: fresh.n }) : t(fresh.key);
+      status.dataset.i18n = fresh.key;
+    }
+  }
+  if (dot) {
+    dot.hidden = !stale;
+    dot.title = t("share.staleDot");
+  }
+  paintAccount();
 }
 
 function cloudShareEnabled() {
@@ -1069,25 +1127,7 @@ function closeAccountMenus() {
 }
 
 function paintCloudShare() {
-  const block = document.getElementById("cloud-share-block");
-  if (!block) return;
-  const enabled = cloudShareEnabled();
-  block.hidden = !enabled;
-  const signedIn = enabled && getCloudAccount().signedIn;
-  const url = signedIn ? String(project?.cloudShare?.url || "") : "";
-  const guest = document.getElementById("cloud-share-guest");
-  const publishBtn = document.getElementById("btn-cloud-share");
-  const result = document.getElementById("cloud-share-actions");
-  const urlInput = document.getElementById("cloud-share-url");
-  if (guest) guest.hidden = !enabled || signedIn;
-  if (publishBtn) publishBtn.hidden = !signedIn || Boolean(url);
-  if (result) result.hidden = !url;
-  if (urlInput) urlInput.value = url;
-  const badge = document.getElementById("cloud-share-badge");
-  if (badge) {
-    badge.hidden = Boolean(url) || !shouldShowProBadge({ ...billingSnapshot(), hasByok: false });
-  }
-  paintAccount();
+  paintShareMenu();
 }
 
 let resumeCloudPublishAfterLogin = async () => {};
@@ -2012,17 +2052,20 @@ function bindChrome() {
         id: share.id,
         writeToken: share.writeToken,
         updatedAt: share.updatedAt,
+        publishedAt: Date.now(),
+        payloadHash: hashSharePayload(project),
       };
       saveDirty = true;
       await flushAutosave();
       paintShareMenu();
       hideExportOverlay();
       await copyText(share.url);
+      if (exportPanel) exportPanel.open = true;
       toast(
         share.renewed
           ? t("toast.shareRenewed")
           : update
-            ? t("toast.shareUpdated")
+            ? t("toast.shareRepublished")
             : t("toast.sharePublished"),
         4200
       );
@@ -2034,27 +2077,40 @@ function bindChrome() {
   }
 
   document.getElementById("btn-share-publish")?.addEventListener("click", () => {
+    if (viewerIsPro()) {
+      clearCloudPublishIntent();
+      void runCloudPublish();
+      return;
+    }
     void runSharePublish({ update: false });
   });
-  document.getElementById("btn-share-update")?.addEventListener("click", () => {
+  document.getElementById("btn-share-republish")?.addEventListener("click", () => {
+    if (viewerIsPro()) {
+      clearCloudPublishIntent();
+      void runCloudPublish();
+      return;
+    }
     void runSharePublish({ update: true });
   });
   document.getElementById("btn-share-copy")?.addEventListener("click", async () => {
-    closeExportMenu();
-    if (!project?.share?.id) return;
+    const url = displayedShareUrl(activeShareRecord());
+    if (!url) return;
     try {
-      await copyText(shareViewUrl(project.share.id));
+      await copyText(url);
       toast(t("toast.shareCopied"));
     } catch (err) {
       console.error(err);
+      const field = document.getElementById("share-link-url");
+      field?.focus();
+      field?.select();
       toast(err?.message || t("share.errGeneric"));
     }
   });
+  document.getElementById("cloud-share-block")?.addEventListener("click", () => {
+    showUpgradeDialog({ feature: "permanentShare" });
+  });
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
     showUpgradeDialog({ feature: "account" });
-  });
-  document.getElementById("btn-cloud-share-signin")?.addEventListener("click", () => {
-    showUpgradeDialog({ feature: "permanentShare" });
   });
   document.getElementById("btn-account-signout")?.addEventListener("click", () => {
     void signOutAccount();
@@ -2123,20 +2179,6 @@ function bindChrome() {
     if (e.target === e.currentTarget) e.currentTarget.close();
   });
 
-  document.getElementById("btn-cloud-share")?.addEventListener("click", () => {
-    if (!project || !cloudShareEnabled()) return;
-    if (isPastDue()) {
-      openFeatureGate("permanentShare");
-      return;
-    }
-    if (!getCloudAccount().signedIn || cloudShareNeedsUpgrade()) {
-      showUpgradeDialog({ feature: "permanentShare" });
-      return;
-    }
-    clearCloudPublishIntent();
-    void runCloudPublish();
-  });
-
   document.getElementById("cloud-magic-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
     void sendCloudMagicLink();
@@ -2149,21 +2191,6 @@ function bindChrome() {
 
   document.getElementById("btn-cloud-continue")?.addEventListener("click", () => {
     void continueCloudLogin();
-  });
-
-  document.getElementById("btn-cloud-copy")?.addEventListener("click", async () => {
-    const url = project?.cloudShare?.url;
-    if (!url) return;
-    try {
-      await copyText(url);
-      toast(t("toast.cloudCopied"));
-    } catch (err) {
-      console.error(err);
-      const field = document.getElementById("cloud-share-url");
-      field?.focus();
-      field?.select();
-      toast(t("toast.cloudCopyFail"));
-    }
   });
 
   async function signOutAccount() {
@@ -2355,15 +2382,20 @@ function bindChrome() {
     project.theme = formToTheme(project.theme);
     showExportOverlay(t("share.cloud.overlay"));
     try {
+      const updating = Boolean(permanentSlug(project.cloudShare));
       const share = await publishPermanentShare(project, {
+        slug: updating ? permanentSlug(project.cloudShare) : "",
         onProgress: (msg) => {
           overlayStatus.textContent = msg;
         },
       });
       project.cloudShare = {
-        id: share.id,
+        id: share.slug || share.id,
+        slug: share.slug || share.id,
         url: share.url,
         updatedAt: share.updatedAt,
+        publishedAt: Date.now(),
+        payloadHash: hashSharePayload(project),
       };
       saveDirty = true;
       await flushAutosave();
@@ -2372,7 +2404,7 @@ function bindChrome() {
       if (exportPanel) exportPanel.open = true;
       try {
         await copyText(share.url);
-        toast(t("toast.cloudPublished"), 4200);
+        toast(updating ? t("toast.shareRepublished") : t("toast.shareCopied"), 4200);
       } catch (err) {
         console.error(err);
       }
