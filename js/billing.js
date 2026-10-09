@@ -5,10 +5,13 @@
  */
 
 import { cloudFetch } from "./cloudConfig.js";
-import { buildCheckoutBody, readBillingReturn, stripBillingReturn } from "./paywall.js";
+import { buildCheckoutBody, formatPaywallAmount, paywallCurrency, readBillingReturn, stripBillingReturn } from "./paywall.js";
 
 export const BILLING_CHECKOUT_PATH = "/billing/checkout";
 export const BILLING_PORTAL_PATH = "/billing/portal";
+export const BILLING_SUBSCRIPTION_PATH = "/billing/subscription";
+export const BILLING_CANCEL_PATH = "/billing/cancel";
+export const BILLING_RESUME_PATH = "/billing/resume";
 export const BILLING_ENTITLEMENT_PATH = "/billing/entitlement";
 export const AUTH_ME_PATH = "/auth/me";
 export const AUTH_HANDOFF_PATH = "/auth/handoff";
@@ -323,4 +326,135 @@ export async function startBillingPortal(env) {
   const url = redirectUrl(result.data?.portal?.url);
   if (!url) return { ok: false, error: "invalid_response", message: "", unavailable: false, url: "" };
   return { ok: true, status: result.status, url, unavailable: false };
+}
+
+/** O item do menu abre a tela. O portal da Stripe fica lá dentro, em pagamento e faturas. */
+export function accountBillingDestination({ status = "", entitlement = null } = {}) {
+  if (status === "ready" && entitlement && (entitlement.active || entitlement.status === "past_due")) {
+    return "subscription";
+  }
+  return "upgrade";
+}
+
+function subscriptionInterval(value) {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (raw === "year" || raw === "annual" || raw === "yearly") return "year";
+  if (raw === "month" || raw === "monthly") return "month";
+  return null;
+}
+
+function isoOrEmpty(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return "";
+  return raw;
+}
+
+/** Data longa. Em português, o fuso de São Paulo evita o dia virar na virada do UTC. */
+export function formatSubscriptionDate(iso, locale = "pt") {
+  const date = new Date(String(iso || ""));
+  if (Number.isNaN(date.getTime())) return "";
+  const loc = String(locale || "").toLowerCase() === "es" ? "es" : String(locale || "").toLowerCase() === "en" ? "en" : "pt";
+  const tag = loc === "es" ? "es-ES" : loc === "en" ? "en-US" : "pt-BR";
+  const timeZone = loc === "pt" ? "America/Sao_Paulo" : "UTC";
+  return new Intl.DateTimeFormat(tag, { dateStyle: "long", timeZone }).format(date);
+}
+
+export function parseSubscription(data) {
+  const body = data && typeof data === "object" ? data : {};
+  const nested =
+    body.subscription && typeof body.subscription === "object" && !Array.isArray(body.subscription)
+      ? body.subscription
+      : body;
+  const planSource = planSourceOf(nested.planSource);
+  const courtesy = isCourtesySource(planSource);
+  const amountRaw = Number(nested.amount);
+  const currencyRaw = String(nested.currency ?? "").trim().toLowerCase();
+  return {
+    plan: courtesy || planRank(nested.plan) === "pro" ? "pro" : "none",
+    planSource,
+    status: String(nested.status ?? "").trim().toLowerCase(),
+    interval: subscriptionInterval(nested.interval),
+    currency: currencyRaw === "brl" || currencyRaw === "usd" ? currencyRaw : "",
+    amount: Number.isFinite(amountRaw) ? Math.round(amountRaw) : null,
+    currentPeriodEnd: isoOrEmpty(nested.currentPeriodEnd),
+    cancelAtPeriodEnd: nested.cancelAtPeriodEnd === true,
+    compUntil: isoOrEmpty(nested.compUntil),
+    canCancel: nested.canCancel === true,
+    canResume: nested.canResume === true,
+  };
+}
+
+const EMPTY_SUBSCRIPTION_SCREEN = {
+  kind: "none",
+  planKey: "",
+  priceKey: "",
+  price: "",
+  statusKey: "",
+  whenKey: "",
+  whenDate: "",
+  canCancel: false,
+  canResume: false,
+  showPortal: false,
+};
+
+/** O que a tela mostra. Cortesia não cancela; quem não assina vê o convite do Pro. */
+export function subscriptionScreen(data, locale = "pt") {
+  const sub = parseSubscription(data);
+  if (sub.plan !== "pro") return { ...EMPTY_SUBSCRIPTION_SCREEN };
+  if (isCourtesySource(sub.planSource)) {
+    const whenDate = sub.compUntil ? formatSubscriptionDate(sub.compUntil, locale) : "";
+    return {
+      ...EMPTY_SUBSCRIPTION_SCREEN,
+      kind: "courtesy",
+      planKey: "billing.planComp",
+      whenKey: whenDate ? "billing.subValidUntil" : "billing.subNoEnd",
+      whenDate,
+    };
+  }
+  const scheduled = sub.cancelAtPeriodEnd;
+  const whenDate = sub.currentPeriodEnd ? formatSubscriptionDate(sub.currentPeriodEnd, locale) : "";
+  const currency = sub.currency || paywallCurrency(locale);
+  let price = "";
+  let priceKey = "";
+  if (sub.amount != null && (sub.interval === "month" || sub.interval === "year")) {
+    price = formatPaywallAmount(sub.amount / 100, currency);
+    priceKey = sub.interval === "year" ? "billing.yearAmount" : "billing.monthEquiv";
+  }
+  const planKey =
+    sub.interval === "year" ? "billing.subPlanAnnual" : sub.interval === "month" ? "billing.subPlanMonthly" : "billing.planCloud";
+  let statusKey = "billing.subStatusActive";
+  if (scheduled) statusKey = "billing.subStatusScheduled";
+  else if (sub.status === "past_due") statusKey = "billing.pastDue";
+  return {
+    kind: "paid",
+    planKey,
+    priceKey,
+    price,
+    statusKey,
+    whenKey: whenDate ? (scheduled ? "billing.subAccessUntil" : "billing.subRenews") : "",
+    whenDate,
+    canCancel: sub.canCancel,
+    canResume: sub.canResume,
+    showPortal: true,
+  };
+}
+
+async function subscriptionResult(path, method, env) {
+  const result = await cloudFetch(path, { method }, env);
+  if (!result.ok) return { ...result, subscription: null };
+  return { ok: true, status: result.status, subscription: parseSubscription(result.data) };
+}
+
+export function fetchSubscription(env) {
+  return subscriptionResult(BILLING_SUBSCRIPTION_PATH, "GET", env);
+}
+
+export function cancelSubscription(env) {
+  return subscriptionResult(BILLING_CANCEL_PATH, "POST", env);
+}
+
+export function resumeSubscription(env) {
+  return subscriptionResult(BILLING_RESUME_PATH, "POST", env);
 }

@@ -102,16 +102,20 @@ import {
   writeCloudPublishIntent,
 } from "./cloudConfig.js";
 import {
+  accountBillingDestination,
   billingMenuModel,
+  cancelSubscription,
   classifyCloudGate,
   emptyEntitlement,
   exportShowsWatermark,
   fetchAccountProfile,
   fetchBillingEntitlement,
+  fetchSubscription,
   hostedAccess,
   mergeAccountAccess,
   hostedQuotaCopy,
   hostedUsageMeters,
+  resumeSubscription,
   shouldShowByokSettings,
   readBillingReturn,
   shouldShowProBadge,
@@ -119,6 +123,7 @@ import {
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
+  subscriptionScreen,
   upgradeCopyKeys,
 } from "./billing.js";
 import {
@@ -682,6 +687,10 @@ let upgradeFeature = "";
 let upgradeEmail = "";
 let upgradeEmailNote = false;
 let upgradeHandoffToLogin = false;
+let subscriptionRecord = null;
+let subscriptionPhase = "loading";
+let subscriptionBusy = false;
+let subscriptionTicket = 0;
 let pendingHostedResume = null;
 let pendingHostedFeature = "";
 const LOCAL_SAVE_DISMISS_KEY = "guiaflow.localSaveDismissed";
@@ -1091,6 +1100,142 @@ function openAdmin() {
       toast(t("account.adminFail"));
     }
   })();
+}
+
+function paintSubscription() {
+  const loading = document.getElementById("subscription-loading");
+  const error = document.getElementById("subscription-error");
+  const ready = document.getElementById("subscription-ready");
+  const confirm = document.getElementById("subscription-confirm");
+  const facts = document.getElementById("subscription-facts");
+  const none = document.getElementById("subscription-none");
+  if (loading) loading.hidden = subscriptionPhase !== "loading";
+  if (error) error.hidden = subscriptionPhase !== "error";
+  if (ready) ready.hidden = subscriptionPhase !== "ready";
+  if (confirm) confirm.hidden = subscriptionPhase !== "confirm";
+  const screen = subscriptionRecord ? subscriptionScreen(subscriptionRecord, getLocale()) : null;
+  const showFacts = Boolean(screen && screen.kind !== "none");
+  if (facts) facts.hidden = !showFacts;
+  if (none) none.hidden = screen?.kind !== "none";
+  const plan = document.getElementById("subscription-plan");
+  if (plan) plan.textContent = screen?.planKey ? t(screen.planKey) : "";
+  const price = document.getElementById("subscription-price");
+  if (price) {
+    price.hidden = !screen?.priceKey;
+    price.textContent = screen?.priceKey ? t(screen.priceKey, { price: screen.price }) : "";
+  }
+  const statusLabel = document.getElementById("subscription-status-label");
+  const state = document.getElementById("subscription-state");
+  if (statusLabel) statusLabel.hidden = !screen?.statusKey;
+  if (state) {
+    state.hidden = !screen?.statusKey;
+    state.textContent = screen?.statusKey ? t(screen.statusKey) : "";
+    state.classList.toggle("is-pending", screen?.statusKey === "billing.pastDue");
+    state.classList.toggle("is-scheduled", screen?.statusKey === "billing.subStatusScheduled");
+  }
+  const when = document.getElementById("subscription-when");
+  if (when) {
+    when.hidden = !screen?.whenKey;
+    when.textContent = !screen?.whenKey
+      ? ""
+      : screen.whenKey === "billing.subNoEnd"
+        ? t(screen.whenKey)
+        : t(screen.whenKey, { date: screen.whenDate });
+  }
+  const cancel = document.getElementById("btn-subscription-cancel");
+  if (cancel) {
+    cancel.hidden = !screen?.canCancel;
+    cancel.disabled = subscriptionBusy;
+  }
+  const resume = document.getElementById("btn-subscription-resume");
+  if (resume) {
+    resume.hidden = !screen?.canResume;
+    resume.disabled = subscriptionBusy;
+  }
+  const upsell = document.getElementById("btn-subscription-upsell");
+  if (upsell) upsell.hidden = screen?.kind !== "none";
+  const portal = document.getElementById("btn-subscription-portal");
+  if (portal) portal.hidden = !screen?.showPortal;
+  const confirmCopy = document.getElementById("subscription-confirm-copy");
+  if (confirmCopy) {
+    confirmCopy.textContent = screen?.whenDate
+      ? t("billing.subConfirm", { date: screen.whenDate })
+      : t("billing.subConfirmOpen");
+  }
+  const confirmBtn = document.getElementById("btn-subscription-confirm");
+  if (confirmBtn) confirmBtn.disabled = subscriptionBusy;
+}
+
+function closeSubscriptionDialog() {
+  subscriptionTicket += 1;
+  const dialog = document.getElementById("modal-subscription");
+  if (dialog?.open) dialog.close();
+}
+
+async function loadSubscription() {
+  const ticket = ++subscriptionTicket;
+  subscriptionPhase = "loading";
+  subscriptionBusy = false;
+  paintSubscription();
+  const result = await fetchSubscription();
+  if (ticket !== subscriptionTicket) return;
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    closeSubscriptionDialog();
+    await endCloudSession();
+    resetBillingView();
+    paintCloudShare();
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return;
+  }
+  if (!result?.ok || !result.subscription) {
+    subscriptionPhase = "error";
+    subscriptionRecord = null;
+    paintSubscription();
+    return;
+  }
+  subscriptionRecord = result.subscription;
+  subscriptionPhase = "ready";
+  paintSubscription();
+}
+
+async function openSubscriptionDialog() {
+  if (!isCloudEnabled()) return;
+  const dialog = document.getElementById("modal-subscription");
+  if (!dialog) return;
+  subscriptionRecord = null;
+  subscriptionPhase = "loading";
+  subscriptionBusy = false;
+  paintSubscription();
+  if (!dialog.open) dialog.showModal();
+  await loadSubscription();
+}
+
+async function changeSubscription(action) {
+  if (subscriptionBusy) return;
+  subscriptionBusy = true;
+  paintSubscription();
+  const result = action === "resume" ? await resumeSubscription() : await cancelSubscription();
+  subscriptionBusy = false;
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    closeSubscriptionDialog();
+    await endCloudSession();
+    resetBillingView();
+    paintCloudShare();
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return;
+  }
+  if (!result?.ok || !result.subscription) {
+    toast(result?.error === "network" ? t("share.cloud.network") : t("billing.unavailable"));
+    paintSubscription();
+    return;
+  }
+  subscriptionRecord = result.subscription;
+  subscriptionPhase = "ready";
+  paintSubscription();
+  toast(t(action === "resume" ? "billing.subToastResume" : "billing.subToastCancel"));
+  void refreshEntitlement();
 }
 
 async function openBillingPortal() {
@@ -2174,9 +2319,42 @@ function bindChrome() {
   });
   document.getElementById("btn-account-billing")?.addEventListener("click", () => {
     closeAccountMenus();
-    if (billingView.status === "ready" && (billingEntitlement.active || billingEntitlement.status === "past_due")) {
-      void openBillingPortal();
-    } else showUpgradeDialog();
+    const destination = accountBillingDestination({
+      status: billingView.status,
+      entitlement: billingEntitlement,
+    });
+    if (destination === "subscription") void openSubscriptionDialog();
+    else showUpgradeDialog();
+  });
+  document.getElementById("btn-subscription-close")?.addEventListener("click", () => {
+    closeSubscriptionDialog();
+  });
+  document.getElementById("modal-subscription")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeSubscriptionDialog();
+  });
+  document.getElementById("btn-subscription-retry")?.addEventListener("click", () => {
+    void loadSubscription();
+  });
+  document.getElementById("btn-subscription-cancel")?.addEventListener("click", () => {
+    subscriptionPhase = "confirm";
+    paintSubscription();
+  });
+  document.getElementById("btn-subscription-back")?.addEventListener("click", () => {
+    subscriptionPhase = "ready";
+    paintSubscription();
+  });
+  document.getElementById("btn-subscription-confirm")?.addEventListener("click", () => {
+    void changeSubscription("cancel");
+  });
+  document.getElementById("btn-subscription-resume")?.addEventListener("click", () => {
+    void changeSubscription("resume");
+  });
+  document.getElementById("btn-subscription-portal")?.addEventListener("click", () => {
+    void openBillingPortal();
+  });
+  document.getElementById("btn-subscription-upsell")?.addEventListener("click", () => {
+    closeSubscriptionDialog();
+    showUpgradeDialog();
   });
   document.getElementById("btn-account-admin")?.addEventListener("click", () => {
     closeAccountMenus();
@@ -2753,6 +2931,7 @@ async function boot() {
     paintChrome();
     paintShareMenu();
     paintUpgradeCopy();
+    paintSubscription();
     paintReleaseNotesTitle();
     renderLibrary();
     syncThemeUi();

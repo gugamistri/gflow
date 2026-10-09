@@ -1,16 +1,23 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { cloudFetch } from "./cloudConfig.js";
 import {
+  accountBillingDestination,
   billingMenuModel,
+  cancelSubscription,
   classifyCloudGate,
   fetchBillingEntitlement,
+  fetchSubscription,
   parseEntitlement,
+  parseSubscription,
   readBillingReturn,
+  resumeSubscription,
   startAdminHandoff,
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
+  subscriptionScreen,
 } from "./billing.js";
 
 const env = { baseUrl: "https://app.guiaflow.pro", accessToken: "jwt-session" };
@@ -312,4 +319,152 @@ test("o handoff da administração usa a sessão e só aceita https", async () =
   }), () => startAdminHandoff(env));
   assert.equal(blocked.ok, false);
   assert.equal(blocked.url, "");
+});
+
+const MONTHLY = {
+  ok: true,
+  plan: "pro",
+  planSource: "stripe",
+  status: "active",
+  interval: "month",
+  currency: "brl",
+  amount: 4500,
+  currentPeriodEnd: "2026-11-09T15:00:00.000Z",
+  cancelAtPeriodEnd: false,
+  compUntil: null,
+  canCancel: true,
+  canResume: false,
+};
+
+test("a tela da assinatura formata preço, data e os estados", () => {
+  assert.equal(formatDateCheck(), "9 de novembro de 2026");
+  const monthly = subscriptionScreen(MONTHLY, "pt");
+  assert.equal(monthly.kind, "paid");
+  assert.equal(monthly.planKey, "billing.subPlanMonthly");
+  assert.equal(monthly.price, "R$45");
+  assert.equal(monthly.priceKey, "billing.monthEquiv");
+  assert.equal(monthly.statusKey, "billing.subStatusActive");
+  assert.equal(monthly.whenKey, "billing.subRenews");
+  assert.equal(monthly.whenDate, "9 de novembro de 2026");
+  assert.equal(monthly.canCancel, true);
+  assert.equal(monthly.canResume, false);
+  assert.equal(monthly.showPortal, true);
+
+  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 34800 }, "pt");
+  assert.equal(annual.planKey, "billing.subPlanAnnual");
+  assert.equal(annual.price, "R$348");
+  assert.equal(annual.priceKey, "billing.yearAmount");
+
+  const usd = subscriptionScreen({ ...MONTHLY, currency: "usd", amount: 900 }, "en");
+  assert.equal(usd.price, "US$9");
+
+  const scheduled = subscriptionScreen(
+    { ...MONTHLY, cancelAtPeriodEnd: true, canCancel: false, canResume: true },
+    "pt"
+  );
+  assert.equal(scheduled.statusKey, "billing.subStatusScheduled");
+  assert.equal(scheduled.whenKey, "billing.subAccessUntil");
+  assert.equal(scheduled.canCancel, false);
+  assert.equal(scheduled.canResume, true);
+
+  const late = subscriptionScreen({ ...MONTHLY, status: "past_due", canCancel: false }, "pt");
+  assert.equal(late.statusKey, "billing.pastDue");
+
+  const comp = subscriptionScreen(
+    {
+      ...MONTHLY,
+      plan: "none",
+      planSource: "comp",
+      amount: null,
+      interval: null,
+      canCancel: true,
+      compUntil: "2026-12-01T15:00:00.000Z",
+    },
+    "pt"
+  );
+  assert.equal(comp.kind, "courtesy");
+  assert.equal(comp.planKey, "billing.planComp");
+  assert.equal(comp.whenKey, "billing.subValidUntil");
+  assert.equal(comp.whenDate, "1 de dezembro de 2026");
+  assert.equal(comp.canCancel, false);
+  assert.equal(comp.showPortal, false);
+  assert.equal(comp.price, "");
+
+  const forever = subscriptionScreen({ plan: "pro", planSource: "superadmin", compUntil: null, canCancel: true }, "pt");
+  assert.equal(forever.kind, "courtesy");
+  assert.equal(forever.whenKey, "billing.subNoEnd");
+  assert.equal(forever.canCancel, false);
+
+  assert.equal(subscriptionScreen({ plan: "none", planSource: null }, "pt").kind, "none");
+  assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 4500);
+  assert.equal(parseSubscription({ amount: "nope" }).amount, null);
+});
+
+function formatDateCheck() {
+  const screen = subscriptionScreen(MONTHLY, "pt");
+  return screen.whenDate;
+}
+
+test("o menu Gerenciar assinatura abre a tela, não o portal", () => {
+  assert.equal(
+    accountBillingDestination({ status: "ready", entitlement: { active: true, status: "active" } }),
+    "subscription"
+  );
+  assert.equal(
+    accountBillingDestination({ status: "ready", entitlement: { active: false, status: "past_due" } }),
+    "subscription"
+  );
+  assert.equal(
+    accountBillingDestination({ status: "ready", entitlement: { active: false, status: "none" } }),
+    "upgrade"
+  );
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="modal-subscription"');
+  const end = html.indexOf("</dialog>", start);
+  const dialog = html.slice(start, end);
+  assert.ok(start > 0 && end > start);
+  assert.match(dialog, /Gerenciar assinatura/);
+  assert.match(dialog, /Cancelar assinatura/);
+  assert.match(dialog, /Manter assinatura/);
+  assert.match(dialog, /Pagamento e faturas/);
+  assert.match(dialog, /Você ainda não tem o GuiaFlow/);
+  assert.equal(/nuvem/i.test(dialog), false);
+});
+
+test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
+  const seen = [];
+  const scheduled = { ...MONTHLY, cancelAtPeriodEnd: true, canCancel: false, canResume: true };
+  const resumed = { ...MONTHLY, cancelAtPeriodEnd: false, canCancel: true, canResume: false };
+  await withFetch(async (url, init) => {
+    seen.push({ url: String(url), method: init?.method });
+    const href = String(url);
+    if (href.endsWith("/billing/subscription")) {
+      return { ok: true, status: 200, json: async () => MONTHLY };
+    }
+    if (href.endsWith("/billing/cancel")) {
+      return { ok: true, status: 200, json: async () => scheduled };
+    }
+    if (href.endsWith("/billing/resume")) {
+      return { ok: true, status: 200, json: async () => resumed };
+    }
+    return { ok: false, status: 500, json: async () => ({}) };
+  }, async () => {
+    const loaded = await fetchSubscription(env);
+    assert.equal(loaded.ok, true);
+    assert.equal(loaded.subscription.interval, "month");
+    assert.equal(loaded.subscription.amount, 4500);
+    assert.equal(seen[0].url, "https://app.guiaflow.pro/billing/subscription");
+    assert.equal(seen[0].method, "GET");
+
+    const canceled = await cancelSubscription(env);
+    assert.equal(canceled.subscription.cancelAtPeriodEnd, true);
+    assert.equal(seen[1].url, "https://app.guiaflow.pro/billing/cancel");
+    assert.equal(seen[1].method, "POST");
+
+    const kept = await resumeSubscription(env);
+    assert.equal(kept.subscription.canResume, false);
+    assert.equal(kept.subscription.canCancel, true);
+    assert.equal(seen[2].url, "https://app.guiaflow.pro/billing/resume");
+    assert.equal(seen[2].method, "POST");
+  });
 });
