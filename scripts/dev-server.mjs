@@ -35,6 +35,8 @@ const server = createServer(async (req, res) => {
     pathname = "/auth/callback.html";
   }
   if (pathname.endsWith("/")) pathname += "index.html";
+  // why: a Vercel usa cleanUrls; /ajuda, /privacidade e /termos servem o .html de mesmo nome.
+  if (!extname(pathname)) pathname += ".html";
   const file = normalize(join(root, pathname));
   if (!file.startsWith(root.endsWith(sep) ? root : root + sep) && file !== root) {
     res.writeHead(403).end();

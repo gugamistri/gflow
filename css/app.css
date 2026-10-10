@@ -1812,6 +1812,45 @@ dialog.upgrade-modal {
   font-size: 1rem;
 }
 
+.paywall-legal {
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--ns-muted);
+}
+
+.paywall-legal a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.paywall-legal a:hover,
+.paywall-legal a:focus-visible {
+  color: var(--ns-ink);
+}
+
+.more-legal {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 2px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  color: var(--ns-muted);
+}
+
+.more-legal a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.more-legal a:hover,
+.more-legal a:focus-visible {
+  color: var(--ns-ink);
+  text-decoration: underline;
+}
+
 .paywall-login {
   justify-self: center;
   border: 0;
