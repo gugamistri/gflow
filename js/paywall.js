@@ -6,8 +6,8 @@
 export const PAYWALL_FEATURES = ["account", "permanentShare", "hostedAi", "tts", "branding"];
 
 export const PAYWALL_PRICES = {
-  usd: { month: 7, year: 70 },
-  brl: { month: 36, year: 360 },
+  usd: { month: 7, year: 69 },
+  brl: { month: 36, year: 359 },
 };
 
 const FEATURE_ALIASES = {

@@ -24,19 +24,19 @@ test("pt-BR vê real e os outros idiomas veem dólar", () => {
 test("preços e a economia do anual", () => {
   const usd = paywallOffer("usd");
   assert.equal(formatPaywallAmount(usd.month, "usd", "en"), "US$7");
-  assert.equal(formatPaywallAmount(usd.year, "usd", "en"), "US$70");
-  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "en"), "US$5.83");
-  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "es"), "US$5,83");
-  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "pt"), "US$5,83");
-  assert.equal(usd.percent, 17);
+  assert.equal(formatPaywallAmount(usd.year, "usd", "en"), "US$69");
+  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "en"), "US$5.75");
+  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "es"), "US$5,75");
+  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "pt"), "US$5,75");
+  assert.equal(usd.percent, 18);
   assert.equal(usd.months, 2);
   assert.equal(usd.freeMonths, 2);
   assert.equal(usd.paidMonths, 10);
 
   const brl = paywallOffer("brl");
   assert.equal(formatPaywallAmount(brl.month, "brl", "pt"), "R$36");
-  assert.equal(formatPaywallAmount(brl.year, "brl", "pt"), "R$360");
-  assert.equal(formatPaywallAmount(brl.monthEquiv, "brl", "pt"), "R$30");
+  assert.equal(formatPaywallAmount(brl.year, "brl", "pt"), "R$359");
+  assert.equal(formatPaywallAmount(brl.monthEquiv, "brl", "pt"), "R$29,92");
   assert.equal(brl.percent, 17);
   assert.equal(brl.months, 2);
   assert.equal(brl.freeMonths, 2);

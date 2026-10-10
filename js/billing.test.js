@@ -351,17 +351,17 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(monthly.canResume, false);
   assert.equal(monthly.showPortal, true);
 
-  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 360 }, "pt");
+  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 359 }, "pt");
   assert.equal(annual.planKey, "billing.subPlanAnnual");
-  assert.equal(annual.price, "R$360");
+  assert.equal(annual.price, "R$359");
   assert.equal(annual.priceKey, "billing.yearAmount");
 
   const usd = subscriptionScreen({ ...MONTHLY, currency: "usd", amount: 7 }, "en");
   assert.equal(usd.price, "US$7");
-  const usdYear = subscriptionScreen({ ...MONTHLY, currency: "usd", interval: "year", amount: 70 / 12 }, "en");
-  assert.equal(usdYear.price, "US$5.83");
-  const usdYearEs = subscriptionScreen({ ...MONTHLY, currency: "usd", interval: "year", amount: 70 / 12 }, "es");
-  assert.equal(usdYearEs.price, "US$5,83");
+  const usdYear = subscriptionScreen({ ...MONTHLY, currency: "usd", interval: "year", amount: 69 / 12 }, "en");
+  assert.equal(usdYear.price, "US$5.75");
+  const usdYearEs = subscriptionScreen({ ...MONTHLY, currency: "usd", interval: "year", amount: 69 / 12 }, "es");
+  assert.equal(usdYearEs.price, "US$5,75");
 
   const scheduled = subscriptionScreen(
     { ...MONTHLY, cancelAtPeriodEnd: true, canCancel: false, canResume: true },
