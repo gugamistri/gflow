@@ -377,7 +377,7 @@ export function parseSubscription(data) {
     status: String(nested.status ?? "").trim().toLowerCase(),
     interval: subscriptionInterval(nested.interval),
     currency: currencyRaw === "brl" || currencyRaw === "usd" ? currencyRaw : "",
-    amount: Number.isFinite(amountRaw) ? Math.round(amountRaw) : null,
+    amount: Number.isFinite(amountRaw) ? amountRaw : null,
     currentPeriodEnd: isoOrEmpty(nested.currentPeriodEnd),
     cancelAtPeriodEnd: nested.cancelAtPeriodEnd === true,
     compUntil: isoOrEmpty(nested.compUntil),
@@ -419,7 +419,7 @@ export function subscriptionScreen(data, locale = "pt") {
   let price = "";
   let priceKey = "";
   if (sub.amount != null && (sub.interval === "month" || sub.interval === "year")) {
-    price = formatPaywallAmount(sub.amount, currency);
+    price = formatPaywallAmount(sub.amount, currency, locale);
     priceKey = sub.interval === "year" ? "billing.yearAmount" : "billing.monthEquiv";
   }
   const planKey =

@@ -6,8 +6,8 @@
 export const PAYWALL_FEATURES = ["account", "permanentShare", "hostedAi", "tts", "branding"];
 
 export const PAYWALL_PRICES = {
-  usd: { month: 9, year: 72 },
-  brl: { month: 45, year: 348 },
+  usd: { month: 7, year: 69 },
+  brl: { month: 36, year: 359 },
 };
 
 const FEATURE_ALIASES = {
@@ -56,10 +56,21 @@ export function paywallOffer(currency) {
   };
 }
 
-export function formatPaywallAmount(amount, currency) {
+/** Vírgula em pt e es. Ponto em inglês. */
+export function paywallDecimalSeparator(locale) {
+  return String(locale || "").toLowerCase() === "en" ? "." : ",";
+}
+
+export function formatPaywallAmount(amount, currency, locale) {
   const symbol = currency === "brl" ? "R$" : "US$";
   const value = Number(amount);
-  const text = Number.isInteger(value) ? String(value) : String(Math.round(value));
+  if (!Number.isFinite(value)) return "";
+  const rounded = Math.round(value * 100) / 100;
+  const whole = Math.round(rounded);
+  const text =
+    Math.abs(rounded - whole) < 0.001
+      ? String(whole)
+      : rounded.toFixed(2).replace(".", paywallDecimalSeparator(locale ?? (currency === "brl" ? "pt" : "en")));
   return `${symbol}${text}`;
 }
 
