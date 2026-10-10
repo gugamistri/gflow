@@ -16,6 +16,7 @@ import {
 } from "./playback.js";
 import { t, getLocale, HTML_LANG, standaloneMessages } from "./i18n.js";
 import { timeStretchChannels } from "./timeStretch.js";
+import { LOGO_DARK_SVG } from "./brandLogo.js";
 
 const DRIVER_JS = "vendor/driver/driver.js.iife.js";
 const DRIVER_CSS = "vendor/driver/driver.css";
@@ -117,7 +118,7 @@ ${css}
 <body class="standalone">
   <header class="topbar">
     <div class="topbar-brand">
-      <span class="logo">Guia<span>Flow</span></span>
+      <span class="logo logo-brand">${LOGO_DARK_SVG}</span>
       <span class="topbar-title">${t("player.standaloneTitle")}</span>
     </div>
   </header>
