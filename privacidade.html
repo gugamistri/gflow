@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-appearance="social">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade — GuiaFlow</title>
+  <meta name="description" content="Como o GuiaFlow trata dados pessoais: o que fica no seu navegador, o que guardamos na conta Pro, fornecedores e seus direitos pela LGPD." />
+  <link rel="canonical" href="https://guiaflow.pro/privacidade" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Política de Privacidade — GuiaFlow" />
+  <meta property="og:description" content="Como o GuiaFlow trata dados pessoais: o que fica no seu navegador, o que guardamos na conta Pro, fornecedores e seus direitos pela LGPD." />
+  <meta property="og:url" content="https://guiaflow.pro/privacidade" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Crie tours guiados interativos" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Política de Privacidade — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#101010" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="a/40/css/theme.css" />
+  <link rel="stylesheet" href="a/40/css/app.css" />
+  <link rel="stylesheet" href="a/40/css/ajuda.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/40/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/40/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title">Privacidade</span>
+    </div>
+  </header>
+  <main class="page legal">
+    <h1>Política de Privacidade</h1>
+    <p class="lead">Explicamos aqui, em linguagem direta, quais dados o GuiaFlow trata, por quê, onde ficam e como você controla isso.</p>
+    <p class="legal-updated">Última atualização: 10 de outubro de 2026</p>
+    <section class="card" id="resumo">
+      <h2>Em resumo</h2>
+      <ul>
+        <li>Você pode usar o editor sem conta. Nesse caso, seus projetos ficam só no seu navegador, neste aparelho, e não chegam até nós.</li>
+        <li>Um link temporário guarda o tour publicado por 7 dias. Depois disso ele é apagado.</li>
+        <li>Quem assina o GuiaFlow Pro tem uma conta com e-mail. Guardamos o mínimo para a conta, a assinatura, os links permanentes e os limites de uso.</li>
+        <li>O pagamento é feito no Stripe. Nós não recebemos nem guardamos os dados do seu cartão.</li>
+        <li>Não usamos ferramentas de análise de audiência, publicidade ou rastreamento, e não vendemos dados.</li>
+      </ul>
+    </section>
+    <section class="card" id="controlador">
+      <h2>Quem cuida dos seus dados</h2>
+      <p>O GuiaFlow é mantido por Gustavo Ariel Mistrinelli, pessoa física, no Brasil, que é o controlador dos dados pessoais tratados no serviço, nos termos da Lei Geral de Proteção de Dados (Lei 13.709/2018, LGPD).</p>
+      <p>Para qualquer assunto sobre privacidade, inclusive para exercer seus direitos, escreva para <a href="mailto:{{CONTATO_EMAIL}}">{{CONTATO_EMAIL}}</a>. Esse é o canal de atendimento ao titular.</p>
+    </section>
+    <section class="card" id="sem-conta">
+      <h2>Uso sem conta: tudo fica no seu navegador</h2>
+      <p>O editor funciona sem login. Projetos, telas capturadas, textos, áudios e temas ficam guardados no armazenamento do próprio navegador (IndexedDB e localStorage), neste aparelho. Esse conteúdo não é enviado ao GuiaFlow enquanto você não publicar um link.</p>
+      <p>O navegador também guarda preferências simples, como idioma, aparência e avisos que você já fechou.</p>
+      <p>Se você limpar os dados do site no navegador, os projetos somem. Para guardar uma cópia, use a exportação do projeto.</p>
+      <p>Se você cadastrar uma chave própria de IA (por exemplo, OpenRouter) ou de voz (Cartesia), a chave fica guardada no navegador ou no app desktop, e os pedidos vão direto do seu aparelho para esse provedor, sob os termos e a política dele. O GuiaFlow não recebe essa chave.</p>
+    </section>
+    <section class="card" id="link-temporario">
+      <h2>Links temporários</h2>
+      <p>Ao criar um link temporário, o conteúdo do tour (título, telas, textos e áudios) é enviado e guardado no Vercel Blob, o armazenamento de arquivos da Vercel. Não é preciso ter conta.</p>
+      <p>O link vale por 7 dias, contados da primeira publicação. Uma rotina diária apaga os tours vencidos.</p>
+      <p>Qualquer pessoa que tiver o endereço do link consegue ver o tour. Não publique telas com senhas, dados de clientes ou outras informações que não possam ser vistas por quem receber o link.</p>
+    </section>
+    <section class="card" id="extensao">
+      <h2>Extensão do Chrome e app desktop</h2>
+      <p>A extensão “GuiaFlow — Captura” existe para fotografar as telas do produto que você quer mostrar. Ela pede estas permissões do Chrome:</p>
+      <ul>
+        <li><strong>activeTab</strong>, <strong>tabs</strong> e <strong>scripting</strong>: ver qual aba está ativa e tirar a foto dela quando você captura ou clica durante uma gravação;</li>
+        <li><strong>storage</strong> e <strong>unlimitedStorage</strong>: guardar as capturas no próprio Chrome até você criar o projeto;</li>
+        <li><strong>downloads</strong>: salvar o arquivo do projeto, se você pedir;</li>
+        <li>acesso a <strong>guiaflow.pro</strong>: entregar as capturas ao editor aberto no seu navegador.</li>
+      </ul>
+      <p>A foto só é tirada quando você captura. As imagens ficam no Chrome até você criar o projeto, baixar o arquivo ou cancelar. A extensão não envia capturas para nenhum servidor.</p>
+      <p>O app desktop captura apenas a janela que ele mesmo abre e guarda os projetos no seu computador.</p>
+    </section>
+    <section class="card" id="pro">
+      <h2>Conta GuiaFlow Pro</h2>
+      <p>Quando você assina o GuiaFlow Pro, tratamos estes dados:</p>
+      <ul>
+        <li><strong>E-mail</strong>: identifica a conta e recebe os links de acesso;</li>
+        <li><strong>Senha</strong>, se você criar uma: guardamos apenas um resumo criptográfico (hash), nunca a senha em si;</li>
+        <li><strong>Nome</strong>, opcional: só quando um administrador envia um convite ou concede acesso cortesia;</li>
+        <li><strong>Dados da assinatura</strong>: plano, periodicidade, situação, fim do período pago e os códigos de cliente e de assinatura do Stripe;</li>
+        <li><strong>Conteúdo que você publica</strong> em links permanentes: título, telas, textos e áudios do tour;</li>
+        <li><strong>Contadores de uso</strong> por mês: quantos textos foram gerados com IA e quantos segundos de áudio foram narrados, para aplicar os limites do plano;</li>
+        <li><strong>Registros técnicos</strong>: avisos de pagamento enviados pelo Stripe e registro das ações feitas no painel administrativo.</li>
+      </ul>
+      <p>Esses dados ficam em um banco de dados Postgres, em servidor no Brasil (São Paulo), contratado pelo GuiaFlow e administrado com a ferramenta Coolify.</p>
+      <p>O acesso é feito por um link enviado por e-mail, que vale 15 minutos e só pode ser usado uma vez, ou por senha. Depois do login, o navegador guarda um token de sessão no armazenamento local (localStorage), válido por 12 horas. O painel administrativo usa um cookie de sessão com as proteções HttpOnly e Secure.</p>
+    </section>
+    <section class="card" id="pagamento">
+      <h2>Pagamento</h2>
+      <p>A assinatura é paga no Stripe Checkout, com cartão, Pix, Apple Pay ou Google Pay, conforme o que estiver disponível para você. Os dados de pagamento são digitados nas páginas do Stripe e tratados pelo Stripe, conforme a política de privacidade dele.</p>
+      <p>O GuiaFlow não recebe nem guarda número de cartão ou dados bancários. Recebemos do Stripe apenas o necessário para liberar e manter o plano: e-mail, códigos do cliente e da assinatura, situação e datas.</p>
+    </section>
+    <section class="card" id="ia-audio">
+      <h2>Textos com IA e áudio narrado (Pro)</h2>
+      <p>Quando você pede um texto com IA, o pedido (o texto do passo e as instruções, sem as imagens) passa pelo nosso servidor e é enviado ao OpenRouter, que o encaminha ao modelo de IA escolhido.</p>
+      <p>Quando você gera áudio, o texto da narração é enviado à Cartesia, que devolve o arquivo de áudio.</p>
+      <p>Evite colocar dados pessoais ou informações sigilosas nesses textos.</p>
+    </section>
+    <section class="card" id="emails">
+      <h2>E-mails</h2>
+      <p>Os e-mails do serviço são enviados pela Resend, a partir de noreply@guiaflow.pro: links de acesso, convites e avisos sobre a assinatura. Não usamos o seu e-mail para propaganda.</p>
+    </section>
+    <section class="card" id="cookies">
+      <h2>Cookies e medição de uso</h2>
+      <p>O GuiaFlow não usa ferramentas de análise de audiência, pixels de publicidade ou rastreamento entre sites.</p>
+      <ul>
+        <li>O editor usa o armazenamento local do navegador para funcionar, como explicado acima.</li>
+        <li>O painel administrativo usa um cookie de sessão.</li>
+        <li>A Cloudflare, que entrega o site, pode usar cookies técnicos de segurança.</li>
+        <li>O Stripe usa cookies próprios nas páginas de pagamento.</li>
+        <li>O botão “Feedback” abre um formulário do Tally, que é carregado no editor. Se você responder, as respostas vão para o Tally.</li>
+      </ul>
+    </section>
+    <section class="card" id="bases">
+      <h2>Para que usamos e com qual base legal</h2>
+      <ul>
+        <li><strong>Execução de contrato</strong> (art. 7º, V, da LGPD): criar e manter a conta, cobrar a assinatura, guardar links, gerar textos e áudios e enviar e-mails do serviço;</li>
+        <li><strong>Obrigação legal</strong> (art. 7º, II): guardar registros de pagamento e fiscais pelo prazo da lei;</li>
+        <li><strong>Legítimo interesse</strong> (art. 7º, IX): segurança, prevenção de abuso e limites de uso, sempre no mínimo necessário;</li>
+        <li><strong>Consentimento</strong> (art. 7º, I): quando você escolhe enviar algo opcional, como uma resposta de feedback.</li>
+      </ul>
+    </section>
+    <section class="card" id="compartilhamento">
+      <h2>Com quem os dados são compartilhados</h2>
+      <p>Não vendemos nem alugamos dados pessoais. Para o serviço funcionar, usamos estes fornecedores, que tratam dados em nosso nome ou como responsáveis pelo próprio serviço:</p>
+      <ul>
+        <li><strong>Vercel</strong> (EUA): hospedagem do site e dos links temporários;</li>
+        <li><strong>Cloudflare</strong> (EUA, rede global): DNS e entrega do site;</li>
+        <li><strong>Hostinger</strong> (servidor em São Paulo): servidor da conta Pro e dos links permanentes;</li>
+        <li><strong>Stripe</strong> (EUA e Irlanda): pagamentos;</li>
+        <li><strong>Resend</strong> (EUA): envio de e-mails;</li>
+        <li><strong>OpenRouter</strong> (EUA) e o provedor do modelo escolhido: textos com IA;</li>
+        <li><strong>Cartesia</strong> (EUA): áudio narrado;</li>
+        <li><strong>Tally</strong> (Bélgica): formulário de feedback.</li>
+      </ul>
+      <p>Também podemos fornecer dados quando a lei ou uma ordem judicial exigir.</p>
+    </section>
+    <section class="card" id="transferencia">
+      <h2>Transferência internacional</h2>
+      <p>Vários desses fornecedores ficam fora do Brasil, principalmente nos Estados Unidos. A transferência acontece porque é necessária para prestar o serviço que você pediu e é feita com as garantias contratuais e de segurança oferecidas por esses fornecedores, conforme o art. 33 da LGPD.</p>
+    </section>
+    <section class="card" id="retencao">
+      <h2>Por quanto tempo guardamos</h2>
+      <ul>
+        <li><strong>Projetos no navegador</strong>: até você apagar ou limpar os dados do site;</li>
+        <li><strong>Links temporários</strong>: 7 dias a partir da primeira publicação;</li>
+        <li><strong>Links permanentes</strong>: até você apagar o link ou a conta ser excluída;</li>
+        <li><strong>Links de acesso por e-mail</strong>: valem 15 minutos;</li>
+        <li><strong>Conta e assinatura</strong>: enquanto a conta existir. Depois de um pedido de exclusão, apagamos os dados da conta, exceto o que a lei manda guardar, como registros de pagamento e fiscais, pelo prazo legal.</li>
+      </ul>
+    </section>
+    <section class="card" id="direitos">
+      <h2>Seus direitos</h2>
+      <p>Pela LGPD (art. 18), você pode pedir a qualquer momento:</p>
+      <ul>
+        <li>confirmação de que tratamos seus dados e acesso a eles;</li>
+        <li>correção de dados incompletos, inexatos ou desatualizados;</li>
+        <li>anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade com a lei;</li>
+        <li>portabilidade dos dados;</li>
+        <li>eliminação dos dados tratados com base no seu consentimento e revogação desse consentimento;</li>
+        <li>informação sobre com quem compartilhamos seus dados;</li>
+        <li>oposição a um tratamento que não cumpra a lei.</li>
+      </ul>
+      <p>Para pedir, escreva para <a href="mailto:{{CONTATO_EMAIL}}">{{CONTATO_EMAIL}}</a>, de preferência a partir do e-mail da conta, para conseguirmos confirmar que é você. Respondemos em até 15 dias. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+      <p>Os dados que ficam só no seu navegador estão sob o seu controle: você pode exportar ou apagar os projetos no próprio editor.</p>
+    </section>
+    <section class="card" id="seguranca">
+      <h2>Segurança</h2>
+      <p>Usamos conexões HTTPS, senhas guardadas apenas como hash, links de acesso com prazo curto, tokens de sessão com validade e acesso restrito ao servidor. Nenhum sistema é totalmente imune a falhas; se acontecer um incidente que possa causar risco ou dano relevante, avisaremos os afetados e a ANPD, como manda a lei.</p>
+    </section>
+    <section class="card" id="menores">
+      <h2>Crianças e adolescentes</h2>
+      <p>O GuiaFlow é uma ferramenta de trabalho e não é direcionado a crianças e adolescentes. A assinatura do Pro é para maiores de 18 anos.</p>
+    </section>
+    <section class="card" id="mudancas">
+      <h2>Mudanças nesta política</h2>
+      <p>Podemos atualizar esta política quando o produto mudar. A data no topo mostra a última versão. Se a mudança for relevante, avisaremos os assinantes por e-mail antes de ela valer.</p>
+    </section>
+    <section class="card" id="contato">
+      <h2>Contato</h2>
+      <p>Dúvidas ou pedidos sobre privacidade: <a href="mailto:{{CONTATO_EMAIL}}">{{CONTATO_EMAIL}}</a>.</p>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/">Editor</a>
+      <a href="/ajuda">Ajuda</a>
+      <a href="/privacidade">Privacidade</a>
+      <a href="/termos">Termos</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+</body>
+</html>
