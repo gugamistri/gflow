@@ -240,6 +240,66 @@ textarea {
   color: var(--ns-accent);
 }
 
+/* Logo em imagem: a barra do topo é escura nos dois temas, então usa sempre a versão clara do texto. */
+.logo-brand {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  flex: none;
+}
+
+.logo-brand img,
+.logo-brand svg {
+  display: block;
+  height: 26px;
+  width: auto;
+}
+
+.logo-brand .logo-mark {
+  display: none;
+  height: 28px;
+}
+
+@media (max-width: 700px) {
+  .logo-brand .logo-full {
+    display: none;
+  }
+
+  .logo-brand .logo-mark {
+    display: block;
+  }
+}
+
+.boot-splash-brand img {
+  display: block;
+  height: 36px;
+  width: auto;
+  margin: 0 auto;
+}
+
+.boot-splash-brand .brand-on-dark,
+html[data-appearance="social"] .boot-splash-brand .brand-on-light {
+  display: none;
+}
+
+html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
+  display: block;
+}
+
+.dialog-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dialog-mark {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
 .topbar-tools {
   margin-left: auto;
   display: flex;
