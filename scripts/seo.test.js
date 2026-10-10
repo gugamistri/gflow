@@ -75,12 +75,12 @@ test("home e ajuda têm título, descrição, canônico e Open Graph", () => {
 });
 
 test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem", () => {
-  for (const [file, slug, title] of [
-    ["privacidade.html", "privacidade", "Política de Privacidade"],
-    ["termos.html", "termos", "Termos de Uso"],
+  for (const [file, slug, title, key] of [
+    ["privacidade.html", "privacidade", "Política de Privacidade", "privacy"],
+    ["termos.html", "termos", "Termos de Uso", "terms"],
   ]) {
     const html = read(file);
-    assert.match(html, new RegExp(`<title>${title} — GuiaFlow</title>`));
+    assert.match(html, new RegExp(`<title data-i18n="doc\\.title\\.${key}">${title} — GuiaFlow</title>`));
     assert.match(html, /<meta name="description" content="[^"]+"/);
     assert.match(html, new RegExp(`<link rel="canonical" href="https://guiaflow\\.pro/${slug}"`));
     assert.match(html, new RegExp(`<meta property="og:url" content="https://guiaflow\\.pro/${slug}"`));
@@ -88,7 +88,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 10 de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/40\/css\/ajuda\.css/);
+    assert.match(html, /a\/41\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
