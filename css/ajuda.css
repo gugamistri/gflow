@@ -95,3 +95,74 @@ code,
   cursor: pointer;
   font-weight: 600;
 }
+
+.site-footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+  border-top: 1px solid var(--ns-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  color: var(--ns-muted);
+  font-size: 0.88rem;
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.site-footer a {
+  color: var(--ns-muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--ns-ink);
+  text-decoration: underline;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+html.is-embedded .site-footer {
+  display: none;
+}
+
+/* Páginas legais: texto longo, links legíveis no tema escuro. */
+.legal-updated {
+  margin: -16px 0 8px;
+  color: var(--ns-muted);
+  font-size: 0.9rem;
+}
+
+.legal .card h2 {
+  margin-top: 0;
+}
+
+.legal .card p {
+  margin: 0 0 10px;
+}
+
+.legal .card p:last-child,
+.legal .card ul:last-child {
+  margin-bottom: 0;
+}
+
+.legal .card ul + p {
+  margin-top: 10px;
+}
+
+.legal .card a {
+  color: var(--ns-accent);
+}
+
+html[data-appearance="documento"] .legal .card a {
+  color: var(--ns-accent-dark);
+}

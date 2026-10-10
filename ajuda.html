@@ -61,14 +61,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/39/css/theme.css" />
-  <link rel="stylesheet" href="a/39/css/app.css" />
-  <link rel="stylesheet" href="a/39/css/ajuda.css" />
+  <link rel="stylesheet" href="a/40/css/theme.css" />
+  <link rel="stylesheet" href="a/40/css/app.css" />
+  <link rel="stylesheet" href="a/40/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="index.html" aria-label="GuiaFlow"><img class="logo-full" src="a/39/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/39/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="index.html" aria-label="GuiaFlow"><img class="logo-full" src="a/40/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/40/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
@@ -156,8 +156,17 @@
     </section>
 
   </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/">Editor</a>
+      <a href="/ajuda" data-i18n="topbar.help">Ajuda</a>
+      <a href="/privacidade" data-i18n="legal.privacy">Privacidade</a>
+      <a href="/termos" data-i18n="legal.terms">Termos</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/39/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/40/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
