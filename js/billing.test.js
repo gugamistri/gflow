@@ -329,7 +329,7 @@ const MONTHLY = {
   status: "active",
   interval: "month",
   currency: "brl",
-  amount: 45,
+  amount: 36,
   currentPeriodEnd: "2026-11-09T15:00:00.000Z",
   cancelAtPeriodEnd: false,
   compUntil: null,
@@ -342,7 +342,7 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   const monthly = subscriptionScreen(MONTHLY, "pt");
   assert.equal(monthly.kind, "paid");
   assert.equal(monthly.planKey, "billing.subPlanMonthly");
-  assert.equal(monthly.price, "R$45");
+  assert.equal(monthly.price, "R$36");
   assert.equal(monthly.priceKey, "billing.monthEquiv");
   assert.equal(monthly.statusKey, "billing.subStatusActive");
   assert.equal(monthly.whenKey, "billing.subRenews");
@@ -351,14 +351,17 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(monthly.canResume, false);
   assert.equal(monthly.showPortal, true);
 
-  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 348 }, "pt");
+  const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 360 }, "pt");
   assert.equal(annual.planKey, "billing.subPlanAnnual");
-  assert.equal(annual.price, "R$348");
+  assert.equal(annual.price, "R$360");
   assert.equal(annual.priceKey, "billing.yearAmount");
 
-  const usd = subscriptionScreen({ ...MONTHLY, currency: "usd", amount: 9 }, "en");
-  assert.equal(usd.price, "US$9");
-  assert.equal(usd.price.includes("0,09"), false);
+  const usd = subscriptionScreen({ ...MONTHLY, currency: "usd", amount: 7 }, "en");
+  assert.equal(usd.price, "US$7");
+  const usdYear = subscriptionScreen({ ...MONTHLY, currency: "usd", interval: "year", amount: 70 / 12 }, "en");
+  assert.equal(usdYear.price, "US$5.83");
+  const usdYearEs = subscriptionScreen({ ...MONTHLY, currency: "usd", interval: "year", amount: 70 / 12 }, "es");
+  assert.equal(usdYearEs.price, "US$5,83");
 
   const scheduled = subscriptionScreen(
     { ...MONTHLY, cancelAtPeriodEnd: true, canCancel: false, canResume: true },
@@ -404,7 +407,7 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(forever.showPortal, false);
 
   assert.equal(subscriptionScreen({ plan: "none", planSource: null }, "pt").kind, "none");
-  assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 45);
+  assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 36);
   assert.equal(parseSubscription({ amount: "nope" }).amount, null);
 });
 
@@ -460,7 +463,7 @@ test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
     const loaded = await fetchSubscription(env);
     assert.equal(loaded.ok, true);
     assert.equal(loaded.subscription.interval, "month");
-    assert.equal(loaded.subscription.amount, 45);
+    assert.equal(loaded.subscription.amount, 36);
     assert.equal(seen[0].url, "https://app.guiaflow.pro/billing/subscription");
     assert.equal(seen[0].method, "GET");
 

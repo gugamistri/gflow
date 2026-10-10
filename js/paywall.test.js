@@ -23,18 +23,24 @@ test("pt-BR vê real e os outros idiomas veem dólar", () => {
 
 test("preços e a economia do anual", () => {
   const usd = paywallOffer("usd");
-  assert.equal(formatPaywallAmount(usd.month, "usd"), "US$9");
-  assert.equal(formatPaywallAmount(usd.year, "usd"), "US$72");
-  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd"), "US$6");
-  assert.equal(usd.percent, 33);
-  assert.equal(usd.months, 4);
+  assert.equal(formatPaywallAmount(usd.month, "usd", "en"), "US$7");
+  assert.equal(formatPaywallAmount(usd.year, "usd", "en"), "US$70");
+  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "en"), "US$5.83");
+  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "es"), "US$5,83");
+  assert.equal(formatPaywallAmount(usd.monthEquiv, "usd", "pt"), "US$5,83");
+  assert.equal(usd.percent, 17);
+  assert.equal(usd.months, 2);
+  assert.equal(usd.freeMonths, 2);
+  assert.equal(usd.paidMonths, 10);
 
   const brl = paywallOffer("brl");
-  assert.equal(formatPaywallAmount(brl.month, "brl"), "R$45");
-  assert.equal(formatPaywallAmount(brl.year, "brl"), "R$348");
-  assert.equal(formatPaywallAmount(brl.monthEquiv, "brl"), "R$29");
-  assert.equal(brl.percent, 36);
-  assert.equal(brl.months, 4);
+  assert.equal(formatPaywallAmount(brl.month, "brl", "pt"), "R$36");
+  assert.equal(formatPaywallAmount(brl.year, "brl", "pt"), "R$360");
+  assert.equal(formatPaywallAmount(brl.monthEquiv, "brl", "pt"), "R$30");
+  assert.equal(brl.percent, 17);
+  assert.equal(brl.months, 2);
+  assert.equal(brl.freeMonths, 2);
+  assert.equal(brl.paidMonths, 10);
 });
 
 test("meses grátis saem do preço anual dividido pelo mensal", () => {
@@ -45,10 +51,10 @@ test("meses grátis saem do preço anual dividido pelo mensal", () => {
     assert.equal(offer.freeMonths, freeMonths);
     assert.equal(offer.paidMonths, 12 - freeMonths);
   }
-  assert.equal(paywallOffer("brl").freeMonths, 4);
-  assert.equal(paywallOffer("brl").paidMonths, 8);
-  assert.equal(paywallOffer("usd").freeMonths, 4);
-  assert.equal(paywallOffer("usd").paidMonths, 8);
+  assert.equal(paywallOffer("brl").freeMonths, 2);
+  assert.equal(paywallOffer("brl").paidMonths, 10);
+  assert.equal(paywallOffer("usd").freeMonths, 2);
+  assert.equal(paywallOffer("usd").paidMonths, 10);
 });
 
 function cssRules(source) {
