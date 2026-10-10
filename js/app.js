@@ -826,18 +826,19 @@ function paintUpgradeCopy() {
     note.hidden = !upgradeEmailNote;
     note.textContent = upgradeEmailNote ? t("billing.emailMissing") : "";
   }
-  const currency = paywallCurrency(getLocale());
+  const locale = getLocale();
+  const currency = paywallCurrency(locale);
   const offer = paywallOffer(currency);
   const monthPrice = document.getElementById("paywall-month-price");
-  if (monthPrice) monthPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.month, currency) });
+  if (monthPrice) monthPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.month, currency, locale) });
   const monthNote = document.getElementById("paywall-month-note");
   if (monthNote) monthNote.textContent = t("billing.billedMonth");
   const yearPrice = document.getElementById("paywall-year-price");
   if (yearPrice) {
-    yearPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.monthEquiv, currency) });
+    yearPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.monthEquiv, currency, locale) });
   }
   const yearNote = document.getElementById("paywall-year-note");
-  if (yearNote) yearNote.textContent = t("billing.billedYear", { price: formatPaywallAmount(offer.year, currency) });
+  if (yearNote) yearNote.textContent = t("billing.billedYear", { price: formatPaywallAmount(offer.year, currency, locale) });
   const free = document.getElementById("paywall-free");
   if (free) free.textContent = t("billing.freeMonths", { n: offer.freeMonths });
   const yearCard = document.getElementById("paywall-year-card");
