@@ -12,13 +12,15 @@
   <meta property="og:title" content="GuiaFlow" />
   <meta property="og:url" content="https://guiaflow.pro/" />
   <meta property="og:description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
-  <meta property="og:image" content="https://guiaflow.pro/og-share.png" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Crie tours guiados interativos" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="GuiaFlow" />
   <meta name="twitter:description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
-  <meta name="twitter:image" content="https://guiaflow.pro/og-share.png" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
   <script>
     (function () {
       try {
@@ -65,13 +67,14 @@
     })();
   </script>
   <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/38/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/38/css/theme.css" />
-  <link rel="stylesheet" href="a/38/css/app.css" />
+  <link rel="stylesheet" href="a/39/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/39/css/theme.css" />
+  <link rel="stylesheet" href="a/39/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -294,7 +297,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo">Guia<span>Flow</span></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/39/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/39/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -410,7 +413,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true">Guia<span>Flow</span></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/39/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/39/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -759,7 +762,10 @@
   <dialog class="studio-modal account-modal" id="modal-account" aria-labelledby="account-dialog-title">
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
-        <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
+        <div class="dialog-title-row">
+          <img class="dialog-mark" src="a/39/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
+        </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
@@ -1322,7 +1328,7 @@
     </symbol>
   </svg>
 
-  <script src="a/38/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/38/js/app.js"></script>
+  <script src="a/39/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/39/js/app.js"></script>
 </body>
 </html>

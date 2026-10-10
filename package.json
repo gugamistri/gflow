@@ -29,6 +29,7 @@
       "favicon.*",
       "apple-touch-icon.png",
       "og-share.png",
+      "brand/**/*",
       "css/**/*",
       "js/**/*",
       "data/**/*",
