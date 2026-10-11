@@ -6436,3 +6436,138 @@ body.standalone .caption-bar,
     display: none;
   }
 }
+
+/* Incorporar no site */
+dialog.embed-modal {
+  width: min(560px, calc(100vw - 24px));
+  max-width: 560px;
+  max-height: min(720px, calc(100dvh - 16px));
+  margin: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.embed-dialog {
+  gap: 14px;
+}
+
+.embed-needs-publish,
+.embed-ready {
+  display: grid;
+  gap: 12px;
+}
+
+.embed-needs-publish[hidden],
+.embed-ready[hidden] {
+  display: none;
+}
+
+.embed-lead,
+.embed-hint {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ns-muted);
+}
+
+.embed-stale {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ns-ink);
+  background: color-mix(in srgb, #f5a524 18%, transparent);
+  border: 1px solid color-mix(in srgb, #f5a524 45%, transparent);
+}
+
+.embed-stale[hidden] {
+  display: none;
+}
+
+.embed-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--ns-input-bg);
+  border: 1px solid var(--ns-border);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.embed-tab {
+  border: 0;
+  background: transparent;
+  color: var(--ns-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.embed-tab[aria-selected="true"] {
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.embed-code {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 150px;
+  resize: vertical;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  white-space: pre;
+}
+
+.studio-modal-body label.embed-autoplay {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.embed-autoplay input {
+  margin-top: 2px;
+  flex: none;
+}
+
+.embed-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.embed-guide {
+  font-size: 0.82rem;
+  color: var(--ns-accent, inherit);
+}
+
+@media (max-width: 520px) {
+  .embed-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .embed-actions .btn {
+    min-height: 44px;
+  }
+
+  .embed-guide {
+    text-align: center;
+  }
+}
