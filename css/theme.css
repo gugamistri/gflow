@@ -37,6 +37,15 @@
   --demo-button: #1a4d6d;
   --demo-hotspot: #2a9d8f;
   --demo-font-display: Georgia, "Times New Roman", serif;
+  /* Campos dos passos fixos (applyTheme recalcula para o tema do tour) */
+  --demo-form-ink: #3f3f46;
+  --demo-field-bg: #ffffff;
+  --demo-field-ink: #18181b;
+  --demo-field-placeholder: #6b6b76;
+  --demo-field-border: #8a8a94;
+  --demo-form-link: #227e72;
+  --demo-form-focus: #2a9d8f;
+  --demo-button-ink: #ffffff;
 }
 
 [data-appearance="social"] {

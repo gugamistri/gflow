@@ -2,7 +2,7 @@
  * Tema, imagens e import/export JSON
  */
 
-import { darkenHex } from "./themes.js";
+import { darkenHex, fixedFormPalette } from "./themes.js";
 
 export function applyTheme(theme) {
   const root = document.documentElement;
@@ -16,6 +16,7 @@ export function applyTheme(theme) {
   root.style.setProperty("--demo-popover-text", theme.text);
   root.style.setProperty("--demo-button", theme.button);
   root.style.setProperty("--demo-hotspot", theme.hotspot);
+  for (const [name, value] of Object.entries(fixedFormPalette(theme))) root.style.setProperty(name, value);
   const darkDemo =
     theme.presetId === "social" ||
     theme.appearance === "social" ||
