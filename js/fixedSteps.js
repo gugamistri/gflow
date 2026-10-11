@@ -4,7 +4,15 @@
  * Os passos fixos não entram em `steps`, por isso ficam fora do vídeo e do drop-off.
  */
 
-import { isValidE164Digits, parseE164, validatePhone } from "./phoneCountries.js";
+import {
+  countryByIso,
+  defaultCountry,
+  formatNational,
+  isValidE164Digits,
+  nationalDigits,
+  parseE164,
+  validatePhone,
+} from "./phoneCountries.js";
 
 export const LEAD_FIELDS = ["name", "email", "phone"];
 
@@ -283,10 +291,69 @@ export function phoneDigits(input) {
   return String(input ?? "").replace(/\D/g, "");
 }
 
-/** Mesma regra do servidor: 8–15 dígitos. */
+/** Mesma regra do servidor: E.164 com 8–15 dígitos (DDI incluso). */
 export function isValidPhone(input) {
-  const d = phoneDigits(input);
-  return d.length >= 10 && d.length <= 15;
+  return /^\+?[1-9]\d{7,14}$/.test(String(input ?? "").replace(/[\s().-]/g, ""));
+}
+
+/**
+ * País padrão do telefone do lead: o do WhatsApp (ou tel:) do passo final; senão o do idioma
+ * do navegador (mesmo mapeamento do campo do WhatsApp no editor).
+ */
+export function leadPhoneDefaultIso(endStep, locale = "pt", languages = []) {
+  const wa = endStep && typeof endStep === "object" ? endStep.whatsapp : null;
+  const fromWa = wa?.phone ? splitWhatsAppNumber(wa.phone) : null;
+  if (fromWa) return fromWa.iso;
+  const url = String(endStep?.contact?.url || "").trim();
+  if (/^tel:/i.test(url)) {
+    const tel = decodeURIComponent(url.slice(4));
+    const parsed = /^(\+|00)/.test(tel.trim()) ? parseE164(tel.trim().replace(/^00/, "")) : null;
+    if (parsed && validatePhone(parsed.dial, parsed.national).ok) return parsed.iso;
+  }
+  return defaultCountry(locale, languages);
+}
+
+/**
+ * Telefone do visitante → { ok, e164: "+5511…", error, min, max }.
+ * Com "+"/"00" o DDI digitado manda; senão vale o país escolhido (dial).
+ */
+export function checkLeadPhone(raw, dial) {
+  const value = String(raw ?? "").trim();
+  if (!value) return { ok: false, error: "empty", e164: "" };
+  const typed = /^(\+|00)/.test(value) ? parseE164(value.replace(/^00/, "")) : null;
+  const code = typed ? typed.dial : String(dial ?? "");
+  const national = typed ? typed.national : nationalDigits(value, code);
+  const res = validatePhone(code, national);
+  return res.ok ? { ok: true, error: "", e164: `+${res.digits}` } : { ...res, e164: "" };
+}
+
+/**
+ * Telefone salvo de um lead → E.164 com "+". Leads antigos vieram só com dígitos:
+ * 10–11 dígitos eram DDD + número do Brasil (a máscara era só BR); o resto já trazia o DDI.
+ */
+export function leadPhoneE164(stored) {
+  const raw = String(stored ?? "").trim();
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  if (raw.startsWith("+")) return `+${digits}`;
+  if (digits.length === 10 || digits.length === 11) return `+55${digits}`;
+  return `+${digits}`;
+}
+
+/** "+5511999998888" → "+55 (11) 99999-8888" (para a lista de contatos). */
+export function formatLeadPhone(stored) {
+  const e164 = leadPhoneE164(stored);
+  const parsed = e164 ? parseE164(e164) : null;
+  if (!parsed) return e164;
+  return `+${parsed.dial} ${formatNational(parsed.dial, parsed.national)}`.trim();
+}
+
+/** Coluna "formatado" do CSV: começa pelo país ("BR +55 (11) 99999-8888") — texto no Excel, sem fórmula. */
+function csvPhoneFormatted(stored) {
+  const e164 = leadPhoneE164(stored);
+  const parsed = e164 ? parseE164(e164) : null;
+  if (!parsed || !countryByIso(parsed.iso)) return "";
+  return `${parsed.iso} ${formatLeadPhone(e164)}`;
 }
 
 /**
@@ -306,9 +373,15 @@ export function validateLeadForm(values = {}, raw) {
       continue;
     }
     if (key === "email" && !isValidEmail(v)) errors[key] = "invalid";
-    else if (key === "phone" && !isValidPhone(v)) errors[key] = "invalid";
     else if (key === "name" && v.length > 120) errors[key] = "invalid";
-    value[key] = key === "phone" ? phoneDigits(v) : v;
+    if (key === "phone") {
+      // why: valida pelo país escolhido (values.phoneDial) e grava E.164 ("+5511…"), como o servidor
+      const phone = checkLeadPhone(v, values.phoneDial || "55");
+      if (!phone.ok) errors.phone = "invalid";
+      value.phone = phone.e164 || v;
+      continue;
+    }
+    value[key] = v;
   }
   if (values.consent !== true) errors.consent = "consent";
   return { ok: Object.keys(errors).length === 0, errors, value };
@@ -330,6 +403,7 @@ export function leadsToCsv(leads = [], headers = {}) {
     ["name", headers.name || "Nome"],
     ["email", headers.email || "E-mail"],
     ["phone", headers.phone || "Telefone"],
+    ["phoneFormatted", headers.phoneFormatted || "Telefone (formatado)"],
     ["message", headers.message || "Mensagem"],
     ["consent", headers.consent || "Consentimento"],
     ["consentAt", headers.consentAt || "Consentimento em"],
@@ -342,6 +416,8 @@ export function leadsToCsv(leads = [], headers = {}) {
         .map(([key]) => {
           if (key === "consent") return csvCell(lead.consent ? headers.yes || "sim" : headers.no || "não");
           if (key === "source") return csvCell(headers[`source_${lead.source}`] || lead.source);
+          if (key === "phone") return csvCell(leadPhoneE164(lead.phone));
+          if (key === "phoneFormatted") return csvCell(csvPhoneFormatted(lead.phone));
           return csvCell(lead[key]);
         })
         .join(";")

@@ -10,23 +10,17 @@ import {
   normalizeStartStep,
   normalizeEndStep,
   safeContactHref,
+  leadPhoneDefaultIso,
   splitWhatsAppNumber,
 } from "./fixedSteps.js";
 import { renderEndCard, renderStartCard } from "./fixedStepsView.js";
 import { defaultCountry } from "./phoneCountries.js";
-import { createPhoneField } from "./phoneField.js";
+import { createPhoneField, phoneErrorText as sharedPhoneErrorText } from "./phoneField.js";
 
 const $ = (id) => document.getElementById(id);
 
-/** Mensagem do erro de telefone (vazio, tamanho do país, DDD do Brasil). */
 function phoneErrorText(result, countryName) {
-  if (result.error === "empty") return t("fixed.errPhoneEmpty");
-  if (result.error === "ddd") return t("fixed.errPhoneDdd");
-  if (result.error === "length" && result.min) {
-    const digits = result.min === result.max ? String(result.min) : `${result.min}–${result.max}`;
-    return t("fixed.errPhoneLength", { country: countryName, digits });
-  }
-  return t("fixed.errPhone");
+  return sharedPhoneErrorText(result, countryName, t);
 }
 
 export function createFixedStepsEditor(ctx) {
@@ -275,7 +269,12 @@ export function createFixedStepsEditor(ctx) {
     }
     els.fieldsError.hidden = !(showErrors && step.enabled && errors.fields);
     els.skipLabelWrap.hidden = !els.skip.checked;
-    const card = renderStartCard(step, { preview: true, consentText: step.consentText || t("fixed.consentDefault") });
+    const nav = globalThis.navigator;
+    const card = renderStartCard(step, {
+      preview: true,
+      consentText: step.consentText || t("fixed.consentDefault"),
+      phoneCountry: leadPhoneDefaultIso(getProject()?.endStep, getLocale(), nav?.languages || [nav?.language]),
+    });
     els.preview.replaceChildren(card);
     els.preview.classList.toggle("is-off", !step.enabled);
     return { step, errors };

@@ -2,18 +2,19 @@
  * Cartões dos passos fixos (início e fim) no player do /v e /p e na prévia do editor.
  * why: tudo com textContent e href validado em fixedSteps.js — nunca innerHTML com texto do autor.
  */
-import { t } from "./i18n.js";
+import { t, getLocale } from "./i18n.js";
 import {
   LEAD_FIELDS,
+  checkLeadPhone,
   endStepActions,
-  formatBrPhone,
   isValidEmail,
-  isValidPhone,
+  leadPhoneE164,
   normalizeEndStep,
   normalizeStartStep,
-  phoneDigits,
   validateLeadForm,
 } from "./fixedSteps.js";
+import { defaultCountry, parseE164 } from "./phoneCountries.js";
+import { createPhoneField, phoneErrorText } from "./phoneField.js";
 
 const WA_ICON =
   "M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z";
@@ -141,6 +142,114 @@ function inputField({ key, label, type = "text", required = false, autocomplete 
   return { wrap, input, err };
 }
 
+function browserLanguages() {
+  const nav = globalThis.navigator;
+  return nav?.languages?.length ? nav.languages : [nav?.language].filter(Boolean);
+}
+
+const CHEVRON = "M3 4.5 6 7.5 9 4.5";
+
+/**
+ * Telefone internacional (mesmo componente do WhatsApp do editor): bandeira + DDI com busca,
+ * número nacional formatado pelo país. defaultIso: país inicial (do WhatsApp do tour ou do idioma).
+ */
+function phoneInputField({ key, label, required = false, defaultIso = "" }) {
+  const base = inputField({ key, label, type: "tel", required, autocomplete: "tel-national", inputmode: "tel", maxLength: 24 });
+  const { wrap, input, err } = base;
+  wrap.classList.add("fixed-field-phone");
+  const id = input.id;
+  const row = el("div", "wa-phone fixed-phone");
+  const button = el("button", "wa-cc fixed-cc");
+  button.type = "button";
+  button.setAttribute("aria-haspopup", "listbox");
+  button.setAttribute("aria-expanded", "false");
+  button.setAttribute("aria-controls", `${id}-cc-pop`);
+  const flag = el("span", "wa-cc-flag");
+  flag.setAttribute("aria-hidden", "true");
+  const dial = el("span", "wa-cc-dial");
+  const ns = "http://www.w3.org/2000/svg";
+  const chevron = document.createElementNS(ns, "svg");
+  chevron.setAttribute("class", "wa-cc-chevron");
+  chevron.setAttribute("viewBox", "0 0 12 12");
+  chevron.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("d", CHEVRON);
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "1.6");
+  path.setAttribute("stroke-linecap", "round");
+  chevron.append(path);
+  button.append(flag, dial, chevron);
+  input.replaceWith(row);
+  row.append(button, input);
+
+  const pop = el("div", "wa-cc-pop fixed-cc-pop");
+  pop.id = `${id}-cc-pop`;
+  pop.hidden = true;
+  const search = el("input", "wa-cc-search fixed-cc-search");
+  search.type = "search";
+  search.autocomplete = "off";
+  search.setAttribute("role", "combobox");
+  search.setAttribute("aria-expanded", "true");
+  search.setAttribute("aria-controls", `${id}-cc-list`);
+  search.setAttribute("aria-autocomplete", "list");
+  search.placeholder = t("fixed.end.waCountrySearch");
+  search.setAttribute("aria-label", t("fixed.end.waCountrySearch"));
+  const list = el("ul", "wa-cc-list");
+  list.id = `${id}-cc-list`;
+  list.setAttribute("role", "listbox");
+  list.setAttribute("aria-label", t("fixed.end.waCountry"));
+  const empty = el("p", "wa-cc-empty", t("fixed.end.waNoCountry"));
+  empty.hidden = true;
+  pop.append(search, list, empty);
+  row.after(pop);
+
+  const field = createPhoneField(
+    { button, flag, dial, input, pop, search, list, empty },
+    {
+      locale: () => getLocale(),
+      defaultIso: () => defaultIso || defaultCountry(getLocale(), browserLanguages()),
+      onChange: () => {
+        err.hidden = true;
+        input.removeAttribute("aria-invalid");
+      },
+      // why: no card a lista abre para cima quando não cabe embaixo (embed baixo, celular)
+      onOpen: () => placeCountryList(wrap, row, pop),
+      t,
+    }
+  );
+  field.fill(null);
+  return { ...base, field };
+}
+
+/**
+ * Lista de países flutuando sobre o cartão: abre para baixo ou para cima (onde houver mais espaço
+ * visível no palco) e encolhe a lista para caber — nunca estica o cartão nem cria rolagem.
+ */
+function placeCountryList(wrap, row, pop) {
+  const r = row.getBoundingClientRect();
+  const area = wrap.closest(".view-share-fixed, .fixed-preview, dialog")?.getBoundingClientRect();
+  const top = Math.max(area?.top ?? 0, 0);
+  const bottom = Math.min(area?.bottom ?? Infinity, globalThis.innerHeight || Infinity);
+  const below = bottom - r.bottom - 8;
+  const above = r.top - top - 8;
+  const up = below < 220 && above > below;
+  const room = Math.max(96, (up ? above : below) - 52);
+  pop.style.setProperty("--cc-list-max", `${Math.min(196, Math.round(room))}px`);
+  pop.style.top = up ? "auto" : `${row.offsetTop + row.offsetHeight + 4}px`;
+  pop.style.bottom = up ? `${wrap.offsetHeight - row.offsetTop + 4}px` : "auto";
+  pop.classList.toggle("is-up", up);
+}
+
+/** Valida o telefone no país escolhido; devolve "" ou a mensagem de erro. */
+function phoneFieldError(phone, { required = false } = {}) {
+  const raw = phone.input.value.trim();
+  if (!raw) return required ? t("fixed.lead.errRequired") : "";
+  const res = checkLeadPhone(raw, phone.field.country().dial);
+  if (res.ok) return "";
+  return phoneErrorText(res, phone.field.countryName(), t, { emptyKey: "fixed.lead.errRequired", fallbackKey: "fixed.lead.errInvalid" });
+}
+
 function consentField(textValue) {
   const id = `fixed-consent-${++fieldSeq}`;
   const wrap = el("div", "fixed-consent");
@@ -172,15 +281,6 @@ function honeypot() {
   return { wrap, input };
 }
 
-function attachPhoneMask(input, formatBrPhone) {
-  input.addEventListener("input", () => {
-    if (input.value.trim().startsWith("+")) return;
-    const atEnd = input.selectionStart === input.value.length;
-    const masked = formatBrPhone(input.value);
-    if (atEnd && masked !== input.value) input.value = masked;
-  });
-}
-
 function errorText(code) {
   if (code === "required") return t("fixed.lead.errRequired");
   return t("fixed.lead.errInvalid");
@@ -195,7 +295,8 @@ export function submitErrorText(result) {
 }
 
 /**
- * Cartão inicial (captura de lead). opts: { preview, consentText, onSubmit(value) → Promise<{ok,…}>, onSkip }
+ * Cartão inicial (captura de lead). opts: { preview, consentText, phoneCountry, onSubmit(value) → Promise<{ok,…}>, onSkip }
+ * phoneCountry: ISO do país inicial do telefone (leadPhoneDefaultIso); vazio → idioma do navegador.
  * onSubmit recebe { name, email, phone, consent: true, website } já validado.
  */
 export function renderStartCard(rawStep, opts = {}) {
@@ -217,15 +318,13 @@ export function renderStartCard(rawStep, opts = {}) {
   const specs = {
     name: { label: t("fixed.lead.name"), type: "text", autocomplete: "name", maxLength: 120 },
     email: { label: t("fixed.lead.email"), type: "email", autocomplete: "email", inputmode: "email", maxLength: 254 },
-    phone: { label: t("fixed.lead.phone"), type: "tel", autocomplete: "tel", inputmode: "tel", maxLength: 20 },
   };
   for (const key of LEAD_FIELDS) {
     if (!step.fields[key].show) continue;
-    const field = inputField({ key, required: step.fields[key].required, ...specs[key] });
-    if (key === "phone") {
-      field.input.placeholder = "(11) 99999-8888";
-      attachPhoneMask(field.input, formatBrPhone);
-    }
+    const field =
+      key === "phone"
+        ? phoneInputField({ key, label: t("fixed.lead.phone"), required: step.fields[key].required, defaultIso: opts.phoneCountry })
+        : inputField({ key, required: step.fields[key].required, ...specs[key] });
     inputs[key] = field;
     fieldsBox.append(field.wrap);
   }
@@ -261,12 +360,14 @@ export function renderStartCard(rawStep, opts = {}) {
     if (opts.preview) return;
     const values = { consent: consent.input.checked };
     for (const [key, field] of Object.entries(inputs)) values[key] = field.input.value;
+    if (inputs.phone) values.phoneDial = inputs.phone.field.country().dial;
     const result = validateLeadForm(values, step);
     let first = null;
     for (const [key, field] of Object.entries(inputs)) {
       const code = result.errors[key];
       field.err.hidden = !code;
-      field.err.textContent = code ? errorText(code) : "";
+      field.err.textContent =
+        code === "invalid" && key === "phone" ? phoneFieldError(field) || errorText(code) : code ? errorText(code) : "";
       field.input.setAttribute("aria-invalid", code ? "true" : "false");
       if (code && !first) first = field.input;
     }
@@ -298,13 +399,14 @@ export function renderContactForm(opts = {}) {
   form.append(el("h3", "fixed-form-title", t("fixed.contact.title")));
   const name = inputField({ key: "name", label: t("fixed.lead.name"), required: true, autocomplete: "name", maxLength: 120 });
   const email = inputField({ key: "email", label: t("fixed.lead.email"), type: "email", required: true, autocomplete: "email", inputmode: "email", maxLength: 254 });
-  const phone = inputField({ key: "phone", label: t("fixed.lead.phoneOptional"), type: "tel", autocomplete: "tel", inputmode: "tel", maxLength: 20 });
-  phone.input.placeholder = "(11) 99999-8888";
-  attachPhoneMask(phone.input, formatBrPhone);
+  const phone = phoneInputField({ key: "phone", label: t("fixed.lead.phoneOptional"), defaultIso: opts.phoneCountry });
   const message = inputField({ key: "message", label: t("fixed.contact.message"), type: "textarea", required: true, maxLength: 2000 });
   if (opts.prefill?.name) name.input.value = opts.prefill.name;
   if (opts.prefill?.email) email.input.value = opts.prefill.email;
-  if (opts.prefill?.phone) phone.input.value = formatBrPhone(opts.prefill.phone);
+  if (opts.prefill?.phone) {
+    const parsed = parseE164(leadPhoneE164(opts.prefill.phone));
+    if (parsed) phone.field.fill(parsed);
+  }
   const consent = consentField(opts.consentText || t("fixed.consentDefault"));
   const hp = honeypot();
   const status = el("p", "fixed-form-status");
@@ -327,13 +429,13 @@ export function renderContactForm(opts = {}) {
     const checks = [
       [name, name.input.value.trim() ? "" : "required"],
       [email, !email.input.value.trim() ? "required" : isValidEmail(email.input.value) ? "" : "invalid"],
-      [phone, phone.input.value.trim() && !isValidPhone(phone.input.value) ? "invalid" : ""],
+      [phone, phoneFieldError(phone) ? "phone" : ""],
       [message, message.input.value.trim() ? "" : "required"],
     ];
     let first = null;
     for (const [field, code] of checks) {
       field.err.hidden = !code;
-      field.err.textContent = code ? errorText(code) : "";
+      field.err.textContent = code === "phone" ? phoneFieldError(field) : code ? errorText(code) : "";
       field.input.setAttribute("aria-invalid", code ? "true" : "false");
       if (code && !first) first = field.input;
     }
@@ -349,7 +451,8 @@ export function renderContactForm(opts = {}) {
     const res = await opts.onSubmit?.({
       name: name.input.value.trim(),
       email: email.input.value.trim(),
-      phone: phoneDigits(phone.input.value),
+      // why: E.164 ("+5511…") no país escolhido — o mesmo formato do passo inicial e do servidor
+      phone: phone.input.value.trim() ? checkLeadPhone(phone.input.value, phone.field.country().dial).e164 : "",
       message: message.input.value.trim(),
       consent: true,
       website: hp.input.value,
