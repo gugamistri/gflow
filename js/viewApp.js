@@ -1,13 +1,15 @@
 /**
  * Páginas /v/:id e /p/:slug — o mesmo preview somente leitura.
  */
-import { applyTheme, normalizeSteps } from "./store.js";
+import { applyTheme, normalizeSteps, resolveImageSrc } from "./store.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createPlayer } from "./player.js";
 import { initLocale, applyI18n, t } from "./i18n.js";
 import { getCloudBaseUrl, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
 import {
   decideEscape,
+  embedShowsCover,
+  parseEmbedOptions,
   parseViewRoute,
   permanentShareEndpoint,
   sameOriginReferrer,
@@ -168,6 +170,24 @@ let player = null;
 let demo = null;
 let touring = false;
 
+// why: ?embed=1 = iframe no site do cliente; a classe também vem do <head> para não piscar
+const embedOptions = parseEmbedOptions(location.search);
+const isEmbed = embedOptions.embed;
+
+function setupEmbedChrome() {
+  if (!isEmbed) return;
+  document.documentElement.classList.add("is-embed");
+  document.body?.classList.add("is-embed");
+  // why: o logo não pode levar o iframe para o editor; abre o site numa aba nova
+  for (const link of document.querySelectorAll(".topbar .logo")) {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener");
+  }
+  const hint = document.getElementById("present-chrome");
+  if (hint) hint.hidden = true;
+}
+setupEmbedChrome();
+
 function shareTitle(name) {
   return sharePageTitle(name, t("view.title"));
 }
@@ -182,6 +202,8 @@ function applyShareTitle(name) {
 }
 
 function focusShareDocument() {
+  // why: foco automático dentro do iframe rola a página do cliente até o tour
+  if (isEmbed) return;
   const root = document.body;
   if (!root) return;
   if (root.tabIndex < 0) root.tabIndex = -1;
@@ -203,28 +225,92 @@ function showClosedState() {
   if (frame) frame.hidden = true;
   const status = document.getElementById("view-share-status");
   if (status) status.hidden = true;
+  const cover = document.getElementById("view-share-cover");
+  if (cover) cover.hidden = true;
   const closed = document.getElementById("view-share-closed");
   if (closed) closed.hidden = false;
   focusShareDocument();
+}
+
+function coverImageSrc() {
+  const steps = Array.isArray(demo?.steps) ? demo.steps : [];
+  for (const step of steps) {
+    if (step?.type === "slide" || !step?.image) continue;
+    const src = resolveImageSrc(demo, step.image);
+    if (src) return src;
+  }
+  return "";
+}
+
+/** Capa do embed: nada toca (nem áudio) antes do clique em ▶. */
+function showCover(onStart) {
+  touring = false;
+  document.body.classList.remove("is-presenting");
+  document.getElementById("view-editor")?.classList.remove("is-presenting");
+  const frame = document.getElementById("canvas-frame");
+  if (frame) frame.hidden = true;
+  const status = document.getElementById("view-share-status");
+  if (status) status.hidden = true;
+  const closed = document.getElementById("view-share-closed");
+  if (closed) closed.hidden = true;
+  const cover = document.getElementById("view-share-cover");
+  if (!cover) {
+    onStart();
+    return;
+  }
+  const img = document.getElementById("view-share-cover-image");
+  const src = coverImageSrc();
+  if (img) {
+    if (src) {
+      img.src = src;
+      img.hidden = false;
+    } else {
+      img.hidden = true;
+    }
+  }
+  const title = document.getElementById("view-share-cover-title");
+  if (title) title.textContent = String(demo?.name || "").trim();
+  cover.hidden = false;
+  const play = document.getElementById("view-share-cover-play");
+  play?.addEventListener(
+    "click",
+    () => {
+      cover.hidden = true;
+      onStart();
+    },
+    { once: true }
+  );
 }
 
 function showTouring() {
   touring = true;
   const closed = document.getElementById("view-share-closed");
   if (closed) closed.hidden = true;
+  const cover = document.getElementById("view-share-cover");
+  if (cover) cover.hidden = true;
   document.body.classList.add("is-presenting");
   document.getElementById("view-editor")?.classList.add("is-presenting");
   document.getElementById("hotspot")?.classList.add("is-previewing");
   const hint = document.getElementById("present-chrome");
-  if (hint) hint.hidden = false;
+  if (hint) hint.hidden = isEmbed;
   hideStatus();
   focusShareDocument();
 }
 
 function exitSharedTour() {
   if (!touring) return;
-  if (tryLeaveSharedPreview()) return;
+  // why: no embed nunca history.back() nem window.close() — isso mexeria na página do cliente
+  if (!isEmbed && tryLeaveSharedPreview()) return;
   showClosedState();
+}
+
+/** Saída pedida pela página (Esc, clique fora): o player reporta o motivo ao onExit. */
+function requestSharedExit(reason) {
+  if (player?.exit) {
+    player.exit(reason);
+    return;
+  }
+  exitSharedTour();
 }
 
 function onSharedEscape(event) {
@@ -233,7 +319,8 @@ function onSharedEscape(event) {
   const action = decideEscape({
     fullscreen: Boolean(fullscreenElement()),
     overlay: Boolean(findPlayerOverlay()),
-    back: Boolean(backTarget()),
+    back: isEmbed ? false : Boolean(backTarget()),
+    embed: isEmbed,
   });
   event.preventDefault();
   event.stopImmediatePropagation();
@@ -246,7 +333,8 @@ function onSharedEscape(event) {
     closePlayerOverlay(findPlayerOverlay());
     return;
   }
-  exitSharedTour();
+  if (!action) return;
+  requestSharedExit("esc");
 }
 
 // why: Esc tem de chegar mesmo sem foco no cartão e antes do driver
@@ -258,10 +346,10 @@ window.addEventListener(
   "pointerdown",
   (event) => {
     if (!touring || event.button !== 0) return;
-    if (!clickClosesSharedTour(event.target)) return;
+    if (!clickClosesSharedTour(event.target, { embed: isEmbed })) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    exitSharedTour();
+    requestSharedExit("click_outside");
   },
   true
 );
@@ -309,8 +397,6 @@ async function boot() {
   const initialIndex = shareStartIndex(location.search, demo.steps.length);
   let selectedIndex = initialIndex;
 
-  showTouring();
-
   player = createPlayer({
     getDemo: () => demo,
     toast,
@@ -320,6 +406,8 @@ async function boot() {
     },
     allowClose: true,
     ignoreAdvanceMs: 700,
+    // why: no embed o clique no véu não fecha; o Driver ignora valores fora de close/nextStep
+    overlayClickBehavior: isEmbed ? "none" : "close",
     onRequestExit: () => {
       exitSharedTour();
     },
@@ -331,10 +419,19 @@ async function boot() {
     player.play({ from: 0, autoplay: true });
   });
 
-  requestAnimationFrame(() => {
-    // why: tour publicado assiste sozinho; o 1º áudio retenta no gesto se o browser bloquear
-    player.play({ from: initialIndex, autoplay: true });
-  });
+  const startTour = () => {
+    showTouring();
+    requestAnimationFrame(() => {
+      // why: tour publicado assiste sozinho; o 1º áudio retenta no gesto se o browser bloquear
+      player.play({ from: initialIndex, autoplay: true });
+    });
+  };
+
+  if (embedShowsCover(embedOptions)) {
+    showCover(startTour);
+    return;
+  }
+  startTour();
 }
 
 boot().catch((err) => {
