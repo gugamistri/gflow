@@ -167,6 +167,7 @@ export function stripBillingReturn(href) {
 /** Some para quem assina e enquanto o plano ainda não chegou. */
 export function shouldShowLocalSave({ signedIn = false, active = false, billingReady = true, dismissed = false } = {}) {
   if (dismissed) return false;
+  if (signedIn && active) return false;
   if (signedIn && !billingReady) return false;
   return true;
 }
