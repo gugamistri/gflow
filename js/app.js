@@ -5,6 +5,7 @@ import {
   themeToForm,
   formToTheme,
   normalizeSteps,
+  resolveImageSrc,
 } from "./store.js";
 import {
   ensureMigrated,
@@ -61,6 +62,7 @@ import {
   shareRecordIsStale,
 } from "./shareLink.js";
 import { permanentShareEndpoint } from "./viewShare.js";
+import { buildEmbedSnippet, embedRatio, normalizeEmbedFlavor } from "./embedSnippet.js";
 import {
   initLocale,
   applyI18n,
@@ -681,6 +683,10 @@ function paintShareMenu() {
     dot.hidden = !stale;
     dot.title = t("share.staleDot");
   }
+  const embedBtn = document.getElementById("btn-share-embed");
+  if (embedBtn) embedBtn.hidden = !cloudShareEnabled();
+  const embedBadge = document.getElementById("embed-pro-badge");
+  if (embedBadge) embedBadge.hidden = pro;
   paintAccount();
 }
 
@@ -2368,6 +2374,162 @@ function bindChrome() {
   });
   document.getElementById("cloud-share-block")?.addEventListener("click", () => {
     showUpgradeDialog({ feature: "permanentShare" });
+  });
+
+  // Incorporar no site (só link permanente, Pro)
+  const EMBED_AUTOPLAY_KEY = "guiaflow.embed.autoplay";
+  const embedModal = document.getElementById("modal-embed");
+  let embedFlavor = "html";
+  let embedRatioValue = "";
+  let embedRatioFor = "";
+
+  function readEmbedAutoplay() {
+    try {
+      return localStorage.getItem(EMBED_AUTOPLAY_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function firstCaptureSrc() {
+    for (const step of project?.steps || []) {
+      if (step?.type === "slide" || !step?.image) continue;
+      const src = resolveImageSrc(project, step.image);
+      if (src) return src;
+    }
+    return "";
+  }
+
+  /** Proporção da 1ª captura (naturalWidth/naturalHeight); 16/9 se faltar. */
+  function measureEmbedRatio() {
+    const src = firstCaptureSrc();
+    const key = `${project?.id || ""}|${src.slice(0, 120)}|${src.length}`;
+    if (embedRatioFor === key && embedRatioValue) return Promise.resolve(embedRatioValue);
+    return new Promise((resolve) => {
+      if (!src) {
+        resolve(embedRatio(0, 0));
+        return;
+      }
+      const img = new Image();
+      img.onload = () => resolve(embedRatio(img.naturalWidth, img.naturalHeight));
+      img.onerror = () => resolve(embedRatio(0, 0));
+      img.src = src;
+    }).then((ratio) => {
+      embedRatioFor = key;
+      embedRatioValue = ratio;
+      return ratio;
+    });
+  }
+
+  function currentEmbedCode() {
+    const record = project?.cloudShare;
+    const url = permanentSlug(record) ? permanentPublicUrl(record) : "";
+    return buildEmbedSnippet({
+      url,
+      title: project?.name || "",
+      ratio: embedRatioValue || embedRatio(0, 0),
+      autoplay: Boolean(document.getElementById("embed-autoplay")?.checked),
+      flavor: embedFlavor,
+      label: t("embed.frameLabel"),
+    });
+  }
+
+  function paintEmbedDialog() {
+    if (!embedModal) return;
+    const record = project?.cloudShare;
+    const published = Boolean(permanentSlug(record));
+    const needs = document.getElementById("embed-needs-publish");
+    const ready = document.getElementById("embed-ready");
+    if (needs) needs.hidden = published;
+    if (ready) ready.hidden = !published;
+    const stale = document.getElementById("embed-stale");
+    if (stale) stale.hidden = !(published && project && shareRecordIsStale(record, project));
+    for (const tab of embedModal.querySelectorAll(".embed-tab")) {
+      const on = tab.dataset.flavor === embedFlavor;
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+    }
+    const hint = document.getElementById("embed-hint");
+    if (hint) {
+      const key = `embed.hint.${embedFlavor}`;
+      hint.dataset.i18n = key;
+      hint.textContent = t(key);
+    }
+    const code = document.getElementById("embed-code");
+    if (code) code.value = published ? currentEmbedCode() : "";
+  }
+
+  function openEmbedDialog() {
+    closeExportMenu();
+    if (!project || !cloudShareEnabled()) return;
+    if (!viewerIsPro()) {
+      if (isPastDue()) {
+        openFeatureGate("embed");
+        return;
+      }
+      showUpgradeDialog({ feature: "embed" });
+      return;
+    }
+    if (!embedModal) return;
+    const autoplay = document.getElementById("embed-autoplay");
+    if (autoplay) autoplay.checked = readEmbedAutoplay();
+    paintEmbedDialog();
+    if (!embedModal.open) embedModal.showModal();
+    void measureEmbedRatio().then(() => {
+      if (embedModal.open) paintEmbedDialog();
+    });
+  }
+
+  document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
+  document.getElementById("btn-embed-close")?.addEventListener("click", () => embedModal?.close());
+  embedModal?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) embedModal.close();
+  });
+  embedModal?.querySelector(".embed-tabs")?.addEventListener("click", (e) => {
+    const tab = e.target.closest?.(".embed-tab");
+    if (!tab) return;
+    embedFlavor = normalizeEmbedFlavor(tab.dataset.flavor);
+    paintEmbedDialog();
+  });
+  embedModal?.querySelector(".embed-tabs")?.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const tabs = [...embedModal.querySelectorAll(".embed-tab")];
+    const i = tabs.findIndex((tab) => tab.dataset.flavor === embedFlavor);
+    const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    if (!next) return;
+    e.preventDefault();
+    embedFlavor = normalizeEmbedFlavor(next.dataset.flavor);
+    paintEmbedDialog();
+    next.focus();
+  });
+  document.getElementById("embed-autoplay")?.addEventListener("change", (e) => {
+    try {
+      localStorage.setItem(EMBED_AUTOPLAY_KEY, e.target.checked ? "1" : "0");
+    } catch {
+      /* storage cheio ou bloqueado */
+    }
+    paintEmbedDialog();
+  });
+  document.getElementById("embed-code")?.addEventListener("focus", (e) => e.target.select());
+  document.getElementById("btn-embed-copy")?.addEventListener("click", async () => {
+    const code = currentEmbedCode();
+    if (!code) return;
+    try {
+      await copyText(code);
+      toast(t("embed.copied"), 3200);
+    } catch (err) {
+      console.error(err);
+      const field = document.getElementById("embed-code");
+      field?.focus();
+      field?.select();
+      toast(err?.message || t("share.errGeneric"));
+    }
+  });
+  document.getElementById("btn-embed-publish")?.addEventListener("click", async () => {
+    embedModal?.close();
+    clearCloudPublishIntent();
+    await runCloudPublish();
+    if (permanentSlug(project?.cloudShare)) openEmbedDialog();
   });
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
     showUpgradeDialog({ feature: "account" });
