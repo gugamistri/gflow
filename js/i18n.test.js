@@ -52,7 +52,7 @@ test("o diálogo de entrada não mostra o host da API", () => {
     assert.equal(catalogs[loc]["account.signOut"].toLowerCase().includes("nuvem"), false);
     assert.equal(catalogs[loc]["share.cloud.openSite"], undefined);
   }
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const start = html.indexOf('id="modal-account"');
   const end = html.indexOf("</dialog>", start);
   const panel = html.slice(start, end);
@@ -135,7 +135,7 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(/GuiaFlow Cloud/.test(catalogs.pt["billing.message"]), false);
   assert.equal(/grátis|gratis|free plan/i.test(catalogs.pt["billing.heroLead"]), false);
   assert.equal(/grátis|gratis/i.test(catalogs.pt["export.removeMarkDesc"]), false);
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const start = html.indexOf('id="modal-upgrade"');
   const end = html.indexOf("</dialog>", start);
   const dialog = html.slice(start, end);

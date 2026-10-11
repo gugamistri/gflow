@@ -146,15 +146,15 @@ function renderViewPage({
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/59/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/59/css/theme.css" />
-  <link rel="stylesheet" href="/a/59/css/app.css" />
+  <link rel="stylesheet" href="/a/60/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/60/css/theme.css" />
+  <link rel="stylesheet" href="/a/60/css/app.css" />
   <script>window.__GF_SHARE = ${scriptJson({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/59/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/59/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/60/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/60/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
   </header>
@@ -220,8 +220,8 @@ function renderViewPage({
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/59/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/59/js/viewApp.js"></script>
+  <script src="/a/60/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/60/js/viewApp.js"></script>
 </body>
 </html>
 `;

@@ -84,7 +84,7 @@ function cssRules(source) {
 }
 
 test("o diálogo Pro fica oculto até abrir, e os outros modais também", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
   for (const id of ["modal-upgrade", "modal-subscription", "modal-account"]) {
     const at = html.indexOf(`id="${id}"`);
@@ -114,7 +114,7 @@ test("o diálogo Pro fica oculto até abrir, e os outros modais também", () => 
 });
 
 test("o diálogo começa em Mensal", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const start = html.indexOf('id="modal-upgrade"');
   const end = html.indexOf("</dialog>", start);
   const dialog = html.slice(start, end);

@@ -222,15 +222,16 @@ test("override local com o host anterior da nuvem continua a valer", () => {
   });
 });
 
-test("o HTML publicado aponta app.guiaflow.pro e os assets em a/59", () => {
-  for (const file of ["../index.html", "../auth/callback.html"]) {
+test("o HTML publicado aponta app.guiaflow.pro e os assets em a/60", () => {
+  for (const file of ["../index.html", "../editor.html", "../auth/callback.html"]) {
     const html = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(html, /__GUIAFLOW_CLOUD__ = "https:\/\/app\.guiaflow\.pro"/);
     assert.equal(html.includes("api.guiaflow.pro"), false);
   }
-  for (const file of ["../index.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
+  for (const file of ["../index.html", "../editor.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(text, /a\/59\//);
+    assert.match(text, /a\/60\//);
+    assert.equal(text.includes("a/59/"), false);
     assert.equal(text.includes("a/58/"), false);
     assert.equal(text.includes("a/57/"), false);
     assert.equal(text.includes("a/56/"), false);
@@ -557,7 +558,7 @@ test("o code de /auth/callback vira sessão e a senha também", async () => {
     const href = "https://guiaflow.pro/auth/callback?code=once-code&lang=pt#stay=1";
     assert.equal(readAuthCallbackCode(href), "once-code");
     assert.equal(readAuthCallbackCode("https://guiaflow.pro/?code=once-code"), "");
-    assert.equal(editorHomeFromCallback(href), "https://guiaflow.pro/?lang=pt#stay=1");
+    assert.equal(editorHomeFromCallback(href), "https://guiaflow.pro/editor?lang=pt#stay=1");
     const done = await completeCloudAuthCallback(href, { baseUrl: "https://app.guiaflow.pro" });
     assert.equal(done.ok, true);
     assert.equal(done.consumed, true);

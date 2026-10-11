@@ -1,6 +1,6 @@
 /**
  * Página /auth/callback. why: a nuvem manda o browser para cá com ?code=
- * e o editor troca esse code pela sessão antes de voltar à raiz.
+ * e o editor troca esse code pela sessão antes de voltar ao editor (/editor).
  */
 import {
   completeCloudAuthCallback,
@@ -10,14 +10,14 @@ import {
 const status = document.getElementById("status");
 
 function goHome(href) {
-  let next = "/";
+  let next = "/editor";
   try {
-    const url = new URL(href || "/", location.origin);
+    const url = new URL(href || "/editor", location.origin);
     if (url.origin === location.origin) {
-      next = `${url.pathname}${url.search}${url.hash}` || "/";
+      next = `${url.pathname}${url.search}${url.hash}` || "/editor";
     }
   } catch {
-    next = "/";
+    next = "/editor";
   }
   location.replace(next);
 }
@@ -28,5 +28,5 @@ try {
   goHome(result.href);
 } catch {
   if (status) status.textContent = "Não foi possível entrar. Volte ao GuiaFlow e peça outro link.";
-  setTimeout(() => goHome("/"), 1600);
+  setTimeout(() => goHome("/editor"), 1600);
 }

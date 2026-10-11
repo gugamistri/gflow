@@ -64,7 +64,8 @@ function createMainWindow() {
     },
   });
 
-  mainWindow.loadFile(path.join(ROOT, "index.html"));
+  // why: index.html virou a landing do site; o editor mora em editor.html (/editor na Vercel)
+  mainWindow.loadFile(path.join(ROOT, "editor.html"));
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (isCartesiaKeys(url)) shell.openExternal(url);

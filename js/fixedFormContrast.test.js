@@ -30,7 +30,7 @@ test("campos do passo inicial ficam legíveis em todos os temas (texto, placehol
 });
 
 test("diálogos dos passos fixos: só o miolo rola e as ações ficam sempre visíveis", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   for (const id of ["modal-fixed-start", "modal-fixed-end"]) {
     const start = html.indexOf(`id="${id}"`);
     const dialog = html.slice(start, html.indexOf("</dialog>", start));
