@@ -9,7 +9,37 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-function renderViewPage({ id, name, origin, missing, kind }) {
+/** JSON seguro dentro de <script>: o título do tour não pode fechar a tag. */
+function scriptJson(value) {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+function stepsLabel(stepCount) {
+  const n = Number(stepCount);
+  if (!Number.isInteger(n) || n <= 0) return "";
+  return n === 1 ? "1 passo" : `${n} passos`;
+}
+
+/**
+ * image/imageWidth/imageHeight: capa do /p vinda do Cloud (`/api/shares/:slug/meta`).
+ * Sem capa, fica a imagem padrão da marca.
+ */
+function renderViewPage({
+  id,
+  name,
+  origin,
+  missing,
+  kind,
+  image: coverImage = null,
+  imageWidth = null,
+  imageHeight = null,
+  stepCount = null,
+}) {
   const base = String(origin || "").replace(/\/$/, "");
   const permanent = kind === "permanent";
   const title = missing
@@ -17,13 +47,18 @@ function renderViewPage({ id, name, origin, missing, kind }) {
     : name
       ? `${name} — GuiaFlow`
       : "GuiaFlow — Tour";
+  const steps = missing ? "" : stepsLabel(stepCount);
   const description = missing
     ? "Este link não está mais disponível."
     : name
-      ? `Tour interativo: ${name}`
+      ? `Tour interativo: ${name}${steps ? ` · ${steps}` : ""}`
       : "Tour interativo no GuiaFlow";
   const canonical = id ? `${base}/${permanent ? "p" : "v"}/${id}` : `${base}/`;
-  const image = `${base}/brand/og-image.png`;
+  const hasCover = !missing && typeof coverImage === "string" && /^https?:\/\//.test(coverImage);
+  const image = hasCover ? coverImage : `${base}/brand/og-image.png`;
+  const imgW = hasCover && Number.isInteger(imageWidth) && imageWidth > 0 ? imageWidth : 1200;
+  const imgH = hasCover && Number.isInteger(imageHeight) && imageHeight > 0 ? imageHeight : 630;
+  const imageAlt = !missing && name ? name : "GuiaFlow";
   const safeTitle = escapeHtml(title);
   const safeDesc = escapeHtml(description);
   const safeName = escapeHtml(name || "");
@@ -45,12 +80,14 @@ function renderViewPage({ id, name, origin, missing, kind }) {
   <meta property="og:description" content="${safeDesc}" />
   <meta property="og:url" content="${escapeHtml(canonical)}" />
   <meta property="og:image" content="${escapeHtml(image)}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image:width" content="${imgW}" />
+  <meta property="og:image:height" content="${imgH}" />
+  <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDesc}" />
   <meta name="twitter:image" content="${escapeHtml(image)}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
   <script>
     (function () {
       try {
@@ -100,15 +137,15 @@ function renderViewPage({ id, name, origin, missing, kind }) {
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/46/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/46/css/theme.css" />
-  <link rel="stylesheet" href="/a/46/css/app.css" />
-  <script>window.__GF_SHARE = ${JSON.stringify({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
+  <link rel="stylesheet" href="/a/47/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/47/css/theme.css" />
+  <link rel="stylesheet" href="/a/47/css/app.css" />
+  <script>window.__GF_SHARE = ${scriptJson({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/46/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/46/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/47/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/47/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
   </header>
@@ -173,8 +210,8 @@ function renderViewPage({ id, name, origin, missing, kind }) {
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/46/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/46/js/viewApp.js"></script>
+  <script src="/a/47/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/47/js/viewApp.js"></script>
 </body>
 </html>
 `;

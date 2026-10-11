@@ -6,6 +6,7 @@ import {
   formToTheme,
   normalizeSteps,
   resolveImageSrc,
+  createStepId,
 } from "./store.js";
 import {
   ensureMigrated,
@@ -465,6 +466,8 @@ const editor = createEditor({
   showHostedBadge,
   prefersHostedGeneration,
   noteHostedUsage: rememberHostedUsage,
+  coverMenuState: () => ({ enabled: cloudShareEnabled(), pro: viewerIsPro() }),
+  onSetCover: (index) => setCoverStep(index),
 });
 
 const player = createPlayer({
@@ -683,11 +686,22 @@ function paintShareMenu() {
     dot.hidden = !stale;
     dot.title = t("share.staleDot");
   }
+  paintShareCover(record, pro);
   const embedBtn = document.getElementById("btn-share-embed");
   if (embedBtn) embedBtn.hidden = !cloudShareEnabled();
   const embedBadge = document.getElementById("embed-pro-badge");
   if (embedBadge) embedBadge.hidden = pro;
   paintAccount();
+}
+
+/** Miniatura da capa do /p (só Pro com link permanente publicado). */
+function paintShareCover(record, pro) {
+  const box = document.getElementById("share-cover");
+  const img = document.getElementById("share-cover-img");
+  if (!box || !img) return;
+  const url = pro && permanentSlug(record) && typeof record?.coverUrl === "string" ? record.coverUrl : "";
+  box.hidden = !url;
+  if (url && img.getAttribute("src") !== url) img.setAttribute("src", url);
 }
 
 function cloudShareEnabled() {
@@ -1044,6 +1058,30 @@ function openFeatureGate(feature) {
     return;
   }
   showUpgradeDialog({ feature });
+}
+
+/**
+ * "Usar como capa do link". Marcar o passo que já é a capa volta ao padrão (1º passo).
+ * why: muda o payload (coverStepId), então o link fica "Desatualizado" até republicar.
+ */
+function setCoverStep(index) {
+  if (!project || !cloudShareEnabled()) return;
+  if (!viewerIsPro()) {
+    openFeatureGate("cover");
+    return;
+  }
+  const step = project.steps?.[index];
+  if (!step) return;
+  if (!step.id) step.id = createStepId();
+  if (project.coverStepId === step.id) {
+    delete project.coverStepId;
+    toast(t("toast.coverReset"), 4200);
+  } else {
+    project.coverStepId = step.id;
+    toast(t("toast.coverSet"), 4200);
+  }
+  onChange();
+  paintShareMenu();
 }
 
 async function consumeBillingReturn() {
@@ -2375,6 +2413,9 @@ function bindChrome() {
   document.getElementById("cloud-share-block")?.addEventListener("click", () => {
     showUpgradeDialog({ feature: "permanentShare" });
   });
+  document.getElementById("btn-share-cover-change")?.addEventListener("click", () => {
+    toast(t("share.cover.changeHint"), 6500);
+  });
 
   // Incorporar no site (só link permanente, Pro)
   const EMBED_AUTOPLAY_KEY = "guiaflow.embed.autoplay";
@@ -2847,6 +2888,7 @@ function bindChrome() {
           overlayStatus.textContent = msg;
         },
       });
+      const previousCover = updating ? project.cloudShare?.coverUrl || "" : "";
       project.cloudShare = {
         id: share.slug || share.id,
         slug: share.slug || share.id,
@@ -2854,6 +2896,7 @@ function bindChrome() {
         updatedAt: share.updatedAt,
         publishedAt: Date.now(),
         payloadHash: hashSharePayload(project),
+        coverUrl: share.coverUrl || previousCover,
       };
       saveDirty = true;
       await flushAutosave();
@@ -2863,6 +2906,7 @@ function bindChrome() {
       try {
         await copyText(share.url);
         toast(updating ? t("toast.shareRepublished") : t("toast.shareCopied"), 4200);
+        if (share.coverSkipped && updating) setTimeout(() => toast(t("share.cover.skipped"), 4200), 4300);
       } catch (err) {
         console.error(err);
       }

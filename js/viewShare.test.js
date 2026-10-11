@@ -18,7 +18,7 @@ import {
 
 const require = createRequire(import.meta.url);
 const { renderViewPage } = require("../api/lib/view-shell.cjs");
-const { fetchPermanentShare } = require("../api/lib/permanent-share.cjs");
+const { fetchPermanentShare, metaFromData } = require("../api/lib/permanent-share.cjs");
 const permanentHandler = require("../api/p/[slug].js");
 
 const tour = {
@@ -152,7 +152,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo — GuiaFlow"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/46\/js\/viewApp\.js/);
+  assert.match(html, /a\/47\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);
@@ -202,7 +202,7 @@ test("GET /api/p/:slug publica a meta e o 404 usa a mesma página", async () => 
   const seen = [];
   globalThis.fetch = async (url) => {
     seen.push(String(url));
-    if (String(url).endsWith("/sumiu")) {
+    if (/\/sumiu(\/meta)?$/.test(String(url))) {
       return { ok: false, status: 404, json: async () => ({ ok: false, error: "not_found" }) };
     }
     return {
@@ -228,7 +228,7 @@ test("GET /api/p/:slug publica a meta e o 404 usa a mesma página", async () => 
     assert.match(ok.body, /\/p\/slug-permanente/);
     assert.equal(ok.body.includes("customImages"), false);
     assert.equal(ok.body.includes("7 dias"), false);
-    assert.equal(seen[0], "https://app.guiaflow.pro/api/shares/slug-permanente");
+    assert.equal(seen[0], "https://app.guiaflow.pro/api/shares/slug-permanente/meta");
 
     const missing = fakeRes();
     await permanentHandler(
@@ -245,7 +245,11 @@ test("GET /api/p/:slug publica a meta e o 404 usa a mesma página", async () => 
       invalid
     );
     assert.equal(invalid.statusCode, 404);
-    assert.equal(seen.length, 2);
+    // 404 do /meta tenta o endpoint antigo (Cloud sem a rota nova) antes de dar "sumiu"
+    assert.deepEqual(seen.slice(1), [
+      "https://app.guiaflow.pro/api/shares/sumiu/meta",
+      "https://app.guiaflow.pro/api/shares/sumiu",
+    ]);
 
     const loaded = await fetchPermanentShare("slug-permanente", globalThis.fetch);
     assert.equal(loaded.missing, false);
@@ -254,6 +258,61 @@ test("GET /api/p/:slug publica a meta e o 404 usa a mesma página", async () => 
     if (prev === undefined) delete globalThis.fetch;
     else globalThis.fetch = prev;
   }
+});
+
+test("/p usa a capa do Cloud na og:image, com nº de passos na descrição", async () => {
+  const prev = globalThis.fetch;
+  const cover = "https://app.guiaflow.pro/api/shares/slug-capa/cover.jpg?v=2026-10-11T13%3A00%3A00.000Z";
+  globalThis.fetch = async (url) => ({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      ok: true,
+      slug: "slug-capa",
+      title: 'Tour "fixo" <b>',
+      updatedAt: "2026-10-11T13:00:00.000Z",
+      stepCount: 7,
+      ratio: "16/10",
+      coverUrl: cover,
+      coverWidth: 1200,
+      coverHeight: 630,
+    }),
+  });
+  try {
+    const meta = await fetchPermanentShare("slug-capa");
+    assert.equal(meta.image, cover);
+    assert.equal(meta.stepCount, 7);
+    assert.equal(meta.ratio, "16/10");
+    const res = fakeRes();
+    await permanentHandler({ method: "GET", query: { slug: "slug-capa" }, headers: { host: "guiaflow.pro" } }, res);
+    assert.equal(res.statusCode, 200);
+    const esc = cover.replace(/[.?*+^$()[\]{}|\\]/g, "\\$&");
+    assert.match(res.body, new RegExp(`property="og:image" content="${esc}"`));
+    assert.match(res.body, new RegExp(`name="twitter:image" content="${esc}"`));
+    assert.match(res.body, /property="og:image:alt" content="Tour &quot;fixo&quot; &lt;b&gt;"/);
+    assert.match(res.body, /property="og:description" content="Tour interativo: Tour &quot;fixo&quot; &lt;b&gt; · 7 passos"/);
+    assert.equal(res.body.includes("<b>"), false);
+    // o título no JSON do <script> não fecha a tag
+    const evil = renderViewPage({ id: "x", name: "</script><script>alert(1)</script>", origin: "https://guiaflow.pro", kind: "permanent" });
+    assert.equal(evil.includes("</script><script>alert(1)"), false);
+    assert.match(evil, /\\u003c\/script\\u003e/);
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
+test("sem capa, a og:image segue a da marca; capa não-https é ignorada", () => {
+  const plain = renderViewPage({ id: "s", name: "Tour", origin: "https://guiaflow.pro", kind: "permanent", stepCount: 1 });
+  assert.match(plain, /og:image" content="https:\/\/guiaflow\.pro\/brand\/og-image\.png"/);
+  assert.match(plain, /og:description" content="Tour interativo: Tour · 1 passo"/);
+  assert.match(plain, /og:image:width" content="1200"/);
+  const missing = renderViewPage({ id: "s", name: null, origin: "https://guiaflow.pro", kind: "permanent", missing: true, image: "https://x/c.jpg" });
+  assert.match(missing, /og:image" content="https:\/\/guiaflow\.pro\/brand\/og-image\.png"/);
+  assert.equal(metaFromData({ ok: true, coverUrl: "javascript:alert(1)" }).image, null);
+  assert.equal(metaFromData({ ok: true, ratio: "1;2" }).ratio, null);
+  // endpoint antigo (sem stepCount) conta pelo payload
+  assert.equal(metaFromData({ ok: true, payload: { steps: [{}, {}] } }).stepCount, 2);
 });
 
 test("?embed=1 liga o modo incorporado; autoplay só vale no embed", () => {
