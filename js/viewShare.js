@@ -39,10 +39,16 @@ export function tourFromPermanentShare(data) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return { ok: false, error: "not_found" };
   }
+  const features = data.features && typeof data.features === "object" ? data.features : {};
   return {
     ok: true,
     tour: payload,
     title: typeof data.title === "string" ? data.title.trim() : "",
+    // why: o servidor decide (passo ligado no tour publicado + autor Pro); o player só obedece
+    features: {
+      leadCapture: features.leadCapture === true,
+      contactForm: features.contactForm === true,
+    },
   };
 }
 

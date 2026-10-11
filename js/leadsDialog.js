@@ -1,0 +1,198 @@
+/**
+ * Contatos recebidos no link permanente (passo inicial + formulário do passo final).
+ * Só o dono vê (GET /shares/:slug/leads com Bearer); CSV gerado no navegador.
+ */
+import { t, getLocale } from "./i18n.js";
+import { cloudFetch } from "./cloudConfig.js";
+import { leadsToCsv } from "./fixedSteps.js";
+
+const $ = (id) => document.getElementById(id);
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+function formatDate(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return String(iso || "");
+  const locale = { pt: "pt-BR", es: "es", en: "en" }[getLocale?.() || "pt"] || "pt-BR";
+  return date.toLocaleString(locale, { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
+}
+
+function formatPhone(digits) {
+  const d = String(digits || "");
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return d ? `+${d}` : "";
+}
+
+/** Data do CSV no fuso America/Sao_Paulo ("2026-10-11 11:03:04"), que o Excel reconhece. */
+export function csvDate(iso) {
+  const date = new Date(iso);
+  if (!iso || Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo", hour12: false });
+}
+
+export function csvFileName(slug, now = new Date()) {
+  const day = now.toISOString().slice(0, 10);
+  return `contatos-${String(slug || "tour").replace(/[^a-z0-9-]/gi, "")}-${day}.csv`;
+}
+
+export function createLeadsDialog({ getSlug, toast }) {
+  let leads = [];
+  let title = "";
+  let bound = false;
+  let loading = false;
+
+  const els = () => ({
+    dialog: $("modal-leads"),
+    meta: $("leads-meta"),
+    status: $("leads-status"),
+    list: $("leads-list"),
+    csv: $("btn-leads-csv"),
+    refresh: $("btn-leads-refresh"),
+    close: $("btn-leads-close"),
+  });
+
+  function sourceLabel(source) {
+    return source === "contact" ? t("leads.sourceContact") : t("leads.sourceStart");
+  }
+
+  function paint() {
+    const e = els();
+    e.list.replaceChildren();
+    e.csv.disabled = !leads.length;
+    e.meta.textContent = leads.length || title ? t("leads.meta", { n: leads.length, title: title || "" }) : "";
+    if (!leads.length) {
+      if (!loading && !e.status.textContent) e.status.textContent = t("leads.empty");
+      return;
+    }
+    for (const lead of leads) {
+      const row = el("div", "leads-row");
+      row.setAttribute("role", "listitem");
+      const head = el("div", "leads-row-head");
+      head.append(el("strong", "leads-name", lead.name || lead.email || formatPhone(lead.phone) || "—"));
+      head.append(el("span", `leads-source leads-source-${lead.source === "contact" ? "contact" : "start"}`, sourceLabel(lead.source)));
+      head.append(el("time", "leads-date", formatDate(lead.createdAt)));
+      const del = el("button", "btn btn-icon leads-delete", "×");
+      del.type = "button";
+      del.title = t("leads.delete");
+      del.setAttribute("aria-label", `${t("leads.delete")}: ${lead.name || lead.email || ""}`);
+      del.addEventListener("click", () => void remove(lead));
+      head.append(del);
+      row.append(head);
+      const contact = el("div", "leads-contact");
+      if (lead.email) {
+        const a = el("a", "", lead.email);
+        a.href = `mailto:${lead.email}`;
+        contact.append(a);
+      }
+      if (lead.phone) {
+        const a = el("a", "", formatPhone(lead.phone));
+        a.href = `https://wa.me/${String(lead.phone).length <= 11 ? `55${lead.phone}` : lead.phone}`;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        contact.append(a);
+      }
+      if (contact.childElementCount) row.append(contact);
+      if (lead.message) row.append(el("p", "leads-message", lead.message));
+      const consent = el("p", "leads-consent", lead.consent ? t("leads.consentAt", { date: formatDate(lead.consentAt || lead.createdAt) }) : "");
+      if (lead.consentText) consent.title = lead.consentText;
+      row.append(consent);
+      if (lead.source === "contact" && lead.delivered === false) row.append(el("p", "leads-undelivered", t("leads.undelivered")));
+      e.list.append(row);
+    }
+  }
+
+  async function load() {
+    const slug = getSlug();
+    const e = els();
+    if (!slug) return;
+    loading = true;
+    e.status.textContent = t("leads.loading");
+    paint();
+    const res = await cloudFetch(`/shares/${encodeURIComponent(slug)}/leads`, { method: "GET" });
+    loading = false;
+    if (!res.ok) {
+      leads = [];
+      e.status.textContent = res.status === 401 ? t("leads.errAuth") : t("leads.errLoad");
+      paint();
+      return;
+    }
+    leads = Array.isArray(res.data?.leads) ? res.data.leads : [];
+    title = String(res.data?.title || "");
+    e.status.textContent = leads.length ? "" : t("leads.empty");
+    paint();
+  }
+
+  async function remove(lead) {
+    if (!window.confirm(t("leads.confirmDelete", { who: lead.name || lead.email || formatPhone(lead.phone) || "" }))) return;
+    const res = await cloudFetch(`/shares/${encodeURIComponent(getSlug())}/leads/${encodeURIComponent(lead.id)}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast?.(t("leads.errDelete"), 4200);
+      return;
+    }
+    leads = leads.filter((item) => item.id !== lead.id);
+    els().status.textContent = leads.length ? "" : t("leads.empty");
+    paint();
+    toast?.(t("leads.deleted"), 3000);
+  }
+
+  function downloadCsv() {
+    if (!leads.length) return;
+    const rows = leads.map((lead) => ({ ...lead, createdAt: csvDate(lead.createdAt), consentAt: csvDate(lead.consentAt) }));
+    const csv = leadsToCsv(rows, {
+      createdAt: t("leads.col.date"),
+      source: t("leads.col.source"),
+      name: t("fixed.lead.name"),
+      email: t("fixed.lead.email"),
+      phone: t("leads.col.phone"),
+      message: t("fixed.contact.message"),
+      consent: t("leads.col.consent"),
+      consentAt: t("leads.col.consentAt"),
+      consentText: t("leads.col.consentText"),
+      yes: t("leads.yes"),
+      no: t("leads.no"),
+      source_start: t("leads.sourceStart"),
+      source_contact: t("leads.sourceContact"),
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = csvFileName(getSlug());
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function bind() {
+    if (bound) return;
+    bound = true;
+    const e = els();
+    e.close?.addEventListener("click", () => e.dialog.close());
+    e.refresh?.addEventListener("click", () => void load());
+    e.csv?.addEventListener("click", downloadCsv);
+  }
+
+  function open() {
+    const e = els();
+    if (!e.dialog) return;
+    bind();
+    if (!getSlug()) {
+      toast?.(t("leads.needsPublish"), 4200);
+      return;
+    }
+    leads = [];
+    title = "";
+    e.status.textContent = "";
+    if (!e.dialog.open) e.dialog.showModal();
+    void load();
+  }
+
+  return { open };
+}
