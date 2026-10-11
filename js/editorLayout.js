@@ -36,56 +36,28 @@ export function isPropsPanelShortcut(e) {
 }
 
 /**
- * @param {{ left: number, top: number, width: number, height: number }} a
- * @param {{ left: number, top: number, width: number, height: number }} b
+ * Decide quais grupos da barra do passo vão para o menu "…" quando falta largura.
+ * Sai primeiro o grupo com menor prioridade (empate: o mais à direita); os demais ficam na ordem.
+ * @param {number[]} widths largura de cada grupo
+ * @param {number[]} priorities prioridade de permanência de cada grupo (maior fica mais tempo)
+ * @param {number} available largura disponível para os grupos
+ * @param {number} sepWidth largura de cada separador entre grupos visíveis
+ * @returns {Set<number>} índices dos grupos que vão para o menu
  */
-export function boxesOverlap(a, b) {
-  if (!a || !b) return false;
-  return (
-    a.left < b.left + b.width &&
-    b.left < a.left + a.width &&
-    a.top < b.top + b.height &&
-    b.top < a.top + a.height
-  );
-}
-
-/**
- * Barra flutuante acima do destaque; sem espaço, vai para baixo dele (ou do balão, se o balão
- * estiver embaixo). Nunca sai das bordas do frame na horizontal.
- * @param {{ left: number, top: number, width: number, height: number }} anchor destaque, em px do frame
- * @param {{ width: number, height: number }} size barra
- * @param {{ width: number, height: number }} frame
- * @param {{ left: number, top: number, width: number, height: number } | null} [avoid] balão visível
- * @param {{ gapAbove?: number, gap?: number, pad?: number }} [opts]
- */
-export function placeFloatToolbarBox(anchor, size, frame, avoid = null, opts = {}) {
-  const gapAbove = opts.gapAbove ?? 26;
-  const gap = opts.gap ?? 10;
-  const pad = opts.pad ?? 4;
-  const w = Math.max(0, size?.width || 0);
-  const h = Math.max(0, size?.height || 0);
-  const fw = Math.max(0, frame?.width || 0);
-  const fh = Math.max(0, frame?.height || 0);
-  const centerX = anchor.left + anchor.width / 2;
-  const left = Math.max(pad, Math.min(centerX - w / 2, fw - w - pad));
-  const fits = (top) => top >= pad && top + h <= fh - pad;
-  const hits = (top) => boxesOverlap({ left, top, width: w, height: h }, avoid);
-
-  const above = anchor.top - h - gapAbove;
-  if (fits(above) && !hits(above)) return { left, top: above, placement: "above" };
-
-  const below = anchor.top + anchor.height + gap;
-  if (fits(below) && !hits(below)) return { left, top: below, placement: "below" };
-
-  if (avoid) {
-    const underAvoid = avoid.top + avoid.height + gap;
-    if (fits(underAvoid)) return { left, top: underAvoid, placement: "below" };
-    const overAvoid = avoid.top - h - gap;
-    if (fits(overAvoid) && !boxesOverlap({ left, top: overAvoid, width: w, height: h }, anchor)) {
-      return { left, top: overAvoid, placement: "above" };
+export function planToolbarOverflow(widths, priorities, available, sepWidth = 0) {
+  const out = new Set();
+  const total = () => {
+    const kept = widths.filter((_, i) => !out.has(i));
+    if (!kept.length) return 0;
+    return kept.reduce((a, b) => a + b, 0) + sepWidth * (kept.length - 1);
+  };
+  while (out.size < widths.length && total() > available + 0.5) {
+    let pick = -1;
+    for (let i = 0; i < widths.length; i += 1) {
+      if (out.has(i)) continue;
+      if (pick === -1 || (priorities[i] ?? 0) <= (priorities[pick] ?? 0)) pick = i;
     }
+    out.add(pick);
   }
-  if (fits(above)) return { left, top: above, placement: "above" };
-  if (fits(below)) return { left, top: below, placement: "below" };
-  return { left, top: Math.max(pad, Math.min(anchor.top + pad, fh - h - pad)), placement: "inside" };
+  return out;
 }

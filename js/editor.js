@@ -23,7 +23,7 @@ import {
 import { isCompactTouch } from "./compact.js";
 import {
   isPropsPanelShortcut,
-  placeFloatToolbarBox,
+  planToolbarOverflow,
   readPropsPanelOpen,
   writePropsPanelOpen,
 } from "./editorLayout.js";
@@ -296,21 +296,22 @@ export function createEditor(ctx) {
     narrationBgName: document.getElementById("narration-bg-name"),
     narrationBgFile: document.getElementById("narration-bg-file"),
     btnNarrationBgClear: document.getElementById("btn-narration-bg-clear"),
-    titlebar: document.getElementById("canvas-titlebar"),
-    stepTitle: document.getElementById("canvas-step-title"),
-    stepKicker: document.getElementById("canvas-step-kicker"),
-    titleType: document.getElementById("title-type"),
-    btnTitleImage: document.getElementById("btn-title-image"),
-    btnTitleGenerate: document.getElementById("btn-title-generate"),
+    stepToolbar: document.getElementById("step-toolbar"),
+    stbRow: document.getElementById("stb-row"),
+    stbType: document.getElementById("stb-type"),
+    stbImage: document.getElementById("stb-image"),
+    stbGenerateCopy: document.getElementById("btn-step-generate-copy"),
+    stbSide: document.getElementById("stb-side"),
+    stbSideLabel: document.getElementById("stb-side-label"),
+    stbAlign: document.getElementById("stb-align"),
+    stbSimulate: document.getElementById("stb-simulate"),
+    stbZoom: document.getElementById("stb-zoom"),
+    stbHold: document.getElementById("stb-hold"),
+    stbMore: document.getElementById("stb-more"),
+    stbMenu: document.getElementById("stb-menu"),
+    stbMenuGroups: document.getElementById("stb-menu-groups"),
+    stbOpenPanel: document.getElementById("stb-open-panel"),
     narrationBar: document.getElementById("narration-bar"),
-    floatToolbar: document.getElementById("float-toolbar"),
-    ftbSide: document.getElementById("ftb-side"),
-    ftbSideLabel: document.getElementById("ftb-side-label"),
-    ftbAlign: document.getElementById("ftb-align"),
-    ftbSimulate: document.getElementById("ftb-simulate"),
-    ftbZoom: document.getElementById("ftb-zoom"),
-    ftbHold: document.getElementById("ftb-hold"),
-    ftbMore: document.getElementById("ftb-more"),
     toolbarPos: document.getElementById("toolbar-pos"),
     propsPos: document.getElementById("props-pos"),
     propsToggle: document.getElementById("btn-props-toggle"),
@@ -339,9 +340,6 @@ export function createEditor(ctx) {
   let filmMenuToken = 0;
   /** @type {HTMLElement | null} */
   let filmMenuEl = null;
-  /** Barra flutuante: aberta ao clicar no destaque ou no slide do passo `ftbStepId`. */
-  let ftbOpen = false;
-  let ftbStepId = null;
   /** Passo em que o usuário pediu para escrever a narração mesmo com o texto oculto. */
   let forceCaptionStepId = null;
 
@@ -1050,6 +1048,7 @@ export function createEditor(ctx) {
     if (uploadBtn) uploadBtn.hidden = !hasText;
     if (clearBtn) clearBtn.hidden = !clips.length;
     if (actionsEl) actionsEl.hidden = !hasText && !clips.length;
+    syncNarrationBar(clips.length > 0);
 
     if (!clips.length) {
       stopCaptionPlayer();
@@ -1057,9 +1056,7 @@ export function createEditor(ctx) {
       syncHoldChrome(step);
       if (!statusEl) return;
       if (!hasText) {
-        // why: a barra de narração fica sempre visível — sem texto, ela diz isso em vez de ficar vazia.
-        statusEl.hidden = false;
-        statusEl.textContent = t("narrbar.noText");
+        statusEl.hidden = true;
         return;
       }
       const hasStaleTts =
@@ -1104,6 +1101,19 @@ export function createEditor(ctx) {
     captionPlayer.rate = normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate);
     enforceHoldFloor(step);
     renderCaptionPlayer();
+  }
+
+  /** why: a barra de baixo é só para ouvir — aparece apenas quando o passo tem áudio. */
+  function syncNarrationBar(hasAudio) {
+    const bar = els.narrationBar;
+    if (!bar) return;
+    const step = currentStep();
+    const show = !!step && !!hasAudio && editingCanvas() && !isCompactTouch();
+    document.getElementById("view-editor")?.classList.toggle("has-narration-bar", show);
+    if (bar.hidden === !show) return;
+    bar.hidden = !show;
+    // O canvas muda de altura: reposiciona destaque e balão.
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
   }
 
   function syncNarrationPanel() {
@@ -1152,7 +1162,7 @@ export function createEditor(ctx) {
   }
 
   function inlineFields() {
-    return [els.stepTitle, els.slideTitle, els.slideBody, els.canvasCaption, els.popoverTitle, els.popoverBody];
+    return [els.slideTitle, els.slideBody, els.canvasCaption, els.popoverTitle, els.popoverBody];
   }
 
   function releaseInlineFocusIfStepChanged(step) {
@@ -1289,7 +1299,6 @@ export function createEditor(ctx) {
     }
     pop.style.left = `${left}px`;
     pop.style.top = `${top}px`;
-    placeFloatToolbar();
   }
 
   function pointerInFrame(e) {
@@ -1538,14 +1547,13 @@ export function createEditor(ctx) {
     const step = currentStep();
     releaseInlineFocusIfStepChanged(step);
     const editing = editingCanvas();
-    if (step?.id !== ftbStepId) {
-      ftbOpen = false;
-      ftbStepId = step?.id ?? null;
-    }
     if (forceCaptionStepId && forceCaptionStepId !== step?.id) forceCaptionStepId = null;
     paintStepPosition();
-    renderTitlebar(step, editing);
-    if (els.narrationBar) els.narrationBar.hidden = !step || !editing;
+    renderStepToolbar(step, editing);
+    {
+      const demoNow = getDemo();
+      syncNarrationBar(!!step && !!demoNow && savedNarrationClips(step, demoNow).length > 0);
+    }
 
     if (!demo.steps.length || !step) {
       if (els.canvasEmpty) els.canvasEmpty.hidden = false;
@@ -1557,7 +1565,6 @@ export function createEditor(ctx) {
       if (els.canvasMissing) els.canvasMissing.hidden = true;
       hideEditorPopover();
       setCanvasCaption("", { editing: false });
-      syncFloatToolbar();
       return;
     }
 
@@ -1586,7 +1593,6 @@ export function createEditor(ctx) {
       els.hotspot.hidden = true;
       els.clickPoint.hidden = true;
       hideEditorPopover();
-      syncFloatToolbar();
       return;
     }
 
@@ -1620,9 +1626,7 @@ export function createEditor(ctx) {
         els.clickPoint.hidden = true;
       }
       placeEditorPopover();
-      syncFloatToolbar();
     });
-    syncFloatToolbar();
   }
 
   function paintSceneKicker(host, step, editing) {
@@ -1667,69 +1671,32 @@ export function createEditor(ctx) {
     renameSceneInline(name, n);
   }
 
-  function renderTitlebar(step, editing) {
-    const bar = els.titlebar;
+  function renderStepToolbar(step, editing) {
+    const bar = els.stepToolbar;
     if (!bar) return;
-    const show = !!step && editing;
+    const show = !!step && editing && !isCompactTouch();
     bar.hidden = !show;
-    if (!show) return;
+    if (!show) {
+      closeStepMenu();
+      return;
+    }
     const isSlide = step.type === "slide";
-    paintSceneKicker(els.stepKicker, step, editing);
-    paintInline(els.stepTitle, step.popover?.title || step.label || "", {
-      editing: true,
-      placeholder: t("canvas.titlePlaceholder"),
-      label: t("canvas.editTitle"),
-    });
-    els.titleType?.querySelectorAll("[data-value]").forEach((btn) => {
-      const on = btn.dataset.value === (isSlide ? "slide" : "screen");
+    const scope = isSlide ? "slide" : "screen";
+    bar.dataset.scope = scope;
+    els.stbType?.querySelectorAll("[data-value]").forEach((btn) => {
+      const on = btn.dataset.value === scope;
       btn.classList.toggle("is-active", on);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
     });
-    if (els.btnTitleImage) els.btnTitleImage.hidden = isSlide;
-  }
-
-  function floatToolbarAllowed() {
-    return editingCanvas() && !isCompactTouch() && !previewDriver;
-  }
-
-  function selectCanvasObject() {
-    const step = currentStep();
-    if (!step || !floatToolbarAllowed()) return;
-    ftbOpen = true;
-    ftbStepId = step.id;
-    syncFloatToolbar();
-  }
-
-  function deselectCanvasObject() {
-    if (!ftbOpen) return;
-    ftbOpen = false;
-    syncFloatToolbar();
-  }
-
-  function syncFloatToolbar() {
-    const bar = els.floatToolbar;
-    if (!bar) return;
-    const step = currentStep();
-    const isSlide = step?.type === "slide";
-    const visible =
-      !!step &&
-      ftbOpen &&
-      ftbStepId === step.id &&
-      floatToolbarAllowed() &&
-      (isSlide ? !els.canvasSlide.hidden : !els.hotspot.hidden);
-    els.hotspot?.classList.toggle("is-selected", visible && !isSlide);
-    els.canvasSlide?.classList.toggle("is-selected", visible && isSlide);
-    if (!visible) {
-      bar.hidden = true;
-      return;
-    }
-    const scope = isSlide ? "slide" : "screen";
-    bar.hidden = false;
-    bar.dataset.scope = scope;
-    if (els.ftbSideLabel) els.ftbSideLabel.textContent = isSlide ? t("props.vertical") : t("ftb.balloon");
+    bar.querySelectorAll(".stb-screen-only").forEach((el) => {
+      el.hidden = isSlide;
+    });
+    const sideLabel = t(isSlide ? "stb.groupSlide" : "stb.groupBalloon");
+    if (els.stbSideLabel) els.stbSideLabel.textContent = sideLabel;
+    els.stbSideLabel?.closest(".stb-group")?.setAttribute("aria-label", sideLabel);
     const side = isSlide ? step.layout?.valign || "center" : step.popover?.side || "bottom";
     const align = isSlide ? step.layout?.align || "start" : step.popover?.align || "center";
-    els.ftbSide?.querySelectorAll("[data-value]").forEach((btn) => {
+    els.stbSide?.querySelectorAll("[data-value]").forEach((btn) => {
       btn.hidden = btn.dataset.scope !== scope;
       const on = !btn.hidden && btn.dataset.value === side;
       btn.classList.toggle("is-active", on);
@@ -1738,7 +1705,7 @@ export function createEditor(ctx) {
     const alignTitles = isSlide
       ? { start: t("props.left"), center: t("props.center"), end: t("props.right") }
       : { start: t("props.start"), center: t("props.center"), end: t("props.end") };
-    els.ftbAlign?.querySelectorAll("[data-value]").forEach((btn) => {
+    els.stbAlign?.querySelectorAll("[data-value]").forEach((btn) => {
       const on = btn.dataset.value === align;
       btn.classList.toggle("is-active", on);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
@@ -1748,53 +1715,98 @@ export function createEditor(ctx) {
         btn.setAttribute("aria-label", label);
       }
     });
-    bar.querySelectorAll(".ftb-screen-only").forEach((el) => {
-      el.hidden = isSlide;
-    });
     const sim = step.simulateClick !== false;
-    els.ftbSimulate?.classList.toggle("is-active", sim);
-    els.ftbSimulate?.setAttribute("aria-pressed", sim ? "true" : "false");
+    els.stbSimulate?.classList.toggle("is-active", sim);
+    els.stbSimulate?.setAttribute("aria-pressed", sim ? "true" : "false");
     const zoom = step.zoomHighlight === true;
-    els.ftbZoom?.classList.toggle("is-active", zoom);
-    els.ftbZoom?.setAttribute("aria-pressed", zoom ? "true" : "false");
-    if (els.ftbHold && els.propHold && document.activeElement !== els.ftbHold) {
-      els.ftbHold.value = els.propHold.value;
-      els.ftbHold.placeholder = els.propHold.placeholder;
-      els.ftbHold.min = els.propHold.min || "1";
-      const hint = els.propHoldHint && !els.propHoldHint.hidden ? els.propHoldHint.textContent : "";
-      const holdWrap = els.ftbHold.closest(".ftb-hold");
-      if (holdWrap) holdWrap.title = hint ? `${t("props.hold")} — ${hint}` : t("props.hold");
-    }
-    placeFloatToolbar();
+    els.stbZoom?.classList.toggle("is-active", zoom);
+    els.stbZoom?.setAttribute("aria-pressed", zoom ? "true" : "false");
+    syncStepHold();
+    const showCap = document.getElementById("prop-show-caption");
+    document.getElementById("wrap-show-caption")?.classList.toggle("is-active", !!showCap?.checked);
+    fitStepToolbar();
   }
 
-  function placeFloatToolbar() {
-    const bar = els.floatToolbar;
-    if (!bar || bar.hidden) return;
-    const step = currentStep();
-    const frame = { width: els.canvasFrame.clientWidth, height: els.canvasFrame.clientHeight };
-    const size = { width: bar.offsetWidth, height: bar.offsetHeight };
-    if (step?.type === "slide") {
-      const left = Math.max(4, (frame.width - size.width) / 2);
-      bar.style.left = `${Math.round(left)}px`;
-      bar.style.top = "8px";
-      bar.dataset.placement = "inside";
-      return;
+  function syncStepHold() {
+    if (!els.stbHold || !els.propHold || document.activeElement === els.stbHold) return;
+    els.stbHold.value = els.propHold.value;
+    els.stbHold.placeholder = els.propHold.placeholder;
+    els.stbHold.min = els.propHold.min || "1";
+    const hint = els.propHoldHint && !els.propHoldHint.hidden ? els.propHoldHint.textContent : "";
+    const holdWrap = els.stbHold.closest(".stb-hold");
+    if (holdWrap) holdWrap.title = hint ? `${t("props.hold")} — ${hint}` : t("props.hold");
+  }
+
+  /** Grupos da barra do passo, na ordem da barra. */
+  function stepToolbarGroups() {
+    return [...(els.stepToolbar?.querySelectorAll("[data-stb-group]") || [])];
+  }
+
+  /**
+   * why: em telas estreitas os grupos menos usados vão para o menu "…" (os próprios nós são movidos,
+   * então ids, estado e listeners continuam valendo) em vez de quebrar a barra em duas linhas.
+   */
+  function fitStepToolbar() {
+    const bar = els.stepToolbar;
+    const row = els.stbRow;
+    if (!bar || !row || bar.hidden) return;
+    const groups = stepToolbarGroups();
+    const seps = [...row.querySelectorAll(".stb-sep")];
+    // Volta tudo para a barra (grupo, separador, grupo…) antes de medir.
+    groups.forEach((g, i) => {
+      g.classList.remove("is-overflowed");
+      row.appendChild(g);
+      if (seps[i]) {
+        seps[i].hidden = false;
+        row.appendChild(seps[i]);
+      }
+    });
+    const widths = groups.map((g) => g.getBoundingClientRect().width);
+    const sepWidth = seps[0]?.getBoundingClientRect().width || 0;
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    const moreWidth = els.stbMore?.parentElement?.getBoundingClientRect().width || 36;
+    const style = getComputedStyle(bar);
+    const available =
+      bar.clientWidth -
+      (parseFloat(style.paddingLeft) || 0) -
+      (parseFloat(style.paddingRight) || 0) -
+      moreWidth -
+      gap;
+    const priorities = groups.map((g) => Number(g.dataset.stbKeep) || 0);
+    const overflow = planToolbarOverflow(widths, priorities, available, sepWidth + gap * 2);
+    groups.forEach((g, i) => {
+      if (!overflow.has(i)) return;
+      g.classList.add("is-overflowed");
+      els.stbMenuGroups?.appendChild(g);
+    });
+    seps.forEach((sep, i) => {
+      const keptBefore = i < groups.length && !overflow.has(i);
+      const keptAfter = groups.some((_, k) => k > i && !overflow.has(k));
+      sep.hidden = !(keptBefore && keptAfter);
+    });
+    const hasOverflow = overflow.size > 0;
+    bar.classList.toggle("has-overflow", hasOverflow);
+    if (els.stbMore) {
+      const label = t(hasOverflow ? "stb.more" : "stb.openPanel");
+      els.stbMore.title = label;
+      els.stbMore.setAttribute("aria-label", label);
+      els.stbMore.setAttribute("aria-haspopup", hasOverflow ? "true" : "false");
     }
-    const pop = els.editorPopover;
-    const avoid =
-      pop && !pop.hidden
-        ? {
-            left: parseFloat(pop.style.left) || 0,
-            top: parseFloat(pop.style.top) || 0,
-            width: pop.offsetWidth,
-            height: pop.offsetHeight,
-          }
-        : null;
-    const box = placeFloatToolbarBox(hotspotAnchor(), size, frame, avoid);
-    bar.style.left = `${Math.round(box.left)}px`;
-    bar.style.top = `${Math.round(box.top)}px`;
-    bar.dataset.placement = box.placement;
+    if (!hasOverflow) closeStepMenu();
+  }
+
+  function openStepMenu() {
+    if (!els.stbMenu) return;
+    els.stbMenu.hidden = false;
+    els.stbMore?.setAttribute("aria-expanded", "true");
+    els.stbMore?.classList.add("is-active");
+  }
+
+  function closeStepMenu() {
+    if (!els.stbMenu || els.stbMenu.hidden) return;
+    els.stbMenu.hidden = true;
+    els.stbMore?.setAttribute("aria-expanded", "false");
+    els.stbMore?.classList.remove("is-active");
   }
 
   function syncPropsSections(step) {
@@ -1862,18 +1874,18 @@ export function createEditor(ctx) {
       setPropsPanelOpen(!propsPanelOpen());
     });
 
-    els.titleType?.addEventListener("click", (e) => {
+    els.stbType?.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-value]");
       if (!btn) return;
       const target = els.propType?.querySelector(`[data-value="${btn.dataset.value}"]`);
       if (!target || target.classList.contains("is-active")) return;
       target.click();
     });
-    els.btnTitleImage?.addEventListener("click", () => openImageModal("replace"));
-    els.btnTitleGenerate?.addEventListener("click", () => {
+    els.stbImage?.addEventListener("click", () => openImageModal("replace"));
+    els.stbGenerateCopy?.addEventListener("click", () => {
       document.getElementById("btn-generate-copy")?.click();
     });
-    for (const kicker of [els.stepKicker, els.slideKicker]) {
+    for (const kicker of [els.slideKicker]) {
       kicker?.addEventListener("click", (e) => {
         if (!kicker.classList.contains("is-renamable") || e.target.closest("input")) return;
         e.stopPropagation();
@@ -1906,30 +1918,15 @@ export function createEditor(ctx) {
       }
     });
 
-    // Barra flutuante — repassa para os controles do painel, que já gravam e entram no desfazer.
-    els.hotspot?.addEventListener("pointerdown", () => {
-      if (els.hotspot.classList.contains("is-previewing")) return;
-      selectCanvasObject();
-    });
-    els.clickPoint?.addEventListener("pointerdown", () => selectCanvasObject());
-    els.canvasSlide?.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".slide-card-close, .slide-card-play, .slide-kicker")) return;
-      selectCanvasObject();
-    });
-    els.canvasStage?.addEventListener("pointerdown", (e) => {
-      if (!ftbOpen) return;
-      if (e.target.closest("#float-toolbar, #hotspot, #click-point, #canvas-slide, #editor-popover, #canvas-caption")) return;
-      deselectCanvasObject();
-    });
-    els.floatToolbar?.addEventListener("pointerdown", (e) => e.stopPropagation());
-    els.ftbSide?.addEventListener("click", (e) => {
+    // Barra do passo — repassa para os controles do painel, que já gravam e entram no desfazer.
+    els.stbSide?.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-value]");
       if (!btn) return;
       els.propSide
         ?.querySelector(`[data-scope="${btn.dataset.scope}"][data-value="${btn.dataset.value}"]`)
         ?.click();
     });
-    els.ftbAlign?.addEventListener("click", (e) => {
+    els.stbAlign?.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-value]");
       if (!btn) return;
       els.propAlign?.querySelector(`[data-value="${btn.dataset.value}"]`)?.click();
@@ -1939,31 +1936,54 @@ export function createEditor(ctx) {
       input.checked = !input.checked;
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
-    els.ftbSimulate?.addEventListener("click", () => toggleCheckbox(els.propSimulate));
-    els.ftbZoom?.addEventListener("click", () => toggleCheckbox(els.propZoom));
-    els.ftbHold?.addEventListener("input", () => {
+    els.stbSimulate?.addEventListener("click", () => toggleCheckbox(els.propSimulate));
+    els.stbZoom?.addEventListener("click", () => toggleCheckbox(els.propZoom));
+    els.stbHold?.addEventListener("input", () => {
       if (!els.propHold) return;
-      els.propHold.value = els.ftbHold.value;
+      els.propHold.value = els.stbHold.value;
       els.propHold.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    els.ftbHold?.addEventListener("change", () => {
+    els.stbHold?.addEventListener("change", () => {
       if (!els.propHold) return;
-      els.propHold.value = els.ftbHold.value;
+      els.propHold.value = els.stbHold.value;
       els.propHold.dispatchEvent(new Event("change", { bubbles: true }));
-      els.ftbHold.value = els.propHold.value;
+      els.stbHold.value = els.propHold.value;
     });
-    els.ftbHold?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") els.ftbHold.blur();
+    els.stbHold?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") els.stbHold.blur();
     });
-    els.ftbMore?.addEventListener("click", () => {
-      const step = currentStep();
-      openPropsSection(step?.type === "slide" ? "position" : "position");
+    const openPanelForStep = () => {
+      closeStepMenu();
+      openPropsSection("position");
+    };
+    els.stbMore?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!els.stepToolbar?.classList.contains("has-overflow")) {
+        openPanelForStep();
+        return;
+      }
+      if (els.stbMenu?.hidden) openStepMenu();
+      else closeStepMenu();
+    });
+    els.stbOpenPanel?.addEventListener("click", openPanelForStep);
+    els.stbMenu?.addEventListener("click", (e) => e.stopPropagation());
+    document.addEventListener("pointerdown", (e) => {
+      if (!els.stbMenu || els.stbMenu.hidden) return;
+      if (e.target.closest(".stb-more-wrap")) return;
+      closeStepMenu();
     });
     window.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape" || !ftbOpen) return;
-      if (isTypingTarget(e.target) || document.querySelector("dialog[open]")) return;
-      deselectCanvasObject();
+      if (e.key !== "Escape" || !els.stbMenu || els.stbMenu.hidden) return;
+      closeStepMenu();
+      els.stbMore?.focus();
     });
+    if (typeof ResizeObserver === "function" && els.stepToolbar) {
+      let raf = 0;
+      new ResizeObserver(() => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => fitStepToolbar());
+      }).observe(els.stepToolbar);
+    }
   }
 
   function placeHotspot(hotspot) {
@@ -3276,7 +3296,6 @@ export function createEditor(ctx) {
       els.hotspot.style.width = width + "px";
       els.hotspot.style.height = height + "px";
       if (!popoverDrag) placeEditorPopover();
-      else placeFloatToolbar();
     });
 
     els.hotspot.addEventListener("pointerup", () => {
@@ -3580,8 +3599,8 @@ export function createEditor(ctx) {
     if (!panel) return;
     panel.classList.toggle("is-generating-copy", kind === "copy" && busy);
     panel.classList.toggle("is-generating-audio", kind === "audio" && busy);
-    els.narrationBar?.classList.toggle("is-generating-audio", kind === "audio" && busy);
-    els.titlebar?.classList.toggle("is-generating-copy", kind === "copy" && busy);
+    els.stepToolbar?.classList.toggle("is-generating-audio", kind === "audio" && busy);
+    els.stepToolbar?.classList.toggle("is-generating-copy", kind === "copy" && busy);
   }
 
   function setGenerateBusy(kind, busy) {
@@ -3597,12 +3616,10 @@ export function createEditor(ctx) {
         ? t("toast.generating")
         : t(kind === "copy" ? "props.generateCopyShort" : "props.generateAudio");
     }
-    if (kind === "copy" && els.btnTitleGenerate) {
-      els.btnTitleGenerate.disabled = busy;
-      if (busy) els.btnTitleGenerate.setAttribute("aria-busy", "true");
-      else els.btnTitleGenerate.removeAttribute("aria-busy");
-      const titleLabel = document.getElementById("btn-title-generate-label");
-      if (titleLabel) titleLabel.textContent = busy ? t("toast.generating") : t("props.generateCopyShort");
+    if (kind === "copy" && els.stbGenerateCopy) {
+      els.stbGenerateCopy.disabled = busy;
+      if (busy) els.stbGenerateCopy.setAttribute("aria-busy", "true");
+      else els.stbGenerateCopy.removeAttribute("aria-busy");
     }
     setAiGenerating(kind, busy);
   }
@@ -4274,7 +4291,6 @@ export function createEditor(ctx) {
       if (step.type === "slide") {
         sizeSlideLikeImage(els.canvasSlide, els.canvasStage, getDemo(), step, resolveImageSrc);
         placeCaptionPlaceholder();
-        placeFloatToolbar();
         return;
       }
       placeHotspot(step.hotspot);
@@ -4299,8 +4315,6 @@ export function createEditor(ctx) {
     clickFx.reset();
     els.hotspot.classList.remove("is-previewing");
     hideEditorPopover();
-    ftbOpen = false;
-    syncFloatToolbar();
     for (const el of inlineFields()) {
       if (!el) continue;
       el.contentEditable = "false";
