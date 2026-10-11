@@ -1,6 +1,7 @@
 /**
  * GET /api/p/:slug — o mesmo player de /v, com og:title do link permanente.
- * why: o tour vem de GET app.guiaflow.pro/api/shares/:slug no browser; aqui só a meta.
+ * why: o tour vem de GET app.guiaflow.pro/api/shares/:slug no browser; aqui só a meta
+ * (GET /api/shares/:slug/meta: título, capa e nº de passos).
  */
 const { renderViewPage } = require("../lib/view-shell.cjs");
 const { fetchPermanentShare, isPermanentSlug } = require("../lib/permanent-share.cjs");
@@ -51,7 +52,17 @@ module.exports = async function handler(req, res) {
     return;
   }
   sendHtml(
-    renderViewPage({ id: slug, name: share.name, origin, missing: false, kind: "permanent" }),
+    renderViewPage({
+      id: slug,
+      name: share.name,
+      origin,
+      missing: false,
+      kind: "permanent",
+      image: share.image,
+      imageWidth: share.imageWidth,
+      imageHeight: share.imageHeight,
+      stepCount: share.stepCount,
+    }),
     200
   );
 };

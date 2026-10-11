@@ -228,6 +228,7 @@ export function upgradeCopyKeys(feature) {
   if (feature === "tts") return { title: "billing.ttsTitle", subtitle: "billing.ttsSubtitle" };
   if (feature === "branding") return { title: "billing.brandTitle", subtitle: "billing.brandSubtitle" };
   if (feature === "embed") return { title: "billing.embedTitle", subtitle: "billing.embedSubtitle" };
+  if (feature === "cover") return { title: "billing.coverTitle", subtitle: "billing.coverSubtitle" };
   return { title: "billing.title", subtitle: "billing.message" };
 }
 

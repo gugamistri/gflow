@@ -19,6 +19,7 @@ const FEATURE_ALIASES = {
   share: "permanentShare",
   // why: embutir depende do link permanente; não precisa de flag nova no cloudConfig
   embed: "permanentShare",
+  cover: "permanentShare",
   hostedai: "hostedAi",
   ai: "hostedAi",
   copy: "hostedAi",

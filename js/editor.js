@@ -2830,6 +2830,24 @@ export function createEditor(ctx) {
     return `<button ${attrs}><span>${escapeHtml(label)}</span>${badge}${kbd}</button>`;
   }
 
+  /** "Usar como capa do link" (só com o link permanente ligado; 👑 sem Pro). */
+  function coverMenuItems(demo, index, indices) {
+    const state = ctx.coverMenuState?.();
+    if (!state?.enabled || indices.length > 1) return [];
+    const step = demo.steps[index];
+    if (!step) return [];
+    const isCover = Boolean(step.id && demo.coverStepId === step.id);
+    return [
+      `<div class="film-context-sep" role="separator"></div>`,
+      filmMenuButton("cover", t("filmstrip.useAsCover"), {
+        role: "menuitemcheckbox",
+        checked: isCover ? "true" : "false",
+        title: t("filmstrip.useAsCoverTitle"),
+        badge: !state.pro,
+      }),
+    ];
+  }
+
   function playFromSelected(opts = {}) {
     closeFilmContextMenu();
     if (!onPlayFrom) return;
@@ -2893,6 +2911,7 @@ export function createEditor(ctx) {
       return;
     }
     if (action === "show-caption") toggleShowCaptionOnSelection();
+    if (action === "cover") ctx.onSetCover?.(getSelectedIndex());
   }
 
   async function openFilmContextMenu(x, y, index) {
@@ -2956,6 +2975,7 @@ export function createEditor(ctx) {
         role: "menuitemcheckbox",
         checked,
       }),
+      ...coverMenuItems(demo, index, indices),
     ].join("");
     document.body.appendChild(menu);
     filmMenuEl = menu;

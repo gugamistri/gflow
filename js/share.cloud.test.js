@@ -343,3 +343,103 @@ test("share_limit, 401 e rede têm mensagens claras", async () => {
     else globalThis.fetch = prev;
   }
 });
+
+test("publicar manda a capa e a proporção; o Cloud devolve a URL da capa", async () => {
+  const prev = globalThis.fetch;
+  const bodies = [];
+  globalThis.fetch = async (url, init) => {
+    bodies.push(JSON.parse(init.body));
+    return {
+      ok: true,
+      status: 201,
+      json: async () => ({
+        ok: true,
+        share: {
+          slug: "slug-capa",
+          url: "https://guiaflow.pro/p/slug-capa",
+          cover: { url: "https://app.guiaflow.pro/api/shares/slug-capa/cover.jpg?v=1", width: 1200, height: 630 },
+        },
+      }),
+    };
+  };
+  const progress = [];
+  try {
+    const share = await publishPermanentShare(project(), {
+      env,
+      onProgress: (msg) => progress.push(msg),
+      buildSnapshot: async () => ({ name: "Tour da nuvem", steps: [{ title: "Um" }] }),
+      buildCover: async () => ({ dataUrl: "data:image/jpeg;base64,/9j/AA==", width: 1200, height: 630 }),
+      measureRatio: async () => "16/10",
+    });
+    assert.equal(bodies.length, 1);
+    assert.equal(bodies[0].cover, "data:image/jpeg;base64,/9j/AA==");
+    assert.equal(bodies[0].ratio, "16/10");
+    assert.equal(share.coverUrl, "https://app.guiaflow.pro/api/shares/slug-capa/cover.jpg?v=1");
+    assert.equal(share.coverSkipped, false);
+    assert.ok(progress.includes("Gerando a capa…"));
+    assert.ok(progress.indexOf("Gerando a capa…") < progress.length - 1);
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
+test("capa recusada (413) não impede o link: reenvia sem a capa", async () => {
+  const prev = globalThis.fetch;
+  const bodies = [];
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    bodies.push(body);
+    if (body.cover) {
+      return { ok: false, status: 413, json: async () => ({ ok: false, error: "cover_too_large" }) };
+    }
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true, share: { slug: "slug-capa", url: "https://guiaflow.pro/p/slug-capa", cover: null } }),
+    };
+  };
+  try {
+    const share = await publishPermanentShare(project(), {
+      env,
+      slug: "slug-capa",
+      buildSnapshot: async () => ({ name: "Tour da nuvem", steps: [{ title: "Um" }] }),
+      buildCover: async () => ({ dataUrl: "data:image/jpeg;base64,/9j/AA==" }),
+      measureRatio: async () => "16/9",
+    });
+    assert.equal(bodies.length, 2);
+    assert.equal(bodies[1].cover, undefined);
+    assert.equal(share.coverSkipped, true);
+    assert.equal(share.coverUrl, "");
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
+
+test("se a capa falhar no navegador, publica sem capa", async () => {
+  const prev = globalThis.fetch;
+  let body = null;
+  globalThis.fetch = async (url, init) => {
+    body = JSON.parse(init.body);
+    return { ok: true, status: 201, json: async () => ({ ok: true, share: { slug: "s1", url: "https://guiaflow.pro/p/s1" } }) };
+  };
+  const warn = console.warn;
+  console.warn = () => {};
+  try {
+    const share = await publishPermanentShare(project(), {
+      env,
+      buildSnapshot: async () => ({ name: "Tour", steps: [] }),
+      buildCover: async () => {
+        throw new Error("tainted");
+      },
+      measureRatio: async () => "16/9",
+    });
+    assert.equal(body.cover, undefined);
+    assert.equal(share.coverSkipped, true);
+  } finally {
+    console.warn = warn;
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
+});
