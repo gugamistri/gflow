@@ -72,9 +72,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/42/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/42/css/theme.css" />
-  <link rel="stylesheet" href="a/42/css/app.css" />
+  <link rel="stylesheet" href="a/43/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/43/css/theme.css" />
+  <link rel="stylesheet" href="a/43/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -151,7 +151,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/42/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/42/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/43/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/43/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -478,7 +478,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/42/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/42/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/43/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/43/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -604,36 +604,70 @@
         </div>
         <span class="toolbar-pos" id="toolbar-pos" aria-live="polite"></span>
       </div>
-      <div class="canvas-titlebar" id="canvas-titlebar" hidden>
-        <div class="canvas-titlebar-text">
-          <p class="canvas-step-kicker" id="canvas-step-kicker"></p>
-          <div class="inline-slot">
-            <span class="inline-placeholder" id="ph-step-title" hidden></span>
-            <h1 class="canvas-step-title" id="canvas-step-title" data-inline="title" data-ph="ph-step-title" role="textbox" aria-multiline="false"></h1>
+      <div class="step-toolbar" id="step-toolbar" role="toolbar" aria-label="Ferramentas do passo" data-i18n-aria="stb.aria" hidden>
+        <div class="stb-row" id="stb-row">
+          <div class="stb-group" data-stb-group="type" data-stb-keep="4" role="group" aria-label="Tipo e imagem" data-i18n-aria="stb.groupType">
+            <span class="stb-group-label" data-i18n="stb.groupType">Tipo e imagem</span>
+            <div class="stb-seg" id="stb-type" role="group" aria-label="Tipo" data-i18n-aria="props.type">
+              <button type="button" class="stb-btn" data-value="screen" title="Tela" aria-label="Tela" data-i18n-title="props.screen" data-i18n-aria="props.screen" aria-pressed="false"><svg aria-hidden="true"><use href="#i-image"></use></svg></button>
+              <button type="button" class="stb-btn" data-value="slide" title="Slide" aria-label="Slide" data-i18n-title="props.slide" data-i18n-aria="props.slide" aria-pressed="false"><svg aria-hidden="true"><use href="#i-slide"></use></svg></button>
+            </div>
+            <button type="button" class="stb-btn stb-screen-only" id="stb-image" title="Trocar imagem" aria-label="Trocar imagem" data-i18n-title="canvas.changeImage" data-i18n-aria="canvas.changeImage"><svg aria-hidden="true"><use href="#i-image-swap"></use></svg></button>
+          </div>
+          <span class="stb-sep" aria-hidden="true"></span>
+          <div class="stb-group" data-stb-group="position" data-stb-keep="1" role="group" aria-label="Posição do balão" data-i18n-aria="stb.groupBalloon">
+            <span class="stb-group-label" id="stb-side-label" data-i18n="stb.groupBalloon">Posição do balão</span>
+            <div class="stb-seg" id="stb-side" role="group" aria-label="Lado do balão" data-i18n-aria="props.side">
+              <button type="button" class="stb-btn" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-top"></use></svg></button>
+              <button type="button" class="stb-btn" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" data-i18n-title="props.right" data-i18n-aria="props.right" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-right"></use></svg></button>
+              <button type="button" class="stb-btn" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-bottom"></use></svg></button>
+              <button type="button" class="stb-btn" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" data-i18n-title="props.left" data-i18n-aria="props.left" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-left"></use></svg></button>
+              <button type="button" class="stb-btn" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-top"></use></svg></button>
+              <button type="button" class="stb-btn" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-center"></use></svg></button>
+              <button type="button" class="stb-btn" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg></button>
+            </div>
+            <div class="stb-seg" id="stb-align" role="group" aria-label="Alinhamento" data-i18n-aria="props.align">
+              <button type="button" class="stb-btn" data-value="start" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-start"></use></svg></button>
+              <button type="button" class="stb-btn" data-value="center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-center"></use></svg></button>
+              <button type="button" class="stb-btn" data-value="end" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-end"></use></svg></button>
+            </div>
+          </div>
+          <span class="stb-sep" aria-hidden="true"></span>
+          <div class="stb-group" data-stb-group="interaction" data-stb-keep="2" role="group" aria-label="Interação" data-i18n-aria="stb.groupInteraction">
+            <span class="stb-group-label" data-i18n="stb.groupInteraction">Interação</span>
+            <button type="button" class="stb-btn stb-screen-only" id="stb-simulate" title="Simular clique ao avançar" aria-label="Simular clique ao avançar" data-i18n-title="props.simulateClick" data-i18n-aria="props.simulateClick" aria-pressed="false"><svg aria-hidden="true"><use href="#i-cursor"></use></svg></button>
+            <button type="button" class="stb-btn stb-screen-only" id="stb-zoom" title="Ampliar destaque" aria-label="Ampliar destaque" data-i18n-title="props.zoomHighlight" data-i18n-aria="props.zoomHighlight" aria-pressed="false"><svg aria-hidden="true"><use href="#i-zoom"></use></svg></button>
+            <label class="stb-hold" title="Temporizador (s)" data-i18n-title="props.hold">
+              <svg aria-hidden="true"><use href="#i-watch"></use></svg>
+              <input type="number" id="stb-hold" min="1" max="120" step="1" aria-label="Temporizador (s)" data-i18n-aria="props.hold" />
+              <span aria-hidden="true">s</span>
+            </label>
+          </div>
+          <span class="stb-sep" aria-hidden="true"></span>
+          <div class="stb-group" data-stb-group="ai" data-stb-keep="3" role="group" aria-label="Textos e áudio" data-i18n-aria="stb.groupAi">
+            <span class="stb-group-label" data-i18n="stb.groupAi">Textos e áudio</span>
+            <button type="button" class="stb-btn stb-btn-pro" id="btn-step-generate-copy" title="Gerar título, descrição e narração" aria-label="Gerar título, descrição e narração" data-i18n-title="props.generateCopy" data-i18n-aria="props.generateCopy"><svg class="btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg><span class="stb-btn-text" data-i18n="stb.texts">Textos</span><span class="pro-badge" id="pro-badge-copy-title" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span></button>
+            <button type="button" class="stb-btn" id="btn-narr-write" title="Escrever a narração" aria-label="Escrever a narração" data-i18n-title="narrbar.write" data-i18n-aria="narrbar.write"><svg aria-hidden="true"><use href="#i-pencil"></use></svg></button>
+            <button type="button" class="stb-btn stb-btn-pro btn-generate-caption" id="btn-generate-caption" hidden title="Gerar áudio da narração" aria-label="Gerar áudio da narração" data-i18n-title="stb.generateAudio" data-i18n-aria="stb.generateAudio"><svg class="btn-ai-spark" aria-hidden="true"><use href="#i-voice"></use></svg><span class="stb-btn-text" id="btn-generate-caption-label" data-i18n="stb.audio">Áudio</span><span class="pro-badge" id="pro-badge-audio" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span></button>
+            <button type="button" class="stb-btn" id="btn-upload-caption" title="Enviar áudio" aria-label="Enviar áudio" data-i18n-title="props.uploadAudio" data-i18n-aria="props.uploadAudio" hidden><svg aria-hidden="true"><use href="#i-upload"></use></svg></button>
+            <button type="button" class="stb-btn btn-danger-hover" id="btn-clear-caption-audio" title="Remover áudio" aria-label="Remover áudio" data-i18n-title="narrbar.removeAudio" data-i18n-aria="narrbar.removeAudio" hidden><svg aria-hidden="true"><use href="#i-trash"></use></svg></button>
+            <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
+            <label class="stb-toggle" id="wrap-show-caption" title="Mostrar o texto da narração na apresentação" data-i18n-title="narrbar.showTextTitle" hidden>
+              <input type="checkbox" id="prop-show-caption" role="switch" checked aria-label="Texto na tela" data-i18n-aria="narrbar.showText" />
+              <svg aria-hidden="true"><use href="#i-captions"></use></svg>
+              <span class="stb-group-label-inline" data-i18n="narrbar.showText">Texto na tela</span>
+            </label>
           </div>
         </div>
-        <div class="canvas-titlebar-actions">
-          <button type="button" class="btn btn-sm btn-title-generate" id="btn-title-generate" title="Gerar título, descrição e narração" data-i18n-title="props.generateCopy">
-            <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-            <span id="btn-title-generate-label" data-i18n="props.generateCopyShort">Gerar textos</span>
-            <span class="pro-badge" id="pro-badge-copy-title" hidden>
-              <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-              <span data-i18n="billing.badge">Pro</span>
-            </span>
-          </button>
-          <div class="title-type" id="title-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
-            <button type="button" class="title-type-btn" data-value="screen" aria-pressed="false">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-              <span data-i18n="props.screen">Tela</span>
-            </button>
-            <button type="button" class="title-type-btn" data-value="slide" aria-pressed="false">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-              <span data-i18n="props.slide">Slide</span>
+        <div class="stb-more-wrap">
+          <button type="button" class="stb-btn" id="stb-more" title="Mais opções" aria-label="Mais opções" data-i18n-title="stb.more" data-i18n-aria="stb.more" aria-haspopup="true" aria-expanded="false" aria-controls="stb-menu"><svg aria-hidden="true"><use href="#i-more"></use></svg></button>
+          <div class="stb-menu" id="stb-menu" hidden>
+            <div class="stb-menu-groups" id="stb-menu-groups"></div>
+            <button type="button" class="stb-menu-item" id="stb-open-panel">
+              <svg aria-hidden="true"><use href="#i-panel-open"></use></svg>
+              <span data-i18n="stb.openPanel">Abrir painel do passo</span>
             </button>
           </div>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-title-image" title="Trocar imagem" aria-label="Trocar imagem" data-i18n-title="canvas.changeImage" data-i18n-aria="canvas.changeImage">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-          </button>
         </div>
       </div>
       <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Clique fora ou Esc para sair</p>
@@ -718,83 +752,23 @@
               <span class="editor-popover-next" id="editor-popover-next"></span>
             </div>
           </div>
-          <div class="float-toolbar" id="float-toolbar" role="toolbar" aria-label="Destaque selecionado" data-i18n-aria="ftb.aria" hidden>
-            <span class="ftb-label" id="ftb-side-label" data-i18n="ftb.balloon">Balão</span>
-            <div class="ftb-group" id="ftb-side" role="group" aria-label="Lado do balão" data-i18n-aria="props.side">
-              <button type="button" class="ftb-btn" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-top"></use></svg></button>
-              <button type="button" class="ftb-btn" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" data-i18n-title="props.right" data-i18n-aria="props.right" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-right"></use></svg></button>
-              <button type="button" class="ftb-btn" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-bottom"></use></svg></button>
-              <button type="button" class="ftb-btn" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" data-i18n-title="props.left" data-i18n-aria="props.left" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-left"></use></svg></button>
-              <button type="button" class="ftb-btn" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-top"></use></svg></button>
-              <button type="button" class="ftb-btn" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-center"></use></svg></button>
-              <button type="button" class="ftb-btn" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg></button>
-            </div>
-            <span class="ftb-sep" aria-hidden="true"></span>
-            <span class="ftb-label" data-i18n="ftb.align">Alinhar</span>
-            <div class="ftb-group" id="ftb-align" role="group" aria-label="Alinhamento" data-i18n-aria="props.align">
-              <button type="button" class="ftb-btn" data-value="start" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-start"></use></svg></button>
-              <button type="button" class="ftb-btn" data-value="center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-center"></use></svg></button>
-              <button type="button" class="ftb-btn" data-value="end" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-end"></use></svg></button>
-            </div>
-            <span class="ftb-sep ftb-screen-only" aria-hidden="true"></span>
-            <button type="button" class="ftb-btn ftb-screen-only" id="ftb-simulate" title="Simular clique ao avançar" aria-label="Simular clique ao avançar" data-i18n-title="props.simulateClick" data-i18n-aria="props.simulateClick" aria-pressed="false"><svg aria-hidden="true"><use href="#i-cursor"></use></svg></button>
-            <button type="button" class="ftb-btn ftb-screen-only" id="ftb-zoom" title="Ampliar destaque" aria-label="Ampliar destaque" data-i18n-title="props.zoomHighlight" data-i18n-aria="props.zoomHighlight" aria-pressed="false"><svg aria-hidden="true"><use href="#i-zoom"></use></svg></button>
-            <span class="ftb-sep" aria-hidden="true"></span>
-            <label class="ftb-hold" title="Temporizador (s)" data-i18n-title="props.hold">
-              <svg aria-hidden="true"><use href="#i-watch"></use></svg>
-              <input type="number" id="ftb-hold" min="1" max="120" step="1" aria-label="Temporizador (s)" data-i18n-aria="props.hold" />
-              <span aria-hidden="true">s</span>
-            </label>
-            <span class="ftb-sep" aria-hidden="true"></span>
-            <button type="button" class="ftb-btn" id="ftb-more" title="Mais opções no painel" aria-label="Mais opções no painel" data-i18n-title="ftb.more" data-i18n-aria="ftb.more"><svg aria-hidden="true"><use href="#i-more"></use></svg></button>
-          </div>
-          <span class="inline-placeholder caption-placeholder" id="ph-caption" hidden></span>
+                    <span class="inline-placeholder caption-placeholder" id="ph-caption" hidden></span>
           <div class="caption-bar" id="canvas-caption" data-inline="caption" data-ph="ph-caption" role="textbox" aria-multiline="true" hidden></div>
         </div>
       </div>
-      <div class="narration-bar" id="narration-bar" role="group" aria-label="Narração" data-i18n-aria="props.caption" hidden>
-        <span class="narration-bar-label">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg>
-          <span data-i18n="props.caption">Narração</span>
-        </span>
-        <button type="button" class="btn btn-sm btn-icon" id="btn-narr-write" title="Escrever a narração" aria-label="Escrever a narração" data-i18n-title="narrbar.write" data-i18n-aria="narrbar.write">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
-        </button>
+      <div class="narration-bar" id="narration-bar" role="group" aria-label="Áudio da narração" data-i18n-aria="narrbar.aria" hidden>
+        <svg class="btn-ico narration-bar-ico" aria-hidden="true"><use href="#i-voice"></use></svg>
         <div class="caption-player" id="caption-player" hidden>
           <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" data-i18n-aria="canvas.play" aria-pressed="false" disabled>
             <svg class="caption-player-icon caption-player-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             <svg class="caption-player-icon caption-player-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" fill="currentColor"/></svg>
           </button>
+          <span class="caption-player-times">
+            <span id="caption-time">0:00</span><span class="caption-time-sep" aria-hidden="true"> / </span><span id="caption-duration">0:00</span>
+          </span>
           <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" data-i18n-aria="props.audioSeek" disabled />
           <button type="button" class="caption-player-rate" id="btn-caption-rate" aria-label="Velocidade de reprodução, 1×">1×</button>
-          <div class="caption-player-times">
-            <span id="caption-time">0:00</span>
-            <span id="caption-duration">0:00</span>
-          </div>
         </div>
-        <p class="props-meta" id="caption-audio-status" hidden data-i18n="props.noAudio">Sem áudio neste passo.</p>
-        <span class="narration-bar-spacer" aria-hidden="true"></span>
-        <div class="caption-audio-actions" id="caption-audio-actions" hidden>
-          <button type="button" class="btn btn-sm btn-generate-caption" id="btn-generate-caption" hidden data-i18n-aria="props.generateAudio" aria-label="Gerar áudio">
-            <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-            <span id="btn-generate-caption-label" data-i18n="props.generateAudio">Gerar áudio</span>
-            <span class="pro-badge" id="pro-badge-audio" hidden>
-              <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-              <span data-i18n="billing.badge">Pro</span>
-            </span>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-upload-caption" hidden title="Enviar áudio" aria-label="Enviar áudio" data-i18n-title="props.uploadAudio" data-i18n-aria="props.uploadAudio">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-upload"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon btn-danger-hover" id="btn-clear-caption-audio" hidden title="Remover áudio" aria-label="Remover áudio" data-i18n-title="narrbar.removeAudio" data-i18n-aria="narrbar.removeAudio">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-          </button>
-          <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
-        </div>
-        <label class="narration-switch" id="wrap-show-caption" title="Mostrar o texto da narração na apresentação" data-i18n-title="narrbar.showTextTitle" hidden>
-          <input type="checkbox" id="prop-show-caption" role="switch" checked />
-          <span data-i18n="narrbar.showText">Texto na tela</span>
-        </label>
       </div>
     </section>
 
@@ -880,7 +854,8 @@
         <label><span data-i18n="panel.captionText">Texto da narração</span>
           <textarea id="prop-caption" rows="5" placeholder="Texto da narração (opcional no slide)" data-i18n-placeholder="props.captionPlaceholder"></textarea>
         </label>
-        <p class="props-meta props-narr-note" data-i18n="narrbar.panelNote">Ouvir, gerar ou enviar áudio e mostrar o texto na tela ficam na barra de narração, abaixo do canvas.</p>
+        <p class="props-meta" id="caption-audio-status" hidden></p>
+        <p class="props-meta props-narr-note" data-i18n="narrbar.panelNote">Gerar, enviar ou remover o áudio e mostrar o texto na tela ficam na barra do passo, acima do canvas. O player aparece abaixo do canvas quando o passo tem áudio.</p>
       </div>
         </div>
       </details>
@@ -962,7 +937,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/42/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/43/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1496,6 +1471,15 @@
     <symbol id="i-panel-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="m8 10 2 2-2 2"/>
     </symbol>
+    <symbol id="i-captions" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M13 15h4M7 11h10"/>
+    </symbol>
+    <symbol id="i-voice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+    </symbol>
+    <symbol id="i-image-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m17 12-3-3-8 8"/><path d="M21 9v10a2 2 0 0 1-2 2H9"/>
+    </symbol>
     <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
     </symbol>
@@ -1549,7 +1533,7 @@
     </symbol>
   </svg>
 
-  <script src="a/42/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/42/js/app.js"></script>
+  <script src="a/43/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/43/js/app.js"></script>
 </body>
 </html>
