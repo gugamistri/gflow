@@ -383,12 +383,35 @@ export async function cloudFetch(path, init, env) {
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
-  const { auth: _auth, accessToken: _token, headers: _headers, ...rest } = request;
+  const {
+    auth: _auth,
+    accessToken: _token,
+    headers: _headers,
+    timeoutMs,
+    signal: outerSignal,
+    ...rest
+  } = request;
+  // why: sem prazo, um envio parado deixava o painel "Enviando o tour…" para sempre
+  const controller = typeof AbortController !== "undefined" && (timeoutMs > 0 || outerSignal) ? new AbortController() : null;
+  let timedOut = false;
+  const timer =
+    controller && timeoutMs > 0
+      ? setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, timeoutMs)
+      : null;
+  const onOuterAbort = () => controller?.abort();
+  if (outerSignal) {
+    if (outerSignal.aborted) controller?.abort();
+    else outerSignal.addEventListener("abort", onOuterAbort, { once: true });
+  }
   try {
     const res = await fetch(url, {
       ...rest,
       headers,
       credentials: rest.credentials || "omit",
+      ...(controller ? { signal: controller.signal } : {}),
     });
     let data = null;
     try {
@@ -396,6 +419,7 @@ export async function cloudFetch(path, init, env) {
     } catch {
       data = null;
     }
+    if (timedOut) return { ok: false, error: "timeout", message: "" };
     if (!res.ok) {
       return {
         ok: false,
@@ -407,7 +431,12 @@ export async function cloudFetch(path, init, env) {
     }
     return { ok: true, status: res.status, data };
   } catch (err) {
+    if (timedOut) return { ok: false, error: "timeout", message: "" };
+    if (outerSignal?.aborted) return { ok: false, error: "aborted", message: "" };
     return { ok: false, error: "network", message: err?.message || "" };
+  } finally {
+    if (timer) clearTimeout(timer);
+    outerSignal?.removeEventListener?.("abort", onOuterAbort);
   }
 }
 

@@ -1,7 +1,7 @@
 /**
  * Publica / atualiza / revoga o link de preview (Vercel Blob via token de cliente).
  */
-import { t } from "./i18n.js";
+import { getLocale, t } from "./i18n.js";
 import {
   cloudFetch,
   getCloudFlags,
@@ -14,6 +14,16 @@ import {
 } from "./shareSnapshot.js";
 import { permanentPublicUrl, permanentSlug, shouldRecreatePermanent } from "./shareLink.js";
 import { renderCover, tourRatio } from "./coverImage.js";
+import {
+  LEGACY_SHARE_MAX_BODY_BYTES,
+  SHARE_MAX_BODY_BYTES,
+  abortable,
+  compressTourImages,
+  formatMb,
+  uploadTimeoutMs,
+  utf8Bytes,
+  withTimeout,
+} from "./shareCompress.js";
 
 const BLOB_API = "https://vercel.com/api/blob";
 const BLOB_API_VERSION = "12";
@@ -172,6 +182,11 @@ function cloudPlanLimitMessage(data) {
 export function permanentShareErrorMessage(result) {
   const data = result?.data && typeof result.data === "object" ? result.data : {};
   const code = String(result?.error || result?.reason || data.error || data.code || "");
+  if (code === "payload_too_large" || code === "http_413" || (result?.status === 413 && !isCoverCode(code))) {
+    return tooLargeMessage(result?.sizeBytes ?? data.receivedBytes, result?.limitBytes ?? data.limitBytes);
+  }
+  if (code === "timeout") return t("share.cloud.timeout");
+  if (code === "aborted") return t("share.cloud.aborted");
   if (code === "share_limit" || data.error === "share_limit") return cloudPlanLimitMessage(data);
   if (code === "invalid_credentials" || code === "invalid_password") return t("share.cloud.badLogin");
   if (result?.status === 401 || code === "unauthorized") return t("share.cloud.unauthorized");
@@ -221,9 +236,38 @@ export function permanentRequestBody(project, snapshot, { cover = "", ratio = ""
   return JSON.stringify(body);
 }
 
+function isCoverCode(code) {
+  return code === "invalid_cover" || code === "cover_too_large";
+}
+
+// why: 413 sem código de capa é o tour inteiro grande demais; reenviar sem capa só repetia o upload
 function isCoverRejected(result) {
-  const code = String(result?.error || result?.data?.error || "");
-  return code === "invalid_cover" || code === "cover_too_large" || result?.status === 413;
+  return isCoverCode(String(result?.error || result?.data?.error || ""));
+}
+
+function localeTag() {
+  try {
+    return getLocale();
+  } catch {
+    return "pt";
+  }
+}
+
+function tooLargeMessage(sizeBytes, limitBytes) {
+  const limit = Number(limitBytes) > 0 ? Number(limitBytes) : LEGACY_SHARE_MAX_BODY_BYTES;
+  const size = Number(sizeBytes) > 0 ? Number(sizeBytes) : 0;
+  const locale = localeTag();
+  if (!size) return t("share.cloud.tooLargeNoSize", { limit: formatMb(limit, locale) });
+  return t("share.cloud.tooLarge", { size: formatMb(size, locale), limit: formatMb(limit, locale) });
+}
+
+function tooLargeError(sizeBytes, limitBytes, status) {
+  const err = new Error(tooLargeMessage(sizeBytes, limitBytes));
+  err.code = "payload_too_large";
+  err.status = status || 413;
+  err.sizeBytes = sizeBytes;
+  err.limitBytes = limitBytes;
+  return err;
 }
 
 async function safeCover(project, buildCover) {
@@ -244,7 +288,11 @@ async function safeRatio(project, measureRatio) {
   }
 }
 
-function permanentFailure(result) {
+function permanentFailure(result, sizeBytes) {
+  if (result?.status === 413 || result?.error === "payload_too_large") {
+    const data = result.data && typeof result.data === "object" ? result.data : {};
+    return tooLargeError(Number(data.receivedBytes) || sizeBytes, Number(data.limitBytes) || LEGACY_SHARE_MAX_BODY_BYTES, 413);
+  }
   const err = new Error(permanentShareErrorMessage(result));
   err.code = result.error || result.reason || "share_failed";
   err.status = result.status;
@@ -282,9 +330,14 @@ export async function publishPermanentShare(
     onProgress,
     env,
     slug = "",
+    signal,
     buildSnapshot = buildShareSnapshot,
     buildCover = renderCover,
     measureRatio = tourRatio,
+    compress = compressTourImages,
+    maxBytes = SHARE_MAX_BODY_BYTES,
+    snapshotTimeoutMs = 90 * 1000,
+    coverTimeoutMs = 15 * 1000,
   } = {}
 ) {
   if (!isCloudEnabled(env) || !getCloudFlags(env).permanentShare) {
@@ -292,7 +345,13 @@ export async function publishPermanentShare(
     err.code = "cloud-not-configured";
     throw err;
   }
-  const snapshot = await buildSnapshot(project, { onProgress });
+  const step = (promise, ms) => abortable(ms ? withTimeout(promise, ms) : promise, signal);
+  let snapshot;
+  try {
+    snapshot = await step(buildSnapshot(project, { onProgress }), snapshotTimeoutMs);
+  } catch (err) {
+    throw stageFailure(err);
+  }
   try {
     assertShareSnapshotSafe(snapshot, project?.share?.writeToken);
   } catch {
@@ -300,26 +359,74 @@ export async function publishPermanentShare(
     err.code = "share_failed";
     throw err;
   }
+  // why: capturas em PNG estouravam o limite; WebP/JPEG mantém a resolução com 4–8× menos bytes
+  try {
+    snapshot = await step(
+      compress(snapshot, {
+        signal,
+        onProgress: (i, n) => onProgress?.(t("share.compress.progress", { i, n })),
+      }),
+      0
+    );
+  } catch (err) {
+    if (err?.code === "aborted") throw stageFailure(err);
+    console.warn("compress", err);
+  }
   onProgress?.(t("share.cover.progress"));
-  const cover = await safeCover(project, buildCover);
-  const ratio = await safeRatio(project, measureRatio);
-  onProgress?.(t("share.cloud.progress"));
+  let cover = "";
+  try {
+    cover = await step(safeCover(project, buildCover), coverTimeoutMs);
+  } catch (err) {
+    if (err?.code === "aborted") throw stageFailure(err);
+    cover = "";
+  }
+  let ratio = "";
+  try {
+    ratio = await step(safeRatio(project, measureRatio), coverTimeoutMs);
+  } catch (err) {
+    if (err?.code === "aborted") throw stageFailure(err);
+    ratio = "";
+  }
+  // why: medir antes de enviar; o servidor só recusava depois de receber tudo
+  let body = permanentRequestBody(project, snapshot, { cover, ratio });
+  let bytes = utf8Bytes(body);
+  let coverDropped = false;
+  if (bytes > maxBytes && cover) {
+    body = permanentRequestBody(project, snapshot, { ratio });
+    bytes = utf8Bytes(body);
+    coverDropped = true;
+  }
+  if (bytes > maxBytes) throw tooLargeError(bytes, maxBytes);
+  onProgress?.(t("share.cloud.progressSize", { size: formatMb(bytes, localeTag()) }));
   const current = String(slug || "").trim();
+  const timeoutMs = uploadTimeoutMs(bytes);
+  const request = (path, method, payload) => cloudFetch(path, { method, body: payload, timeoutMs, signal }, env);
   // why: se o Cloud recusar a capa, o link sai mesmo assim (sem trocar a capa anterior)
   const send = async (path, method) => {
-    const withCover = await cloudFetch(path, { method, body: permanentRequestBody(project, snapshot, { cover, ratio }) }, env);
-    if (withCover.ok || !cover || !isCoverRejected(withCover)) return { result: withCover, coverSkipped: !cover };
-    const plain = await cloudFetch(path, { method, body: permanentRequestBody(project, snapshot, { ratio }) }, env);
+    const first = await request(path, method, body);
+    if (first.ok || coverDropped || !cover || !isCoverRejected(first)) {
+      return { result: first, coverSkipped: coverDropped || !cover };
+    }
+    const plain = await request(path, method, permanentRequestBody(project, snapshot, { ratio }));
     return { result: plain, coverSkipped: true };
   };
   if (current) {
     const put = await send(`/shares/${encodeURIComponent(current)}`, "PUT");
     if (put.result.ok) return { ...permanentShareFromResult(put.result), coverSkipped: put.coverSkipped };
-    if (!shouldRecreatePermanent(put.result)) throw permanentFailure(put.result);
+    if (!shouldRecreatePermanent(put.result)) throw permanentFailure(put.result, bytes);
   }
   const created = await send("/shares", "POST");
-  if (!created.result.ok) throw permanentFailure(created.result);
+  if (!created.result.ok) throw permanentFailure(created.result, bytes);
   return { ...permanentShareFromResult(created.result), coverSkipped: created.coverSkipped };
+}
+
+function stageFailure(err) {
+  if (err?.code === "aborted") return permanentFailure({ error: "aborted" });
+  if (err?.code === "timeout") return permanentFailure({ error: "timeout" });
+  if (err && typeof err === "object" && err.code) return err;
+  const out = new Error(t("share.errGeneric"));
+  out.code = "share_failed";
+  return out;
 }
 
 function copyWithTextarea(text) {

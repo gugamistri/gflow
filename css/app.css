@@ -2615,6 +2615,17 @@ html.is-embed .present-hint {
   display: block;
 }
 
+.export-overlay-actions:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.export-overlay-card.is-error .export-overlay-status {
+  color: var(--ns-ink);
+  font-size: 0.92rem;
+}
+
 .export-overlay-card .btn-ghost {
   justify-self: start;
   background: var(--ns-input-bg);
