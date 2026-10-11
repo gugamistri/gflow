@@ -203,3 +203,18 @@ test("textos novos do layout existem em pt, es e en, sem falar em nuvem", () => 
     assert.equal(typeof catalogs.pt[key], "string", `index.html usa ${key}`);
   }
 });
+
+test("topo da filmstrip: só a duração, com ícone de relógio e tooltip traduzido", () => {
+  assert.match(html, /<symbol id="i-clock"/);
+  const editor = readFileSync(new URL("./editor.js", import.meta.url), "utf8");
+  assert.match(editor, /#i-clock/);
+  assert.match(editor, /editor\.durationTitle/);
+  assert.match(editor, /editor\.durationAria/);
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const key of ["editor.durationLabel", "editor.durationTitle", "editor.durationAria"]) {
+      assert.equal(typeof catalogs[loc][key], "string", `${loc} ${key}`);
+    }
+    assert.match(catalogs[loc]["editor.durationAria"], /\{time\}/, loc);
+  }
+  assert.equal(catalogs.pt["editor.durationTitle"], "Duração total do tour");
+});
