@@ -72,9 +72,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/52/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/52/css/theme.css" />
-  <link rel="stylesheet" href="a/52/css/app.css" />
+  <link rel="stylesheet" href="a/53/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/53/css/theme.css" />
+  <link rel="stylesheet" href="a/53/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -151,7 +151,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/52/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/52/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/53/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/53/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -510,7 +510,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/52/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/52/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/53/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/53/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -969,7 +969,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/52/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/53/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1151,37 +1151,46 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
-      <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
-      <div class="fixed-grid">
-        <div class="fixed-fields">
-          <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
-          <div class="fixed-config" id="fixed-start-config">
-            <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
-            <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
-            <fieldset class="fixed-group">
-              <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
-              <div class="fixed-fields-table" id="fixed-start-fields">
-                <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
-                <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
-                <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
-                <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+      <div class="fixed-dialog-scroll">
+        <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
+        <div class="fixed-grid">
+          <div class="fixed-fields">
+            <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
+            <div class="fixed-config" id="fixed-start-config">
+              <div class="fixed-row">
+                <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
+                <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
               </div>
-              <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
-            </fieldset>
-            <label><span data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
-            <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
-            <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
-            <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
-            <label id="fixed-start-skip-label-wrap"><span data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
-            <button type="button" class="btn" id="btn-fixed-start-leads" data-i18n="leads.open">Ver contatos recebidos</button>
+              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
+              <fieldset class="fixed-group">
+                <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
+                <div class="fixed-fields-table" id="fixed-start-fields">
+                  <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
+                  <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
+                  <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
+                  <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+                </div>
+                <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
+              </fieldset>
+              <div class="fixed-row fixed-row-inline">
+                <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
+                <label id="fixed-start-skip-label-wrap" class="fixed-inline-field"><span class="visually-hidden" data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
+              </div>
+              <details class="fixed-more">
+                <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
+                <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
+                <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
+              </details>
+            </div>
+          </div>
+          <div class="fixed-preview-wrap">
+            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+            <div class="fixed-preview" id="fixed-start-preview"></div>
           </div>
         </div>
-        <div class="fixed-preview-wrap">
-          <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-          <div class="fixed-preview" id="fixed-start-preview"></div>
-        </div>
       </div>
-      <div class="studio-modal-actions">
+      <div class="studio-modal-actions fixed-actions">
+        <button type="button" class="btn fixed-actions-aside" id="btn-fixed-start-leads" data-i18n="leads.open">Ver contatos recebidos</button>
         <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
         <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
       </div>
@@ -1253,53 +1262,65 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
-      <p class="fixed-lead" data-i18n="fixed.end.lead">Aparece quando o visitante conclui o tour. É um passo fixo: não entra no vídeo exportado.</p>
-      <div class="fixed-grid">
-        <div class="fixed-fields">
-          <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
-          <div class="fixed-config" id="fixed-end-config">
-            <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
-            <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
-            <fieldset class="fixed-group">
-              <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
-              <div class="fixed-sub" id="fixed-end-wa-fields">
-                <label><span data-i18n="fixed.end.waPhone">Número com DDD</span><input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" /></label>
-                <p class="fixed-error" id="fixed-end-wa-error" hidden data-i18n="fixed.errPhone">Número incompleto. Use DDD + número.</p>
-                <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Sem número, o visitante escolhe o contato no WhatsApp.</p>
-                <label><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500"></textarea></label>
-                <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
-                <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
-              </div>
-            </fieldset>
-            <fieldset class="fixed-group">
-              <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
-              <div class="fixed-sub" id="fixed-end-contact-fields">
-                <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
-                  <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
-                  <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
-                    <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-                  </label>
+      <div class="fixed-dialog-scroll">
+        <p class="fixed-lead" data-i18n="fixed.end.lead">Aparece quando o visitante conclui o tour. É um passo fixo: não entra no vídeo exportado.</p>
+        <div class="fixed-grid">
+          <div class="fixed-fields">
+            <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
+            <div class="fixed-config" id="fixed-end-config">
+              <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
+              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
+              <fieldset class="fixed-group">
+                <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
+                <div class="fixed-sub" id="fixed-end-wa-fields">
+                  <div class="fixed-row">
+                    <label><span data-i18n="fixed.end.waPhone">Número com DDD</span><input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" /></label>
+                    <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
+                  </div>
+                  <p class="fixed-error" id="fixed-end-wa-error" hidden data-i18n="fixed.errPhone">Número incompleto. Use DDD + número.</p>
+                  <label><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500"></textarea></label>
+                  <details class="fixed-more">
+                    <summary data-i18n="stb.more">Mais opções</summary>
+                    <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Sem número, o visitante escolhe o contato no WhatsApp.</p>
+                    <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
+                  </details>
                 </div>
-                <div id="fixed-end-link-fields">
-                  <label><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
-                  <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
+              </fieldset>
+              <fieldset class="fixed-group">
+                <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
+                <div class="fixed-sub" id="fixed-end-contact-fields">
+                  <div class="fixed-row fixed-row-seg">
+                    <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
+                      <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
+                      <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
+                        <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                      </label>
+                    </div>
+                    <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
+                  </div>
+                  <div id="fixed-end-link-fields">
+                    <label><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
+                    <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
+                  </div>
+                  <div id="fixed-end-form-fields" hidden>
+                    <details class="fixed-more">
+                      <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
+                      <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
+                      <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-end-consent" rows="2" maxlength="600"></textarea></label>
+                    </details>
+                  </div>
                 </div>
-                <div id="fixed-end-form-fields" hidden>
-                  <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
-                  <label><span data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-end-consent" rows="2" maxlength="600"></textarea></label>
-                </div>
-                <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
-              </div>
-            </fieldset>
-            <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
+              </fieldset>
+              <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
+            </div>
+          </div>
+          <div class="fixed-preview-wrap">
+            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+            <div class="fixed-preview" id="fixed-end-preview"></div>
           </div>
         </div>
-        <div class="fixed-preview-wrap">
-          <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-          <div class="fixed-preview" id="fixed-end-preview"></div>
-        </div>
       </div>
-      <div class="studio-modal-actions">
+      <div class="studio-modal-actions fixed-actions">
         <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
         <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
       </div>
@@ -1772,7 +1793,7 @@
     </symbol>
   </svg>
 
-  <script src="a/52/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/52/js/app.js"></script>
+  <script src="a/53/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/53/js/app.js"></script>
 </body>
 </html>
