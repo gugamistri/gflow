@@ -1146,6 +1146,25 @@ function setCoverStep(index) {
   paintShareMenu();
 }
 
+/**
+ * /editor?pro=1 vem do botão "Assinar o Pro" da landing: abre o diálogo do GuiaFlow Pro
+ * e tira o parâmetro da barra para um F5 não reabrir.
+ */
+function consumeProIntent() {
+  let url;
+  try {
+    url = new URL(location.href);
+  } catch {
+    return;
+  }
+  if (url.searchParams.get("pro") !== "1") return;
+  url.searchParams.delete("pro");
+  applyCloudAuthHref(url.toString());
+  if (!isCloudEnabled()) return;
+  if (viewerIsPro()) return;
+  showUpgradeDialog({ feature: "account" });
+}
+
 async function consumeBillingReturn() {
   const found = readBillingReturn(location.href);
   if (!isCloudEnabled() || !found.kind) return;
@@ -2116,6 +2135,9 @@ function bindChrome() {
     document.getElementById("btn-capture-desktop-lib"),
   ].filter(Boolean);
   if (window.guiaDesktopApp?.isDesktop) {
+    // why: a landing (/?landing=1) só existe no site; no app desktop o link não abre nada
+    const aboutLink = document.getElementById("btn-about");
+    if (aboutLink) aboutLink.hidden = true;
     for (const captureBtn of captureBtns) {
       captureBtn.hidden = false;
       captureBtn.addEventListener("click", async () => {
@@ -3362,6 +3384,7 @@ async function boot() {
     void (async () => {
       await consumeBillingReturn();
       if (getCloudAccount().signedIn && billingView.status !== "ready") await refreshEntitlement();
+      consumeProIntent();
     })();
   }
 }

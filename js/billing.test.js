@@ -429,7 +429,7 @@ test("o menu Gerenciar assinatura abre a tela, não o portal", () => {
     accountBillingDestination({ status: "ready", entitlement: { active: false, status: "none" } }),
     "upgrade"
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const start = html.indexOf('id="modal-subscription"');
   const end = html.indexOf("</dialog>", start);
   const dialog = html.slice(start, end);

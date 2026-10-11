@@ -2,59 +2,60 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    /*
+     * why: a raiz era o editor. Quem já usa (projetos locais ou a extensão de captura) e
+     * qualquer ?parâmetro de app (retorno do Stripe, login, extensão) continua indo para
+     * /editor, com query e hash. /?landing=1 sempre mostra esta página.
+     * Precisa rodar antes de qualquer pintura; por isso fica inline e no topo do <head>.
+     */
+    (function () {
+      try {
+        var l = window.location;
+        var q = new URLSearchParams(l.search);
+        if (q.get("landing") === "1") { window.__gfLandingForced = true; return; }
+        var go = false;
+        q.forEach(function (_v, k) {
+          if (!/^(utm_[a-z0-9_]+|gclid|fbclid|msclkid|ref|landing)$/i.test(k)) go = true;
+        });
+        if (l.hash && l.hash.indexOf("=") !== -1) go = true;
+        if (!go && document.documentElement.getAttribute("data-guia-extension") === "1") go = true;
+        if (!go) {
+          var raw = localStorage.getItem("demo-studio-index-v2");
+          if (raw) {
+            var idx = JSON.parse(raw);
+            if (idx && idx.projects && idx.projects.length) go = true;
+          }
+          if (!go && localStorage.getItem("interactive-demo-v1")) go = true;
+        }
+        if (go) {
+          document.documentElement.style.visibility = "hidden";
+          l.replace("/editor" + l.search + l.hash);
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title data-i18n="doc.title.editor">GuiaFlow — Editor</title>
-  <meta name="description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
+  <title data-i18n="lp.doc.title">GuiaFlow — Demo interativo do seu produto, sem call</title>
+  <meta name="description" content="Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch. Grátis no navegador." />
   <link rel="canonical" href="https://guiaflow.pro/" />
-  <meta name="theme-color" content="#1A4D6D" />
+  <meta name="theme-color" content="#101010" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="GuiaFlow" />
-  <meta property="og:title" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Seu produto, demonstrado sem call — GuiaFlow" />
+  <meta property="og:description" content="Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch." />
   <meta property="og:url" content="https://guiaflow.pro/" />
-  <meta property="og:description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
-  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-landing.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="GuiaFlow — Crie tours guiados interativos" />
+  <meta property="og:image:alt" content="GuiaFlow — Seu produto, demonstrado sem call." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="GuiaFlow" />
-  <meta name="twitter:description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
-  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
-  <script>
-    (function () {
-      try {
-        var stored = localStorage.getItem("ns-locale");
-        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
-        var pick = stored;
-        if (!pick) {
-          for (var i = 0; i < langs.length; i++) {
-            var p = String(langs[i] || "").toLowerCase().split("-")[0];
-            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
-          }
-        }
-        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
-        var htmlLang = pick === "pt" ? "pt-BR" : pick;
-        document.documentElement.lang = htmlLang;
-      } catch (e) {}
-    })();
-  </script>
-  <script>
-    (function () {
-      try {
-        var pref = localStorage.getItem("ns-appearance") || "system";
-        var mode = pref;
-        if (pref !== "documento" && pref !== "social") {
-          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "social"
-            : "documento";
-        }
-        document.documentElement.setAttribute("data-appearance", mode);
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
-      } catch (e) {}
-    })();
-  </script>
+  <meta name="twitter:title" content="Seu produto, demonstrado sem call — GuiaFlow" />
+  <meta name="twitter:description" content="Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch." />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing.png" />
+  <meta name="twitter:image:alt" content="GuiaFlow — Seu produto, demonstrado sem call." />
   <script>
     (function () {
       try {
@@ -66,1738 +67,348 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="icon" href="favicon.ico" sizes="any" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
-  <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/59/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/59/css/theme.css" />
-  <link rel="stylesheet" href="a/59/css/app.css" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preload" href="/a/60/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/a/60/css/landing.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GuiaFlow",
+    "url": "https://guiaflow.pro/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web, Chrome",
+    "description": "Transforme prints do seu produto em um demo interativo e narrado em minutos.",
+    "offers": [
+      { "@type": "Offer", "name": "Grátis", "price": "0", "priceCurrency": "BRL" },
+      { "@type": "Offer", "name": "GuiaFlow Pro (mensal)", "price": "36", "priceCurrency": "BRL" },
+      { "@type": "Offer", "name": "GuiaFlow Pro (anual)", "price": "359", "priceCurrency": "BRL" }
+    ],
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
 </head>
-<body class="is-booting">
-  <header class="topbar">
-      <details class="more-panel" id="more-panel">
-        <summary class="btn btn-ghost btn-icon" id="btn-menu" aria-label="Menu" aria-expanded="false" aria-controls="more-panel-body" data-i18n-aria="topbar.menu">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-menu"></use></svg>
-        </summary>
-        <div class="more-panel-body" id="more-panel-body">
-          <div class="more-group" id="more-file-group">
-            <button type="button" class="more-item" id="btn-menu-new">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-              <span data-i18n="menu.new">Novo</span>
-            </button>
-            <button type="button" class="more-item" id="btn-menu-open">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-open"></use></svg>
-              <span data-i18n="menu.open">Abrir</span>
-            </button>
-            <button type="button" class="more-item" id="btn-menu-import">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-              <span data-i18n="menu.import">Importar</span>
-            </button>
-          </div>
-          <hr class="more-divider" id="more-file-divider" />
-          <div class="more-group more-group-actions">
-            <div class="more-editor-only" id="more-editor-only" hidden>
-              <button type="button" class="more-item" id="btn-menu-projects">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-                <span data-i18n="topbar.projects">Projetos</span>
-              </button>
-            </div>
-            <button type="button" class="more-item" id="btn-shortcuts">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-keyboard"></use></svg>
-              <span data-i18n="shortcuts.title">Atalhos</span>
-            </button>
-            <button type="button" class="more-item" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
-              <span data-i18n="topbar.feedback">Feedback</span>
-            </button>
-            <a class="more-item" id="btn-help" href="ajuda.html" target="_blank" rel="noopener noreferrer">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
-              <span data-i18n="topbar.help">Ajuda</span>
-            </a>
-            <p class="more-legal">
-              <a href="/privacidade" target="_blank" rel="noopener" data-i18n="legal.privacy">Privacidade</a>
-              <span aria-hidden="true">·</span>
-              <a href="/termos" target="_blank" rel="noopener" data-i18n="legal.terms">Termos</a>
-            </p>
-          </div>
-          <hr class="more-divider" />
-          <div class="more-group more-group-prefs">
-            <div class="more-pref-row more-theme-row">
-              <span class="more-pref-label" data-i18n="appearance.theme">Modo</span>
-              <div class="appearance-segment" id="appearance-segment" role="radiogroup" aria-label="Modo" data-i18n-aria="appearance.theme">
-                <button type="button" class="appearance-opt" data-mode="documento" title="Claro" aria-label="Claro" aria-pressed="false" data-i18n-title="appearance.light" data-i18n-aria="appearance.light">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-sun"></use></svg>
-                </button>
-                <button type="button" class="appearance-opt" data-mode="social" title="Escuro" aria-label="Escuro" aria-pressed="false" data-i18n-title="appearance.dark" data-i18n-aria="appearance.dark">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-moon"></use></svg>
-                </button>
-                <button type="button" class="appearance-opt" data-mode="system" title="Sistema" aria-label="Sistema" aria-pressed="false" data-i18n-title="appearance.system" data-i18n-aria="appearance.system">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-appearance"></use></svg>
-                </button>
-              </div>
-            </div>
-            <label class="locale-select more-locale">
-              <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
-              <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
-                <option value="pt">Português</option>
-                <option value="es">Español</option>
-                <option value="en">English</option>
-              </select>
-            </label>
-          </div>
-        </div>
-      </details>
-    <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/59/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/59/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
-      <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
-        <span
-          class="topbar-project"
-          id="topbar-project"
-          hidden
-          title="Clique para renomear"
-          data-i18n-title="library.renameTitle"
-          role="button"
-          tabindex="0"
-        ></span>
-        <details class="menu-panel file-panel" id="file-panel">
-          <summary class="menu-summary file-menu" id="btn-file-menu" aria-haspopup="menu" title="Novo, abrir, importar e backup" data-i18n-title="file.menuTitle">
-            <span data-i18n="file.menu">Arquivo</span>
-            <svg class="btn-ico menu-caret" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
-          </summary>
-          <div class="menu-panel-body" role="menu" aria-label="Arquivo" data-i18n-aria="file.menu">
-            <button type="button" class="more-item" role="menuitem" id="btn-file-new">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-              <span data-i18n="file.new">Novo projeto…</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-file-open">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-open"></use></svg>
-              <span data-i18n="file.open">Abrir…</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-file-import">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-              <span data-i18n="file.import">Importar JSON…</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-export-json">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
-              <span data-i18n="file.export">Exportar JSON</span>
-            </button>
-            <hr class="more-divider" />
-            <button type="button" class="more-item" role="menuitem" id="btn-file-rename">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
-              <span data-i18n="file.rename">Renomear</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-capture-desktop" hidden>
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-              <span data-i18n="file.capture">Capturar telas</span>
-            </button>
-            <hr class="more-divider" />
-            <button type="button" class="more-item more-item-danger" role="menuitem" id="btn-file-delete">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-              <span data-i18n="file.delete">Apagar projeto…</span>
-            </button>
-          </div>
-        </details>
+<body>
+  <a class="skip" href="#conteudo" data-i18n="lp.skip">Pular para o conteúdo</a>
+  <header class="site-header" id="topo">
+    <div class="wrap header-row">
+      <a class="brand" href="/?landing=1" aria-label="GuiaFlow">
+        <img src="/a/60/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
+      </a>
+      <nav class="nav" aria-label="Seções" data-i18n-aria="lp.nav.aria">
+        <a href="#como-funciona" data-i18n="lp.nav.how">Como funciona</a>
+        <a href="#recursos" data-i18n="lp.nav.features">Recursos</a>
+        <a href="#precos" data-i18n="lp.nav.pricing">Preços</a>
+        <a href="#faq" data-i18n="lp.nav.faq">Dúvidas</a>
       </nav>
-      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
-    </div>
-    <div class="topbar-tools">
-      <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <details class="more-panel prefs-panel more-editor-pref" id="prefs-panel" hidden>
-          <summary class="btn btn-ghost btn-icon" id="btn-prefs" aria-label="Preferências do projeto" title="Tema do tour, narração e IA" data-i18n-aria="prefs.aria" data-i18n-title="prefs.title">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
-          </summary>
-          <div class="more-panel-body prefs-panel-body">
-            <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
-              <summary>
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
-                <span data-i18n="prefs.theme">Tema do tour</span>
-              </summary>
-              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
-                <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
-                <div class="theme-presets" id="theme-presets"></div>
-                <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
-                <div class="theme-customs" id="theme-customs"></div>
-                <div class="theme-custom-actions">
-                  <button type="button" class="btn btn-sm" id="btn-save-theme">
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                    <span data-i18n="theme.save">Salvar tema</span>
-                  </button>
-                  <button type="button" class="btn btn-sm" id="btn-dup-theme">
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                    <span data-i18n="theme.duplicate">Duplicar selecionado</span>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                    <span data-i18n="theme.delete">Excluir tema</span>
-                  </button>
-                </div>
-                <hr class="theme-divider" />
-                <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
-                <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
-                <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
-                <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
-                <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
-                <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
-                <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
-                <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
-              </div>
-            </details>
-            <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
-              <summary>
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
-                <span data-i18n="prefs.narration">Narração e IA</span>
-              </summary>
-              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
-                <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
-                <label class="checkbox">
-                  <input type="checkbox" id="narration-enabled" checked />
-                  <span data-i18n="narration.speakCaption">Falar no avanço automático</span>
-                </label>
-                <label><span data-i18n="narration.voice">Voz</span>
-                  <select id="narration-voice"></select>
-                </label>
-                <label><span data-i18n="narration.rate">Velocidade</span>
-                  <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
-                  <span id="narration-rate-label">1.0×</span>
-                </label>
-                <label><span data-i18n="narration.defaultHold">Pausa padrão (s)</span>
-                  <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
-                </label>
-                <details class="settings-fold" id="settings-tts">
-                  <summary data-i18n="narration.cartesiaKey">Cartesia</summary>
-                  <div class="settings-fold-body">
-                    <p class="props-meta" id="cartesia-status" data-i18n="cartesia.noKey">Nenhuma chave salva.</p>
-                    <div class="settings-key-row">
-                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
-                        <input
-                          type="text"
-                          id="cartesia-key"
-                          class="settings-secret"
-                          name="guiaflow-cartesia-api-key"
-                          autocomplete="off"
-                          autocorrect="off"
-                          autocapitalize="off"
-                          spellcheck="false"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-form-type="other"
-                          placeholder="sk_car_…"
-                          aria-label="Chave da API"
-                          data-i18n-aria="narration.apiKey"
-                        />
-                      </form>
-                      <div class="settings-actions">
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                        </button>
-                        <a class="btn btn-sm btn-icon" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-                <details class="settings-fold" id="settings-llm">
-                  <summary data-i18n="llm.section">Inteligência</summary>
-                  <div class="settings-fold-body">
-                    <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">Modelo com visão · só neste navegador</p>
-                    <label><span data-i18n="llm.provider">Provedor</span>
-                      <select id="llm-provider">
-                        <option value="openrouter" selected>OpenRouter</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
-                      </select>
-                    </label>
-                    <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
-                      <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
-                    </label>
-                    <label><span data-i18n="llm.model">Modelo</span>
-                      <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
-                      <datalist id="llm-model-list"></datalist>
-                    </label>
-                    <div class="settings-key-row">
-                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
-                        <input
-                          type="text"
-                          id="llm-key"
-                          class="settings-secret"
-                          name="guiaflow-llm-api-key"
-                          autocomplete="off"
-                          autocorrect="off"
-                          autocapitalize="off"
-                          spellcheck="false"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-form-type="other"
-                          placeholder="sk-…"
-                          aria-label="Chave da API"
-                          data-i18n-aria="narration.apiKey"
-                        />
-                      </form>
-                      <div class="settings-actions">
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-list-models" title="Listar modelos" aria-label="Listar modelos" data-i18n-title="llm.listModels" data-i18n-aria="llm.listModels">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-list"></use></svg>
-                        </button>
-                        <a class="btn btn-sm btn-icon" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </details>
-          </div>
-        </details>
-        <div class="split-btn preview-split" id="preview-split" role="group" aria-label="Preview" data-i18n-aria="toolbar.preview">
-          <button type="button" class="btn split-main" id="btn-play-from" title="Preview a partir deste passo (P)" aria-label="Preview" data-i18n-title="preview.fromHereTitle" data-i18n-aria="toolbar.preview">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
-            <span class="split-label" data-i18n="toolbar.preview">Preview</span>
-          </button>
-          <details class="menu-panel preview-panel" id="preview-panel">
-            <summary class="split-caret" aria-label="Mais opções de preview" title="Mais opções de preview" data-i18n-aria="toolbar.previewMore" data-i18n-title="toolbar.previewMore" aria-haspopup="menu">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
-            </summary>
-            <div class="menu-panel-body" role="menu">
-              <button type="button" class="more-item" role="menuitem" id="btn-preview-here">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
-                <span data-i18n="preview.fromHere">A partir deste passo</span>
-                <kbd class="menu-kbd">P</kbd>
-              </button>
-              <button type="button" class="more-item" role="menuitem" id="btn-preview-start">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
-                <span data-i18n="preview.fromStart">Desde o início</span>
-              </button>
-            </div>
-          </details>
-        </div>
-        <details class="export-panel">
-          <summary class="share-menu" aria-label="Compartilhar" title="Link, HTML e vídeo" data-i18n-aria="topbar.share" data-i18n-title="share.menuTitle">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
-            <span class="share-label" data-i18n="topbar.share">Compartilhar</span>
-            <span class="share-stale-dot" id="share-stale-dot" hidden></span>
-          </summary>
-          <div class="export-panel-body">
-            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
-            <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Link</strong>
-              <span id="share-publish-desc" data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
-            </button>
-            <div class="share-link-actions" id="share-link-actions" hidden>
-              <div class="share-link-meta">
-                <strong>
-                  <span data-i18n="share.linkTitle">Link</span>
-                </strong>
-              </div>
-              <div class="share-link-field">
-                <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link" data-i18n-aria="share.linkTitle" />
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                </button>
-              </div>
-              <div class="share-cover" id="share-cover" hidden>
-                <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
-                <div class="share-cover-text">
-                  <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
-                  <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
-                  <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa fica pública junto com o link. Confira se não há dados sensíveis na tela.</small>
-                </div>
-              </div>
-              <div class="share-link-extra" id="share-link-extra" hidden>
-                <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
-                <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                </button>
-              </div>
-            </div>
-            <button type="button" id="cloud-share-block" class="share-pro-upsell" hidden>
-              <span class="pro-badge" id="cloud-share-badge">
-                <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                <span data-i18n="billing.badge">Pro</span>
-              </span>
-              <span data-i18n="share.upsell">Link que não expira</span>
-            </button>
-            <button type="button" class="export-option" id="btn-share-embed" hidden>
-              <strong>
-                <span data-i18n="embed.button">Incorporar no site</span>
-                <span class="pro-badge" id="embed-pro-badge" hidden>
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </strong>
-              <span data-i18n="embed.buttonDesc">Código para colar na sua página. Ajusta ao tamanho da tela.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-share-analytics" hidden>
-              <strong>
-                <span data-i18n="analytics.button">📊 Análise</span>
-                <span class="pro-badge" id="analytics-pro-badge" hidden>
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </strong>
-              <span data-i18n="analytics.buttonDesc">Visualizações, conclusão e onde as pessoas param.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-share-leads" hidden>
-              <strong><span data-i18n="leads.open">Ver contatos recebidos</span></strong>
-              <span data-i18n="leads.buttonDesc">Contatos do passo inicial e do formulário do passo final, com exportação CSV.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-export-html">
-              <strong data-i18n="export.htmlTitle">HTML navegável</strong>
-              <span data-i18n="export.htmlDesc">Tour em um arquivo para percorrer os passos ou assistir no navegador.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-export-video">
-              <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
-              <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-export-unbrand" hidden>
-              <strong>
-                <span data-i18n="export.removeMark">Remover marca GuiaFlow</span>
-                <span class="pro-badge">
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </strong>
-              <span data-i18n="export.removeMarkDesc">O vídeo mostra o logo GuiaFlow. O Pro exporta sem a marca.</span>
-            </button>
-          </div>
-        </details>
-      </div>
-      <div class="topbar-actions" id="topbar-actions-library">
-        <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-          <span data-i18n="topbar.capture">Capturar</span>
-        </button>
-        <input type="file" id="import-file" accept="application/json,.json" hidden />
-      </div>
-      <div class="account-slot" id="account-slot" hidden>
-        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.subscribeOrSignIn">Assinar / Entrar</button>
-        <details class="account-chip" id="account-chip" hidden>
-          <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
-            <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
-          </summary>
-          <div class="account-chip-menu">
-            <p class="account-chip-email" id="account-chip-email"></p>
-            <p class="account-chip-plan" id="account-chip-plan" hidden></p>
-            <p class="account-chip-usage" id="account-chip-usage" hidden></p>
-            <button type="button" class="account-chip-action" id="btn-account-billing" hidden></button>
-            <button type="button" class="account-chip-action" id="btn-account-admin" hidden data-i18n="account.admin">Administração</button>
-            <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
-          </div>
-        </details>
-      </div>
+      <a class="btn btn-primary btn-sm" href="/editor" data-i18n="lp.openEditor">Abrir editor</a>
     </div>
   </header>
 
-  <div
-    class="boot-splash"
-    id="boot-splash"
-    role="status"
-    aria-busy="true"
-    aria-live="polite"
-  >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/59/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/59/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
-    <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
-    <div class="boot-progress" aria-hidden="true">
-      <span class="boot-progress-bar"></span>
-    </div>
-  </div>
-
-  <aside class="ext-banner" id="ext-banner" hidden>
-    <p data-i18n="extBanner.text">Para gravar as telas do produto, instale a extensão de captura.</p>
-    <div class="ext-banner-actions">
-      <a class="btn btn-sm btn-primary" href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener noreferrer">
-        <span data-i18n="extBanner.install">Instalar no Chrome</span>
-      </a>
-      <a class="btn btn-sm" href="ajuda.html#gravar">
-        <span data-i18n="extBanner.help">Como capturar</span>
-      </a>
-      <button type="button" class="btn btn-sm" id="ext-banner-dismiss" data-i18n="extBanner.dismiss">Não mostrar de novo</button>
-    </div>
-  </aside>
-
-  <main id="view-help" class="view view-help" hidden>
-    <iframe id="help-frame" title="Como usar" data-i18n-title="help.iframeTitle"></iframe>
-  </main>
-
-  <main id="view-library" class="view view-library">
-    <div class="library-header">
-      <div>
-        <h1 data-i18n="library.title">Projetos</h1>
-        <p data-i18n="library.lead">Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
-        <p class="local-save" id="local-save-library" hidden>
-          <button type="button" class="local-save-chip" data-local-save-open data-i18n="billing.localSave">Salvo só neste navegador</button>
-          <span class="local-save-tip" role="tooltip" data-i18n="billing.localSaveTip">Se limpar o cache ou os dados do site, os projetos deste navegador somem.</span>
-          <button type="button" class="local-save-dismiss" data-local-save-dismiss data-i18n-aria="billing.localSaveDismiss" aria-label="Ocultar aviso">×</button>
-        </p>
-      </div>
-    </div>
-    <aside class="release-notes" id="release-notes" hidden>
-      <div class="release-notes-body">
-        <p class="release-notes-title" id="release-notes-title">Novidades da versão 0.3.0 · outubro de 2026</p>
-        <ul class="release-notes-list">
-          <li data-i18n="releaseNotes.item1">Entre com email e senha, ou peça um link por email, sem senha.</li>
-          <li data-i18n="releaseNotes.item2">GuiaFlow Pro: link permanente, texto e áudio com IA, e vídeo sem o logo.</li>
-          <li data-i18n="releaseNotes.item3">No celular, revise e edite o texto de cada passo.</li>
-          <li data-i18n="releaseNotes.item4">Novo projeto fica num card. No menu: Novo, Abrir e Importar.</li>
-          <li data-i18n="releaseNotes.item5">Preview e Compartilhar ficam só com ícone. Desfazer e refazer ficam ao lado de copiar e colar.</li>
-        </ul>
-      </div>
-      <button type="button" class="btn btn-sm" id="release-notes-dismiss" data-i18n="releaseNotes.dismiss">Entendi</button>
-    </aside>
-    <div class="library-grid" id="library-board" tabindex="-1">
-      <button type="button" class="library-action-card library-create-card" id="btn-new-project">
-        <span class="library-action-icon" aria-hidden="true">
-          <svg class="btn-ico"><use href="#i-plus"></use></svg>
-        </span>
-        <span data-i18n="topbar.newProject">Novo projeto</span>
-      </button>
-      <button type="button" class="library-import-hint" id="library-import-hint" hidden data-i18n="library.importHint">
-        Para trazer um projeto, use Importar no menu.
-      </button>
-      <div id="library-grid" class="library-grid-items"></div>
-    </div>
-    <p class="library-empty" id="library-empty" hidden data-i18n="library.empty">Nenhum guia ainda. Crie o primeiro.</p>
-  </main>
-
-  <main id="view-editor" class="view view-editor" hidden>
-    <aside class="filmstrip-panel" id="filmstrip-panel">
-      <div class="filmstrip-header">
-        <p class="filmstrip-metrics" id="filmstrip-metrics" aria-live="polite"></p>
-        <p class="local-save" id="local-save-editor" hidden>
-          <button type="button" class="local-save-chip" data-local-save-open data-i18n="billing.localSave">Salvo só neste navegador</button>
-          <span class="local-save-tip" role="tooltip" data-i18n="billing.localSaveTip">Se limpar o cache ou os dados do site, os projetos deste navegador somem.</span>
-          <button type="button" class="local-save-dismiss" data-local-save-dismiss data-i18n-aria="billing.localSaveDismiss" aria-label="Ocultar aviso">×</button>
-        </p>
-        <span class="filmstrip-multi-hint" data-i18n="filmstrip.multiHint">⌘/Ctrl+clique ou Shift para selecionar vários</span>
-      </div>
-      <div class="filmstrip" id="filmstrip" aria-label="Passos do demo" data-i18n-aria="filmstrip.aria"></div>
-      <div class="filmstrip-footer">
-        <button type="button" class="btn btn-sm filmstrip-add-images" id="btn-add-images" title="Criar vários passos de uma vez a partir de imagens" data-i18n-title="filmstrip.addImagesTitle">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          <span data-i18n="toolbar.images">Imagens</span>
-        </button>
-      </div>
-    </aside>
-
-    <section class="canvas-wrap">
-      <div class="canvas-toolbar" role="toolbar" aria-label="Edição" data-i18n-aria="toolbar.aria">
-        <div class="toolbar-group" role="group" aria-label="Adicionar" data-i18n-aria="toolbar.groupAdd">
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-step" title="Novo passo" aria-label="Novo passo" data-i18n-title="toolbar.addStep" data-i18n-aria="toolbar.addStep">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-slide" title="Novo slide" aria-label="Novo slide" data-i18n-title="toolbar.addSlide" data-i18n-aria="toolbar.addSlide">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-scene" title="Nova cena" aria-label="Nova cena" data-i18n-title="toolbar.addScene" data-i18n-aria="toolbar.addScene">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
-          </button>
+  <main id="conteudo">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="lp.hero.eyebrow">Demos interativos para vendas, startups e founders</p>
+          <h1 data-i18n="lp.hero.title">Seu produto, demonstrado sem call.</h1>
+          <p class="hero-sub" data-i18n="lp.hero.sub">Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch — ele navega sozinho e você vê quem chegou até o fim.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="/editor" data-i18n="lp.hero.ctaPrimary">Criar meu demo grátis</a>
+            <a class="btn btn-ghost btn-lg" href="#demo" data-i18n="lp.hero.ctaSecondary">Ver um demo de exemplo</a>
+          </div>
+          <ul class="hero-proof">
+            <li data-i18n="lp.hero.proof1">Sem conta e sem cartão</li>
+            <li data-i18n="lp.hero.proof2">Funciona no navegador</li>
+            <li data-i18n="lp.hero.proof3">Código aberto (MIT)</li>
+          </ul>
         </div>
-        <span class="toolbar-divider" aria-hidden="true"></span>
-        <div class="toolbar-group" role="group" aria-label="Editar" data-i18n-aria="toolbar.groupEdit">
-          <button type="button" class="btn btn-sm btn-icon" id="btn-dup-step" title="Duplicar (⌘D)" aria-label="Duplicar" data-i18n-title="toolbar.duplicateTitle" data-i18n-aria="toolbar.duplicate">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-duplicate"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-copy-step" title="Copiar (⌘C)" aria-label="Copiar" data-i18n-title="toolbar.copyTitle" data-i18n-aria="toolbar.copy">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-cut-step" title="Recortar (⌘X)" aria-label="Recortar" data-i18n-title="toolbar.cutTitle" data-i18n-aria="toolbar.cut">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-cut"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-paste-step" title="Colar (⌘V)" aria-label="Colar" data-i18n-title="toolbar.pasteTitle" data-i18n-aria="toolbar.paste">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-paste"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon btn-danger-hover" id="btn-delete-step" title="Excluir (Delete)" aria-label="Excluir" data-i18n-title="toolbar.deleteTitle" data-i18n-aria="toolbar.delete">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-          </button>
-        </div>
-        <span class="toolbar-divider" aria-hidden="true"></span>
-        <div class="toolbar-group" role="group" aria-label="Desfazer e refazer" data-i18n-aria="toolbar.groupHistory">
-          <button type="button" class="btn btn-sm btn-icon" id="btn-undo" title="Desfazer (⌘Z)" aria-label="Desfazer" data-i18n-title="toolbar.undoTitle" data-i18n-aria="topbar.undo" disabled>
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-redo" title="Refazer (⌘⇧Z)" aria-label="Refazer" data-i18n-title="toolbar.redoTitle" data-i18n-aria="topbar.redo" disabled>
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
-          </button>
-        </div>
-        <span class="toolbar-pos" id="toolbar-pos" aria-live="polite"></span>
-      </div>
-      <div class="step-toolbar" id="step-toolbar" role="toolbar" aria-label="Ferramentas do passo" data-i18n-aria="stb.aria" hidden>
-        <div class="stb-row" id="stb-row">
-          <div class="stb-group" data-stb-group="type" data-stb-keep="4" role="group" aria-label="Tipo e imagem" data-i18n-aria="stb.groupType">
-            <span class="stb-group-label" data-i18n="stb.groupType">Tipo e imagem</span>
-            <div class="stb-seg" id="stb-type" role="group" aria-label="Tipo" data-i18n-aria="props.type">
-              <button type="button" class="stb-btn" data-value="screen" title="Tela" aria-label="Tela" data-i18n-title="props.screen" data-i18n-aria="props.screen" aria-pressed="false"><svg aria-hidden="true"><use href="#i-image"></use></svg></button>
-              <button type="button" class="stb-btn" data-value="slide" title="Slide" aria-label="Slide" data-i18n-title="props.slide" data-i18n-aria="props.slide" aria-pressed="false"><svg aria-hidden="true"><use href="#i-slide"></use></svg></button>
-            </div>
-            <button type="button" class="stb-btn stb-screen-only" id="stb-image" title="Trocar imagem" aria-label="Trocar imagem" data-i18n-title="canvas.changeImage" data-i18n-aria="canvas.changeImage"><svg aria-hidden="true"><use href="#i-image-swap"></use></svg></button>
-          </div>
-          <span class="stb-sep" aria-hidden="true"></span>
-          <div class="stb-group" data-stb-group="position" data-stb-keep="1" role="group" aria-label="Posição do balão" data-i18n-aria="stb.groupBalloon">
-            <span class="stb-group-label" id="stb-side-label" data-i18n="stb.groupBalloon">Posição do balão</span>
-            <div class="stb-seg" id="stb-side" role="group" aria-label="Lado do balão" data-i18n-aria="props.side">
-              <button type="button" class="stb-btn" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-top"></use></svg></button>
-              <button type="button" class="stb-btn" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" data-i18n-title="props.right" data-i18n-aria="props.right" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-right"></use></svg></button>
-              <button type="button" class="stb-btn" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-bottom"></use></svg></button>
-              <button type="button" class="stb-btn" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" data-i18n-title="props.left" data-i18n-aria="props.left" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-left"></use></svg></button>
-              <button type="button" class="stb-btn" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-top"></use></svg></button>
-              <button type="button" class="stb-btn" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-center"></use></svg></button>
-              <button type="button" class="stb-btn" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg></button>
-            </div>
-            <div class="stb-seg" id="stb-align" role="group" aria-label="Alinhamento" data-i18n-aria="props.align">
-              <button type="button" class="stb-btn" data-value="start" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-start"></use></svg></button>
-              <button type="button" class="stb-btn" data-value="center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-center"></use></svg></button>
-              <button type="button" class="stb-btn" data-value="end" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-end"></use></svg></button>
+        <div class="hero-art" aria-hidden="true">
+          <div class="mock">
+            <div class="mock-bar"><span></span><span></span><span></span><i>app.leadpronto.ai</i></div>
+            <div class="mock-shot">
+              <img src="/a/60/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
+              <span class="mock-target"></span>
+              <span class="mock-hotspot"></span>
+              <div class="mock-pop">
+                <small data-i18n="lp.mock.step">Passo 1 de 11</small>
+                <strong data-i18n="lp.mock.title">Integração Meta</strong>
+                <span class="mock-desc" data-i18n="lp.mock.desc">Capture leads de anúncios do Facebook e Instagram direto no funil.</span>
+                <span class="mock-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <em data-i18n="lp.mock.next">Próximo →</em>
+              </div>
             </div>
           </div>
-          <span class="stb-sep" aria-hidden="true"></span>
-          <div class="stb-group" data-stb-group="interaction" data-stb-keep="2" role="group" aria-label="Interação" data-i18n-aria="stb.groupInteraction">
-            <span class="stb-group-label" data-i18n="stb.groupInteraction">Interação</span>
-            <button type="button" class="stb-btn stb-screen-only" id="stb-simulate" title="Simular clique ao avançar" aria-label="Simular clique ao avançar" data-i18n-title="props.simulateClick" data-i18n-aria="props.simulateClick" aria-pressed="false"><svg aria-hidden="true"><use href="#i-cursor"></use></svg></button>
-            <button type="button" class="stb-btn stb-screen-only" id="stb-zoom" title="Ampliar destaque" aria-label="Ampliar destaque" data-i18n-title="props.zoomHighlight" data-i18n-aria="props.zoomHighlight" aria-pressed="false"><svg aria-hidden="true"><use href="#i-zoom"></use></svg></button>
-            <label class="stb-hold" title="Temporizador (s)" data-i18n-title="props.hold">
-              <svg aria-hidden="true"><use href="#i-watch"></use></svg>
-              <input type="number" id="stb-hold" min="1" max="120" step="1" aria-label="Temporizador (s)" data-i18n-aria="props.hold" />
-              <span aria-hidden="true">s</span>
-            </label>
-          </div>
-          <span class="stb-sep" aria-hidden="true"></span>
-          <div class="stb-group" data-stb-group="ai" data-stb-keep="3" role="group" aria-label="Textos e áudio" data-i18n-aria="stb.groupAi">
-            <span class="stb-group-label" data-i18n="stb.groupAi">Textos e áudio</span>
-            <button type="button" class="stb-btn stb-btn-pro" id="btn-step-generate-copy" title="Gerar título, descrição e narração" aria-label="Gerar título, descrição e narração" data-i18n-title="props.generateCopy" data-i18n-aria="props.generateCopy"><svg class="btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg><span class="stb-btn-text" data-i18n="stb.texts">Textos</span><span class="pro-badge" id="pro-badge-copy-title" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span></button>
-            <button type="button" class="stb-btn" id="btn-narr-write" title="Escrever a narração" aria-label="Escrever a narração" data-i18n-title="narrbar.write" data-i18n-aria="narrbar.write"><svg aria-hidden="true"><use href="#i-pencil"></use></svg></button>
-            <button type="button" class="stb-btn stb-btn-pro btn-generate-caption" id="btn-generate-caption" hidden title="Gerar áudio da narração" aria-label="Gerar áudio da narração" data-i18n-title="stb.generateAudio" data-i18n-aria="stb.generateAudio"><svg class="btn-ai-spark" aria-hidden="true"><use href="#i-voice"></use></svg><span class="stb-btn-text" id="btn-generate-caption-label" data-i18n="stb.audio">Áudio</span><span class="pro-badge" id="pro-badge-audio" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span></button>
-            <button type="button" class="stb-btn" id="btn-upload-caption" title="Enviar áudio" aria-label="Enviar áudio" data-i18n-title="props.uploadAudio" data-i18n-aria="props.uploadAudio" hidden><svg aria-hidden="true"><use href="#i-upload"></use></svg></button>
-            <button type="button" class="stb-btn btn-danger-hover" id="btn-clear-caption-audio" title="Remover áudio" aria-label="Remover áudio" data-i18n-title="narrbar.removeAudio" data-i18n-aria="narrbar.removeAudio" hidden><svg aria-hidden="true"><use href="#i-trash"></use></svg></button>
-            <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
-            <label class="stb-toggle" id="wrap-show-caption" title="Mostrar o texto da narração na apresentação" data-i18n-title="narrbar.showTextTitle" hidden>
-              <input type="checkbox" id="prop-show-caption" role="switch" checked aria-label="Texto na tela" data-i18n-aria="narrbar.showText" />
-              <svg aria-hidden="true"><use href="#i-captions"></use></svg>
-              <span class="stb-group-label-inline" data-i18n="narrbar.showText">Texto na tela</span>
-            </label>
-          </div>
-        </div>
-        <div class="stb-more-wrap">
-          <button type="button" class="stb-btn" id="stb-more" title="Mais opções" aria-label="Mais opções" data-i18n-title="stb.more" data-i18n-aria="stb.more" aria-haspopup="true" aria-expanded="false" aria-controls="stb-menu"><svg aria-hidden="true"><use href="#i-more"></use></svg></button>
-          <div class="stb-menu" id="stb-menu" hidden>
-            <div class="stb-menu-groups" id="stb-menu-groups"></div>
-            <button type="button" class="stb-menu-item" id="stb-open-panel">
-              <svg aria-hidden="true"><use href="#i-panel-open"></use></svg>
-              <span data-i18n="stb.openPanel">Abrir painel do passo</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      <p class="present-hint" id="present-chrome" hidden data-i18n="present.escHint">Clique fora ou Esc para sair</p>
-      <button type="button" class="present-close" id="present-close" hidden aria-label="Fechar" data-i18n-aria="present.close">
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-      </button>
-      <div class="present-progress" id="present-progress" hidden aria-hidden="true">
-        <div class="present-progress-fill" id="present-progress-fill"></div>
-      </div>
-      <p class="rotate-hint" id="rotate-hint" hidden data-i18n="present.rotateHint">Gire o celular para ver a tela inteira</p>
-      <input type="file" id="images-file" accept="image/*" multiple hidden />
-      <div class="canvas-stage" id="canvas-stage">
-        <div class="canvas-empty" id="canvas-empty" hidden>
-          <h2 data-i18n="canvas.emptyTitle">Projeto vazio</h2>
-          <p data-i18n="canvas.emptyLead">Envie capturas de tela ou adicione um passo/slide para começar.</p>
-          <div class="canvas-empty-actions">
-            <button type="button" class="btn btn-primary" id="btn-empty-images">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-              <span data-i18n="canvas.uploadShots">Enviar capturas</span>
-            </button>
-            <button type="button" class="btn" id="btn-empty-step">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-              <span data-i18n="toolbar.step">Passo</span>
-            </button>
-            <button type="button" class="btn" id="btn-empty-slide">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-              <span data-i18n="toolbar.slide">Slide</span>
-            </button>
-          </div>
-        </div>
-        <div class="canvas-frame" id="canvas-frame">
-          <img id="canvas-image" alt="Captura da tela" data-i18n-alt="canvas.imageAlt" hidden />
-          <div class="image-missing" id="canvas-missing" hidden data-i18n="canvas.missing">Tela sem imagem — escolha outra no painel à direita.</div>
-          <div class="slide-card" id="canvas-slide" hidden>
-            <button type="button" class="slide-card-close" id="canvas-slide-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </button>
-            <p class="slide-kicker" id="canvas-slide-kicker"></p>
-            <div class="inline-slot">
-              <span class="inline-placeholder" id="ph-slide-title" hidden></span>
-              <h2 id="canvas-slide-title" data-inline="title" data-ph="ph-slide-title" role="textbox" aria-multiline="false"></h2>
-            </div>
-            <div class="inline-slot">
-              <span class="inline-placeholder" id="ph-slide-body" hidden></span>
-              <p id="canvas-slide-body" data-inline="description" data-ph="ph-slide-body" role="textbox" aria-multiline="true"></p>
-            </div>
-            <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir" data-i18n-aria="canvas.play">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-            </button>
-          </div>
-          <div class="hotspot" id="hotspot" hidden>
-            <span class="hotspot-label" data-i18n="canvas.hotspot">destaque</span>
-            <i class="hotspot-handle nw" data-handle="nw"></i>
-            <i class="hotspot-handle ne" data-handle="ne"></i>
-            <i class="hotspot-handle sw" data-handle="sw"></i>
-            <i class="hotspot-handle se" data-handle="se"></i>
-          </div>
-          <div class="click-point" id="click-point" hidden title="Ponto do clique simulado — arraste" data-i18n-title="canvas.clickTitle">
-            <span class="click-point-ring"></span>
-            <span class="click-point-dot"></span>
-            <span class="click-point-label">click</span>
-          </div>
-          <div class="click-fx" id="editor-click-fx" hidden aria-hidden="true">
-            <span class="click-fx-ring"></span>
-            <span class="click-fx-ring click-fx-ring-2"></span>
-            <span class="click-fx-burst"></span>
-          </div>
-          <div class="sim-cursor" id="editor-sim-cursor" hidden></div>
-          <div class="editor-popover" id="editor-popover" hidden role="group">
-            <div class="editor-popover-arrow" aria-hidden="true"></div>
-            <div class="editor-popover-grip" id="editor-popover-grip" aria-hidden="true"></div>
-            <div class="inline-slot">
-              <span class="inline-placeholder" id="ph-popover-title" hidden></span>
-              <div id="canvas-popover-title" class="editor-popover-title" data-inline="title" data-ph="ph-popover-title" role="textbox" aria-multiline="false"></div>
-            </div>
-            <div class="inline-slot">
-              <span class="inline-placeholder" id="ph-popover-body" hidden></span>
-              <div id="canvas-popover-body" class="editor-popover-body" data-inline="description" data-ph="ph-popover-body" role="textbox" aria-multiline="true"></div>
-            </div>
-            <div class="editor-popover-foot" aria-hidden="true">
-              <span class="editor-popover-progress" id="editor-popover-progress"></span>
-              <span class="editor-popover-next" id="editor-popover-next"></span>
-            </div>
-          </div>
-                    <span class="inline-placeholder caption-placeholder" id="ph-caption" hidden></span>
-          <div class="caption-bar" id="canvas-caption" data-inline="caption" data-ph="ph-caption" role="textbox" aria-multiline="true" hidden></div>
-        </div>
-      </div>
-      <div class="narration-bar" id="narration-bar" role="group" aria-label="Áudio da narração" data-i18n-aria="narrbar.aria" hidden>
-        <svg class="btn-ico narration-bar-ico" aria-hidden="true"><use href="#i-voice"></use></svg>
-        <div class="caption-player" id="caption-player" hidden>
-          <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" data-i18n-aria="canvas.play" aria-pressed="false" disabled>
-            <svg class="caption-player-icon caption-player-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-            <svg class="caption-player-icon caption-player-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" fill="currentColor"/></svg>
-          </button>
-          <span class="caption-player-times">
-            <span id="caption-time">0:00</span><span class="caption-time-sep" aria-hidden="true"> / </span><span id="caption-duration">0:00</span>
-          </span>
-          <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" data-i18n-aria="props.audioSeek" disabled />
-          <button type="button" class="caption-player-rate" id="btn-caption-rate" aria-label="Velocidade de reprodução, 1×">1×</button>
+          <div class="mock-toast"><span class="dot"></span><span data-i18n="lp.mock.toast">Novo lead: ana@empresa.com</span></div>
         </div>
       </div>
     </section>
 
-    <aside class="props" id="props-panel">
-      <div class="props-header">
-        <h2 data-i18n="props.step">Passo</h2>
-        <span class="props-pos" id="props-pos"></span>
-        <button type="button" class="btn btn-ghost btn-icon props-toggle" id="btn-props-toggle" aria-controls="props-body" aria-expanded="true" title="Recolher painel (Ctrl+\)" aria-label="Recolher painel" data-i18n-aria="panel.collapse">
-          <svg class="btn-ico props-toggle-ico-open" aria-hidden="true"><use href="#i-panel-close"></use></svg>
-          <svg class="btn-ico props-toggle-ico-closed" aria-hidden="true"><use href="#i-panel-open"></use></svg>
-        </button>
-      </div>
-      <nav class="props-rail" id="props-rail" aria-label="Seções do painel" data-i18n-aria="panel.sections">
-        <button type="button" class="btn btn-ghost btn-icon" data-rail="image" title="Imagem" aria-label="Imagem" data-i18n-title="props.image" data-i18n-aria="props.image"><svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg></button>
-        <button type="button" class="btn btn-ghost btn-icon" data-rail="texts" title="Textos" aria-label="Textos" data-i18n-title="panel.texts" data-i18n-aria="panel.texts"><svg class="btn-ico" aria-hidden="true"><use href="#i-edit"></use></svg></button>
-        <button type="button" class="btn btn-ghost btn-icon" data-rail="narration" title="Narração" aria-label="Narração" data-i18n-title="props.caption" data-i18n-aria="props.caption"><svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg></button>
-        <button type="button" class="btn btn-ghost btn-icon" data-rail="playback" title="Reprodução" aria-label="Reprodução" data-i18n-title="panel.playback" data-i18n-aria="panel.playback"><svg class="btn-ico" aria-hidden="true"><use href="#i-cursor"></use></svg></button>
-        <button type="button" class="btn btn-ghost btn-icon" data-rail="position" title="Posição" aria-label="Posição" data-i18n-title="panel.position" data-i18n-aria="panel.position"><svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg></button>
-      </nav>
-      <div class="props-body" id="props-body">
-      <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
-        <button type="button" class="mode-btn" data-value="slide" aria-pressed="false">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
-          <span data-i18n="props.slide">Slide</span>
-        </button>
-        <button type="button" class="mode-btn" data-value="screen" aria-pressed="false">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-          <span data-i18n="props.screen">Tela</span>
-        </button>
-      </div>
-      <details class="props-section" data-sec="image" open>
-        <summary class="props-section-head">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
-          <span data-i18n="props.image">Imagem</span>
-        </summary>
-        <div class="props-section-body">
-      <div id="wrap-image" class="image-picker-field">
-                <button type="button" class="image-pick-btn" id="btn-pick-image">
-          <img id="prop-image-thumb" alt="" hidden />
-          <span id="prop-image-name" data-i18n="props.chooseImage">Escolher imagem…</span>
-        </button>
-        <select id="prop-image" hidden></select>
-      </div>
+    <section class="demo" id="demo">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.demo.eyebrow">Experimente agora</p>
+          <h2 data-i18n="lp.demo.title">Um demo de verdade, feito no GuiaFlow</h2>
+          <p data-i18n="lp.demo.lead">Clique para avançar, como o seu lead vai fazer. É o mesmo player que vai no seu link ou no seu site.</p>
         </div>
-      </details>
-      <details class="props-section" data-sec="texts" open>
-        <summary class="props-section-head">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-edit"></use></svg>
-          <span data-i18n="panel.texts">Textos</span>
-        </summary>
-        <div class="props-section-body">
-      <button
-        type="button"
-        class="btn btn-sm btn-generate-copy"
-        id="btn-generate-copy"
-        title="Gerar título, descrição e narração"
-        aria-label="Gerar título, descrição e narração"
-        data-i18n-title="props.generateCopy"
-        data-i18n-aria="props.generateCopy"
-      >
-        <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-        <span id="btn-generate-copy-label" data-i18n="props.generateCopyShort">Gerar textos</span>
-        <span class="pro-badge" id="pro-badge-copy" hidden>
-          <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-          <span data-i18n="billing.badge">Pro</span>
-        </span>
-      </button>
-      <label><span data-i18n="props.title">Título</span>
-        <input type="text" id="prop-title" />
-      </label>
-      <label><span data-i18n="props.description">Descrição</span>
-        <textarea id="prop-description" rows="3"></textarea>
-      </label>
+        <div class="demo-frame" id="demo-frame">
+          <div class="demo-placeholder" id="demo-placeholder">
+            <img src="/a/60/brand/symbol-simple.svg" alt="" width="40" height="40" />
+            <p data-i18n="lp.demo.soon">O demo de exemplo chega em breve. Enquanto isso, crie o seu em minutos.</p>
+            <a class="btn btn-primary" href="/editor" data-i18n="lp.hero.ctaPrimary">Criar meu demo grátis</a>
+          </div>
         </div>
-      </details>
-      <details class="props-section" data-sec="narration" open>
-        <summary class="props-section-head">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg>
-          <span data-i18n="props.caption">Narração</span>
-        </summary>
-        <div class="props-section-body">
-      <div class="caption-block">
-        <label><span data-i18n="panel.captionText">Texto da narração</span>
-          <textarea id="prop-caption" rows="5" placeholder="Texto da narração (opcional no slide)" data-i18n-placeholder="props.captionPlaceholder"></textarea>
-        </label>
-        <p class="props-meta" id="caption-audio-status" hidden></p>
-        <p class="props-meta props-narr-note" data-i18n="narrbar.panelNote">Gerar, enviar ou remover o áudio e mostrar o texto na tela ficam na barra do passo, acima do canvas. O player aparece abaixo do canvas quando o passo tem áudio.</p>
-      </div>
-        </div>
-      </details>
-      <details class="props-section" data-sec="playback" open>
-        <summary class="props-section-head">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-cursor"></use></svg>
-          <span data-i18n="panel.playback">Reprodução</span>
-        </summary>
-        <div class="props-section-body">
-      <label class="checkbox" id="wrap-simulate">
-        <input type="checkbox" id="prop-simulate-click" checked />
-        <span data-i18n="props.simulateClick">Simular clique ao avançar</span>
-      </label>
-      <label class="checkbox" id="wrap-zoom">
-        <input type="checkbox" id="prop-zoom-highlight" />
-        <span data-i18n="props.zoomHighlight">Ampliar destaque</span>
-      </label>
-      <div class="hold-field">
-        <label><span data-i18n="props.hold">Temporizador (s)</span>
-          <input type="number" id="prop-hold" min="1" max="120" step="1" placeholder="padrão" data-i18n-placeholder="props.holdDefault" />
-        </label>
-        <p class="props-meta" id="prop-hold-hint" hidden></p>
-      </div>
-        </div>
-      </details>
-      <details class="props-section" data-sec="position" open>
-        <summary class="props-section-head">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
-          <span data-i18n="panel.position">Posição</span>
-        </summary>
-        <div class="props-section-body">
-      <div class="choice-field" id="wrap-side">
-        <span class="field-label" id="label-side" data-i18n="props.side">Lado</span>
-        <div class="icon-choices" id="prop-side" role="radiogroup" aria-label="Lado" data-i18n-aria="props.side">
-          <button type="button" class="icon-choice" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-side-top"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" data-i18n-title="props.right" data-i18n-aria="props.right" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-side-right"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-side-bottom"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" data-i18n-title="props.left" data-i18n-aria="props.left" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-side-left"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false" hidden>
-            <svg aria-hidden="true"><use href="#i-valign-top"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false" hidden>
-            <svg aria-hidden="true"><use href="#i-valign-center"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false" hidden>
-            <svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg>
-          </button>
         </div>
       </div>
-      <div class="choice-field" id="wrap-align">
-        <span class="field-label" id="label-align" data-i18n="props.align">Alinhamento</span>
-        <div class="icon-choices" id="prop-align" role="radiogroup" aria-label="Alinhamento" data-i18n-aria="props.align">
-          <button type="button" class="icon-choice" data-value="start" title="Início" aria-label="Início" data-i18n-title="props.start" data-i18n-aria="props.start" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-align-start"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-align-center"></use></svg>
-          </button>
-          <button type="button" class="icon-choice" data-value="end" title="Fim" aria-label="Fim" data-i18n-title="props.end" data-i18n-aria="props.end" aria-pressed="false">
-            <svg aria-hidden="true"><use href="#i-align-end"></use></svg>
-          </button>
+    </section>
+
+    <section class="cases" id="casos">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.cases.eyebrow">Para quem é</p>
+          <h2 data-i18n="lp.cases.title">Quem precisa mostrar o produto sem estar na sala</h2>
+        </div>
+        <div class="grid-3">
+          <article class="card case">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+            <h3 data-i18n="lp.cases.sales.title">Vendas</h3>
+            <p data-i18n="lp.cases.sales.body">Mande o demo antes da reunião para o lead chegar preparado, ou depois, para ele mostrar ao time. Capture nome e e-mail no início e termine com um botão de WhatsApp.</p>
+          </article>
+          <article class="card case">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2c3 2 5 6 5 10l-2 5H9l-2-5c0-4 2-8 5-10z"/><circle cx="12" cy="10" r="2"/><path d="M9 17l-2 4M15 17l2 4"/></svg></span>
+            <h3 data-i18n="lp.cases.startups.title">Startups</h3>
+            <p data-i18n="lp.cases.startups.body">Coloque o demo na home e no lançamento do Product Hunt. O produto mudou? Troque as telas e atualize o demo em minutos, sem regravar nada.</p>
+          </article>
+          <article class="card case">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+            <h3 data-i18n="lp.cases.founders.title">Founders</h3>
+            <p data-i18n="lp.cases.founders.body">Mostre o produto no pitch para investidores e no e-mail de outbound. Fica com cara profissional sem designer e sem edição de vídeo.</p>
+          </article>
         </div>
       </div>
+    </section>
+
+    <section class="how" id="como-funciona">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.how.eyebrow">Como funciona</p>
+          <h2 data-i18n="lp.how.title">Do print ao link em 3 passos</h2>
         </div>
-      </details>
+        <ol class="steps">
+          <li class="card step">
+            <span class="step-n">1</span>
+            <h3 data-i18n="lp.how.s1.title">Capture com a extensão</h3>
+            <p data-i18n-html="lp.how.s1.body">Instale a <a href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener">extensão do Chrome</a> e navegue no seu produto. Cada clique vira uma tela do demo, já com o ponto clicado.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">2</span>
+            <h3 data-i18n="lp.how.s2.title">Edite com IA e narração</h3>
+            <p data-i18n="lp.how.s2.body">Ajuste destaques e textos no editor. A IA escreve título e descrição de cada passo, e a narração em voz sai do mesmo texto.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">3</span>
+            <h3 data-i18n="lp.how.s3.title">Compartilhe ou incorpore</h3>
+            <p data-i18n="lp.how.s3.body">Envie o link para o lead, cole no e-mail ou incorpore no site com um trecho de código. Quem abre navega sozinho, no celular ou no computador.</p>
+          </li>
+        </ol>
       </div>
-    </aside>
+    </section>
+
+    <section class="features" id="recursos">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.features.eyebrow">Recursos</p>
+          <h2 data-i18n="lp.features.title">Feito para virar conversa de venda</h2>
+        </div>
+        <div class="grid-3 features-grid">
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+            <h3><span data-i18n="lp.f.leads.title">Captura de leads</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.leads.body">Peça nome, e-mail ou telefone no primeiro passo, com consentimento LGPD. Os contatos ficam no editor e saem em CSV.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.3A8.5 8.5 0 1 1 21 12z"/></svg></span>
+            <h3 data-i18n="lp.f.cta.title">WhatsApp e contato no fim</h3>
+            <p data-i18n="lp.f.cta.body">O último passo leva o lead para o seu WhatsApp, para um link ou para um formulário de contato (Pro 👑) que chega no seu e-mail.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span>
+            <h3><span data-i18n="lp.f.embed.title">Incorpore no site</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.embed.body">Um trecho de código para HTML, WordPress ou Webflow. O demo se ajusta à largura da página.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7v10M4 10v4M16 7v10M20 10v4"/></svg></span>
+            <h3 data-i18n="lp.f.ai.title">Texto com IA e narração</h3>
+            <p data-i18n="lp.f.ai.body">Gere os textos de cada passo e transforme em voz. No Pro 👑 a IA já vem inclusa; no Grátis, use a sua própria chave.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>
+            <h3><span data-i18n="lp.f.links.title">Links permanentes</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.links.body">Um endereço que não expira, com capa no preview do WhatsApp e do LinkedIn. Atualize o demo e o link continua o mesmo.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+            <h3><span data-i18n="lp.f.analytics.title">Quem chegou até o fim</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.analytics.body">Veja quantas pessoas abriram o demo, quantas chegaram ao fim, quem clicou no botão final e em que passo as pessoas param.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing" id="precos">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.pricing.eyebrow">Preços</p>
+          <h2 data-i18n="lp.pricing.title">Comece grátis. Assine quando o demo virar canal de venda.</h2>
+        </div>
+        <div class="plans">
+          <article class="card plan">
+            <h3 data-i18n="lp.plan.free.name">Grátis</h3>
+            <p class="price"><span class="amount" data-i18n="lp.plan.free.price">R$0</span></p>
+            <p class="plan-lead" data-i18n="lp.plan.free.lead">Para criar e testar à vontade.</p>
+            <ul class="checks">
+              <li data-i18n="lp.plan.free.f1">Editor completo no navegador</li>
+              <li data-i18n="lp.plan.free.f2">Projetos salvos neste navegador</li>
+              <li data-i18n="lp.plan.free.f3">Links temporários de 7 dias</li>
+              <li data-i18n="lp.plan.free.f4">Final com WhatsApp ou link</li>
+              <li data-i18n="lp.plan.free.f5">IA e narração com a sua chave</li>
+              <li data-i18n="lp.plan.free.f6">Sem conta e sem cartão</li>
+            </ul>
+            <a class="btn btn-ghost btn-block" href="/editor" data-i18n="lp.plan.free.cta">Abrir o editor</a>
+          </article>
+          <article class="card plan plan-pro">
+            <p class="plan-badge" data-i18n="lp.plan.pro.badge">Pro 👑</p>
+            <h3 data-i18n="lp.plan.pro.name">GuiaFlow Pro</h3>
+            <p class="price"><span class="amount" data-price="month">R$36</span><span class="per" data-i18n="lp.plan.perMonth">/mês</span></p>
+            <p class="plan-alt"><span data-i18n="lp.plan.orYear">ou</span> <strong data-price="year">R$359</strong><span data-i18n="lp.plan.perYear">/ano</span> · <span class="save" data-free-months="1">2 meses grátis</span></p>
+            <ul class="checks">
+              <li data-i18n="lp.plan.pro.f1">Tudo do Grátis</li>
+              <li data-i18n="lp.plan.pro.f2">Links permanentes com capa</li>
+              <li data-i18n="lp.plan.pro.f3">Captura de leads e formulário de contato</li>
+              <li data-i18n="lp.plan.pro.f4">Incorporar no site</li>
+              <li data-i18n="lp.plan.pro.f8">Análise: quem abriu e quem chegou até o fim</li>
+              <li data-i18n="lp.plan.pro.f5">IA e narração inclusas, sem chave</li>
+              <li data-i18n="lp.plan.pro.f6">Projetos guardados na sua conta</li>
+              <li data-i18n="lp.plan.pro.f7">Vídeo exportado sem a marca GuiaFlow</li>
+            </ul>
+            <a class="btn btn-primary btn-block" href="/editor?pro=1" data-i18n="lp.plan.pro.cta">Assinar o Pro</a>
+            <p class="plan-note" data-i18n="lp.plan.pro.note">Assinatura pelo Stripe. Cancele quando quiser.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="testers" id="testers">
+      <div class="wrap testers-grid">
+        <div class="testers-copy">
+          <p class="eyebrow" data-i18n="lp.testers.eyebrow">Programa de testers</p>
+          <h2 data-i18n="lp.testers.title">Tem um caso real? Peça acesso Pro em troca de feedback</h2>
+          <p data-i18n="lp.testers.lead">Estamos abrindo o GuiaFlow Pro para quem vai usar o demo com clientes de verdade. Conte o seu caso: se fizer sentido, você recebe um convite por e-mail.</p>
+          <ul class="checks">
+            <li data-i18n="lp.testers.b1">Acesso ao GuiaFlow Pro durante o teste</li>
+            <li data-i18n="lp.testers.b2">Conversa direta com quem faz o produto</li>
+            <li data-i18n="lp.testers.b3">Seu feedback vira prioridade no roadmap</li>
+          </ul>
+        </div>
+        <form class="card tester-form" id="tester-form" novalidate>
+          <div class="field">
+            <label for="tf-name" data-i18n="lp.form.name">Nome</label>
+            <input id="tf-name" name="name" type="text" autocomplete="name" maxlength="80" required />
+          </div>
+          <div class="field">
+            <label for="tf-email" data-i18n="lp.form.email">E-mail</label>
+            <input id="tf-email" name="email" type="email" autocomplete="email" maxlength="200" required />
+          </div>
+          <div class="field">
+            <label for="tf-company" data-i18n="lp.form.company">Empresa ou produto</label>
+            <input id="tf-company" name="company" type="text" autocomplete="organization" maxlength="120" required />
+          </div>
+          <div class="field">
+            <label for="tf-usecase" data-i18n="lp.form.useCase">Como você vai usar o demo?</label>
+            <textarea id="tf-usecase" name="useCase" rows="3" maxlength="1000" required placeholder="Ex.: mandar para leads depois da primeira call" data-i18n-placeholder="lp.form.useCasePh"></textarea>
+          </div>
+          <div class="field">
+            <label for="tf-linkedin" data-i18n="lp.form.linkedin">LinkedIn (URL)</label>
+            <input id="tf-linkedin" name="linkedin" type="url" inputmode="url" maxlength="200" placeholder="https://www.linkedin.com/in/…" />
+          </div>
+          <div class="hp" aria-hidden="true">
+            <label for="tf-website">Website</label>
+            <input id="tf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <label class="consent">
+            <input id="tf-consent" name="consent" type="checkbox" required />
+            <span data-i18n-html="lp.form.consent">Concordo que o GuiaFlow use estes dados para avaliar o pedido e falar comigo sobre o acesso Pro, conforme a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</span>
+          </label>
+          <button class="btn btn-primary btn-block" type="submit" data-i18n="lp.form.submit">Pedir acesso Pro</button>
+          <p class="form-status" id="tf-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <div class="wrap faq-wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.faq.eyebrow">Dúvidas</p>
+          <h2 data-i18n="lp.faq.title">Perguntas frequentes</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary data-i18n="lp.faq.q1">Onde ficam os meus dados?</summary>
+            <p data-i18n="lp.faq.a1">No Grátis, os projetos ficam só no seu navegador, neste aparelho, e não chegam até nós; um link temporário guarda o tour publicado por 7 dias. No Pro, os projetos, os links permanentes e os leads ficam no servidor do GuiaFlow, ligados à sua conta.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q2">O GuiaFlow segue a LGPD?</summary>
+            <p data-i18n-html="lp.faq.a2">Sim. Guardamos o mínimo para a conta e os links, não usamos rastreamento de publicidade e não vendemos dados. A captura de leads pede consentimento explícito do visitante. Os detalhes estão na <a href="/privacidade">Política de Privacidade</a>.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q3">O GuiaFlow é open source?</summary>
+            <p data-i18n-html="lp.faq.a3">Sim. O editor e o player têm licença MIT e o código está em <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">github.com/gugamistri/gflow</a>.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q4">Preciso de cartão de crédito?</summary>
+            <p data-i18n="lp.faq.a4">Não para o Grátis: não tem conta nem cartão, é só abrir o editor. O GuiaFlow Pro é uma assinatura mensal ou anual paga pelo Stripe, e você cancela quando quiser.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q5">Quem recebe o demo precisa instalar alguma coisa?</summary>
+            <p data-i18n="lp.faq.a5">Não. O demo abre no navegador, no celular ou no computador, a partir do link ou do seu site. A extensão do Chrome só é necessária para quem cria o demo.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="wrap final-inner">
+        <h2 data-i18n="lp.final.title">Seu próximo lead pode ver o produto hoje.</h2>
+        <a class="btn btn-primary btn-lg" href="/editor" data-i18n="lp.hero.ctaPrimary">Criar meu demo grátis</a>
+      </div>
+    </section>
   </main>
 
-  <dialog class="studio-modal account-modal" id="modal-account" aria-labelledby="account-dialog-title">
-    <div class="studio-modal-body cloud-login" id="cloud-login">
-      <div class="account-dialog-head">
-        <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/59/brand/symbol-simple.svg" alt="" width="28" height="28" />
-          <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
-        </div>
-        <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <p class="cloud-login-lead" data-i18n="share.cloud.signIn">Entre com email e senha.</p>
-      <form id="cloud-password-form">
-        <label>
-          <span data-i18n="share.cloud.email">Email</span>
-          <input
-            type="email"
-            id="cloud-email"
-            name="guiaflow-cloud-email"
-            autocomplete="username"
-            inputmode="email"
-            data-i18n-placeholder="share.cloud.emailPh"
-            placeholder="seu@email.com"
-          />
-        </label>
-        <label>
-          <span data-i18n="share.cloud.password">Senha</span>
-          <input
-            type="password"
-            id="cloud-password"
-            name="guiaflow-cloud-password"
-            autocomplete="current-password"
-            data-i18n-placeholder="share.cloud.passwordPh"
-            placeholder="Sua senha"
-          />
-        </label>
-        <button type="submit" class="btn btn-primary" id="btn-cloud-password" data-i18n="share.cloud.passwordSubmit">Entrar</button>
-      </form>
-      <div class="cloud-login-or" role="separator">
-        <span data-i18n="share.cloud.or">ou</span>
-      </div>
-      <form id="cloud-magic-form">
-        <button type="submit" class="btn" id="btn-cloud-magic" data-i18n="share.cloud.send">Entrar sem senha</button>
-        <p class="cloud-login-hint" data-i18n="share.cloud.magicHint">Sem senha ou primeira vez: enviamos um link para o email. Também cria a conta.</p>
-      </form>
-      <p id="cloud-login-status" class="cloud-login-status" role="status"></p>
-      <details id="cloud-paste-fallback" class="cloud-login-extra cloud-paste-fallback">
-        <summary data-i18n="share.cloud.pasteLabel">O link abriu noutro aparelho?</summary>
-        <label>
-          <span class="visually-hidden" data-i18n="share.cloud.pastePh">Cole o link de confirmação</span>
-          <input
-            type="text"
-            id="cloud-paste"
-            name="guiaflow-cloud-magic-link"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            data-1p-ignore="true"
-            data-lpignore="true"
-            data-bwignore="true"
-            data-form-type="other"
-            data-i18n-placeholder="share.cloud.pastePh"
-            placeholder="Cole o link de confirmação"
-          />
-        </label>
-        <button type="button" class="btn btn-sm" id="btn-cloud-continue" data-i18n="share.cloud.continue">Entrar</button>
-      </details>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal upgrade-modal" id="modal-upgrade" aria-labelledby="upgrade-dialog-title">
-    <form class="studio-modal-body upgrade-dialog" id="upgrade-form">
-      <div class="upgrade-scroll">
-      <div class="paywall-hero">
-        <div class="paywall-hero-top">
-          <span class="pro-badge paywall-hero-badge">
-            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-            <span data-i18n="billing.badge">Pro</span>
-          </span>
-          <button type="button" class="btn btn-icon" id="btn-upgrade-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          </button>
-        </div>
-        <h3 id="upgrade-dialog-title" data-i18n="billing.title">GuiaFlow&nbsp;Pro</h3>
-        <p id="upgrade-message" class="paywall-lead"></p>
-        <p id="upgrade-email-note" class="paywall-email-note" hidden></p>
-      </div>
-      <ul class="paywall-benefits" id="paywall-benefits">
-        <li data-feature="account">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitAccount">Projetos salvos na sua conta, seguros mesmo se limpar o navegador</span>
-        </li>
-        <li data-feature="permanentShare">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitShare">Links permanentes</span>
-        </li>
-        <li data-feature="analytics">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitAnalytics">Análise de quem assistiu: visualizações, conclusão e onde as pessoas param</span>
-        </li>
-        <li data-feature="hostedAi">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitAi">Textos com IA</span>
-        </li>
-        <li data-feature="tts">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitTts">Áudio narrado</span>
-        </li>
-        <li data-feature="branding">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitBrand">Exportar vídeo sem a marca GuiaFlow</span>
-        </li>
-      </ul>
-      <fieldset class="upgrade-intervals">
-        <legend class="visually-hidden" data-i18n="billing.intervalAria">Periodicidade</legend>
-        <label class="upgrade-interval">
-          <input type="radio" name="billing-interval" value="month" checked />
-          <span class="paywall-interval-name" data-i18n="billing.monthly">Mensal</span>
-          <strong class="paywall-price" id="paywall-month-price"></strong>
-          <span class="paywall-cadence" id="paywall-month-note"></span>
-        </label>
-        <label class="upgrade-interval" id="paywall-year-card">
-          <input type="radio" name="billing-interval" value="year" />
-          <span class="paywall-free" id="paywall-free"></span>
-          <span class="paywall-interval-name" data-i18n="billing.annual">Anual</span>
-          <strong class="paywall-price" id="paywall-year-price"></strong>
-          <span class="paywall-cadence" id="paywall-year-note"></span>
-        </label>
-      </fieldset>
-      <p id="upgrade-status" class="cloud-login-status" role="status"></p>
-      </div>
-      <div class="upgrade-footer">
-      <button type="submit" class="btn btn-primary paywall-cta" id="btn-upgrade-subscribe" data-i18n="billing.subscribeMonthly">Assinar Pro mensal</button>
-      <p class="paywall-pay-note" id="paywall-pay-note" hidden></p>
-      <button type="button" class="paywall-login" id="btn-upgrade-login" data-i18n="billing.already">Já é assinante? Entrar</button>
-      <p class="paywall-legal" data-i18n-html="billing.legal">Ao assinar, você concorda com os <a href="/termos" target="_blank" rel="noopener">Termos</a> e a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal embed-modal" id="modal-embed" aria-labelledby="embed-title">
-    <div class="studio-modal-body embed-dialog">
-      <div class="account-dialog-head">
-        <h3 id="embed-title" data-i18n="embed.title">Incorporar no site</h3>
-        <button type="button" class="btn btn-icon" id="btn-embed-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="embed-needs-publish" id="embed-needs-publish" hidden>
-        <p class="embed-lead" data-i18n="embed.needsPublish">Para incorporar, publique primeiro o link permanente. Ele não expira e atualiza em todos os sites quando você republicar.</p>
-        <div class="studio-modal-actions">
-          <button type="button" class="btn btn-primary" id="btn-embed-publish" data-i18n="embed.publish">Publicar link permanente</button>
-        </div>
-      </div>
-      <div class="embed-ready" id="embed-ready" hidden>
-        <p class="embed-stale" id="embed-stale" hidden data-i18n="embed.stale">O site mostra a última versão publicada. Republicar atualiza o tour em todos os sites.</p>
-        <div class="embed-tabs" role="tablist" aria-label="Onde vai colar" data-i18n-aria="embed.platform">
-          <button type="button" class="embed-tab" role="tab" data-flavor="html" aria-selected="true">HTML</button>
-          <button type="button" class="embed-tab" role="tab" data-flavor="wordpress" aria-selected="false" tabindex="-1">WordPress</button>
-          <button type="button" class="embed-tab" role="tab" data-flavor="webflow" aria-selected="false" tabindex="-1">Webflow</button>
-        </div>
-        <p class="embed-hint" id="embed-hint" data-i18n="embed.hint.html">Cole o código no ponto da página onde o tour deve aparecer.</p>
-        <textarea class="embed-code" id="embed-code" readonly rows="7" spellcheck="false" aria-label="Código para incorporar" data-i18n-aria="embed.codeAria"></textarea>
-        <label class="embed-autoplay">
-          <input type="checkbox" id="embed-autoplay" />
-          <span data-i18n="embed.autoplay">Começar automaticamente (o navegador pode segurar o som até o visitante interagir)</span>
-        </label>
-        <div class="embed-actions">
-          <a class="embed-guide" href="/ajuda#incorporar" target="_blank" rel="noopener" data-i18n="embed.guide">Como colar no WordPress / Webflow →</a>
-          <button type="button" class="btn btn-primary" id="btn-embed-copy" data-i18n="embed.copy">Copiar código</button>
-        </div>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal fixed-modal" id="modal-fixed-start" aria-labelledby="fixed-start-heading">
-    <form class="studio-modal-body fixed-dialog" id="fixed-start-form" novalidate>
-      <div class="account-dialog-head">
-        <h3 id="fixed-start-heading"><span data-i18n="fixed.start.dialogTitle">Passo inicial: captura de contatos</span>
-          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-        </h3>
-        <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="fixed-dialog-scroll">
-        <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
-        <div class="fixed-grid">
-          <div class="fixed-fields">
-            <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
-            <div class="fixed-config" id="fixed-start-config">
-              <div class="fixed-row">
-                <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
-                <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
-              </div>
-              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
-              <fieldset class="fixed-group">
-                <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
-                <div class="fixed-fields-table" id="fixed-start-fields">
-                  <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
-                  <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
-                  <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
-                  <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
-                </div>
-                <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
-              </fieldset>
-              <div class="fixed-row fixed-row-inline">
-                <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
-                <label id="fixed-start-skip-label-wrap" class="fixed-inline-field"><span class="visually-hidden" data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
-              </div>
-              <details class="fixed-more">
-                <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
-                <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
-                <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
-              </details>
-            </div>
-          </div>
-          <div class="fixed-preview-wrap">
-            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-            <div class="fixed-preview" id="fixed-start-preview"></div>
-          </div>
-        </div>
-      </div>
-      <div class="studio-modal-actions fixed-actions">
-        <button type="button" class="btn fixed-actions-aside" id="btn-fixed-start-leads" data-i18n="leads.open">Ver contatos recebidos</button>
-        <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal leads-modal" id="modal-leads" aria-labelledby="leads-heading">
-    <div class="studio-modal-body leads-dialog">
-      <div class="account-dialog-head">
-        <h3 id="leads-heading" data-i18n="leads.title">Contatos recebidos</h3>
-        <button type="button" class="btn btn-icon" id="btn-leads-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <p class="leads-meta" id="leads-meta"></p>
-      <p class="leads-status" id="leads-status" role="status"></p>
-      <div class="leads-list" id="leads-list" role="list"></div>
-      <p class="fixed-hint" data-i18n="leads.controllerNote">Você é o controlador destes dados (LGPD): use-os só para a finalidade informada ao visitante e exclua um contato quando o titular pedir.</p>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
-        <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal analytics-modal" id="modal-analytics" aria-labelledby="analytics-heading">
-    <div class="studio-modal-body analytics-dialog">
-      <div class="account-dialog-head">
-        <h3 id="analytics-heading" data-i18n="analytics.title">Análise do tour</h3>
-        <button type="button" class="btn btn-icon" id="btn-analytics-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="analytics-toolbar">
-        <p class="analytics-tour" id="analytics-tour"></p>
-        <div class="analytics-range" id="analytics-range" role="group" aria-label="Período" data-i18n-aria="analytics.rangeAria">
-          <button type="button" class="analytics-range-btn" data-days="7" data-i18n="analytics.range7">7 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="30" data-i18n="analytics.range30">30 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="90" data-i18n="analytics.range90">90 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="365" data-i18n="analytics.range365">12 meses</button>
-        </div>
-      </div>
-      <p class="analytics-status" id="analytics-status" role="status"></p>
-      <div class="analytics-empty" id="analytics-empty" hidden>
-        <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
-      </div>
-      <div class="analytics-body" id="analytics-body" hidden>
-        <div class="analytics-cards" id="analytics-cards"></div>
-        <p class="analytics-split" id="analytics-split"></p>
-        <div class="analytics-chart" id="analytics-chart"></div>
-        <h4 class="analytics-h" data-i18n="analytics.stepsTitle">Onde as pessoas param</h4>
-        <p class="analytics-note" data-i18n="analytics.stepsNote">Os passos fixos de início e fim não entram nesta conta.</p>
-        <div class="analytics-steps" id="analytics-steps" role="table"></div>
-        <h4 class="analytics-h" data-i18n="analytics.sourcesTitle">De onde vieram</h4>
-        <div class="analytics-sources" id="analytics-sources"></div>
-      </div>
-      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Contagem sem cookies e sem dados pessoais. Visitantes com “Não rastrear” ou GPC ativado não entram nos números. Visitantes únicos são aproximados.</p>
-      <div class="studio-modal-actions analytics-actions">
-        <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal fixed-modal" id="modal-fixed-end" aria-labelledby="fixed-end-heading">
-    <form class="studio-modal-body fixed-dialog" id="fixed-end-form" novalidate>
-      <div class="account-dialog-head">
-        <h3 id="fixed-end-heading" data-i18n="fixed.end.dialogTitle">Passo final</h3>
-        <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="fixed-dialog-scroll">
-        <p class="fixed-lead" data-i18n="fixed.end.lead">Aparece quando o visitante conclui o tour. É um passo fixo: não entra no vídeo exportado.</p>
-        <div class="fixed-grid">
-          <div class="fixed-fields">
-            <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
-            <div class="fixed-config" id="fixed-end-config">
-              <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
-              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
-              <fieldset class="fixed-group">
-                <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
-                <div class="fixed-sub" id="fixed-end-wa-fields">
-                  <div class="fixed-row">
-                    <label><span data-i18n="fixed.end.waPhone">Número com DDD</span><input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" /></label>
-                    <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
-                  </div>
-                  <p class="fixed-error" id="fixed-end-wa-error" hidden data-i18n="fixed.errPhone">Número incompleto. Use DDD + número.</p>
-                  <label><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500"></textarea></label>
-                  <details class="fixed-more">
-                    <summary data-i18n="stb.more">Mais opções</summary>
-                    <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Sem número, o visitante escolhe o contato no WhatsApp.</p>
-                    <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
-                  </details>
-                </div>
-              </fieldset>
-              <fieldset class="fixed-group">
-                <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
-                <div class="fixed-sub" id="fixed-end-contact-fields">
-                  <div class="fixed-row fixed-row-seg">
-                    <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
-                      <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
-                      <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
-                        <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-                      </label>
-                    </div>
-                    <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
-                  </div>
-                  <div id="fixed-end-link-fields">
-                    <label><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
-                    <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
-                  </div>
-                  <div id="fixed-end-form-fields" hidden>
-                    <details class="fixed-more">
-                      <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
-                      <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
-                      <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-end-consent" rows="2" maxlength="600"></textarea></label>
-                    </details>
-                  </div>
-                </div>
-              </fieldset>
-              <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
-            </div>
-          </div>
-          <div class="fixed-preview-wrap">
-            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-            <div class="fixed-preview" id="fixed-end-preview"></div>
-          </div>
-        </div>
-      </div>
-      <div class="studio-modal-actions fixed-actions">
-        <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal subscription-modal" id="modal-subscription" aria-labelledby="subscription-title">
-    <div class="studio-modal-body subscription-dialog">
-      <div class="account-dialog-head">
-        <h3 id="subscription-title" data-i18n="billing.manage">Gerenciar assinatura</h3>
-        <button type="button" class="btn btn-icon" id="btn-subscription-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <p id="subscription-loading" class="subscription-loading" role="status" data-i18n="billing.subLoading">Carregando a assinatura…</p>
-      <div id="subscription-error" hidden>
-        <p class="subscription-when" data-i18n="billing.subLoadError">Não foi possível carregar a assinatura.</p>
-        <button type="button" class="btn" id="btn-subscription-retry" data-i18n="billing.subRetry">Tentar de novo</button>
-      </div>
-      <div id="subscription-ready" hidden>
-        <div id="subscription-facts">
-          <p class="subscription-kicker" data-i18n="billing.subPlanLabel">Plano</p>
-          <p class="subscription-plan" id="subscription-plan"></p>
-          <p class="subscription-price" id="subscription-price"></p>
-          <p class="subscription-kicker" id="subscription-status-label" data-i18n="billing.subStatusLabel">Status</p>
-          <p class="subscription-state" id="subscription-state"></p>
-          <p class="subscription-when" id="subscription-when"></p>
-        </div>
-        <div id="subscription-none" hidden>
-          <p class="subscription-when" data-i18n="billing.subNoneLead">Você ainda não tem o GuiaFlow Pro.</p>
-        </div>
-        <div class="subscription-actions">
-          <button type="button" class="btn btn-danger" id="btn-subscription-cancel" hidden data-i18n="billing.subCancel">Cancelar assinatura</button>
-          <button type="button" class="btn btn-primary" id="btn-subscription-resume" hidden data-i18n="billing.subResume">Manter assinatura</button>
-          <button type="button" class="btn btn-primary" id="btn-subscription-upsell" hidden data-i18n="billing.subscribe">Assinar Pro</button>
-          <button type="button" class="subscription-portal" id="btn-subscription-portal" hidden data-i18n="billing.subPortal">Pagamento e faturas</button>
-        </div>
-      </div>
-      <div id="subscription-confirm" hidden>
-        <p class="subscription-when" id="subscription-confirm-copy"></p>
-        <div class="subscription-actions">
-          <button type="button" class="btn btn-danger" id="btn-subscription-confirm" data-i18n="billing.subCancel">Cancelar assinatura</button>
-          <button type="button" class="subscription-portal" id="btn-subscription-back" data-i18n="billing.subBack">Voltar</button>
-        </div>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal shortcuts-modal" id="modal-shortcuts" aria-labelledby="shortcuts-title">
-    <div class="studio-modal-body">
-      <h3 id="shortcuts-title" data-i18n="shortcuts.title">Atalhos</h3>
-      <p class="shortcuts-lead" data-i18n="shortcuts.lead">Atalhos do editor. No Windows use Ctrl; no Mac, ⌘.</p>
-      <div class="shortcuts-table">
-        <div class="shortcuts-row shortcuts-head">
-          <span data-i18n="shortcuts.colAction">Ação</span>
-          <span data-i18n="shortcuts.colWindows">Windows</span>
-          <span data-i18n="shortcuts.colMac">Mac</span>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="shortcuts.select">Selecionar passo</span>
-          <kbd data-i18n="shortcuts.arrows">↑ / ↓</kbd>
-          <kbd data-i18n="shortcuts.arrows">↑ / ↓</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="shortcuts.extend">Estender seleção</span>
-          <kbd data-i18n="shortcuts.shiftArrows">Shift+↑ / Shift+↓</kbd>
-          <kbd data-i18n="shortcuts.shiftArrows">Shift+↑ / Shift+↓</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="toolbar.copy">Copiar</span>
-          <kbd data-i18n="shortcuts.winCopy">Ctrl+C</kbd>
-          <kbd data-i18n="shortcuts.macCopy">⌘C</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="filmstrip.cut">Cortar</span>
-          <kbd data-i18n="shortcuts.winCut">Ctrl+X</kbd>
-          <kbd data-i18n="shortcuts.macCut">⌘X</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="toolbar.paste">Colar</span>
-          <kbd data-i18n="shortcuts.winPaste">Ctrl+V</kbd>
-          <kbd data-i18n="shortcuts.macPaste">⌘V</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="toolbar.duplicate">Duplicar</span>
-          <kbd data-i18n="shortcuts.winDuplicate">Ctrl+D</kbd>
-          <kbd data-i18n="shortcuts.macDuplicate">⌘D</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="filmstrip.remove">Remover</span>
-          <kbd data-i18n="shortcuts.deleteKeys">Delete / Backspace</kbd>
-          <kbd data-i18n="shortcuts.deleteKeys">Delete / Backspace</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="toolbar.preview">Preview</span>
-          <kbd data-i18n="shortcuts.previewChord">P</kbd>
-          <kbd data-i18n="shortcuts.previewChord">P</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="toolbar.autoPreview">Preview automático</span>
-          <kbd data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
-          <kbd data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="topbar.undo">Desfazer</span>
-          <kbd data-i18n="shortcuts.winUndo">Ctrl+Z</kbd>
-          <kbd data-i18n="shortcuts.macUndo">⌘Z</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="topbar.redo">Refazer</span>
-          <kbd data-i18n="shortcuts.winRedo">Ctrl+Y / Ctrl+Shift+Z</kbd>
-          <kbd data-i18n="shortcuts.macRedo">⌘⇧Z</kbd>
-        </div>
-        <div class="shortcuts-row">
-          <span data-i18n="shortcuts.exitPreview">Sair do preview</span>
-          <kbd data-i18n="shortcuts.esc">Esc</kbd>
-          <kbd data-i18n="shortcuts.esc">Esc</kbd>
-        </div>
-      </div>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-close-shortcuts">
-          <span data-i18n="modal.close">Fechar</span>
-        </button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal" id="modal-delete-project">
-    <form method="dialog" id="form-delete-project" class="studio-modal-body">
-      <h3 data-i18n="modal.deleteProject">Excluir projeto</h3>
-      <p class="delete-project-lead">
-        <span data-i18n="modal.deleteLeadBefore">Isto apaga </span><strong id="delete-project-name-label"></strong><span data-i18n="modal.deleteLeadAfter"> deste navegador. Não dá para desfazer.</span>
-      </p>
-      <label class="checkbox delete-project-backup">
-        <input type="checkbox" id="delete-project-backup" checked />
-        <span data-i18n="modal.backupJson">Baixar backup JSON antes de excluir</span>
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <img src="/a/60/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
+      <nav aria-label="Links do rodapé" data-i18n-aria="lp.footer.aria">
+        <a href="/editor" data-i18n="lp.footer.editor">Editor</a>
+        <a href="/ajuda" data-i18n="lp.footer.help">Ajuda</a>
+        <a href="/privacidade" data-i18n="lp.footer.privacy">Privacidade</a>
+        <a href="/termos" data-i18n="lp.footer.terms">Termos</a>
+        <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>
+      </nav>
+      <label class="locale">
+        <span class="visually-hidden" data-i18n="lp.locale">Idioma</span>
+        <select id="locale-select" aria-label="Idioma" data-i18n-aria="lp.locale">
+          <option value="pt">Português</option>
+          <option value="es">Español</option>
+          <option value="en">English</option>
+        </select>
       </label>
-      <label><span data-i18n="modal.confirmName">Digite o nome do projeto para confirmar</span>
-        <input type="text" id="delete-project-confirm" required autocomplete="off" spellcheck="false" />
-      </label>
-      <p class="props-meta delete-project-hint" id="delete-project-hint" hidden data-i18n="modal.nameMismatch">
-        O nome não confere.
-      </p>
-      <input type="hidden" id="delete-project-id" />
-      <input type="hidden" id="delete-project-expected" />
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-cancel-delete-project">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          <span data-i18n="modal.cancel">Cancelar</span>
-        </button>
-        <button type="submit" class="btn btn-danger" id="btn-confirm-delete-project" disabled>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          <span data-i18n="modal.delete">Excluir</span>
-        </button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal" id="modal-new-project">
-    <form method="dialog" id="form-new-project" class="studio-modal-body">
-      <h3 data-i18n="modal.newProject">Novo projeto</h3>
-      <label><span data-i18n="modal.name">Nome</span>
-        <input type="text" id="new-project-name" placeholder="Ex.: Demo onboarding" data-i18n-placeholder="modal.newProjectPlaceholder" required maxlength="80" />
-      </label>
-      <p class="theme-section-label" data-i18n="modal.initialTheme">Tema inicial</p>
-      <div class="theme-presets" id="new-project-themes"></div>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-cancel-new-project" value="cancel">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          <span data-i18n="modal.cancel">Cancelar</span>
-        </button>
-        <button type="submit" class="btn btn-primary" id="btn-confirm-new-project">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-          <span data-i18n="modal.create">Criar</span>
-        </button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal" id="modal-save-theme">
-    <form method="dialog" id="form-save-theme" class="studio-modal-body">
-      <h3 data-i18n="modal.saveTheme">Salvar tema</h3>
-      <label><span data-i18n="modal.name">Nome</span>
-        <input type="text" id="save-theme-name" placeholder="Ex.: Marca cliente X" data-i18n-placeholder="modal.themePlaceholder" required maxlength="60" />
-      </label>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-cancel-save-theme">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          <span data-i18n="modal.cancel">Cancelar</span>
-        </button>
-        <button type="submit" class="btn btn-primary">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-          <span data-i18n="modal.save">Salvar</span>
-        </button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal" id="modal-scene">
-    <form method="dialog" id="form-scene" class="studio-modal-body">
-      <h3 id="modal-scene-title" data-i18n="modal.scene">Cena</h3>
-      <label><span data-i18n="modal.name">Nome</span>
-        <input type="text" id="scene-name" required maxlength="60" placeholder="Ex.: Editor" data-i18n-placeholder="modal.scenePlaceholder" />
-      </label>
-      <input type="hidden" id="scene-mode" value="create" />
-      <input type="hidden" id="scene-number" value="" />
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-cancel-scene">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-          <span data-i18n="modal.cancel">Cancelar</span>
-        </button>
-        <button type="submit" class="btn btn-primary" id="btn-submit-scene">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-          <span data-i18n="modal.save">Salvar</span>
-        </button>
-      </div>
-    </form>
-  </dialog>
-
-  <div class="toast" id="toast" hidden></div>
-
-  <dialog class="image-modal" id="image-modal">
-    <div class="image-modal-header">
-      <h3 data-i18n="modal.pickImage">Escolher imagem</h3>
-      <button type="button" class="btn btn-sm" id="btn-close-image-modal">
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        <span data-i18n="modal.close">Fechar</span>
-      </button>
     </div>
-    <div class="image-modal-actions">
-      <button type="button" class="btn btn-primary" id="btn-upload-in-modal">
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-        <span data-i18n="modal.uploadComputer">Enviar do computador</span>
-      </button>
-      <input type="search" id="image-search" placeholder="Filtrar por nome…" data-i18n-placeholder="modal.filterImages" />
-    </div>
-    <p class="image-drop-hint" data-i18n="modal.dropHint">Arraste imagens para esta janela ou cole</p>
-    <div class="image-grid" id="image-grid"></div>
-  </dialog>
-
-  <div class="export-overlay" id="export-overlay" hidden>
-    <div class="export-overlay-card">
-      <p class="export-overlay-title" id="export-overlay-title" data-i18n="export.overlay">Exportando…</p>
-      <p class="export-overlay-status" id="export-overlay-status"></p>
-      <canvas class="export-preview" id="export-preview" width="1920" height="1080" hidden></canvas>
-      <button type="button" class="btn btn-ghost" id="btn-export-cancel" hidden>
-        <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        <span data-i18n="modal.cancel">Cancelar</span>
-      </button>
-      <div class="export-overlay-actions" id="export-overlay-actions" hidden>
-        <button type="button" class="btn btn-primary" id="btn-export-retry" data-i18n="share.retry">Tentar de novo</button>
-        <button type="button" class="btn btn-ghost" id="btn-export-close" data-i18n="modal.close">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <div
-    class="project-open-overlay"
-    id="project-open-overlay"
-    hidden
-    role="status"
-    aria-busy="true"
-    aria-live="polite"
-  >
-    <div class="project-open-overlay-card">
-      <p class="project-open-overlay-text" data-i18n="boot.loading">Carregando…</p>
-      <div class="boot-progress" aria-hidden="true">
-        <span class="boot-progress-bar"></span>
-      </div>
-    </div>
-  </div>
-
-  <svg xmlns="http://www.w3.org/2000/svg" hidden aria-hidden="true">
-    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 5v14M5 12h14"/>
-    </symbol>
-    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 7h16M4 12h16M4 17h16"/>
-    </symbol>
-    <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-    </symbol>
-    <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m6 9 6 6 6-6"/>
-    </symbol>
-    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
-    </symbol>
-    <symbol id="i-paste" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
-    </symbol>
-    <symbol id="i-duplicate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/>
-    </symbol>
-    <symbol id="i-import" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
-    </symbol>
-    <symbol id="i-export" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>
-    </symbol>
-    <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>
-    </symbol>
-    <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>
-    </symbol>
-    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="8" cy="15" r="4"/><path d="m10.7 12.3 8.8-8.8"/><path d="M17 5.5 19.5 8"/><path d="M15 7.5 17.5 10"/>
-    </symbol>
-    <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
-    </symbol>
-    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    </symbol>
-    <symbol id="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>
-    </symbol>
-    <symbol id="i-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
-    </symbol>
-    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="4"/>
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-    </symbol>
-    <symbol id="i-moon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </symbol>
-    <symbol id="i-appearance" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="9"/>
-      <path d="M12 3v18"/>
-      <path d="M12 3a9 9 0 0 1 0 18" fill="currentColor" stroke="none" opacity="0.65"/>
-    </symbol>
-    <symbol id="i-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="6" width="20" height="12" rx="2"/>
-      <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/>
-    </symbol>
-    <symbol id="i-message" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    </symbol>
-    <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="9"/>
-      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2-3 4"/>
-      <path d="M12 17h.01"/>
-    </symbol>
-    <symbol id="i-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2a10 10 0 1 0 10 10c0-1.5-1.2-2-2.5-2H16a2 2 0 0 0-2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 4 4 0 0 1 4-4h.5"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="14" cy="7" r="1"/>
-    </symbol>
-    <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
-    </symbol>
-    <symbol id="i-slide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 18v3"/>
-    </symbol>
-    <symbol id="i-screen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/>
-    </symbol>
-    <symbol id="i-side-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 4h8"/><rect x="5" y="8" width="14" height="11" rx="1.5"/>
-    </symbol>
-    <symbol id="i-side-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="4" y="5" width="12" height="14" rx="1.5"/><path d="M20 8v8"/>
-    </symbol>
-    <symbol id="i-side-bottom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="5" y="5" width="14" height="11" rx="1.5"/><path d="M8 20h8"/>
-    </symbol>
-    <symbol id="i-side-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 8v8"/><rect x="8" y="5" width="12" height="14" rx="1.5"/>
-    </symbol>
-    <symbol id="i-valign-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7 7h10M7 11h7"/>
-    </symbol>
-    <symbol id="i-valign-center" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7 10h10M7 14h7"/>
-    </symbol>
-    <symbol id="i-valign-bottom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7 13h10M7 17h7"/>
-    </symbol>
-    <symbol id="i-align-start" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M4 6h10M4 12h16M4 18h8"/>
-    </symbol>
-    <symbol id="i-align-center" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M7 6h10M4 12h16M8 18h8"/>
-    </symbol>
-    <symbol id="i-align-end" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M10 6h10M4 12h16M12 18h8"/>
-    </symbol>
-    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>
-    </symbol>
-    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/>
-    </symbol>
-    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
-    </symbol>
-    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m7 4 12 8-12 8z"/>
-    </symbol>
-    <symbol id="i-cut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/>
-    </symbol>
-    <symbol id="i-panel-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="m10 10-2 2 2 2"/>
-    </symbol>
-    <symbol id="i-panel-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="m8 10 2 2-2 2"/>
-    </symbol>
-    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-    </symbol>
-    <symbol id="i-captions" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M13 15h4M7 11h10"/>
-    </symbol>
-    <symbol id="i-voice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
-    </symbol>
-    <symbol id="i-image-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m17 12-3-3-8 8"/><path d="M21 9v10a2 2 0 0 1-2 2H9"/>
-    </symbol>
-    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
-    </symbol>
-    <symbol id="i-cursor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m4 4 7 17 2.5-7.5L21 11z"/>
-    </symbol>
-    <symbol id="i-zoom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/>
-    </symbol>
-    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/>
-    </symbol>
-    <symbol id="i-watch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>
-    </symbol>
-    <symbol id="i-restart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>
-    </symbol>
-    <symbol id="i-stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="6" y="6" width="12" height="12" rx="1"/>
-    </symbol>
-    <symbol id="i-crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m3 8 4 4 5-8 5 8 4-4-2 10H5L3 8z"/>
-      <path d="M5 20h14"/>
-    </symbol>
-    <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/>
-      <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14z"/>
-      <path d="M5 15l.6 1.6L7.2 17l-1.6.6L5 19.2l-.6-1.6L2.8 17l1.6-.6L5 15z"/>
-    </symbol>
-    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
-    </symbol>
-    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
-    </symbol>
-    <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 14 4 9l5-5" />
-      <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" />
-    </symbol>
-    <symbol id="i-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m15 14 5-5-5-5" />
-      <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" />
-    </symbol>
-    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 21a8 8 0 0 0-16 0" />
-      <circle cx="12" cy="7" r="4" />
-    </symbol>
-    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M18 6 6 18M6 6l12 12"/>
-    </symbol>
-  </svg>
-
-  <script src="a/59/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/59/js/app.js"></script>
+    <p class="wrap copy">© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module" src="/a/60/js/landing.js"></script>
 </body>
 </html>

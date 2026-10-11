@@ -23,7 +23,7 @@
       "output": "release"
     },
     "files": [
-      "index.html",
+      "editor.html",
       "view.html",
       "ajuda.html",
       "favicon.*",
