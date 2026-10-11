@@ -140,6 +140,7 @@ import {
 } from "./paywall.js";
 import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 import { createLeadsDialog } from "./leadsDialog.js";
+import { createAnalyticsDialog } from "./analyticsDialog.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -493,6 +494,28 @@ const leadsDialog = createLeadsDialog({
   toast,
 });
 
+// why: análise (F4) é Pro; sem Pro o botão abre o paywall, sem link permanente pede para publicar
+const analyticsDialog = createAnalyticsDialog({
+  getSlug: () => (viewerIsPro() ? permanentSlug(activeShareRecord()) || "" : ""),
+  getTitle: () => project?.name || "",
+  toast,
+  onPaywall: () => openFeatureGate("analytics"),
+});
+
+function openAnalytics() {
+  if (!viewerIsPro()) {
+    openFeatureGate("analytics");
+    return;
+  }
+  const slug = permanentSlug(activeShareRecord());
+  const link = document.getElementById("analytics-preview-link");
+  if (link) {
+    link.hidden = !slug;
+    if (slug) link.href = `${location.origin}/p/${encodeURIComponent(slug)}?preview=1`;
+  }
+  analyticsDialog.open();
+}
+
 /** Início = captura de lead (Pro, precisa do link permanente); Fim = livre. */
 function openFixedStep(kind) {
   if (kind === "start" && !cloudShareEnabled()) {
@@ -723,6 +746,10 @@ function paintShareMenu() {
   if (embedBtn) embedBtn.hidden = !cloudShareEnabled();
   const embedBadge = document.getElementById("embed-pro-badge");
   if (embedBadge) embedBadge.hidden = pro;
+  const analyticsBtn = document.getElementById("btn-share-analytics");
+  if (analyticsBtn) analyticsBtn.hidden = !cloudShareEnabled() || (pro && !permanentSlug(record));
+  const analyticsBadge = document.getElementById("analytics-pro-badge");
+  if (analyticsBadge) analyticsBadge.hidden = pro;
   const leadsBtn = document.getElementById("btn-share-leads");
   if (leadsBtn) leadsBtn.hidden = !(pro && cloudShareEnabled() && permanentSlug(record));
   paintAccount();
@@ -2579,6 +2606,7 @@ function bindChrome() {
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
   document.getElementById("btn-share-leads")?.addEventListener("click", () => leadsDialog.open());
+  document.getElementById("btn-share-analytics")?.addEventListener("click", () => openAnalytics());
   document.getElementById("btn-embed-close")?.addEventListener("click", () => embedModal?.close());
   embedModal?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) embedModal.close();

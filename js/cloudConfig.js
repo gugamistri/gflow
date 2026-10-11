@@ -28,6 +28,8 @@ export const CLOUD_EDITOR_ORIGIN = "https://guiaflow.pro";
 
 /** Pedidos HTTP da nuvem. O apex guiaflow.pro só serve o editor. */
 export const PUBLISHED_CLOUD_BASE = "https://app.guiaflow.pro";
+/** Ingestão do analytics do link permanente (player do /p e embed). */
+export const CLOUD_EVENTS_PATH = (slug) => `/api/shares/${encodeURIComponent(String(slug || ""))}/events`;
 const PUBLISHED_CLOUD_HOSTS = new Set(["guiaflow.pro", "guiaflow-seven.vercel.app"]);
 
 const INJECTED_KEYS = ["baseUrl", "globalValue", "metaContent", "storageValue", "flags", "hostname"];

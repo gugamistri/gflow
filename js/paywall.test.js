@@ -128,6 +128,7 @@ test("o recurso que abriu o diálogo fica no topo", () => {
   assert.deepEqual(paywallFeatureOrder(""), [
     "account",
     "permanentShare",
+    "analytics",
     "hostedAi",
     "tts",
     "branding",
@@ -136,9 +137,11 @@ test("o recurso que abriu o diálogo fica no topo", () => {
   assert.equal(paywallFeatureOrder("audio")[0], "tts");
   assert.equal(paywallFeatureOrder("hostedAi")[0], "hostedAi");
   assert.equal(paywallFeatureOrder("branding")[0], "branding");
+  assert.equal(paywallFeatureOrder("analytics")[0], "analytics");
+  assert.equal(paywallFeatureOrder("stats")[0], "analytics");
   assert.equal(paywallFeatureOrder("permanentShare")[0], "permanentShare");
   assert.equal(paywallFeatureOrder("tts").includes("account"), true);
-  assert.equal(new Set(paywallFeatureOrder("tts")).size, 5);
+  assert.equal(new Set(paywallFeatureOrder("tts")).size, 6);
 });
 
 test("o checkout manda mês ou ano, a moeda e a origem", () => {
