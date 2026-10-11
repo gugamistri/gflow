@@ -104,10 +104,22 @@ export function shareStartIndex(search, stepCount) {
   return Math.max(0, Math.min(max - 1, index));
 }
 
-/** Título do separador, igual em /v e /p: «Nome — GuiaFlow». */
-export function sharePageTitle(name, fallback = "GuiaFlow — Tour") {
+/** Título do separador: «Nome — GuiaFlow»; sem marca (link permanente), só o nome. */
+export function sharePageTitle(name, fallback = "GuiaFlow — Tour", { branded = true } = {}) {
   const label = String(name || "").trim();
+  if (!branded) return label || "Tour";
   return label ? `${label} — GuiaFlow` : fallback;
+}
+
+/**
+ * Marca GuiaFlow no player.
+ * - "full": logo no topo (link temporário /v e editor).
+ * - "none": link permanente /p (só Pro publica) — sem logo, padrão também para links antigos.
+ * - "credit": /p cujo autor pediu o crédito (`removeBranding: false` no tour publicado) — «Feito com GuiaFlow».
+ */
+export function shareBranding(kind, tour) {
+  if (kind !== "permanent") return "full";
+  return tour && typeof tour === "object" && tour.removeBranding === false ? "credit" : "none";
 }
 
 /** Cartão do passo (slide ou popover) e o destaque da tela. */

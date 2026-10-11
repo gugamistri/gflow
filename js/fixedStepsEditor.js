@@ -2,26 +2,31 @@
  * Diálogos dos passos fixos no editor (cartões 📌 Início/Fim da filmstrip).
  * O rascunho só vai para o projeto em "Salvar" — um passo de histórico por edição.
  */
-import { t } from "./i18n.js";
+import { getLocale, t } from "./i18n.js";
 import {
   LEAD_FIELDS,
   defaultEndStep,
   defaultStartStep,
   normalizeStartStep,
-  formatBrPhone,
-  isValidWhatsAppNumber,
   normalizeEndStep,
-  normalizeWhatsAppNumber,
   safeContactHref,
+  splitWhatsAppNumber,
 } from "./fixedSteps.js";
 import { renderEndCard, renderStartCard } from "./fixedStepsView.js";
+import { defaultCountry } from "./phoneCountries.js";
+import { createPhoneField } from "./phoneField.js";
 
 const $ = (id) => document.getElementById(id);
 
-function displayPhone(digits) {
-  const d = String(digits || "");
-  if (d.startsWith("55") && (d.length === 12 || d.length === 13)) return formatBrPhone(d.slice(2));
-  return d ? `+${d}` : "";
+/** Mensagem do erro de telefone (vazio, tamanho do país, DDD do Brasil). */
+function phoneErrorText(result, countryName) {
+  if (result.error === "empty") return t("fixed.errPhoneEmpty");
+  if (result.error === "ddd") return t("fixed.errPhoneDdd");
+  if (result.error === "length" && result.min) {
+    const digits = result.min === result.max ? String(result.min) : `${result.min}–${result.max}`;
+    return t("fixed.errPhoneLength", { country: countryName, digits });
+  }
+  return t("fixed.errPhone");
 }
 
 export function createFixedStepsEditor(ctx) {
@@ -39,6 +44,13 @@ export function createFixedStepsEditor(ctx) {
       wa: $("fixed-end-wa"),
       waFields: $("fixed-end-wa-fields"),
       waPhone: $("fixed-end-wa-phone"),
+      waCc: $("fixed-end-wa-cc"),
+      waCcFlag: $("fixed-end-wa-cc-flag"),
+      waCcDial: $("fixed-end-wa-cc-dial"),
+      waCcPop: $("fixed-end-wa-cc-pop"),
+      waCcSearch: $("fixed-end-wa-cc-search"),
+      waCcList: $("fixed-end-wa-cc-list"),
+      waCcEmpty: $("fixed-end-wa-cc-empty"),
       waError: $("fixed-end-wa-error"),
       waMessage: $("fixed-end-wa-message"),
       waLabel: $("fixed-end-wa-label"),
@@ -63,7 +75,8 @@ export function createFixedStepsEditor(ctx) {
 
   /** Lê o formulário; errors marca campos inválidos (não salva com erro). */
   function readEnd(els) {
-    const phone = normalizeWhatsAppNumber(els.waPhone.value);
+    const phoneResult = phoneField.read();
+    const phone = phoneResult.ok ? phoneResult.digits : "";
     const rawUrl = els.url.value.trim();
     const mode = selectedMode(els);
     const step = normalizeEndStep({
@@ -85,8 +98,9 @@ export function createFixedStepsEditor(ctx) {
       },
       showReplay: els.replay.checked,
     });
+    // why: o botão de WhatsApp só pode ser ligado/salvo com um número válido do país escolhido
     const errors = {
-      phone: els.wa.checked && Boolean(els.waPhone.value.trim()) && !isValidWhatsAppNumber(phone),
+      phone: els.wa.checked && !phoneResult.ok ? phoneErrorText(phoneResult, phoneField.countryName()) : "",
       url: els.contact.checked && mode === "link" && !safeContactHref(rawUrl),
     };
     return { step, errors };
@@ -100,7 +114,10 @@ export function createFixedStepsEditor(ctx) {
     const mode = selectedMode(els);
     els.linkFields.hidden = mode !== "link";
     els.formFields.hidden = mode !== "form";
-    els.waError.hidden = !(showErrors || els.waPhone.dataset.touched) || !errors.phone;
+    const showPhone = Boolean(errors.phone) && Boolean(showErrors || els.waPhone.dataset.touched);
+    els.waError.hidden = !showPhone;
+    if (errors.phone) els.waError.textContent = errors.phone;
+    els.waPhone.setAttribute("aria-invalid", String(showPhone));
     els.urlError.hidden = !(showErrors || els.url.dataset.touched) || !errors.url;
     const project = getProject();
     const card = renderEndCard(step, {
@@ -119,8 +136,12 @@ export function createFixedStepsEditor(ctx) {
     els.enabled.checked = raw ? base.enabled : true;
     els.title.value = base.title;
     els.body.value = base.body;
-    els.wa.checked = base.whatsapp.enabled;
-    els.waPhone.value = displayPhone(base.whatsapp.phone);
+    const parsed = splitWhatsAppNumber(base.whatsapp.phone);
+    const savedRaw = String(raw?.whatsapp?.phone ?? "").trim();
+    // why: ligado sem número (padrão antigo) vira desligado; número salvo inválido aparece com o erro
+    els.wa.checked = base.whatsapp.enabled && Boolean(parsed || savedRaw);
+    phoneField.fill(parsed);
+    if (!parsed && savedRaw) els.waPhone.value = savedRaw;
     els.waMessage.value = base.whatsapp.message || t("fixed.end.waDefaultMessage");
     els.waLabel.value = base.whatsapp.label;
     els.contact.checked = base.contact.enabled;
@@ -130,21 +151,38 @@ export function createFixedStepsEditor(ctx) {
     if (els.consent) els.consent.value = base.contact.consentText || t("fixed.consentDefault");
     els.contactLabel.value = base.contact.label;
     els.replay.checked = base.showReplay;
-    delete els.waPhone.dataset.touched;
+    if (parsed || !savedRaw) delete els.waPhone.dataset.touched;
+    else els.waPhone.dataset.touched = "1";
     delete els.url.dataset.touched;
   }
+
+  let phoneField = null;
 
   function bind() {
     if (bound) return;
     bound = true;
     const els = endEls();
     if (!els.dialog) return;
-    els.form.addEventListener("input", (e) => {
-      if (e.target === els.waPhone && !els.waPhone.value.trim().startsWith("+")) {
-        const atEnd = els.waPhone.selectionStart === els.waPhone.value.length;
-        const masked = formatBrPhone(els.waPhone.value);
-        if (atEnd && masked !== els.waPhone.value) els.waPhone.value = masked;
+    phoneField = createPhoneField(
+      {
+        button: els.waCc,
+        flag: els.waCcFlag,
+        dial: els.waCcDial,
+        input: els.waPhone,
+        pop: els.waCcPop,
+        search: els.waCcSearch,
+        list: els.waCcList,
+        empty: els.waCcEmpty,
+      },
+      {
+        locale: getLocale,
+        defaultIso: () => defaultCountry(getLocale(), globalThis.navigator?.languages || [globalThis.navigator?.language]),
+        onChange: () => paintEnd(els),
+        t,
       }
+    );
+    els.form.addEventListener("input", (e) => {
+      if (e.target === els.waPhone || e.target === els.waCcSearch) return; // o campo repinta sozinho
       paintEnd(els);
     });
     els.form.addEventListener("change", (e) => {
@@ -170,6 +208,7 @@ export function createFixedStepsEditor(ctx) {
       e.preventDefault();
       const { step, errors } = paintEnd(els, { showErrors: true });
       if (step.enabled && (errors.phone || errors.url)) {
+        if (errors.phone) els.waPhone.dataset.touched = "1";
         (errors.phone ? els.waPhone : els.url).focus();
         return;
       }

@@ -753,6 +753,11 @@ function paintShareMenu() {
   if (analyticsBadge) analyticsBadge.hidden = pro;
   const leadsBtn = document.getElementById("btn-share-leads");
   if (leadsBtn) leadsBtn.hidden = !(pro && cloudShareEnabled() && permanentSlug(record));
+  // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
+  const brandToggle = document.getElementById("share-brand-toggle");
+  if (brandToggle) brandToggle.hidden = !(pro && cloudShareEnabled());
+  const brandBox = document.getElementById("share-remove-brand");
+  if (brandBox) brandBox.checked = project?.removeBranding !== false;
   paintAccount();
 }
 
@@ -2409,6 +2414,15 @@ function bindChrome() {
       hideExportOverlay();
       toast(err?.message || t("toast.htmlFail"));
     }
+  });
+
+  document.getElementById("share-remove-brand")?.addEventListener("change", (e) => {
+    if (!project || !viewerIsPro()) return;
+    if (e.target.checked) delete project.removeBranding;
+    else project.removeBranding = false;
+    saveDirty = true;
+    schedulePersist();
+    paintShareMenu();
   });
 
   document.getElementById("btn-export-unbrand")?.addEventListener("click", () => {

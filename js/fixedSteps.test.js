@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildWhatsAppUrl,
   csvCell,
+  defaultEndStep,
   endStepActions,
   endStepActive,
   fixedStepsForPayload,
@@ -15,8 +16,10 @@ import {
   normalizeWhatsAppNumber,
   safeContactHref,
   safeHttpUrl,
+  splitWhatsAppNumber,
   startStepActive,
   validateLeadForm,
+  whatsAppE164,
 } from "./fixedSteps.js";
 
 test("normalizeWhatsAppNumber: números BR com e sem 9, com 0 e com +55", () => {
@@ -110,6 +113,40 @@ test("endStepActions: WhatsApp, link e formulário só com o recurso ativo no se
   assert.equal(endStepActions(form, { contactForm: true })[1].kind, "contact-form");
   const bad = { enabled: true, whatsapp: { enabled: false }, contact: { enabled: true, mode: "link", url: "javascript:x" } };
   assert.deepEqual(endStepActions(bad), []);
+});
+
+test("whatsAppE164: guarda só dígitos E.164 e não reaplica o 55 em números de outros países", () => {
+  assert.equal(whatsAppE164("5511999998888"), "5511999998888");
+  assert.equal(whatsAppE164("(11) 99999-8888"), "5511999998888");
+  assert.equal(whatsAppE164("21 3333-4444"), "552133334444");
+  assert.equal(whatsAppE164("+1 (415) 555-0100"), "14155550100");
+  // why: o normalizador antigo virava "5514155550100" ao salvar de novo um número dos EUA
+  assert.equal(whatsAppE164("14155550100"), "14155550100");
+  assert.equal(whatsAppE164("+351 912 345 678"), "351912345678");
+  assert.equal(whatsAppE164("00 54 9 11 2345-6789"), "5491123456789");
+  assert.equal(whatsAppE164("+44 7911 123456"), "447911123456");
+  assert.equal(whatsAppE164("+55 00 99999-8888"), "");
+  assert.equal(whatsAppE164("+1 415 555"), "");
+  assert.equal(whatsAppE164("123"), "");
+  assert.equal(whatsAppE164(""), "");
+  assert.equal(isValidWhatsAppNumber("5500999998888"), false);
+  assert.equal(isValidWhatsAppNumber("14155550100"), true);
+  assert.equal(isValidWhatsAppNumber("10155550100"), false);
+  assert.deepEqual(splitWhatsAppNumber("14155550100"), { iso: "US", dial: "1", national: "4155550100" });
+  assert.deepEqual(splitWhatsAppNumber("5511999998888"), { iso: "BR", dial: "55", national: "11999998888" });
+  assert.equal(splitWhatsAppNumber(""), null);
+});
+
+test("WhatsApp: botão começa desligado e só aparece no player com número válido", () => {
+  assert.equal(defaultEndStep().whatsapp.enabled, false);
+  // why: tours já publicados com o botão ligado e sem número (ou incompleto) não mostram um wa.me quebrado
+  const noPhone = { enabled: true, whatsapp: { enabled: true, phone: "" }, contact: { enabled: false } };
+  assert.deepEqual(endStepActions(noPhone), []);
+  const shortPhone = { enabled: true, whatsapp: { enabled: true, phone: "551199999" }, contact: { enabled: false } };
+  assert.deepEqual(endStepActions(shortPhone), []);
+  const us = { enabled: true, whatsapp: { enabled: true, phone: "+1 415 555 0100", message: "Hi" }, contact: { enabled: false } };
+  assert.equal(endStepActions(us)[0].href, "https://wa.me/14155550100?text=Hi");
+  assert.equal(normalizeEndStep(normalizeEndStep(us)).whatsapp.phone, "14155550100");
 });
 
 test("formatBrPhone: máscara BR", () => {

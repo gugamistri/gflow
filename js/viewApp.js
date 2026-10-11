@@ -16,6 +16,7 @@ import {
   sameOriginReferrer,
   clickClosesSharedTour,
   sharePageTitle,
+  shareBranding,
   shareStartIndex,
   sharedPreviewBackTarget,
   tourFromPermanentShare,
@@ -178,6 +179,15 @@ let touring = false;
 let replayTour = () => {};
 let shareFeatures = { leadCapture: false, contactForm: false };
 let shareSlug = "";
+// why: /p começa sem marca (classe também vem do <head>); /v mostra o logo
+let branding = /^\/p\//.test(location.pathname) ? "none" : "full";
+
+function applyBranding(mode) {
+  branding = mode;
+  document.documentElement.classList.toggle("is-unbranded", mode !== "full");
+  const credit = document.getElementById("view-credit");
+  if (credit) credit.hidden = mode !== "credit";
+}
 
 // why: ?embed=1 = iframe no site do cliente; a classe também vem do <head> para não piscar
 const embedOptions = parseEmbedOptions(location.search);
@@ -198,7 +208,7 @@ function setupEmbedChrome() {
 setupEmbedChrome();
 
 function shareTitle(name) {
-  return sharePageTitle(name, t("view.title"));
+  return sharePageTitle(name, t("view.title"), { branded: branding === "full" });
 }
 
 function applyShareTitle(name) {
@@ -553,6 +563,7 @@ async function boot() {
   }
 
   if (route.kind === "permanent") shareSlug = route.id;
+  applyBranding(route.kind === "permanent" ? "none" : "full");
   try {
     demo = await loadDemo(route);
   } catch (err) {
@@ -571,6 +582,7 @@ async function boot() {
   ensureNarration(demo);
   applyTheme(demo.theme);
 
+  applyBranding(shareBranding(route.kind, demo));
   applyShareTitle(demo.name || shareBoot?.name || "");
 
   // why: o índice do editor no storage não pode abrir o link no passo 2
