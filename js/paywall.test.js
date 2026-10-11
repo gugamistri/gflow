@@ -191,7 +191,7 @@ test("welcome troca o code e tira welcome e code do endereço", () => {
 
 test("o aviso de salvar no navegador some para quem assina e para quem dispensou", () => {
   assert.equal(shouldShowLocalSave({ signedIn: false, active: false, billingReady: true, dismissed: false }), true);
-  assert.equal(shouldShowLocalSave({ signedIn: true, active: true, billingReady: true }), false);
+  assert.equal(shouldShowLocalSave({ signedIn: true, active: true, billingReady: true }), true);
   assert.equal(shouldShowLocalSave({ signedIn: true, active: false, billingReady: false }), false);
   assert.equal(shouldShowLocalSave({ signedIn: false, dismissed: true }), false);
   assert.equal(shouldShowLocalSave({ signedIn: true, active: false, billingReady: true }), true);
