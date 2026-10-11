@@ -6,6 +6,7 @@ const MAILTO_PT = 'Não foi possível enviar agora. <a href="{mailto}">Mande por
 
 export const landingCatalogs = {
   pt: {
+    "lp.demo.frameTitle": "Tour interativo de exemplo feito no GuiaFlow",
     "lp.form.sending": "Enviando…",
     "lp.form.ok": "Pedido recebido. Se o seu caso combinar com o programa, você recebe o convite por e-mail.",
     "lp.form.err.name": "Informe o seu nome.",
@@ -39,9 +40,10 @@ export const landingCatalogs = {
     "lp.mock.next": "Siguiente →",
     "lp.mock.toast": "Nuevo lead: ana@empresa.com",
     "lp.demo.eyebrow": "Pruébalo ahora",
-    "lp.demo.title": "Un demo de GuiaFlow, hecho en GuiaFlow",
+    "lp.demo.title": "Un demo de verdad, hecho en GuiaFlow",
+    "lp.demo.soon": "El demo de ejemplo llega pronto. Mientras tanto, crea el tuyo en minutos.",
     "lp.demo.lead": "Haz clic para avanzar, como lo hará tu lead. Es el mismo reproductor que va en tu enlace o en tu sitio.",
-    "lp.demo.frameTitle": "Tour interactivo de ejemplo de GuiaFlow",
+    "lp.demo.frameTitle": "Tour interactivo de ejemplo hecho en GuiaFlow",
     "lp.cases.eyebrow": "Para quién es",
     "lp.cases.title": "Para quien necesita mostrar el producto sin estar en la sala",
     "lp.cases.sales.title": "Ventas",
@@ -165,9 +167,10 @@ export const landingCatalogs = {
     "lp.mock.next": "Next →",
     "lp.mock.toast": "New lead: ana@company.com",
     "lp.demo.eyebrow": "Try it now",
-    "lp.demo.title": "A GuiaFlow demo, made with GuiaFlow",
+    "lp.demo.title": "A real demo, made with GuiaFlow",
+    "lp.demo.soon": "The sample demo is coming soon. Meanwhile, create yours in minutes.",
     "lp.demo.lead": "Click to move forward, just like your lead will. It is the same player that goes in your link or on your site.",
-    "lp.demo.frameTitle": "Sample GuiaFlow interactive tour",
+    "lp.demo.frameTitle": "Sample interactive tour made with GuiaFlow",
     "lp.cases.eyebrow": "Who it is for",
     "lp.cases.title": "For anyone who needs to show the product without being in the room",
     "lp.cases.sales.title": "Sales",

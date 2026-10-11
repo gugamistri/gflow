@@ -7,6 +7,35 @@ import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, t } from 
 import { landingCatalogs } from "./landing-i18n.js";
 import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js";
 
+/**
+ * Demo de exemplo da seção #demo: slug de um link permanente publicado (/p/<slug>).
+ * why: é o único lugar a trocar quando o tour de exemplo mudar; vazio = placeholder, sem iframe.
+ */
+export const LANDING_DEMO_SLUG = "";
+export const LANDING_DEMO_ORIGIN = "https://guiaflow.pro";
+const DEMO_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/;
+
+/** URL do embed (?embed=1) ou "" se o slug estiver vazio ou fora do formato de /p. */
+export function landingDemoUrl(slug = LANDING_DEMO_SLUG, origin = LANDING_DEMO_ORIGIN) {
+  const clean = String(slug || "").trim();
+  if (!DEMO_SLUG_RE.test(clean)) return "";
+  return `${origin}/p/${encodeURIComponent(clean)}?embed=1`;
+}
+
+function mountDemo() {
+  const frame = document.getElementById("demo-frame");
+  const src = landingDemoUrl();
+  if (!frame || !src) return;
+  const iframe = document.createElement("iframe");
+  iframe.src = src;
+  iframe.title = t("lp.demo.frameTitle");
+  iframe.setAttribute("data-i18n-title", "lp.demo.frameTitle");
+  iframe.loading = "lazy";
+  iframe.allow = "autoplay; fullscreen";
+  iframe.referrerPolicy = "strict-origin-when-cross-origin";
+  frame.replaceChildren(iframe);
+}
+
 const ATTRS = [
   ["data-i18n", null],
   ["data-i18n-html", "html"],
@@ -227,6 +256,7 @@ function wireTesterForm() {
 function boot() {
   installCatalogs();
   initLocale();
+  mountDemo();
   if (getLocale() !== "pt") applyI18n(document);
   paintPrices();
   bindLocaleSelect(document.getElementById("locale-select"), () => paintPrices());

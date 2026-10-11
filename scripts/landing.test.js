@@ -74,3 +74,18 @@ test("deep links seguem: /v, /p, /oembed, auth e os rodapés apontam para /edito
   assert.match(read("electron/main.js"), /loadFile\(path\.join\(ROOT, "editor\.html"\)\)/);
   assert.ok(JSON.parse(read("package.json")).build.files.includes("editor.html"));
 });
+
+test("demo de exemplo: slug numa constante só, sem o Demo RCV, placeholder quando vazio", async () => {
+  const fs = await import("node:fs");
+  const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const js = fs.readFileSync(new URL("../js/landing.js", import.meta.url), "utf8");
+  assert.equal(/rcv/i.test(html) || /rcv/i.test(js), false, "landing sem Demo RCV");
+  assert.equal(/<iframe/i.test(html), false, "o iframe nasce do LANDING_DEMO_SLUG em landing.js");
+  assert.match(html, /id="demo-placeholder"/);
+  assert.equal((js.match(/export const LANDING_DEMO_SLUG = /g) || []).length, 1);
+  const { landingDemoUrl } = await import("../js/landing.js");
+  assert.equal(landingDemoUrl(""), "");
+  assert.equal(landingDemoUrl("../x"), "");
+  assert.equal(landingDemoUrl("javascript:alert(1)"), "");
+  assert.equal(landingDemoUrl("leadpronto-abc123"), "https://guiaflow.pro/p/leadpronto-abc123?embed=1");
+});
