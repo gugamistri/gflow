@@ -24,7 +24,7 @@ const LEGACY_KEYS = ["interactive-demo-v1"];
 const DEFAULT_JSON_URL = "data/demo.json";
 /** Bump when data/demo.json muda — reinstala o tour de exemplo sem apagar outros projetos. */
 const SEED_REVISION = 3;
-const STOCK_DEMO_NAME = "Como usar o Guia";
+export const STOCK_DEMO_NAME = "Como usar o Guia";
 
 const DEFAULT_SCENE_LABELS = {
   1: "Cena 1",
@@ -85,6 +85,24 @@ function withStore(mode, fn, storeName = STORE) {
         };
       })
   );
+}
+
+/** why: a sincronização do Pro ouve as gravações locais; o que ela mesma grava vem com { silent: true } */
+const changeListeners = new Set();
+
+export function onLocalProjectChange(listener) {
+  changeListeners.add(listener);
+  return () => changeListeners.delete(listener);
+}
+
+function emitChange(event) {
+  for (const listener of changeListeners) {
+    try {
+      listener(event);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 }
 
 export function createProjectId() {
@@ -230,15 +248,16 @@ export async function listAllProjects() {
   return Array.isArray(rows) ? rows : [];
 }
 
-export async function putProject(project) {
+export async function putProject(project, { silent = false, keepUpdatedAt = false } = {}) {
   const next = {
     ...project,
-    updatedAt: Date.now(),
+    updatedAt: keepUpdatedAt && project.updatedAt ? project.updatedAt : Date.now(),
   };
   await withStore("readwrite", (store) => store.put(next));
   const index = readIndex();
   await upsertSummary(index, next);
   writeIndex(index);
+  if (!silent) emitChange({ type: "put", id: next.id });
   return next;
 }
 
@@ -287,10 +306,11 @@ export async function putProjectAndHistory(project, stacks) {
   const index = readIndex();
   await upsertSummary(index, next);
   writeIndex(index);
+  emitChange({ type: "put", id: next.id });
   return next;
 }
 
-export async function deleteProject(id) {
+export async function deleteProject(id, { silent = false } = {}) {
   await openDb().then(
     (db) =>
       new Promise((resolve, reject) => {
@@ -318,6 +338,7 @@ export async function deleteProject(id) {
   index.projects = index.projects.filter((p) => p.id !== id);
   if (index.activeProjectId === id) index.activeProjectId = null;
   writeIndex(index);
+  if (!silent) emitChange({ type: "delete", id });
 }
 
 export async function setActiveProjectId(id) {
@@ -330,10 +351,11 @@ export function getCustomThemes() {
   return readIndex().customThemes || [];
 }
 
-export function saveCustomThemes(themes) {
+export function saveCustomThemes(themes, { silent = false } = {}) {
   const index = readIndex();
   index.customThemes = themes;
   writeIndex(index);
+  if (!silent) emitChange({ type: "settings" });
 }
 
 export function createEmptyProject({ name, theme } = {}) {

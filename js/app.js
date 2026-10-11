@@ -26,7 +26,12 @@ import {
   getCustomThemes,
   saveCustomThemes,
   writeIndex,
+  listAllProjects,
+  createProjectId,
+  onLocalProjectChange,
+  STOCK_DEMO_NAME,
 } from "./projects.js";
+import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks } from "./cloudSync.js";
 import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
 import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
@@ -99,6 +104,8 @@ import {
   getCloudBaseUrl,
   getCloudFlags,
   isCloudEnabled,
+  readCloudSession,
+  cloudFetch,
   loginWithPassword,
   parseCloudAuthMessage,
   requestMagicLink,
@@ -792,6 +799,134 @@ let pendingHostedResume = null;
 let pendingHostedFeature = "";
 const LOCAL_SAVE_DISMISS_KEY = "guiaflow.localSaveDismissed";
 
+/* ---------- sincronização de projetos (Pro) ---------- */
+
+let syncState = { phase: "off", done: 0, total: 0, error: "" };
+
+async function fetchSyncAsset(sha) {
+  const base = getCloudBaseUrl();
+  const token = readCloudSession()?.accessToken || "";
+  if (!base || !token) return "";
+  const res = await fetch(`${base}/media/${encodeURIComponent(sha)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "omit",
+  });
+  if (!res.ok) return "";
+  const mime = (res.headers.get("content-type") || "application/octet-stream").split(";")[0];
+  return bytesToDataUrl(new Uint8Array(await res.arrayBuffer()), mime);
+}
+
+const cloudSync = createCloudSync({
+  request: (path, init) => cloudFetch(path, { timeoutMs: 120 * 1000, ...init }),
+  fetchAsset: fetchSyncAsset,
+  uploadAsset: (sha, bytes, mime) =>
+    cloudFetch(`/media/${encodeURIComponent(sha)}`, {
+      method: "PUT",
+      body: bytes,
+      headers: { "Content-Type": mime },
+      timeoutMs: 180 * 1000,
+    }),
+  store: {
+    listAllProjects,
+    getProject,
+    putProject,
+    deleteProject,
+    getCustomThemes,
+    saveCustomThemes,
+    createProjectId,
+  },
+  // why: o tour de exemplo vem com o editor; subir criaria cópias em cada navegador
+  skipProject: (p) => p?.name === STOCK_DEMO_NAME,
+  isProjectBusy: (id) => Boolean(project && project.id === id && (saveDirty || saveTimer)),
+  conflictName: (name) => t("sync.conflictCopy", { name }),
+  onStatus: (next) => {
+    syncState = next;
+    paintSyncStatus();
+  },
+  onRemoteChange: (change) => handleRemoteProjectChange(change),
+});
+
+onLocalProjectChange((event) => cloudSync.notifyLocalChange(event));
+
+async function handleRemoteProjectChange({ type, id }) {
+  if (project && project.id === id) {
+    if (type === "delete") {
+      project = null;
+      rememberProject(null);
+      showLibrary();
+      toast(t("sync.deletedOpen"), 4200);
+      return;
+    }
+    if (!saveDirty && !saveTimer) {
+      await openProject(id);
+      toast(t("sync.updatedOpen"), 3200);
+      return;
+    }
+  }
+  if (chromeView === "library") renderLibrary();
+}
+
+function syncWanted() {
+  return Boolean(isCloudEnabled() && getCloudAccount().signedIn && billingView.status === "ready" && billingEntitlement.active);
+}
+
+function reconcileSync() {
+  const account = getCloudAccount();
+  if (syncWanted()) {
+    cloudSync.enable(account.email || "conta");
+    return;
+  }
+  // why: carregando o plano não desliga; só sem sessão ou com plano confirmado sem Pro
+  if (!account.signedIn || billingView.status === "ready" || billingView.status === "hidden") {
+    if (cloudSync.isEnabled()) cloudSync.disable();
+  }
+}
+
+function syncStatusText() {
+  const { phase, done, total, error } = syncState;
+  if (phase === "syncing") return total ? t("sync.progress", { done, total }) : t("sync.syncing");
+  if (phase === "offline") return t("sync.offline");
+  if (phase === "error") return error === "media_quota_exceeded" ? t("sync.quota") : t("sync.error");
+  return t("sync.synced");
+}
+
+function syncChipVisible() {
+  return cloudSync.isEnabled() && syncState.phase !== "off" && syncState.phase !== "inactive";
+}
+
+function paintSyncStatus() {
+  const visible = syncChipVisible();
+  for (const id of ["sync-status-library", "sync-status-editor"]) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.hidden = !visible;
+    el.dataset.phase = syncState.phase;
+    const text = el.querySelector("[data-sync-text]");
+    if (text) text.textContent = syncStatusText();
+    const chip = el.querySelector("[data-sync-now]");
+    if (chip) chip.title = t("sync.tip");
+  }
+  const restore = document.getElementById("btn-file-restore-links");
+  if (restore) restore.hidden = !visible;
+}
+
+async function restorePublishedLinks() {
+  toast(t("sync.restoring"), 3000);
+  try {
+    const result = await restoreFromPublishedLinks({
+      request: (path, init) => cloudFetch(path, { timeoutMs: 120 * 1000, ...init }),
+      store: { listAllProjects, putProject },
+      toProject: (payload, opts) => demoPayloadToProject(payload, opts),
+      slugOf: (record) => permanentSlug(record),
+    });
+    if (chromeView === "library") renderLibrary();
+    toast(result.restored ? t("sync.restored", { n: result.restored }) : t("sync.restoreNone"), 4200);
+  } catch (err) {
+    console.error(err);
+    toast(t("sync.restoreFail"), 4200);
+  }
+}
+
 function accountInitial(email) {
   const ch = String(email || "").trim().charAt(0);
   return ch ? ch.toUpperCase() : "?";
@@ -894,8 +1029,10 @@ function localSaveDismissed() {
 }
 
 function paintLocalSave() {
+  reconcileSync();
+  paintSyncStatus();
   const signedIn = Boolean(getCloudAccount().signedIn);
-  const show = shouldShowLocalSave({
+  const show = !syncChipVisible() && shouldShowLocalSave({
     signedIn,
     active: Boolean(billingEntitlement.active),
     billingReady: !signedIn || billingView.status === "ready" || billingView.status === "hidden",
@@ -2778,14 +2915,20 @@ function bindChrome() {
   });
   document.querySelectorAll("[data-local-save-open]").forEach((button) => {
     button.addEventListener("click", () => {
-      // why: o Pro também vê o aviso até a sincronização existir; não oferecer assinar de novo
-      if (getCloudAccount().signedIn && billingEntitlement.active) {
-        toast(t("billing.localSaveTip"), 5200);
-        return;
-      }
       showUpgradeDialog({ feature: "account" });
     });
   });
+  document.querySelectorAll("[data-sync-now]").forEach((button) => {
+    button.addEventListener("click", () => cloudSync.syncNow());
+  });
+  document.querySelectorAll("[data-sync-restore]").forEach((button) => {
+    button.addEventListener("click", () => {
+      closeAccountMenus?.();
+      restorePublishedLinks();
+    });
+  });
+  window.addEventListener("online", () => cloudSync.syncNow());
+  window.addEventListener("focus", () => cloudSync.syncNow());
   document.querySelectorAll("[data-local-save-dismiss]").forEach((button) => {
     button.addEventListener("click", () => {
       try {
