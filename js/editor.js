@@ -7,6 +7,9 @@ import {
   fileToDataUrl,
   ensureClickPoint,
   clickPointFromHotspot,
+  clampClickToHotspot,
+  followHotspot,
+  hasHotspot,
   applyTheme,
   formToTheme,
   bindImage,
@@ -2052,8 +2055,12 @@ export function createEditor(ctx) {
   function commitHotspot() {
     const step = currentStep();
     if (!step || step.type === "slide") return;
+    const prev = step.hotspot;
+    const prevClick = ensureClickPoint(step);
     step.hotspot = readHotspotFromDom();
-    if (!step.clickPoint) step.clickPoint = clickPointFromHotspot(step.hotspot);
+    // why: mover leva o clique junto; redimensionar mantém o clique e o prende dentro
+    step.clickPoint = followHotspot(prevClick, prev, step.hotspot);
+    if (step.simulateClick !== false) placeClickPoint(step.clickPoint);
     onChange();
   }
 
@@ -2072,7 +2079,8 @@ export function createEditor(ctx) {
   function commitClickPoint() {
     const step = currentStep();
     if (!step || step.type === "slide") return;
-    step.clickPoint = readClickPointFromDom();
+    step.clickPoint = clampClickToHotspot(readClickPointFromDom(), step.hotspot);
+    placeClickPoint(step.clickPoint);
     onChange();
   }
 
@@ -2083,7 +2091,7 @@ export function createEditor(ctx) {
     const rect = getImageContentRect(els.canvasImage);
     const x = ((clientX - frame.left - rect.left) / rect.width) * 100;
     const y = ((clientY - frame.top - rect.top) / rect.height) * 100;
-    step.clickPoint = { x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
+    step.clickPoint = clampClickToHotspot({ x: clamp(x, 0, 100), y: clamp(y, 0, 100) }, step.hotspot);
     placeClickPoint(step.clickPoint);
     onChange();
   }
@@ -2097,7 +2105,12 @@ export function createEditor(ctx) {
     const title = els.propTitle.value;
     step.label = title;
     if (els.propImage.value) step.image = els.propImage.value;
+    const wasSimulating = step.simulateClick !== false;
     step.simulateClick = els.propSimulate.checked;
+    // why: ao ligar "simular clique", o clique nasce no centro do destaque
+    if (!wasSimulating && step.simulateClick && hasHotspot(step.hotspot)) {
+      step.clickPoint = clickPointFromHotspot(step.hotspot);
+    }
     if (els.propZoom) step.zoomHighlight = els.propZoom.checked;
     step.caption = els.propCaption?.value || "";
     step.showCaption = els.propShowCaption ? els.propShowCaption.checked : true;
@@ -3323,6 +3336,8 @@ export function createEditor(ctx) {
         width: rect.width,
         height: rect.height,
         frame: els.canvasFrame.getBoundingClientRect(),
+        hotspot: currentStep()?.hotspot,
+        click: currentStep() ? ensureClickPoint(currentStep()) : null,
       };
       e.preventDefault();
       e.stopPropagation();
@@ -3358,6 +3373,10 @@ export function createEditor(ctx) {
       els.hotspot.style.top = top + "px";
       els.hotspot.style.width = width + "px";
       els.hotspot.style.height = height + "px";
+      // why: o marcador acompanha o destaque ao vivo, não só no pointerup
+      if (dragStart.click && !els.clickPoint.hidden) {
+        placeClickPoint(followHotspot(dragStart.click, dragStart.hotspot, readHotspotFromDom()));
+      }
       if (!popoverDrag) placeEditorPopover();
     });
 
@@ -3396,6 +3415,17 @@ export function createEditor(ctx) {
       const rect = getImageContentRect(els.canvasImage);
       const x = clamp(e.clientX - frame.left, rect.left, rect.left + rect.width);
       const y = clamp(e.clientY - frame.top, rect.top, rect.top + rect.height);
+      const step = currentStep();
+      if (step && hasHotspot(step.hotspot) && rect.width > 0 && rect.height > 0) {
+        // why: com destaque, o clique só anda dentro dele (atenção e clique não divergem)
+        placeClickPoint(
+          clampClickToHotspot(
+            { x: ((x - rect.left) / rect.width) * 100, y: ((y - rect.top) / rect.height) * 100 },
+            step.hotspot
+          )
+        );
+        return;
+      }
       els.clickPoint.style.left = x + "px";
       els.clickPoint.style.top = y + "px";
     });
@@ -3704,7 +3734,7 @@ export function createEditor(ctx) {
       ? null
       : {
           hotspot: step.hotspot,
-          clickPoint: step.clickPoint || clickPointFromHotspot(step.hotspot),
+          clickPoint: ensureClickPoint(step),
           simulateClick: step.simulateClick !== false,
         };
     let imageDataUrl = "";
