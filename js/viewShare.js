@@ -44,6 +44,8 @@ export function tourFromPermanentShare(data) {
     ok: true,
     tour: payload,
     title: typeof data.title === "string" ? data.title.trim() : "",
+    // why: o Cloud calcula pelo plano atual do dono; ausente (Cloud antigo) = null
+    branding: data.branding === "shown" || data.branding === "hidden" ? data.branding : null,
     // why: o servidor decide (passo ligado no tour publicado + autor Pro); o player só obedece
     features: {
       leadCapture: features.leadCapture === true,
@@ -116,9 +118,10 @@ export function sharePageTitle(name, fallback = "GuiaFlow — Tour", { branded =
  * - "full": logo no topo (link temporário /v e editor).
  * - "none": link permanente /p (só Pro publica) — sem logo, padrão também para links antigos.
  * - "credit": /p cujo autor pediu o crédito (`removeBranding: false` no tour publicado) — «Feito com GuiaFlow».
+ * server = `branding` do Cloud: "shown" (dono sem Pro agora) volta ao logo do plano grátis, ignorando a opção salva.
  */
-export function shareBranding(kind, tour) {
-  if (kind !== "permanent") return "full";
+export function shareBranding(kind, tour, server = null) {
+  if (kind !== "permanent" || server === "shown") return "full";
   return tour && typeof tour === "object" && tour.removeBranding === false ? "credit" : "none";
 }
 
