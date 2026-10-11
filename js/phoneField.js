@@ -13,6 +13,17 @@ import {
   validatePhone,
 } from "./phoneCountries.js";
 
+/** Mensagem do erro de telefone (vazio, tamanho do país, DDD do Brasil). */
+export function phoneErrorText(result, countryName, t, { emptyKey = "fixed.errPhoneEmpty", fallbackKey = "fixed.errPhone" } = {}) {
+  if (result.error === "empty") return t(emptyKey);
+  if (result.error === "ddd") return t("fixed.errPhoneDdd");
+  if (result.error === "length" && result.min) {
+    const digits = result.min === result.max ? String(result.min) : `${result.min}–${result.max}`;
+    return t("fixed.errPhoneLength", { country: countryName, digits });
+  }
+  return t(fallbackKey);
+}
+
 /**
  * els: { button, flag, dial, input, pop, search, list, empty }
  * opts: { locale(), defaultIso(), onChange(), t(key) }
@@ -76,6 +87,7 @@ export function createPhoneField(els, opts) {
   function open() {
     options = countryOptions(opts.locale());
     els.pop.hidden = false;
+    opts.onOpen?.();
     els.button.setAttribute("aria-expanded", "true");
     els.search.value = "";
     active = Math.max(0, options.findIndex((o) => o.iso === iso));
@@ -169,6 +181,8 @@ export function createPhoneField(els, opts) {
       paintButton();
       close({ focus: false });
     },
+    /** País escolhido no botão: { iso, dial }. */
+    country: () => ({ iso: country().iso, dial: country().dial }),
     countryName() {
       const c = country();
       return options.find((o) => o.iso === c.iso)?.name || c.iso;
