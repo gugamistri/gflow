@@ -59,11 +59,25 @@ function gfT(key, vars) {
     return { x: hs.x + hs.w / 2, y: hs.y + hs.h / 2 };
   }
 
+  // why: espelha clampClickToHotspot de store.js — o HTML exportado não importa módulos
+  function clampClickToHotspot(point, hs) {
+    const ok =
+      hs && [hs.x, hs.y, hs.w, hs.h].every(Number.isFinite) && hs.w > 0 && hs.h > 0;
+    if (!ok) return point;
+    const ix = Math.min(1, hs.w / 2);
+    const iy = Math.min(1, hs.h / 2);
+    return {
+      x: Math.min(Math.max(point.x, hs.x + ix), hs.x + hs.w - ix),
+      y: Math.min(Math.max(point.y, hs.y + iy), hs.y + hs.h - iy),
+    };
+  }
+
   function ensureClickPoint(step) {
-    if (step?.clickPoint && Number.isFinite(step.clickPoint.x) && Number.isFinite(step.clickPoint.y)) {
-      return step.clickPoint;
-    }
-    return clickPointFromHotspot(step?.hotspot);
+    const raw =
+      step?.clickPoint && Number.isFinite(step.clickPoint.x) && Number.isFinite(step.clickPoint.y)
+        ? step.clickPoint
+        : clickPointFromHotspot(step?.hotspot);
+    return clampClickToHotspot(raw, step?.hotspot);
   }
 
   function clampCover(translate, scaledSize, stageSize) {
