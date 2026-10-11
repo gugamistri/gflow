@@ -11,6 +11,7 @@ import {
 import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback } from "./playback.js";
 import { t } from "./i18n.js";
 import { downscaleImageUrl, isHeavyDataUrl, thumbKey } from "./thumbs.js";
+import { fixedStepsForPayload, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
 
 const DB_NAME = "demo-studio";
 const DB_VERSION = 3;
@@ -363,6 +364,7 @@ export function projectToDemoPayload(project) {
   };
   // why: só entra quando escolhida, para não mudar o hash de links já publicados
   if (project.coverStepId) payload.coverStepId = String(project.coverStepId);
+  Object.assign(payload, fixedStepsForPayload(project));
   ensurePlayback(payload);
   ensureNarration(payload);
   return payload;
@@ -387,6 +389,9 @@ export function demoPayloadToProject(data, { name, id } = {}) {
     narration: data.narration || defaultNarration(),
   };
   if (typeof data.coverStepId === "string" && data.coverStepId) project.coverStepId = data.coverStepId;
+  // why: passos fixos só existem no payload quando ligados; desligado = ausente
+  if (data.startStep && typeof data.startStep === "object") project.startStep = normalizeStartStep(data.startStep);
+  if (data.endStep && typeof data.endStep === "object") project.endStep = normalizeEndStep(data.endStep);
   ensurePlayback(project);
   ensureNarration(project);
   return project;

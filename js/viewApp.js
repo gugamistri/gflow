@@ -19,6 +19,8 @@ import {
   sharedPreviewBackTarget,
   tourFromPermanentShare,
 } from "./viewShare.js";
+import { endStepActive } from "./fixedSteps.js";
+import { renderEndCard } from "./fixedStepsView.js";
 
 function showStatus(message) {
   const status = document.getElementById("view-share-status");
@@ -169,6 +171,7 @@ function tryLeaveSharedPreview() {
 let player = null;
 let demo = null;
 let touring = false;
+let replayTour = () => {};
 
 // why: ?embed=1 = iframe no site do cliente; a classe também vem do <head> para não piscar
 const embedOptions = parseEmbedOptions(location.search);
@@ -227,9 +230,54 @@ function showClosedState() {
   if (status) status.hidden = true;
   const cover = document.getElementById("view-share-cover");
   if (cover) cover.hidden = true;
+  hideFixedCard();
   const closed = document.getElementById("view-share-closed");
   if (closed) closed.hidden = false;
   focusShareDocument();
+}
+
+function hideFixedCard() {
+  const host = document.getElementById("view-share-fixed");
+  if (!host) return;
+  host.hidden = true;
+  host.replaceChildren();
+}
+
+/** Palco limpo para um cartão fixo (início ou fim): sem player, capa ou estado final. */
+function showFixedCard(card) {
+  touring = false;
+  player?.stop?.({ silent: true });
+  document.body.classList.remove("is-presenting");
+  document.getElementById("view-editor")?.classList.remove("is-presenting");
+  const hint = document.getElementById("present-chrome");
+  if (hint) hint.hidden = true;
+  for (const id of ["canvas-frame", "view-share-status", "view-share-cover", "view-share-closed"]) {
+    const node = document.getElementById(id);
+    if (node) node.hidden = true;
+  }
+  const host = document.getElementById("view-share-fixed");
+  if (!host) return false;
+  host.replaceChildren(card);
+  host.hidden = false;
+  if (!isEmbed) card.querySelector("a, button, input")?.focus({ preventScroll: true });
+  return true;
+}
+
+/** Endereço do tour para {link}: a página atual sem query (no embed também é o /p). */
+function tourLink() {
+  return `${location.origin}${location.pathname}`;
+}
+
+const fixedState = { leadName: "" };
+
+function showEndStep() {
+  const card = renderEndCard(demo.endStep, {
+    tour: String(demo?.name || "").trim(),
+    link: tourLink(),
+    nome: fixedState.leadName,
+    onReplay: () => replayTour(),
+  });
+  return showFixedCard(card);
 }
 
 function coverImageSrc() {
@@ -253,6 +301,7 @@ function showCover(onStart) {
   if (status) status.hidden = true;
   const closed = document.getElementById("view-share-closed");
   if (closed) closed.hidden = true;
+  hideFixedCard();
   const cover = document.getElementById("view-share-cover");
   if (!cover) {
     onStart();
@@ -288,6 +337,7 @@ function showTouring() {
   if (closed) closed.hidden = true;
   const cover = document.getElementById("view-share-cover");
   if (cover) cover.hidden = true;
+  hideFixedCard();
   document.body.classList.add("is-presenting");
   document.getElementById("view-editor")?.classList.add("is-presenting");
   document.getElementById("hotspot")?.classList.add("is-previewing");
@@ -297,8 +347,10 @@ function showTouring() {
   focusShareDocument();
 }
 
-function exitSharedTour() {
+function exitSharedTour(reason) {
   if (!touring) return;
+  // why: passo final ao concluir (e no embed, onde sair não pode mexer na página do cliente)
+  if (endStepActive(demo?.endStep) && (reason === "complete" || isEmbed) && showEndStep()) return;
   // why: no embed nunca history.back() nem window.close() — isso mexeria na página do cliente
   if (!isEmbed && tryLeaveSharedPreview()) return;
   showClosedState();
@@ -408,16 +460,17 @@ async function boot() {
     ignoreAdvanceMs: 700,
     // why: no embed o clique no véu não fecha; o Driver ignora valores fora de close/nextStep
     overlayClickBehavior: isEmbed ? "none" : "close",
-    onRequestExit: () => {
-      exitSharedTour();
+    onRequestExit: (info) => {
+      exitSharedTour(info?.reason);
     },
   });
 
-  document.getElementById("view-share-replay")?.addEventListener("click", () => {
+  replayTour = () => {
     selectedIndex = 0;
     showTouring();
     player.play({ from: 0, autoplay: true });
-  });
+  };
+  document.getElementById("view-share-replay")?.addEventListener("click", () => replayTour());
 
   const startTour = () => {
     showTouring();

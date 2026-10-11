@@ -146,15 +146,15 @@ function renderViewPage({
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/47/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/47/css/theme.css" />
-  <link rel="stylesheet" href="/a/47/css/app.css" />
+  <link rel="stylesheet" href="/a/48/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/48/css/theme.css" />
+  <link rel="stylesheet" href="/a/48/css/app.css" />
   <script>window.__GF_SHARE = ${scriptJson({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/47/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/47/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/48/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/48/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
   </header>
@@ -183,6 +183,7 @@ function renderViewPage({
           <h1 id="view-share-closed-title"></h1>
           <button type="button" class="btn btn-primary" id="view-share-replay" data-i18n="view.replay">Ver tour novamente</button>
         </div>
+        <div class="view-share-fixed" id="view-share-fixed" hidden></div>
         <div class="canvas-frame" id="canvas-frame" hidden>
           <img id="canvas-image" alt="" hidden />
           <div class="image-missing" id="canvas-missing" hidden data-i18n="canvas.missing">Tela sem imagem</div>
@@ -219,8 +220,8 @@ function renderViewPage({
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/47/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/47/js/viewApp.js"></script>
+  <script src="/a/48/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/48/js/viewApp.js"></script>
 </body>
 </html>
 `;

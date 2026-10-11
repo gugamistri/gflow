@@ -152,7 +152,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo — GuiaFlow"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/47\/js\/viewApp\.js/);
+  assert.match(html, /a\/48\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);
@@ -362,4 +362,13 @@ test("nenhum header impede o /p e o /v de abrir em iframe", () => {
       }
     }
   }
+});
+
+test("o shell do /p, do /v e o view.html têm o palco do passo fixo, escondido", () => {
+  for (const kind of ["permanent", "temporary"]) {
+    const html = renderViewPage({ id: "slug-permanente", name: "Tour", origin: "https://guiaflow.pro", kind });
+    assert.match(html, /id="view-share-fixed"[^>]*hidden/);
+  }
+  const view = readFileSync(new URL("../view.html", import.meta.url), "utf8");
+  assert.match(view, /id="view-share-fixed"[^>]*hidden/);
 });
