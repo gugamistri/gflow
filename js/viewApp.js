@@ -5,7 +5,8 @@ import { applyTheme, normalizeSteps, resolveImageSrc } from "./store.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createPlayer } from "./player.js";
 import { initLocale, applyI18n, t } from "./i18n.js";
-import { getCloudBaseUrl, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
+import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
+import { createViewTracker, ctaFromAction, defaultSender, deviceKind, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
 import {
   decideEscape,
   embedShowsCover,
@@ -170,6 +171,8 @@ function tryLeaveSharedPreview() {
 }
 
 let player = null;
+/** Tracker do analytics; null quando não há rastreio (DNT/GPC, /v, preview). */
+let tracker = null;
 let demo = null;
 let touring = false;
 let replayTour = () => {};
@@ -319,6 +322,7 @@ function endCard() {
     nome: fixedState.lead?.name || "",
     contactForm: Boolean(shareSlug && shareFeatures.contactForm),
     onReplay: () => replayTour(),
+    onAction: (action) => tracker?.ctaClick(ctaFromAction(action)),
     onContactForm: () => {
       const card = cardShell("end");
       card.append(
@@ -335,7 +339,39 @@ function endCard() {
 }
 
 function showEndStep() {
-  return showFixedCard(endCard());
+  const card = endCard();
+  const shown = showFixedCard(card);
+  if (shown && card.querySelector(".fixed-card-actions")) tracker?.ctaView();
+  return shown;
+}
+
+/** Analytics (F4): só /p e embed, com a Cloud, sem DNT/GPC e fora do ?preview=1 do editor. */
+function startTracking(route) {
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  const ok = shouldTrack({
+    kind: route?.kind,
+    cloudEnabled: isCloudEnabled() || route?.kind === "permanent",
+    flags: isCloudEnabled() ? getCloudFlags() : null,
+    dnt: nav.doNotTrack,
+    windowDnt: window.doNotTrack,
+    msDnt: nav.msDoNotTrack,
+    gpc: nav.globalPrivacyControl,
+    search: location.search,
+  });
+  if (!ok || !shareSlug) return null;
+  const endpoint = `${getCloudBaseUrl() || PUBLISHED_CLOUD_BASE}${CLOUD_EVENTS_PATH(shareSlug)}`;
+  const coarse = Boolean(window.matchMedia?.("(pointer: coarse)")?.matches);
+  const t = createViewTracker({
+    send: defaultSender(endpoint),
+    embed: isEmbed,
+    // why: no embed o referrer é a página do cliente (só o host é enviado)
+    source: trafficSource(document.referrer, location.search, location.origin),
+    device: deviceKind({ coarse, width: window.innerWidth || 0 }),
+    locale: shortLocale(document.documentElement.lang || nav.language),
+  });
+  document.addEventListener("visibilitychange", () => t.visibility(document.visibilityState === "hidden"));
+  window.addEventListener("pagehide", () => t.pagehide());
+  return t;
 }
 
 /** Passo inicial (Pro): só no /p, com o recurso ativo no servidor, uma vez por sessão. */
@@ -353,7 +389,10 @@ function showStartStep(next) {
         const lead = { leadId: String(res.data?.leadId || ""), name: value.name || "", email: value.email || "", phone: value.phone || "" };
         fixedState.lead = lead;
         storeLead({ leadId: lead.leadId, name: lead.name });
-        if (lead.leadId) window.__GF_LEAD = { slug: shareSlug, leadId: lead.leadId, consent: true };
+        if (lead.leadId) {
+          window.__GF_LEAD = { slug: shareSlug, leadId: lead.leadId, consent: true };
+          tracker?.lead(lead.leadId);
+        }
         hideFixedCard();
         next();
       }
@@ -552,7 +591,12 @@ async function boot() {
     onRequestExit: (info) => {
       exitSharedTour(info?.reason);
     },
+    onStep: (info) => tracker?.onStep(info),
+    onComplete: (info) => tracker?.onComplete(info),
+    onExit: (info) => tracker?.onExit(info),
   });
+
+  tracker = startTracking(route);
 
   replayTour = () => {
     selectedIndex = 0;
@@ -573,6 +617,7 @@ async function boot() {
   if (stored?.leadId) {
     fixedState.lead = { leadId: stored.leadId, name: stored.name || "" };
     window.__GF_LEAD = { slug: shareSlug, leadId: stored.leadId, consent: true };
+    tracker?.lead(stored.leadId);
   }
 
   const begin = () => {

@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/51/css/theme.css" />
-  <link rel="stylesheet" href="a/51/css/app.css" />
-  <link rel="stylesheet" href="a/51/css/ajuda.css" />
+  <link rel="stylesheet" href="a/52/css/theme.css" />
+  <link rel="stylesheet" href="a/52/css/app.css" />
+  <link rel="stylesheet" href="a/52/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/51/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/51/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/52/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/52/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -74,8 +74,9 @@
         <li data-i18n="privacy.resumo.li2">Um link temporário guarda o tour publicado por 7 dias. Depois disso ele é apagado.</li>
         <li data-i18n="privacy.resumo.li3">Quem assina o GuiaFlow Pro tem uma conta com e-mail. Guardamos o mínimo para a conta, a assinatura, os links permanentes e os limites de uso.</li>
         <li data-i18n="privacy.resumo.li4">O pagamento é feito no Stripe. Nós não recebemos nem guardamos os dados do seu cartão.</li>
-        <li data-i18n="privacy.resumo.li5">Não usamos ferramentas de análise de audiência, publicidade ou rastreamento, e não vendemos dados.</li>
+        <li data-i18n="privacy.resumo.li5">Não usamos publicidade nem rastreamento entre sites, e não vendemos dados.</li>
         <li data-i18n="privacy.resumo.li6">Se um tour publicado pedir seu nome, e-mail ou telefone, ou se você usar o formulário de contato no fim dele, esses dados vão para o autor do tour, que é o responsável por eles. O GuiaFlow só os guarda e entrega em nome do autor.</li>
+        <li data-i18n="privacy.resumo.li7">Nos tours publicados em link permanente por assinantes Pro, contamos as visitas (quantas pessoas abriram, até qual passo foram e se clicaram no botão final) sem cookies e sem guardar IP. Se o seu navegador pede para não ser rastreado (“Não rastrear” ou GPC), nada é medido.</li>
       </ul>
     </section>
     <section class="card" id="controlador">
@@ -151,9 +152,23 @@
       <p data-i18n="privacy.leads.p4">O endereço IP é usado apenas na hora do envio, para limitar tentativas e evitar abuso, e não fica guardado junto do contato.</p>
       <p data-i18n-html="privacy.leads.p5">O envio depende do consentimento do visitante (art. 7º, I, da LGPD): sem marcar a caixa, nada é enviado. Para acessar, corrigir ou excluir seus dados, fale com o autor do tour. Se não conseguir, escreva para <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>; encaminharemos o pedido ao autor e ajudaremos no que couber ao operador.</p>
     </section>
+    <section class="card" id="visitas-tours">
+      <h2 data-i18n="privacy.analytics.title">Visitas a tours publicados (análise do Pro)</h2>
+      <p data-i18n="privacy.analytics.p1">Quando um assinante Pro publica um tour em link permanente (inclusive incorporado em outro site), o player conta como o tour foi assistido, para mostrar ao autor uma análise agregada: visualizações, conclusão, onde as pessoas param, cliques no botão final e de onde vieram as visitas. Links temporários, o editor e o HTML ou vídeo exportados não são medidos.</p>
+      <p data-i18n="privacy.analytics.p2">Para cada visita guardamos apenas:</p>
+      <ul>
+        <li data-i18n="privacy.analytics.li1">os eventos do tour: abriu, começou, passos vistos e o tempo em cada um (até 10 minutos por passo), se concluiu ou saiu (e como: Esc, clique fora, fechar ou sair da página), e se viu ou clicou no botão do passo final (WhatsApp, link, e-mail ou formulário);</li>
+        <li data-i18n="privacy.analytics.li2">o contexto: se o tour estava incorporado em um site, o domínio da página de origem (sem o endereço completo), os parâmetros UTM do link, o tipo de aparelho (celular ou computador) e o idioma do navegador;</li>
+        <li data-i18n="privacy.analytics.li3">um identificador de visita aleatório, que vive só na memória da página e some ao fechá-la;</li>
+        <li data-i18n="privacy.analytics.li4">um código para estimar visitantes únicos, calculado no servidor a partir do IP, do navegador e do link com um valor aleatório que muda todo dia e é apagado. O IP e o navegador não são gravados, e depois que o valor do dia é apagado o código não permite saber quem foi o visitante.</li>
+      </ul>
+      <p data-i18n="privacy.analytics.p3">Não usamos cookies nem guardamos nada no navegador do visitante para isso. Se o navegador enviar o sinal “Não rastrear” (DNT) ou o Global Privacy Control (GPC), o player não envia nenhum dado. As visitas do próprio autor abertas pelo editor como pré-visualização também não contam.</p>
+      <p data-i18n="privacy.analytics.p4">Se o visitante preencher o passo inicial do tour e marcar a caixa de consentimento, a visita fica ligada a esse contato, e a análise mostra ao autor quantas visitas vieram de pessoas que deixaram o contato. Sem esse consentimento, a visita não é ligada a ninguém.</p>
+      <p data-i18n-html="privacy.analytics.p5">Aqui também <strong>o autor do tour é o controlador</strong> e <strong>o GuiaFlow é o operador</strong>, que trata esses dados só para gerar a análise do autor. A base legal é o legítimo interesse do autor em entender o uso do próprio tour (art. 7º, IX, da LGPD), com o mínimo de dados; o vínculo com um contato depende do consentimento dado no passo inicial (art. 7º, I). Os dados de cada visita ficam guardados por 90 dias; os totais por dia (no horário de Brasília), por 25 meses. Tudo é apagado antes se o autor apagar o link. Para exercer seus direitos, fale com o autor do tour ou escreva para <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
     <section class="card" id="cookies">
       <h2 data-i18n="privacy.cookies.title">Cookies e medição de uso</h2>
-      <p data-i18n="privacy.cookies.p1">O GuiaFlow não usa ferramentas de análise de audiência, pixels de publicidade ou rastreamento entre sites.</p>
+      <p data-i18n="privacy.cookies.p1">O GuiaFlow não usa pixels de publicidade nem rastreamento entre sites. A medição de visitas dos tours publicados, descrita acima, não usa cookies.</p>
       <ul>
         <li data-i18n="privacy.cookies.li1">O editor usa o armazenamento local do navegador para funcionar, como explicado acima.</li>
         <li data-i18n="privacy.cookies.li2">O painel administrativo usa um cookie de sessão.</li>
@@ -177,7 +192,7 @@
       <ul>
         <li data-i18n-html="privacy.compartilhamento.li1"><strong>Vercel</strong> (EUA): hospedagem do site e dos links temporários;</li>
         <li data-i18n-html="privacy.compartilhamento.li2"><strong>Cloudflare</strong> (EUA, rede global): DNS e entrega do site;</li>
-        <li data-i18n-html="privacy.compartilhamento.li3"><strong>Hostinger</strong> (servidor em São Paulo): servidor da conta Pro e dos links permanentes;</li>
+        <li data-i18n-html="privacy.compartilhamento.li3"><strong>Hostinger</strong> (servidor em São Paulo): servidor da conta Pro, dos links permanentes e da análise de visitas;</li>
         <li data-i18n-html="privacy.compartilhamento.li4"><strong>Stripe</strong> (EUA e Irlanda): pagamentos;</li>
         <li data-i18n-html="privacy.compartilhamento.li5"><strong>Resend</strong> (EUA): envio de e-mails;</li>
         <li data-i18n-html="privacy.compartilhamento.li6"><strong>OpenRouter</strong> (EUA) e o provedor do modelo escolhido: textos com IA;</li>
@@ -198,6 +213,7 @@
         <li data-i18n-html="privacy.retencao.li3"><strong>Links permanentes</strong>: até você apagar o link ou a conta ser excluída;</li>
         <li data-i18n-html="privacy.retencao.li4"><strong>Links de acesso por e-mail</strong>: o link de login vale 15 minutos e o link de ativação de um convite vale 7 dias;</li>
         <li data-i18n-html="privacy.retencao.li6"><strong>Contatos de visitantes</strong>: até o autor do tour excluí-los, apagar o link permanente ou encerrar a conta;</li>
+        <li data-i18n-html="privacy.retencao.li7"><strong>Visitas a tours publicados</strong>: dados de cada visita por 90 dias e totais diários por 25 meses, ou até o autor apagar o link;</li>
         <li data-i18n-html="privacy.retencao.li5"><strong>Conta e assinatura</strong>: enquanto a conta existir. Depois de um pedido de exclusão, apagamos os dados da conta, exceto o que a lei manda guardar, como registros de pagamento e fiscais, pelo prazo legal.</li>
       </ul>
     </section>
@@ -243,8 +259,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/51/js/i18n.js";
-    import "./a/51/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/52/js/i18n.js";
+    import "./a/52/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

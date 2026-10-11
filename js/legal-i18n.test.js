@@ -12,8 +12,8 @@ test("privacidade e termos usam o mesmo i18n da /ajuda", () => {
     assert.match(html, /localStorage\.getItem\("ns-locale"\)/, file);
     assert.match(html, /<select id="locale-select"[^>]*>/, file);
     for (const loc of SUPPORTED_LOCALES) assert.match(html, new RegExp(`<option value="${loc}">`), file);
-    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/51\/js\/i18n\.js"/, file);
-    assert.match(html, /import "\.\/a\/51\/js\/legal-i18n\.js"/, file);
+    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/52\/js\/i18n\.js"/, file);
+    assert.match(html, /import "\.\/a\/52\/js\/legal-i18n\.js"/, file);
     const keys = [...html.matchAll(/data-i18n(?:-html|-aria)?="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(keys.length > 40, file);
     for (const key of keys) {
@@ -80,4 +80,24 @@ test("privacidade separa o link de login (15 min) do link de convite (7 dias)", 
   }
   assert.match(html, /convite do GuiaFlow Pro vale 7 dias/);
   assert.match(html, /link de ativação de um convite vale 7 dias/);
+});
+
+test("privacidade e termos explicam a análise de visitas: sem cookies, DNT/GPC, 90 dias / 25 meses", () => {
+  const privacy = read("privacidade.html");
+  assert.match(privacy, /id="visitas-tours"/);
+  for (const loc of SUPPORTED_LOCALES) {
+    const c = legalCatalogs[loc];
+    for (const key of ["privacy.analytics.p1", "privacy.analytics.li4", "privacy.analytics.p3", "privacy.analytics.p5", "privacy.retencao.li7", "terms.leads.p3"]) {
+      assert.ok(c[key], `${loc} ${key}`);
+    }
+    assert.match(c["privacy.analytics.p3"], /DNT/);
+    assert.match(c["privacy.analytics.p3"], /GPC/);
+    assert.match(c["privacy.analytics.p5"], /90/);
+    assert.match(c["privacy.analytics.p5"], /25/);
+    // why: o resumo e a seção de cookies não podem mais dizer que não há análise de audiência
+    assert.equal(/análise de audiência|análisis de audiencia|audience analytics/i.test(c["privacy.resumo.li5"] + c["privacy.cookies.p1"]), false, loc);
+  }
+  assert.match(legalCatalogs.pt["privacy.analytics.p5"], /autor do tour é o controlador/);
+  assert.match(legalCatalogs.en["privacy.analytics.p5"], /processor/);
+  assert.match(legalCatalogs.es["privacy.analytics.p5"], /encargado/);
 });

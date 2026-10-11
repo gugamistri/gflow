@@ -72,9 +72,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/51/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/51/css/theme.css" />
-  <link rel="stylesheet" href="a/51/css/app.css" />
+  <link rel="stylesheet" href="a/52/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/52/css/theme.css" />
+  <link rel="stylesheet" href="a/52/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -151,7 +151,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/51/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/51/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/52/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/52/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -442,6 +442,16 @@
               </strong>
               <span data-i18n="embed.buttonDesc">Código para colar na sua página. Ajusta ao tamanho da tela.</span>
             </button>
+            <button type="button" class="export-option" id="btn-share-analytics" hidden>
+              <strong>
+                <span data-i18n="analytics.button">📊 Análise</span>
+                <span class="pro-badge" id="analytics-pro-badge" hidden>
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
+              </strong>
+              <span data-i18n="analytics.buttonDesc">Views, conclusão e onde as pessoas param.</span>
+            </button>
             <button type="button" class="export-option" id="btn-share-leads" hidden>
               <strong><span data-i18n="leads.open">Ver contatos recebidos</span></strong>
               <span data-i18n="leads.buttonDesc">Contatos do passo inicial e do formulário do passo final, com exportação CSV.</span>
@@ -500,7 +510,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/51/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/51/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/52/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/52/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -959,7 +969,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/51/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/52/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1051,6 +1061,10 @@
         <li data-feature="permanentShare">
           <span class="paywall-check" aria-hidden="true"></span>
           <span data-i18n="billing.benefitShare">Links permanentes</span>
+        </li>
+        <li data-feature="analytics">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitAnalytics">Análise de quem assistiu: views, conclusão e onde as pessoas param</span>
         </li>
         <li data-feature="hostedAi">
           <span class="paywall-check" aria-hidden="true"></span>
@@ -1189,6 +1203,44 @@
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
         <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="studio-modal analytics-modal" id="modal-analytics" aria-labelledby="analytics-heading">
+    <div class="studio-modal-body analytics-dialog">
+      <div class="account-dialog-head">
+        <h3 id="analytics-heading" data-i18n="analytics.title">Análise do tour</h3>
+        <button type="button" class="btn btn-icon" id="btn-analytics-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <div class="analytics-toolbar">
+        <p class="analytics-tour" id="analytics-tour"></p>
+        <div class="analytics-range" id="analytics-range" role="group" aria-label="Período" data-i18n-aria="analytics.rangeAria">
+          <button type="button" class="analytics-range-btn" data-days="7" data-i18n="analytics.range7">7 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="30" data-i18n="analytics.range30">30 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="90" data-i18n="analytics.range90">90 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="365" data-i18n="analytics.range365">12 meses</button>
+        </div>
+      </div>
+      <p class="analytics-status" id="analytics-status" role="status"></p>
+      <div class="analytics-empty" id="analytics-empty" hidden>
+        <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
+      </div>
+      <div class="analytics-body" id="analytics-body" hidden>
+        <div class="analytics-cards" id="analytics-cards"></div>
+        <p class="analytics-split" id="analytics-split"></p>
+        <div class="analytics-chart" id="analytics-chart"></div>
+        <h4 class="analytics-h" data-i18n="analytics.stepsTitle">Onde as pessoas param</h4>
+        <p class="analytics-note" data-i18n="analytics.stepsNote">Os passos fixos de início e fim não entram nesta conta.</p>
+        <div class="analytics-steps" id="analytics-steps" role="table"></div>
+        <h4 class="analytics-h" data-i18n="analytics.sourcesTitle">De onde vieram</h4>
+        <div class="analytics-sources" id="analytics-sources"></div>
+      </div>
+      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Contagem sem cookies e sem dados pessoais. Visitantes com “Não rastrear” ou GPC ativado não entram nos números. Visitantes únicos são aproximados.</p>
+      <div class="studio-modal-actions analytics-actions">
+        <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
       </div>
     </div>
   </dialog>
@@ -1720,7 +1772,7 @@
     </symbol>
   </svg>
 
-  <script src="a/51/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/51/js/app.js"></script>
+  <script src="a/52/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/52/js/app.js"></script>
 </body>
 </html>
