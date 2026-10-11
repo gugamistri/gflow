@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/67/css/theme.css" />
-  <link rel="stylesheet" href="a/67/css/app.css" />
-  <link rel="stylesheet" href="a/67/css/ajuda.css" />
+  <link rel="stylesheet" href="a/68/css/theme.css" />
+  <link rel="stylesheet" href="a/68/css/app.css" />
+  <link rel="stylesheet" href="a/68/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/67/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/67/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/68/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/68/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -130,7 +130,7 @@
       <h2 data-i18n="privacy.projetos.title">Projetos salvos na conta (Pro)</h2>
       <p data-i18n="privacy.projetos.p1">Com o Pro ativo e a conta conectada no editor, todos os projetos deste navegador sobem para a sua conta. Depois disso, cada alteração é enviada automaticamente. Em outro navegador ou aparelho, basta entrar na mesma conta para os projetos aparecerem.</p>
       <p data-i18n="privacy.projetos.p2">Guardamos o conteúdo completo de cada projeto: título, telas, textos, áudios, configurações, temas personalizados e o endereço do link permanente, se houver. Imagens e áudios ficam como arquivos privados da sua conta, identificados por um resumo (hash) para não guardar o mesmo arquivo duas vezes. Só a sua conta conectada consegue baixá-los. Os limites são 15 MB por arquivo, 1 GB de mídia por conta e 500 projetos.</p>
-      <p data-i18n="privacy.projetos.p3">Esses dados ficam no mesmo banco de dados Postgres da conta, em servidor no Brasil (São Paulo).</p>
+      <p data-i18n="privacy.projetos.p3">O conteúdo de cada projeto (textos e configurações) fica no banco de dados Postgres da conta, em servidor no Brasil (São Paulo). As imagens e os áudios ficam no DigitalOcean Spaces, o armazenamento de arquivos da DigitalOcean, nos Estados Unidos (São Francisco), como arquivos privados. As cópias de segurança diárias do banco de dados também ficam lá, por até 14 dias.</p>
       <p data-i18n="privacy.projetos.p4">Se a assinatura terminar, nada é apagado: os projetos continuam guardados na conta. A sincronização para, o editor continua funcionando com as cópias deste navegador e as alterações novas ficam só nele. Ao voltar para o Pro, a sincronização recomeça e os projetos guardados voltam a aparecer.</p>
       <p data-i18n="privacy.projetos.p5">Um projeto apagado no editor também é apagado da conta. Fica só um registro sem conteúdo, para avisar os outros navegadores. Para apagar tudo de uma vez, peça a exclusão da conta pelo contato@guiaflow.pro.</p>
     </section>
@@ -204,6 +204,7 @@
         <li data-i18n-html="privacy.compartilhamento.li1"><strong>Vercel</strong> (EUA): hospedagem do site e dos links temporários;</li>
         <li data-i18n-html="privacy.compartilhamento.li2"><strong>Cloudflare</strong> (EUA, rede global): DNS e entrega do site;</li>
         <li data-i18n-html="privacy.compartilhamento.li3"><strong>Hostinger</strong> (servidor em São Paulo): servidor da conta Pro, dos links permanentes e da análise de visitas;</li>
+        <li data-i18n-html="privacy.compartilhamento.li9"><strong>DigitalOcean</strong> (EUA): imagens e áudios dos projetos salvos na conta Pro e cópias de segurança do banco de dados;</li>
         <li data-i18n-html="privacy.compartilhamento.li4"><strong>Stripe</strong> (EUA e Irlanda): pagamentos;</li>
         <li data-i18n-html="privacy.compartilhamento.li5"><strong>Resend</strong> (EUA): envio de e-mails;</li>
         <li data-i18n-html="privacy.compartilhamento.li6"><strong>OpenRouter</strong> (EUA) e o provedor do modelo escolhido: textos com IA;</li>
@@ -271,8 +272,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/67/js/i18n.js";
-    import "./a/67/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/68/js/i18n.js";
+    import "./a/68/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
