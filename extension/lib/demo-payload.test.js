@@ -91,3 +91,13 @@ test("captura sem imagem falha antes de gerar JSON", () => {
     /Captura incompleta/
   );
 });
+
+test("captura com clique na borda: clique fica dentro do destaque", () => {
+  const payload = buildDemoPayload({
+    name: "x",
+    shots: [{ dataUrl: "data:image/jpeg;base64,AA", imageId: "i", stepId: "s", clickPoint: { x: 0, y: 100 } }],
+  });
+  const { hotspot, clickPoint } = payload.steps[0];
+  assert.deepEqual(hotspot, { x: 0, y: 92, w: 14, h: 8 });
+  assert.deepEqual(clickPoint, { x: 1, y: 99 });
+});
