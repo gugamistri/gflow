@@ -401,7 +401,7 @@ export const catalogs = {
     "fixed.contact.sentBody": "O autor do tour vai responder no seu e-mail.",
     "leads.open": "Ver contatos recebidos",
     "analytics.button": "📊 Análise",
-    "analytics.buttonDesc": "Views, conclusão e onde as pessoas param.",
+    "analytics.buttonDesc": "Visualizações, conclusão e onde as pessoas param.",
     "analytics.title": "Análise do tour",
     "analytics.rangeAria": "Período",
     "analytics.range7": "7 dias",
