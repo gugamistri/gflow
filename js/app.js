@@ -507,6 +507,15 @@ function paintChrome() {
     el.hidden = hidePrefs;
     if (hidePrefs) el.open = false;
   });
+  // why: no editor (desktop) Novo/Abrir/Importar ficam no menu Arquivo; o ☰ fica só com o app.
+  const fileInEditor = inEditor && !compact;
+  for (const id of ["more-file-group", "more-file-divider"]) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = fileInEditor;
+  }
+  document.querySelectorAll("details.menu-panel").forEach((el) => {
+    if (!inEditor) el.open = false;
+  });
   if (presentChrome) presentChrome.hidden = !presenting || view !== "editor";
   if (presentClose) presentClose.hidden = !presenting || view !== "editor" || !compact;
   if (rotateHint) {
@@ -1708,6 +1717,35 @@ function bindChrome() {
     if (more) more.open = false;
     document.getElementById("import-file")?.click();
   });
+
+  // Menu Arquivo (ao lado do nome do projeto)
+  document.getElementById("btn-file-new")?.addEventListener("click", () => {
+    openNewProjectDialog();
+  });
+  document.getElementById("btn-file-open")?.addEventListener("click", () => {
+    void closeProject();
+  });
+  document.getElementById("btn-file-import")?.addEventListener("click", () => {
+    document.getElementById("import-file")?.click();
+  });
+  document.getElementById("btn-file-rename")?.addEventListener("click", () => {
+    const label = document.getElementById("topbar-project");
+    if (!project || !label) return;
+    label.click();
+  });
+  document.getElementById("btn-file-delete")?.addEventListener("click", () => {
+    if (!project?.id) return;
+    void openDeleteProjectModal(project.id);
+  });
+  // why: menus do header (Arquivo, Preview) fecham ao escolher um item.
+  document.querySelectorAll("details.menu-panel").forEach((panel) => {
+    panel.querySelector(".menu-panel-body")?.addEventListener("click", (e) => {
+      if (e.target.closest("button, a")) panel.open = false;
+    });
+    panel.addEventListener("toggle", () => {
+      panel.querySelector(":scope > summary")?.setAttribute("aria-expanded", panel.open ? "true" : "false");
+    });
+  });
   document.getElementById("btn-shortcuts")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
     if (more) more.open = false;
@@ -1939,7 +1977,7 @@ function bindChrome() {
   document.addEventListener("pointerdown", (e) => {
     document
       .querySelectorAll(
-        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.account-chip[open]",
+        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.account-chip[open], details.menu-panel[open]",
       )
       .forEach((panel) => {
         if (!panel.contains(e.target)) panel.open = false;
@@ -1953,6 +1991,18 @@ function bindChrome() {
     e.stopPropagation();
     menuPanel.open = false;
     menuButton?.focus();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (document.querySelector("dialog[open]")) return;
+    const open = document.querySelector(
+      "details.menu-panel[open], details.prefs-panel[open], details.export-panel[open]"
+    );
+    if (!open) return;
+    e.preventDefault();
+    e.stopPropagation();
+    open.open = false;
+    open.querySelector(":scope > summary")?.focus();
   });
 
   const captureBtns = [

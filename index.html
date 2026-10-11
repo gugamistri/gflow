@@ -72,9 +72,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/41/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/41/css/theme.css" />
-  <link rel="stylesheet" href="a/41/css/app.css" />
+  <link rel="stylesheet" href="a/42/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/42/css/theme.css" />
+  <link rel="stylesheet" href="a/42/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -97,7 +97,7 @@
               <span data-i18n="menu.import">Importar</span>
             </button>
           </div>
-          <hr class="more-divider" />
+          <hr class="more-divider" id="more-file-divider" />
           <div class="more-group more-group-actions">
             <div class="more-editor-only" id="more-editor-only" hidden>
               <button type="button" class="more-item" id="btn-menu-projects">
@@ -125,10 +125,130 @@
           </div>
           <hr class="more-divider" />
           <div class="more-group more-group-prefs">
+            <div class="more-pref-row more-theme-row">
+              <span class="more-pref-label" data-i18n="appearance.theme">Modo</span>
+              <div class="appearance-segment" id="appearance-segment" role="radiogroup" aria-label="Modo" data-i18n-aria="appearance.theme">
+                <button type="button" class="appearance-opt" data-mode="documento" title="Claro" aria-label="Claro" aria-pressed="false" data-i18n-title="appearance.light" data-i18n-aria="appearance.light">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-sun"></use></svg>
+                </button>
+                <button type="button" class="appearance-opt" data-mode="social" title="Escuro" aria-label="Escuro" aria-pressed="false" data-i18n-title="appearance.dark" data-i18n-aria="appearance.dark">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-moon"></use></svg>
+                </button>
+                <button type="button" class="appearance-opt" data-mode="system" title="Sistema" aria-label="Sistema" aria-pressed="false" data-i18n-title="appearance.system" data-i18n-aria="appearance.system">
+                  <svg class="btn-ico" aria-hidden="true"><use href="#i-appearance"></use></svg>
+                </button>
+              </div>
+            </div>
+            <label class="locale-select more-locale">
+              <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
+              <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+                <option value="pt">Português</option>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </details>
+    <div class="topbar-brand">
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/42/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/42/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
+        <span
+          class="topbar-project"
+          id="topbar-project"
+          hidden
+          title="Clique para renomear"
+          data-i18n-title="library.renameTitle"
+          role="button"
+          tabindex="0"
+        ></span>
+        <details class="menu-panel file-panel" id="file-panel">
+          <summary class="menu-summary file-menu" id="btn-file-menu" aria-haspopup="menu" title="Novo, abrir, importar e backup" data-i18n-title="file.menuTitle">
+            <span data-i18n="file.menu">Arquivo</span>
+            <svg class="btn-ico menu-caret" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+          </summary>
+          <div class="menu-panel-body" role="menu" aria-label="Arquivo" data-i18n-aria="file.menu">
+            <button type="button" class="more-item" role="menuitem" id="btn-file-new">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+              <span data-i18n="file.new">Novo projeto…</span>
+            </button>
+            <button type="button" class="more-item" role="menuitem" id="btn-file-open">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-open"></use></svg>
+              <span data-i18n="file.open">Abrir…</span>
+            </button>
+            <button type="button" class="more-item" role="menuitem" id="btn-file-import">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+              <span data-i18n="file.import">Importar JSON…</span>
+            </button>
+            <button type="button" class="more-item" role="menuitem" id="btn-export-json">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
+              <span data-i18n="file.export">Exportar JSON</span>
+            </button>
+            <hr class="more-divider" />
+            <button type="button" class="more-item" role="menuitem" id="btn-file-rename">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
+              <span data-i18n="file.rename">Renomear</span>
+            </button>
+            <button type="button" class="more-item" role="menuitem" id="btn-capture-desktop" hidden>
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
+              <span data-i18n="file.capture">Capturar telas</span>
+            </button>
+            <hr class="more-divider" />
+            <button type="button" class="more-item more-item-danger" role="menuitem" id="btn-file-delete">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+              <span data-i18n="file.delete">Apagar projeto…</span>
+            </button>
+          </div>
+        </details>
+      </nav>
+      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
+    </div>
+    <div class="topbar-tools">
+      <div class="topbar-actions" id="topbar-actions-editor" hidden>
+        <details class="more-panel prefs-panel more-editor-pref" id="prefs-panel" hidden>
+          <summary class="btn btn-ghost btn-icon" id="btn-prefs" aria-label="Preferências do projeto" title="Tema do tour, narração e IA" data-i18n-aria="prefs.aria" data-i18n-title="prefs.title">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+          </summary>
+          <div class="more-panel-body prefs-panel-body">
+            <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
+              <summary>
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
+                <span data-i18n="prefs.theme">Tema do tour</span>
+              </summary>
+              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
+                <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
+                <div class="theme-presets" id="theme-presets"></div>
+                <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
+                <div class="theme-customs" id="theme-customs"></div>
+                <div class="theme-custom-actions">
+                  <button type="button" class="btn btn-sm" id="btn-save-theme">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                    <span data-i18n="theme.save">Salvar tema</span>
+                  </button>
+                  <button type="button" class="btn btn-sm" id="btn-dup-theme">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                    <span data-i18n="theme.duplicate">Duplicar selecionado</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                    <span data-i18n="theme.delete">Excluir tema</span>
+                  </button>
+                </div>
+                <hr class="theme-divider" />
+                <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
+                <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
+                <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
+                <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
+                <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
+                <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
+                <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
+                <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+              </div>
+            </details>
             <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
               <summary>
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
-                <span data-i18n="topbar.settings">Preferências</span>
+                <span data-i18n="prefs.narration">Narração e IA</span>
               </summary>
               <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
                 <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
@@ -241,90 +361,34 @@
                 </details>
               </div>
             </details>
-            <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
-              <summary>
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
-                <span data-i18n="topbar.themeGuide">Temas</span>
-              </summary>
-              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
-                <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
-                <div class="theme-presets" id="theme-presets"></div>
-                <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
-                <div class="theme-customs" id="theme-customs"></div>
-                <div class="theme-custom-actions">
-                  <button type="button" class="btn btn-sm" id="btn-save-theme">
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                    <span data-i18n="theme.save">Salvar tema</span>
-                  </button>
-                  <button type="button" class="btn btn-sm" id="btn-dup-theme">
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                    <span data-i18n="theme.duplicate">Duplicar selecionado</span>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                    <span data-i18n="theme.delete">Excluir tema</span>
-                  </button>
-                </div>
-                <hr class="theme-divider" />
-                <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
-                <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
-                <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
-                <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
-                <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
-                <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
-                <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
-                <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
-              </div>
-            </details>
-            <div class="more-pref-row more-theme-row">
-              <span class="more-pref-label" data-i18n="appearance.theme">Modo</span>
-              <div class="appearance-segment" id="appearance-segment" role="radiogroup" aria-label="Modo" data-i18n-aria="appearance.theme">
-                <button type="button" class="appearance-opt" data-mode="documento" title="Claro" aria-label="Claro" aria-pressed="false" data-i18n-title="appearance.light" data-i18n-aria="appearance.light">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-sun"></use></svg>
-                </button>
-                <button type="button" class="appearance-opt" data-mode="social" title="Escuro" aria-label="Escuro" aria-pressed="false" data-i18n-title="appearance.dark" data-i18n-aria="appearance.dark">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-moon"></use></svg>
-                </button>
-                <button type="button" class="appearance-opt" data-mode="system" title="Sistema" aria-label="Sistema" aria-pressed="false" data-i18n-title="appearance.system" data-i18n-aria="appearance.system">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-appearance"></use></svg>
-                </button>
-              </div>
-            </div>
-            <label class="locale-select more-locale">
-              <span class="visually-hidden" data-i18n="locale.label">Idioma</span>
-              <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
-                <option value="pt">Português</option>
-                <option value="es">Español</option>
-                <option value="en">English</option>
-              </select>
-            </label>
           </div>
+        </details>
+        <div class="split-btn preview-split" id="preview-split" role="group" aria-label="Preview" data-i18n-aria="toolbar.preview">
+          <button type="button" class="btn split-main" id="btn-play-from" title="Preview a partir deste passo (P)" aria-label="Preview" data-i18n-title="preview.fromHereTitle" data-i18n-aria="toolbar.preview">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+            <span class="split-label" data-i18n="toolbar.preview">Preview</span>
+          </button>
+          <details class="menu-panel preview-panel" id="preview-panel">
+            <summary class="split-caret" aria-label="Mais opções de preview" title="Mais opções de preview" data-i18n-aria="toolbar.previewMore" data-i18n-title="toolbar.previewMore" aria-haspopup="menu">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+            </summary>
+            <div class="menu-panel-body" role="menu">
+              <button type="button" class="more-item" role="menuitem" id="btn-preview-here">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+                <span data-i18n="preview.fromHere">A partir deste passo</span>
+                <kbd class="menu-kbd">P</kbd>
+              </button>
+              <button type="button" class="more-item" role="menuitem" id="btn-preview-start">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
+                <span data-i18n="preview.fromStart">Desde o início</span>
+              </button>
+            </div>
+          </details>
         </div>
-      </details>
-    <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/41/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/41/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
-      <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
-        <span
-          class="topbar-project"
-          id="topbar-project"
-          hidden
-          title="Clique para renomear"
-          data-i18n-title="library.renameTitle"
-          role="button"
-          tabindex="0"
-        ></span>
-      </nav>
-      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
-    </div>
-    <div class="topbar-tools">
-      <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <button type="button" class="btn btn-ghost" id="btn-capture-desktop" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
-          <span data-i18n="topbar.capture">Capturar</span>
-        </button>
         <details class="export-panel">
-          <summary class="btn-icon share-menu" aria-label="Compartilhar" title="Compartilhar" data-i18n-aria="topbar.share" data-i18n-title="topbar.share">
+          <summary class="share-menu" aria-label="Compartilhar" title="Link, HTML e vídeo" data-i18n-aria="topbar.share" data-i18n-title="share.menuTitle">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
+            <span class="share-label" data-i18n="topbar.share">Compartilhar</span>
             <span class="share-stale-dot" id="share-stale-dot" hidden></span>
           </summary>
           <div class="export-panel-body">
@@ -378,10 +442,6 @@
               </strong>
               <span data-i18n="export.removeMarkDesc">O vídeo mostra o logo GuiaFlow. O Pro exporta sem a marca.</span>
             </button>
-            <button type="button" class="export-option" id="btn-export-json">
-              <strong data-i18n="export.jsonTitle">JSON</strong>
-              <span data-i18n="export.jsonDesc">Backup para reimportar neste editor.</span>
-            </button>
           </div>
         </details>
       </div>
@@ -418,7 +478,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/41/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/41/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/42/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/42/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -494,22 +554,25 @@
         <span class="filmstrip-multi-hint" data-i18n="filmstrip.multiHint">⌘/Ctrl+clique ou Shift para selecionar vários</span>
       </div>
       <div class="filmstrip" id="filmstrip" aria-label="Passos do demo" data-i18n-aria="filmstrip.aria"></div>
+      <div class="filmstrip-footer">
+        <button type="button" class="btn btn-sm filmstrip-add-images" id="btn-add-images" title="Criar vários passos de uma vez a partir de imagens" data-i18n-title="filmstrip.addImagesTitle">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
+          <span data-i18n="toolbar.images">Imagens</span>
+        </button>
+      </div>
     </aside>
 
     <section class="canvas-wrap">
       <div class="canvas-toolbar" role="toolbar" aria-label="Edição" data-i18n-aria="toolbar.aria">
         <div class="toolbar-group" role="group" aria-label="Adicionar" data-i18n-aria="toolbar.groupAdd">
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-scene" title="Cena" aria-label="Cena" data-i18n-title="toolbar.scene" data-i18n-aria="toolbar.scene">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-step" title="Passo" aria-label="Passo" data-i18n-title="toolbar.step" data-i18n-aria="toolbar.step">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-step" title="Novo passo" aria-label="Novo passo" data-i18n-title="toolbar.addStep" data-i18n-aria="toolbar.addStep">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
           </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-slide" title="Slide" aria-label="Slide" data-i18n-title="toolbar.slide" data-i18n-aria="toolbar.slide">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-slide" title="Novo slide" aria-label="Novo slide" data-i18n-title="toolbar.addSlide" data-i18n-aria="toolbar.addSlide">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
           </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-add-images" title="Imagens" aria-label="Imagens" data-i18n-title="toolbar.images" data-i18n-aria="toolbar.images">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-add-scene" title="Nova cena" aria-label="Nova cena" data-i18n-title="toolbar.addScene" data-i18n-aria="toolbar.addScene">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
           </button>
         </div>
         <span class="toolbar-divider" aria-hidden="true"></span>
@@ -520,23 +583,56 @@
           <button type="button" class="btn btn-sm btn-icon" id="btn-copy-step" title="Copiar (⌘C)" aria-label="Copiar" data-i18n-title="toolbar.copyTitle" data-i18n-aria="toolbar.copy">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
           </button>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-cut-step" title="Recortar (⌘X)" aria-label="Recortar" data-i18n-title="toolbar.cutTitle" data-i18n-aria="toolbar.cut">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-cut"></use></svg>
+          </button>
           <button type="button" class="btn btn-sm btn-icon" id="btn-paste-step" title="Colar (⌘V)" aria-label="Colar" data-i18n-title="toolbar.pasteTitle" data-i18n-aria="toolbar.paste">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-paste"></use></svg>
           </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-undo" title="Desfazer" aria-label="Desfazer" data-i18n-title="topbar.undo" data-i18n-aria="topbar.undo" disabled>
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
-          </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-redo" title="Refazer" aria-label="Refazer" data-i18n-title="topbar.redo" data-i18n-aria="topbar.redo" disabled>
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
+          <button type="button" class="btn btn-sm btn-icon btn-danger-hover" id="btn-delete-step" title="Excluir (Delete)" aria-label="Excluir" data-i18n-title="toolbar.deleteTitle" data-i18n-aria="toolbar.delete">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
           </button>
         </div>
         <span class="toolbar-divider" aria-hidden="true"></span>
-        <div class="toolbar-group toolbar-group-preview" role="group" aria-label="Preview" data-i18n-aria="toolbar.preview">
-          <button type="button" class="btn btn-sm btn-icon btn-primary" id="btn-play-from" title="Preview (P)" aria-label="Preview" data-i18n-title="toolbar.previewTitle" data-i18n-aria="toolbar.preview">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+        <div class="toolbar-group" role="group" aria-label="Desfazer e refazer" data-i18n-aria="toolbar.groupHistory">
+          <button type="button" class="btn btn-sm btn-icon" id="btn-undo" title="Desfazer (⌘Z)" aria-label="Desfazer" data-i18n-title="toolbar.undoTitle" data-i18n-aria="topbar.undo" disabled>
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-undo"></use></svg>
           </button>
-          <button type="button" class="btn btn-sm btn-icon" id="btn-watch-from" title="Preview automático (Shift+P)" aria-label="Preview automático" data-i18n-title="toolbar.autoPreviewTitle" data-i18n-aria="toolbar.autoPreview">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-watch"></use></svg>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-redo" title="Refazer (⌘⇧Z)" aria-label="Refazer" data-i18n-title="toolbar.redoTitle" data-i18n-aria="topbar.redo" disabled>
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
+          </button>
+        </div>
+        <span class="toolbar-pos" id="toolbar-pos" aria-live="polite"></span>
+      </div>
+      <div class="canvas-titlebar" id="canvas-titlebar" hidden>
+        <div class="canvas-titlebar-text">
+          <p class="canvas-step-kicker" id="canvas-step-kicker"></p>
+          <div class="inline-slot">
+            <span class="inline-placeholder" id="ph-step-title" hidden></span>
+            <h1 class="canvas-step-title" id="canvas-step-title" data-inline="title" data-ph="ph-step-title" role="textbox" aria-multiline="false"></h1>
+          </div>
+        </div>
+        <div class="canvas-titlebar-actions">
+          <button type="button" class="btn btn-sm btn-title-generate" id="btn-title-generate" title="Gerar título, descrição e narração" data-i18n-title="props.generateCopy">
+            <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+            <span id="btn-title-generate-label" data-i18n="props.generateCopyShort">Gerar textos</span>
+            <span class="pro-badge" id="pro-badge-copy-title" hidden>
+              <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+              <span data-i18n="billing.badge">Pro</span>
+            </span>
+          </button>
+          <div class="title-type" id="title-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
+            <button type="button" class="title-type-btn" data-value="screen" aria-pressed="false">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
+              <span data-i18n="props.screen">Tela</span>
+            </button>
+            <button type="button" class="title-type-btn" data-value="slide" aria-pressed="false">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
+              <span data-i18n="props.slide">Slide</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-title-image" title="Trocar imagem" aria-label="Trocar imagem" data-i18n-title="canvas.changeImage" data-i18n-aria="canvas.changeImage">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
           </button>
         </div>
       </div>
@@ -622,16 +718,103 @@
               <span class="editor-popover-next" id="editor-popover-next"></span>
             </div>
           </div>
+          <div class="float-toolbar" id="float-toolbar" role="toolbar" aria-label="Destaque selecionado" data-i18n-aria="ftb.aria" hidden>
+            <span class="ftb-label" id="ftb-side-label" data-i18n="ftb.balloon">Balão</span>
+            <div class="ftb-group" id="ftb-side" role="group" aria-label="Lado do balão" data-i18n-aria="props.side">
+              <button type="button" class="ftb-btn" data-scope="screen" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-top"></use></svg></button>
+              <button type="button" class="ftb-btn" data-scope="screen" data-value="right" title="Direita" aria-label="Direita" data-i18n-title="props.right" data-i18n-aria="props.right" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-right"></use></svg></button>
+              <button type="button" class="ftb-btn" data-scope="screen" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-bottom"></use></svg></button>
+              <button type="button" class="ftb-btn" data-scope="screen" data-value="left" title="Esquerda" aria-label="Esquerda" data-i18n-title="props.left" data-i18n-aria="props.left" aria-pressed="false"><svg aria-hidden="true"><use href="#i-side-left"></use></svg></button>
+              <button type="button" class="ftb-btn" data-scope="slide" data-value="top" title="Em cima" aria-label="Em cima" data-i18n-title="props.top" data-i18n-aria="props.top" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-top"></use></svg></button>
+              <button type="button" class="ftb-btn" data-scope="slide" data-value="center" title="Centro" aria-label="Centro" data-i18n-title="props.center" data-i18n-aria="props.center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-center"></use></svg></button>
+              <button type="button" class="ftb-btn" data-scope="slide" data-value="bottom" title="Embaixo" aria-label="Embaixo" data-i18n-title="props.bottom" data-i18n-aria="props.bottom" aria-pressed="false"><svg aria-hidden="true"><use href="#i-valign-bottom"></use></svg></button>
+            </div>
+            <span class="ftb-sep" aria-hidden="true"></span>
+            <span class="ftb-label" data-i18n="ftb.align">Alinhar</span>
+            <div class="ftb-group" id="ftb-align" role="group" aria-label="Alinhamento" data-i18n-aria="props.align">
+              <button type="button" class="ftb-btn" data-value="start" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-start"></use></svg></button>
+              <button type="button" class="ftb-btn" data-value="center" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-center"></use></svg></button>
+              <button type="button" class="ftb-btn" data-value="end" aria-pressed="false"><svg aria-hidden="true"><use href="#i-align-end"></use></svg></button>
+            </div>
+            <span class="ftb-sep ftb-screen-only" aria-hidden="true"></span>
+            <button type="button" class="ftb-btn ftb-screen-only" id="ftb-simulate" title="Simular clique ao avançar" aria-label="Simular clique ao avançar" data-i18n-title="props.simulateClick" data-i18n-aria="props.simulateClick" aria-pressed="false"><svg aria-hidden="true"><use href="#i-cursor"></use></svg></button>
+            <button type="button" class="ftb-btn ftb-screen-only" id="ftb-zoom" title="Ampliar destaque" aria-label="Ampliar destaque" data-i18n-title="props.zoomHighlight" data-i18n-aria="props.zoomHighlight" aria-pressed="false"><svg aria-hidden="true"><use href="#i-zoom"></use></svg></button>
+            <span class="ftb-sep" aria-hidden="true"></span>
+            <label class="ftb-hold" title="Temporizador (s)" data-i18n-title="props.hold">
+              <svg aria-hidden="true"><use href="#i-watch"></use></svg>
+              <input type="number" id="ftb-hold" min="1" max="120" step="1" aria-label="Temporizador (s)" data-i18n-aria="props.hold" />
+              <span aria-hidden="true">s</span>
+            </label>
+            <span class="ftb-sep" aria-hidden="true"></span>
+            <button type="button" class="ftb-btn" id="ftb-more" title="Mais opções no painel" aria-label="Mais opções no painel" data-i18n-title="ftb.more" data-i18n-aria="ftb.more"><svg aria-hidden="true"><use href="#i-more"></use></svg></button>
+          </div>
           <span class="inline-placeholder caption-placeholder" id="ph-caption" hidden></span>
           <div class="caption-bar" id="canvas-caption" data-inline="caption" data-ph="ph-caption" role="textbox" aria-multiline="true" hidden></div>
         </div>
+      </div>
+      <div class="narration-bar" id="narration-bar" role="group" aria-label="Narração" data-i18n-aria="props.caption" hidden>
+        <span class="narration-bar-label">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg>
+          <span data-i18n="props.caption">Narração</span>
+        </span>
+        <button type="button" class="btn btn-sm btn-icon" id="btn-narr-write" title="Escrever a narração" aria-label="Escrever a narração" data-i18n-title="narrbar.write" data-i18n-aria="narrbar.write">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
+        </button>
+        <div class="caption-player" id="caption-player" hidden>
+          <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" data-i18n-aria="canvas.play" aria-pressed="false" disabled>
+            <svg class="caption-player-icon caption-player-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            <svg class="caption-player-icon caption-player-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" fill="currentColor"/></svg>
+          </button>
+          <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" data-i18n-aria="props.audioSeek" disabled />
+          <button type="button" class="caption-player-rate" id="btn-caption-rate" aria-label="Velocidade de reprodução, 1×">1×</button>
+          <div class="caption-player-times">
+            <span id="caption-time">0:00</span>
+            <span id="caption-duration">0:00</span>
+          </div>
+        </div>
+        <p class="props-meta" id="caption-audio-status" hidden data-i18n="props.noAudio">Sem áudio neste passo.</p>
+        <span class="narration-bar-spacer" aria-hidden="true"></span>
+        <div class="caption-audio-actions" id="caption-audio-actions" hidden>
+          <button type="button" class="btn btn-sm btn-generate-caption" id="btn-generate-caption" hidden data-i18n-aria="props.generateAudio" aria-label="Gerar áudio">
+            <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+            <span id="btn-generate-caption-label" data-i18n="props.generateAudio">Gerar áudio</span>
+            <span class="pro-badge" id="pro-badge-audio" hidden>
+              <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+              <span data-i18n="billing.badge">Pro</span>
+            </span>
+          </button>
+          <button type="button" class="btn btn-sm btn-icon" id="btn-upload-caption" hidden title="Enviar áudio" aria-label="Enviar áudio" data-i18n-title="props.uploadAudio" data-i18n-aria="props.uploadAudio">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-upload"></use></svg>
+          </button>
+          <button type="button" class="btn btn-sm btn-icon btn-danger-hover" id="btn-clear-caption-audio" hidden title="Remover áudio" aria-label="Remover áudio" data-i18n-title="narrbar.removeAudio" data-i18n-aria="narrbar.removeAudio">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+          </button>
+          <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
+        </div>
+        <label class="narration-switch" id="wrap-show-caption" title="Mostrar o texto da narração na apresentação" data-i18n-title="narrbar.showTextTitle" hidden>
+          <input type="checkbox" id="prop-show-caption" role="switch" checked />
+          <span data-i18n="narrbar.showText">Texto na tela</span>
+        </label>
       </div>
     </section>
 
     <aside class="props" id="props-panel">
       <div class="props-header">
         <h2 data-i18n="props.step">Passo</h2>
+        <span class="props-pos" id="props-pos"></span>
+        <button type="button" class="btn btn-ghost btn-icon props-toggle" id="btn-props-toggle" aria-controls="props-body" aria-expanded="true" title="Recolher painel (Ctrl+\)" aria-label="Recolher painel" data-i18n-aria="panel.collapse">
+          <svg class="btn-ico props-toggle-ico-open" aria-hidden="true"><use href="#i-panel-close"></use></svg>
+          <svg class="btn-ico props-toggle-ico-closed" aria-hidden="true"><use href="#i-panel-open"></use></svg>
+        </button>
       </div>
+      <nav class="props-rail" id="props-rail" aria-label="Seções do painel" data-i18n-aria="panel.sections">
+        <button type="button" class="btn btn-ghost btn-icon" data-rail="image" title="Imagem" aria-label="Imagem" data-i18n-title="props.image" data-i18n-aria="props.image"><svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg></button>
+        <button type="button" class="btn btn-ghost btn-icon" data-rail="texts" title="Textos" aria-label="Textos" data-i18n-title="panel.texts" data-i18n-aria="panel.texts"><svg class="btn-ico" aria-hidden="true"><use href="#i-edit"></use></svg></button>
+        <button type="button" class="btn btn-ghost btn-icon" data-rail="narration" title="Narração" aria-label="Narração" data-i18n-title="props.caption" data-i18n-aria="props.caption"><svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button type="button" class="btn btn-ghost btn-icon" data-rail="playback" title="Reprodução" aria-label="Reprodução" data-i18n-title="panel.playback" data-i18n-aria="panel.playback"><svg class="btn-ico" aria-hidden="true"><use href="#i-cursor"></use></svg></button>
+        <button type="button" class="btn btn-ghost btn-icon" data-rail="position" title="Posição" aria-label="Posição" data-i18n-title="panel.position" data-i18n-aria="panel.position"><svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg></button>
+      </nav>
+      <div class="props-body" id="props-body">
       <div class="topbar-modes type-toggle" id="prop-type" role="radiogroup" aria-label="Tipo" data-i18n-aria="props.type">
         <button type="button" class="mode-btn" data-value="slide" aria-pressed="false">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-slide"></use></svg>
@@ -642,14 +825,27 @@
           <span data-i18n="props.screen">Tela</span>
         </button>
       </div>
+      <details class="props-section" data-sec="image" open>
+        <summary class="props-section-head">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-image"></use></svg>
+          <span data-i18n="props.image">Imagem</span>
+        </summary>
+        <div class="props-section-body">
       <div id="wrap-image" class="image-picker-field">
-        <span class="field-label" data-i18n="props.image">Imagem</span>
-        <button type="button" class="image-pick-btn" id="btn-pick-image">
+                <button type="button" class="image-pick-btn" id="btn-pick-image">
           <img id="prop-image-thumb" alt="" hidden />
           <span id="prop-image-name" data-i18n="props.chooseImage">Escolher imagem…</span>
         </button>
         <select id="prop-image" hidden></select>
       </div>
+        </div>
+      </details>
+      <details class="props-section" data-sec="texts" open>
+        <summary class="props-section-head">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-edit"></use></svg>
+          <span data-i18n="panel.texts">Textos</span>
+        </summary>
+        <div class="props-section-body">
       <button
         type="button"
         class="btn btn-sm btn-generate-copy"
@@ -672,41 +868,28 @@
       <label><span data-i18n="props.description">Descrição</span>
         <textarea id="prop-description" rows="3"></textarea>
       </label>
+        </div>
+      </details>
+      <details class="props-section" data-sec="narration" open>
+        <summary class="props-section-head">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg>
+          <span data-i18n="props.caption">Narração</span>
+        </summary>
+        <div class="props-section-body">
       <div class="caption-block">
-        <label><span data-i18n="props.caption">Narração</span>
-          <textarea id="prop-caption" rows="3" placeholder="Texto da narração (opcional no slide)" data-i18n-placeholder="props.captionPlaceholder"></textarea>
+        <label><span data-i18n="panel.captionText">Texto da narração</span>
+          <textarea id="prop-caption" rows="5" placeholder="Texto da narração (opcional no slide)" data-i18n-placeholder="props.captionPlaceholder"></textarea>
         </label>
-        <label class="checkbox" id="wrap-show-caption" hidden>
-          <input type="checkbox" id="prop-show-caption" checked />
-          <span data-i18n="props.showCaption">Mostrar texto no slide</span>
-        </label>
-        <div class="caption-audio-actions" id="caption-audio-actions" hidden>
-          <button type="button" class="btn btn-sm btn-generate-caption" id="btn-generate-caption" hidden data-i18n-aria="props.generateAudio" aria-label="Gerar áudio">
-            <svg class="btn-ico btn-ai-spark" aria-hidden="true"><use href="#i-sparkles"></use></svg>
-            <span id="btn-generate-caption-label" data-i18n="props.generateAudio">Gerar áudio</span>
-            <span class="pro-badge" id="pro-badge-audio" hidden>
-              <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-              <span data-i18n="billing.badge">Pro</span>
-            </span>
-          </button>
-          <button type="button" class="btn btn-sm" id="btn-upload-caption" hidden data-i18n="props.uploadAudio">Enviar áudio</button>
-          <button type="button" class="btn btn-sm" id="btn-clear-caption-audio" hidden data-i18n="props.removeAudio">Remover</button>
-          <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
-        </div>
-        <div class="caption-player" id="caption-player" hidden>
-          <button type="button" class="caption-player-toggle" id="btn-caption-play" aria-label="Reproduzir" data-i18n-aria="canvas.play" aria-pressed="false" disabled>
-            <svg class="caption-player-icon caption-player-icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-            <svg class="caption-player-icon caption-player-icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.2v14H7zm6.8 0H17v14h-3.2z" fill="currentColor"/></svg>
-          </button>
-          <input type="range" id="caption-seek" class="caption-seek" min="0" max="1000" value="0" step="1" aria-label="Avanço do áudio" data-i18n-aria="props.audioSeek" disabled />
-          <button type="button" class="caption-player-rate" id="btn-caption-rate" aria-label="Velocidade de reprodução, 1×">1×</button>
-          <div class="caption-player-times">
-            <span id="caption-time">0:00</span>
-            <span id="caption-duration">0:00</span>
-          </div>
-        </div>
-        <p class="props-meta" id="caption-audio-status" hidden data-i18n="props.noAudio">Sem áudio neste passo.</p>
+        <p class="props-meta props-narr-note" data-i18n="narrbar.panelNote">Ouvir, gerar ou enviar áudio e mostrar o texto na tela ficam na barra de narração, abaixo do canvas.</p>
       </div>
+        </div>
+      </details>
+      <details class="props-section" data-sec="playback" open>
+        <summary class="props-section-head">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-cursor"></use></svg>
+          <span data-i18n="panel.playback">Reprodução</span>
+        </summary>
+        <div class="props-section-body">
       <label class="checkbox" id="wrap-simulate">
         <input type="checkbox" id="prop-simulate-click" checked />
         <span data-i18n="props.simulateClick">Simular clique ao avançar</span>
@@ -721,6 +904,14 @@
         </label>
         <p class="props-meta" id="prop-hold-hint" hidden></p>
       </div>
+        </div>
+      </details>
+      <details class="props-section" data-sec="position" open>
+        <summary class="props-section-head">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
+          <span data-i18n="panel.position">Posição</span>
+        </summary>
+        <div class="props-section-body">
       <div class="choice-field" id="wrap-side">
         <span class="field-label" id="label-side" data-i18n="props.side">Lado</span>
         <div class="icon-choices" id="prop-side" role="radiogroup" aria-label="Lado" data-i18n-aria="props.side">
@@ -761,6 +952,9 @@
           </button>
         </div>
       </div>
+        </div>
+      </details>
+      </div>
     </aside>
   </main>
 
@@ -768,7 +962,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/41/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/42/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1293,6 +1487,27 @@
     <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m7 4 12 8-12 8z"/>
     </symbol>
+    <symbol id="i-cut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/>
+    </symbol>
+    <symbol id="i-panel-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="m10 10-2 2 2 2"/>
+    </symbol>
+    <symbol id="i-panel-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="m8 10 2 2-2 2"/>
+    </symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
+    </symbol>
+    <symbol id="i-cursor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m4 4 7 17 2.5-7.5L21 11z"/>
+    </symbol>
+    <symbol id="i-zoom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/>
+    </symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/>
+    </symbol>
     <symbol id="i-watch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>
     </symbol>
@@ -1334,7 +1549,7 @@
     </symbol>
   </svg>
 
-  <script src="a/41/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/41/js/app.js"></script>
+  <script src="a/42/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/42/js/app.js"></script>
 </body>
 </html>
