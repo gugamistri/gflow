@@ -21,6 +21,12 @@ import {
   snapPopoverPlacement,
 } from "./canvasEdit.js";
 import { isCompactTouch } from "./compact.js";
+import {
+  isPropsPanelShortcut,
+  placeFloatToolbarBox,
+  readPropsPanelOpen,
+  writePropsPanelOpen,
+} from "./editorLayout.js";
 import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
@@ -151,7 +157,9 @@ function mediaMaxBox(stage) {
   const styles = stage ? getComputedStyle(stage) : null;
   const padX = styles ? parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight) : 32;
   const maxW = Math.min(1200, Math.max(280, (stage?.clientWidth || 800) - (Number.isFinite(padX) ? padX : 32)));
-  const maxH = Math.max(200, window.innerHeight - 160);
+  // why: no editor o palco divide a altura com título e barra de narração (--media-chrome no CSS).
+  const chrome = styles ? parseFloat(styles.getPropertyValue("--media-chrome")) : NaN;
+  const maxH = Math.max(200, window.innerHeight - (Number.isFinite(chrome) && chrome > 0 ? chrome : 160));
   return { maxW, maxH };
 }
 
@@ -288,6 +296,25 @@ export function createEditor(ctx) {
     narrationBgName: document.getElementById("narration-bg-name"),
     narrationBgFile: document.getElementById("narration-bg-file"),
     btnNarrationBgClear: document.getElementById("btn-narration-bg-clear"),
+    titlebar: document.getElementById("canvas-titlebar"),
+    stepTitle: document.getElementById("canvas-step-title"),
+    stepKicker: document.getElementById("canvas-step-kicker"),
+    titleType: document.getElementById("title-type"),
+    btnTitleImage: document.getElementById("btn-title-image"),
+    btnTitleGenerate: document.getElementById("btn-title-generate"),
+    narrationBar: document.getElementById("narration-bar"),
+    floatToolbar: document.getElementById("float-toolbar"),
+    ftbSide: document.getElementById("ftb-side"),
+    ftbSideLabel: document.getElementById("ftb-side-label"),
+    ftbAlign: document.getElementById("ftb-align"),
+    ftbSimulate: document.getElementById("ftb-simulate"),
+    ftbZoom: document.getElementById("ftb-zoom"),
+    ftbHold: document.getElementById("ftb-hold"),
+    ftbMore: document.getElementById("ftb-more"),
+    toolbarPos: document.getElementById("toolbar-pos"),
+    propsPos: document.getElementById("props-pos"),
+    propsToggle: document.getElementById("btn-props-toggle"),
+    propsRail: document.getElementById("props-rail"),
   };
 
   let suppressForm = false;
@@ -312,6 +339,11 @@ export function createEditor(ctx) {
   let filmMenuToken = 0;
   /** @type {HTMLElement | null} */
   let filmMenuEl = null;
+  /** Barra flutuante: aberta ao clicar no destaque ou no slide do passo `ftbStepId`. */
+  let ftbOpen = false;
+  let ftbStepId = null;
+  /** Passo em que o usuário pediu para escrever a narração mesmo com o texto oculto. */
+  let forceCaptionStepId = null;
 
   const clickFx = createClickFxController({
     frame: els.canvasFrame,
@@ -322,6 +354,8 @@ export function createEditor(ctx) {
 
   function currentStep() {
     const demo = getDemo();
+    // why: o painel recolhível dispara "resize" no boot, antes de existir projeto aberto.
+    if (!demo?.steps) return null;
     return demo.steps[getSelectedIndex()] || null;
   }
 
@@ -410,10 +444,25 @@ export function createEditor(ctx) {
     const demo = getDemo();
     const steps = Array.isArray(demo?.steps) ? demo.steps : [];
     const time = formatHoldClock(tourHoldSeconds(demo));
-    el.textContent =
+    const full =
       steps.length === 1
         ? t("editor.metricsOne", { time })
         : t("editor.metricsMany", { n: steps.length, time });
+    const count =
+      steps.length === 1 ? t("editor.stepsOne") : t("editor.stepsMany", { n: steps.length });
+    // why: a duração é o dado principal do topo da filmstrip; o total de passos vem ao lado.
+    el.innerHTML = `<strong class="metrics-time">${escapeHtml(time)}</strong><span class="metrics-count">${escapeHtml(count)}</span>`;
+    el.setAttribute("aria-label", full);
+    el.title = full;
+    paintStepPosition();
+  }
+
+  function paintStepPosition() {
+    const demo = getDemo();
+    const total = Array.isArray(demo?.steps) ? demo.steps.length : 0;
+    const current = total ? Math.min(total, getSelectedIndex() + 1) : 0;
+    if (els.toolbarPos) els.toolbarPos.textContent = total ? t("toolbar.pos", { current, total }) : "";
+    if (els.propsPos) els.propsPos.textContent = total ? t("player.of", { current, total }) : "";
   }
 
   function syncImageButton() {
@@ -469,15 +518,16 @@ export function createEditor(ctx) {
       if (step.scene !== lastScene) {
         lastScene = step.scene;
         const label = sceneLabel(demo, step.scene);
-        html += `<div class="film-scene" data-scene="${Number(step.scene) || 1}" draggable="true">
+        const sceneText = `${t("filmstrip.scene", { n: step.scene })}${label ? ` · ${label}` : ""}`;
+        html += `<div class="film-scene" data-scene="${Number(step.scene) || 1}" draggable="true" title="${escapeAttr(sceneText)}">
           <span class="film-grip" aria-hidden="true">⋮⋮</span>
-          <span class="film-scene-label" data-action="rename-scene-inline" data-scene="${Number(step.scene) || 1}" title="${escapeAttr(t("filmstrip.sceneRename"))}">${escapeHtml(t("filmstrip.scene", { n: step.scene }))}${label ? ` · ${escapeHtml(label)}` : ""}</span>
+          <span class="film-scene-label" data-action="rename-scene-inline" data-scene="${Number(step.scene) || 1}" title="${escapeAttr(`${sceneText} — ${t("filmstrip.sceneRename")}`)}">${escapeHtml(t("filmstrip.scene", { n: step.scene }))}${label ? ` · ${escapeHtml(label)}` : ""}</span>
         </div>`;
       }
       const src = resolveImageSrc(demo, step.image);
       let thumb;
       if (step.type === "slide") {
-        thumb = `<div class="film-thumb-slide">SLIDE</div>`;
+        thumb = `<div class="film-thumb-slide film-thumb-is-slide"><svg aria-hidden="true"><use href="#i-slide"></use></svg><span>SLIDE</span></div>`;
       } else if (!src) {
         thumb = `<div class="film-thumb-slide">—</div>`;
       } else if (shouldDownscaleSrc(src)) {
@@ -501,12 +551,13 @@ export function createEditor(ctx) {
              draggable="true"
              role="button"
              tabindex="0"
+             title="${escapeAttr(stepListName(step))}"
+             aria-label="${escapeAttr(stepListName(step))}"
              aria-selected="${selectedSet.has(index) ? "true" : "false"}">
           <span class="film-grip" aria-hidden="true">⋮⋮</span>
           ${thumb}
           <div class="film-meta">
             <strong>${escapeHtml(stepListName(step))}</strong>
-            <span>#${index + 1}</span>
           </div>
           <div class="film-actions">
             <button type="button" class="film-action-move" data-action="up" ${index === 0 ? "disabled" : ""} title="${upLabel}" aria-label="${upLabel}">↑</button>
@@ -591,6 +642,7 @@ export function createEditor(ctx) {
     if (els.propZoom) els.propZoom.checked = step.zoomHighlight === true;
     syncSideAlignControls(step);
     els.wrapImage.hidden = step.type === "slide";
+    syncPropsSections(step);
     syncImageButton();
     syncNarrationPanel();
     syncCaptionAudio();
@@ -1005,7 +1057,9 @@ export function createEditor(ctx) {
       syncHoldChrome(step);
       if (!statusEl) return;
       if (!hasText) {
-        statusEl.hidden = true;
+        // why: a barra de narração fica sempre visível — sem texto, ela diz isso em vez de ficar vazia.
+        statusEl.hidden = false;
+        statusEl.textContent = t("narrbar.noText");
         return;
       }
       const hasStaleTts =
@@ -1098,7 +1152,7 @@ export function createEditor(ctx) {
   }
 
   function inlineFields() {
-    return [els.slideTitle, els.slideBody, els.canvasCaption, els.popoverTitle, els.popoverBody];
+    return [els.stepTitle, els.slideTitle, els.slideBody, els.canvasCaption, els.popoverTitle, els.popoverBody];
   }
 
   function releaseInlineFocusIfStepChanged(step) {
@@ -1148,7 +1202,8 @@ export function createEditor(ctx) {
     const value = String(text || "");
     const hasText = !!value.trim();
     // why: no editor a narração continua editável mesmo se estiver oculta na apresentação.
-    const show = editing ? visible || hasText : visible && hasText;
+    const forced = editing && forceCaptionStepId && forceCaptionStepId === currentStep()?.id;
+    const show = editing ? visible || hasText || !!forced : visible && hasText;
     const canEdit = editing && show;
     paintInline(els.canvasCaption, value, {
       editing: canEdit,
@@ -1234,6 +1289,7 @@ export function createEditor(ctx) {
     }
     pop.style.left = `${left}px`;
     pop.style.top = `${top}px`;
+    placeFloatToolbar();
   }
 
   function pointerInFrame(e) {
@@ -1273,20 +1329,15 @@ export function createEditor(ctx) {
 
   function mirrorInline(source, value) {
     const kind = source.dataset.inline;
-    const twin =
-      kind === "title"
-        ? source === els.slideTitle
-          ? els.popoverTitle
-          : els.slideTitle
-        : kind === "description"
-          ? source === els.slideBody
-            ? els.popoverBody
-            : els.slideBody
-          : null;
-    if (!twin || twin === source || document.activeElement === twin) return;
-    if (twin.textContent !== value) twin.textContent = value;
-    twin.classList.toggle("is-empty", !value.trim());
-    syncInlinePlaceholder(twin, value, twin.contentEditable === "true");
+    if (kind !== "title" && kind !== "description") return;
+    // why: o título acima da imagem, o do balão e o do slide são o mesmo campo.
+    for (const twin of inlineFields()) {
+      if (!twin || twin === source || twin.dataset.inline !== kind) continue;
+      if (document.activeElement === twin) continue;
+      if (twin.textContent !== value) twin.textContent = value;
+      twin.classList.toggle("is-empty", !value.trim());
+      syncInlinePlaceholder(twin, value, twin.contentEditable === "true");
+    }
   }
 
   function commitInline(el) {
@@ -1353,15 +1404,31 @@ export function createEditor(ctx) {
     for (const el of inlineFields()) {
       if (!el) continue;
       el.addEventListener("input", () => commitInline(el));
-      el.addEventListener("blur", () => commitInline(el));
+      el.addEventListener("focus", () => {
+        el.dataset.orig = readInlineText(el.innerText);
+      });
+      el.addEventListener("blur", () => {
+        commitInline(el);
+        delete el.dataset.orig;
+      });
       el.addEventListener("keydown", (e) => {
         if (el.contentEditable !== "true") return;
         if (e.key === "Escape") {
+          // why: Esc desfaz a edição em curso; Enter (ou sair do campo) salva.
           e.preventDefault();
+          e.stopPropagation();
+          const orig = el.dataset.orig;
+          if (orig != null && readInlineText(el.innerText) !== orig) {
+            el.textContent = orig;
+            commitInline(el);
+          }
           el.blur();
           return;
         }
-        if (e.key === "Enter" && el.dataset.inline === "title") e.preventDefault();
+        if (e.key === "Enter" && el.dataset.inline === "title") {
+          e.preventDefault();
+          el.blur();
+        }
       });
       el.addEventListener("paste", (e) => {
         if (el.contentEditable !== "true") return;
@@ -1471,6 +1538,14 @@ export function createEditor(ctx) {
     const step = currentStep();
     releaseInlineFocusIfStepChanged(step);
     const editing = editingCanvas();
+    if (step?.id !== ftbStepId) {
+      ftbOpen = false;
+      ftbStepId = step?.id ?? null;
+    }
+    if (forceCaptionStepId && forceCaptionStepId !== step?.id) forceCaptionStepId = null;
+    paintStepPosition();
+    renderTitlebar(step, editing);
+    if (els.narrationBar) els.narrationBar.hidden = !step || !editing;
 
     if (!demo.steps.length || !step) {
       if (els.canvasEmpty) els.canvasEmpty.hidden = false;
@@ -1482,6 +1557,7 @@ export function createEditor(ctx) {
       if (els.canvasMissing) els.canvasMissing.hidden = true;
       hideEditorPopover();
       setCanvasCaption("", { editing: false });
+      syncFloatToolbar();
       return;
     }
 
@@ -1494,10 +1570,7 @@ export function createEditor(ctx) {
       els.canvasImage.removeAttribute("src");
       if (els.canvasMissing) els.canvasMissing.hidden = true;
       els.canvasSlide.hidden = false;
-      const label = sceneLabel(demo, step.scene);
-      els.slideKicker.textContent = label
-        ? `${t("filmstrip.scene", { n: step.scene })} · ${label}`
-        : t("filmstrip.scene", { n: step.scene });
+      paintSceneKicker(els.slideKicker, step, editing && !isCompactTouch());
       paintInline(els.slideTitle, step.popover?.title || step.label || "", {
         editing,
         placeholder: t("canvas.titlePlaceholder"),
@@ -1513,6 +1586,7 @@ export function createEditor(ctx) {
       els.hotspot.hidden = true;
       els.clickPoint.hidden = true;
       hideEditorPopover();
+      syncFloatToolbar();
       return;
     }
 
@@ -1546,6 +1620,349 @@ export function createEditor(ctx) {
         els.clickPoint.hidden = true;
       }
       placeEditorPopover();
+      syncFloatToolbar();
+    });
+    syncFloatToolbar();
+  }
+
+  function paintSceneKicker(host, step, editing) {
+    if (!host || !step) return;
+    if (host.querySelector("input.inline-edit")) return;
+    const demo = getDemo();
+    const n = Number(step.scene) || 1;
+    const label = sceneLabel(demo, n);
+    const prefix = t("filmstrip.scene", { n });
+    if (!editing) {
+      host.textContent = label ? `${prefix} · ${label}` : prefix;
+      host.removeAttribute("role");
+      host.removeAttribute("tabindex");
+      host.removeAttribute("title");
+      host.classList.remove("is-renamable");
+      return;
+    }
+    const num = document.createElement("span");
+    num.className = "kicker-scene-n";
+    num.textContent = label ? `${prefix} · ` : prefix;
+    const name = document.createElement("span");
+    name.className = "kicker-scene-name";
+    name.dataset.scene = String(n);
+    name.textContent = label;
+    host.replaceChildren(num, name);
+    host.classList.add("is-renamable");
+    host.dataset.scene = String(n);
+    host.setAttribute("role", "button");
+    host.setAttribute("tabindex", "0");
+    host.title = t("canvas.renameScene");
+  }
+
+  function startKickerRename(host) {
+    if (!host || !editingCanvas()) return;
+    const step = currentStep();
+    if (!step) return;
+    const n = Number(step.scene) || 1;
+    let name = host.querySelector(".kicker-scene-name");
+    const num = host.querySelector(".kicker-scene-n");
+    if (num) num.textContent = `${t("filmstrip.scene", { n })} · `;
+    if (!name) return;
+    renameSceneInline(name, n);
+  }
+
+  function renderTitlebar(step, editing) {
+    const bar = els.titlebar;
+    if (!bar) return;
+    const show = !!step && editing;
+    bar.hidden = !show;
+    if (!show) return;
+    const isSlide = step.type === "slide";
+    paintSceneKicker(els.stepKicker, step, editing);
+    paintInline(els.stepTitle, step.popover?.title || step.label || "", {
+      editing: true,
+      placeholder: t("canvas.titlePlaceholder"),
+      label: t("canvas.editTitle"),
+    });
+    els.titleType?.querySelectorAll("[data-value]").forEach((btn) => {
+      const on = btn.dataset.value === (isSlide ? "slide" : "screen");
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    if (els.btnTitleImage) els.btnTitleImage.hidden = isSlide;
+  }
+
+  function floatToolbarAllowed() {
+    return editingCanvas() && !isCompactTouch() && !previewDriver;
+  }
+
+  function selectCanvasObject() {
+    const step = currentStep();
+    if (!step || !floatToolbarAllowed()) return;
+    ftbOpen = true;
+    ftbStepId = step.id;
+    syncFloatToolbar();
+  }
+
+  function deselectCanvasObject() {
+    if (!ftbOpen) return;
+    ftbOpen = false;
+    syncFloatToolbar();
+  }
+
+  function syncFloatToolbar() {
+    const bar = els.floatToolbar;
+    if (!bar) return;
+    const step = currentStep();
+    const isSlide = step?.type === "slide";
+    const visible =
+      !!step &&
+      ftbOpen &&
+      ftbStepId === step.id &&
+      floatToolbarAllowed() &&
+      (isSlide ? !els.canvasSlide.hidden : !els.hotspot.hidden);
+    els.hotspot?.classList.toggle("is-selected", visible && !isSlide);
+    els.canvasSlide?.classList.toggle("is-selected", visible && isSlide);
+    if (!visible) {
+      bar.hidden = true;
+      return;
+    }
+    const scope = isSlide ? "slide" : "screen";
+    bar.hidden = false;
+    bar.dataset.scope = scope;
+    if (els.ftbSideLabel) els.ftbSideLabel.textContent = isSlide ? t("props.vertical") : t("ftb.balloon");
+    const side = isSlide ? step.layout?.valign || "center" : step.popover?.side || "bottom";
+    const align = isSlide ? step.layout?.align || "start" : step.popover?.align || "center";
+    els.ftbSide?.querySelectorAll("[data-value]").forEach((btn) => {
+      btn.hidden = btn.dataset.scope !== scope;
+      const on = !btn.hidden && btn.dataset.value === side;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    const alignTitles = isSlide
+      ? { start: t("props.left"), center: t("props.center"), end: t("props.right") }
+      : { start: t("props.start"), center: t("props.center"), end: t("props.end") };
+    els.ftbAlign?.querySelectorAll("[data-value]").forEach((btn) => {
+      const on = btn.dataset.value === align;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      const label = alignTitles[btn.dataset.value];
+      if (label) {
+        btn.title = label;
+        btn.setAttribute("aria-label", label);
+      }
+    });
+    bar.querySelectorAll(".ftb-screen-only").forEach((el) => {
+      el.hidden = isSlide;
+    });
+    const sim = step.simulateClick !== false;
+    els.ftbSimulate?.classList.toggle("is-active", sim);
+    els.ftbSimulate?.setAttribute("aria-pressed", sim ? "true" : "false");
+    const zoom = step.zoomHighlight === true;
+    els.ftbZoom?.classList.toggle("is-active", zoom);
+    els.ftbZoom?.setAttribute("aria-pressed", zoom ? "true" : "false");
+    if (els.ftbHold && els.propHold && document.activeElement !== els.ftbHold) {
+      els.ftbHold.value = els.propHold.value;
+      els.ftbHold.placeholder = els.propHold.placeholder;
+      els.ftbHold.min = els.propHold.min || "1";
+      const hint = els.propHoldHint && !els.propHoldHint.hidden ? els.propHoldHint.textContent : "";
+      const holdWrap = els.ftbHold.closest(".ftb-hold");
+      if (holdWrap) holdWrap.title = hint ? `${t("props.hold")} — ${hint}` : t("props.hold");
+    }
+    placeFloatToolbar();
+  }
+
+  function placeFloatToolbar() {
+    const bar = els.floatToolbar;
+    if (!bar || bar.hidden) return;
+    const step = currentStep();
+    const frame = { width: els.canvasFrame.clientWidth, height: els.canvasFrame.clientHeight };
+    const size = { width: bar.offsetWidth, height: bar.offsetHeight };
+    if (step?.type === "slide") {
+      const left = Math.max(4, (frame.width - size.width) / 2);
+      bar.style.left = `${Math.round(left)}px`;
+      bar.style.top = "8px";
+      bar.dataset.placement = "inside";
+      return;
+    }
+    const pop = els.editorPopover;
+    const avoid =
+      pop && !pop.hidden
+        ? {
+            left: parseFloat(pop.style.left) || 0,
+            top: parseFloat(pop.style.top) || 0,
+            width: pop.offsetWidth,
+            height: pop.offsetHeight,
+          }
+        : null;
+    const box = placeFloatToolbarBox(hotspotAnchor(), size, frame, avoid);
+    bar.style.left = `${Math.round(box.left)}px`;
+    bar.style.top = `${Math.round(box.top)}px`;
+    bar.dataset.placement = box.placement;
+  }
+
+  function syncPropsSections(step) {
+    const isSlide = step?.type === "slide";
+    const imageSec = els.propsPanel?.querySelector('.props-section[data-sec="image"]');
+    if (imageSec) imageSec.hidden = !!isSlide;
+    const railImage = els.propsRail?.querySelector('[data-rail="image"]');
+    if (railImage) railImage.hidden = !!isSlide;
+  }
+
+  function panelShortcutLabel() {
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+    return `${mac ? "⌘" : "Ctrl"}+\\`;
+  }
+
+  function setPropsPanelOpen(open, { persist = true } = {}) {
+    const view = document.getElementById("view-editor");
+    if (!view) return;
+    view.classList.toggle("is-props-collapsed", !open);
+    const btn = els.propsToggle;
+    if (btn) {
+      const label = t(open ? "panel.collapse" : "panel.expand");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.setAttribute("aria-label", label);
+      btn.title = `${label} (${panelShortcutLabel()})`;
+    }
+    if (persist) writePropsPanelOpen(globalThis.localStorage, open);
+    // why: o canvas muda de largura — destaque, balão e barra flutuante precisam se reposicionar.
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  }
+
+  function propsPanelOpen() {
+    return !document.getElementById("view-editor")?.classList.contains("is-props-collapsed");
+  }
+
+  function openPropsSection(sec, { focus = true } = {}) {
+    setPropsPanelOpen(true);
+    const section = els.propsPanel?.querySelector(`.props-section[data-sec="${sec}"]`);
+    if (!section || section.hidden) return;
+    section.open = true;
+    requestAnimationFrame(() => {
+      section.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (!focus) return;
+      const target = section.querySelector(
+        "input:not([type=hidden]):not([hidden]), textarea, select:not([hidden]), button:not([hidden])"
+      );
+      (target || section.querySelector("summary"))?.focus({ preventScroll: true });
+    });
+  }
+
+  function bindLayoutChrome() {
+    setPropsPanelOpen(readPropsPanelOpen(globalThis.localStorage), { persist: false });
+    els.propsToggle?.addEventListener("click", () => setPropsPanelOpen(!propsPanelOpen()));
+    els.propsRail?.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-rail]");
+      if (!btn) return;
+      openPropsSection(btn.dataset.rail);
+    });
+    window.addEventListener("keydown", (e) => {
+      if (!isPropsPanelShortcut(e)) return;
+      const view = document.getElementById("view-editor");
+      if (!view || view.hidden || view.classList.contains("is-presenting")) return;
+      if (document.querySelector("dialog[open]")) return;
+      e.preventDefault();
+      setPropsPanelOpen(!propsPanelOpen());
+    });
+
+    els.titleType?.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-value]");
+      if (!btn) return;
+      const target = els.propType?.querySelector(`[data-value="${btn.dataset.value}"]`);
+      if (!target || target.classList.contains("is-active")) return;
+      target.click();
+    });
+    els.btnTitleImage?.addEventListener("click", () => openImageModal("replace"));
+    els.btnTitleGenerate?.addEventListener("click", () => {
+      document.getElementById("btn-generate-copy")?.click();
+    });
+    for (const kicker of [els.stepKicker, els.slideKicker]) {
+      kicker?.addEventListener("click", (e) => {
+        if (!kicker.classList.contains("is-renamable") || e.target.closest("input")) return;
+        e.stopPropagation();
+        startKickerRename(kicker);
+      });
+      kicker?.addEventListener("keydown", (e) => {
+        if (e.target.closest("input")) return;
+        if (e.key !== "Enter" && e.key !== " " && e.key !== "F2") return;
+        if (!kicker.classList.contains("is-renamable")) return;
+        e.preventDefault();
+        startKickerRename(kicker);
+      });
+    }
+
+    document.getElementById("btn-narr-write")?.addEventListener("click", () => {
+      const step = currentStep();
+      if (!step) return;
+      forceCaptionStepId = step.id;
+      renderCanvas();
+      const cap = els.canvasCaption;
+      if (!cap || cap.hidden) return;
+      cap.focus();
+      const sel = document.getSelection();
+      if (sel) {
+        const range = document.createRange();
+        range.selectNodeContents(cap);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    });
+
+    // Barra flutuante — repassa para os controles do painel, que já gravam e entram no desfazer.
+    els.hotspot?.addEventListener("pointerdown", () => {
+      if (els.hotspot.classList.contains("is-previewing")) return;
+      selectCanvasObject();
+    });
+    els.clickPoint?.addEventListener("pointerdown", () => selectCanvasObject());
+    els.canvasSlide?.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".slide-card-close, .slide-card-play, .slide-kicker")) return;
+      selectCanvasObject();
+    });
+    els.canvasStage?.addEventListener("pointerdown", (e) => {
+      if (!ftbOpen) return;
+      if (e.target.closest("#float-toolbar, #hotspot, #click-point, #canvas-slide, #editor-popover, #canvas-caption")) return;
+      deselectCanvasObject();
+    });
+    els.floatToolbar?.addEventListener("pointerdown", (e) => e.stopPropagation());
+    els.ftbSide?.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-value]");
+      if (!btn) return;
+      els.propSide
+        ?.querySelector(`[data-scope="${btn.dataset.scope}"][data-value="${btn.dataset.value}"]`)
+        ?.click();
+    });
+    els.ftbAlign?.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-value]");
+      if (!btn) return;
+      els.propAlign?.querySelector(`[data-value="${btn.dataset.value}"]`)?.click();
+    });
+    const toggleCheckbox = (input) => {
+      if (!input) return;
+      input.checked = !input.checked;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    els.ftbSimulate?.addEventListener("click", () => toggleCheckbox(els.propSimulate));
+    els.ftbZoom?.addEventListener("click", () => toggleCheckbox(els.propZoom));
+    els.ftbHold?.addEventListener("input", () => {
+      if (!els.propHold) return;
+      els.propHold.value = els.ftbHold.value;
+      els.propHold.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    els.ftbHold?.addEventListener("change", () => {
+      if (!els.propHold) return;
+      els.propHold.value = els.ftbHold.value;
+      els.propHold.dispatchEvent(new Event("change", { bubbles: true }));
+      els.ftbHold.value = els.propHold.value;
+    });
+    els.ftbHold?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") els.ftbHold.blur();
+    });
+    els.ftbMore?.addEventListener("click", () => {
+      const step = currentStep();
+      openPropsSection(step?.type === "slide" ? "position" : "position");
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || !ftbOpen) return;
+      if (isTypingTarget(e.target) || document.querySelector("dialog[open]")) return;
+      deselectCanvasObject();
     });
   }
 
@@ -1649,6 +2066,7 @@ export function createEditor(ctx) {
       };
     }
     els.wrapImage.hidden = isSlide;
+    syncPropsSections(step);
     syncSideAlignControls(step);
     syncImageButton();
     renderFilmstrip();
@@ -1707,9 +2125,11 @@ export function createEditor(ctx) {
       }
       renderFilmstrip();
       syncForm();
+      renderCanvas();
     };
 
     input.addEventListener("keydown", (e) => {
+      e.stopPropagation();
       if (e.key === "Enter") {
         e.preventDefault();
         finish(true);
@@ -2856,6 +3276,7 @@ export function createEditor(ctx) {
       els.hotspot.style.width = width + "px";
       els.hotspot.style.height = height + "px";
       if (!popoverDrag) placeEditorPopover();
+      else placeFloatToolbar();
     });
 
     els.hotspot.addEventListener("pointerup", () => {
@@ -2963,7 +3384,10 @@ export function createEditor(ctx) {
   function paintHostedBadges() {
     const copy = document.getElementById("pro-badge-copy");
     const audio = document.getElementById("pro-badge-audio");
-    if (copy) copy.hidden = !hostedBadge(Boolean(llmBridge() || llmConfigured));
+    const copyPro = hostedBadge(Boolean(llmBridge() || llmConfigured));
+    if (copy) copy.hidden = !copyPro;
+    const copyTitle = document.getElementById("pro-badge-copy-title");
+    if (copyTitle) copyTitle.hidden = !copyPro;
     if (audio) audio.hidden = !hostedBadge(Boolean(cartesiaBridge() || cartesiaConfigured));
   }
 
@@ -3003,10 +3427,10 @@ export function createEditor(ctx) {
   }
 
   function openLlmSettings() {
-    const more = document.getElementById("more-panel");
+    const more = document.getElementById("prefs-panel") || document.getElementById("more-panel");
     const panel = document.getElementById("narration-panel");
     if (!panel) return;
-    // why: abre Mais e fecha outros details para o painel de Ajustes ficar visível.
+    // why: abre a engrenagem e fecha outros details para o painel de Ajustes ficar visível.
     if (more) more.open = true;
     document
       .querySelectorAll("details.theme-panel, details.export-panel")
@@ -3156,6 +3580,8 @@ export function createEditor(ctx) {
     if (!panel) return;
     panel.classList.toggle("is-generating-copy", kind === "copy" && busy);
     panel.classList.toggle("is-generating-audio", kind === "audio" && busy);
+    els.narrationBar?.classList.toggle("is-generating-audio", kind === "audio" && busy);
+    els.titlebar?.classList.toggle("is-generating-copy", kind === "copy" && busy);
   }
 
   function setGenerateBusy(kind, busy) {
@@ -3170,6 +3596,13 @@ export function createEditor(ctx) {
       label.textContent = busy
         ? t("toast.generating")
         : t(kind === "copy" ? "props.generateCopyShort" : "props.generateAudio");
+    }
+    if (kind === "copy" && els.btnTitleGenerate) {
+      els.btnTitleGenerate.disabled = busy;
+      if (busy) els.btnTitleGenerate.setAttribute("aria-busy", "true");
+      else els.btnTitleGenerate.removeAttribute("aria-busy");
+      const titleLabel = document.getElementById("btn-title-generate-label");
+      if (titleLabel) titleLabel.textContent = busy ? t("toast.generating") : t("props.generateCopyShort");
     }
     setAiGenerating(kind, busy);
   }
@@ -3652,6 +4085,18 @@ export function createEditor(ctx) {
         toast(err?.message || t("toast.clipboardEmpty"));
       });
     });
+    document.getElementById("btn-cut-step")?.addEventListener("click", () => {
+      closeFilmContextMenu();
+      cutStepToClipboard().catch((err) => {
+        console.error(err);
+        toast(err?.message || t("toast.nothingToCopy"));
+      });
+    });
+    document.getElementById("btn-delete-step")?.addEventListener("click", () => {
+      closeFilmContextMenu();
+      if (!currentStep()) return;
+      deleteStep();
+    });
 
     window.addEventListener("keydown", (e) => {
       const editorView = document.getElementById("view-editor");
@@ -3726,7 +4171,12 @@ export function createEditor(ctx) {
       previewDriver = null;
     }
     document.getElementById("btn-play-from")?.addEventListener("click", () => playFromSelected());
-    document.getElementById("btn-watch-from")?.addEventListener("click", watchFromSelected);
+    document.getElementById("btn-preview-here")?.addEventListener("click", () => playFromSelected());
+    document.getElementById("btn-preview-start")?.addEventListener("click", () => {
+      closeFilmContextMenu();
+      if (!onPlayFrom || !getDemo()?.steps?.length) return;
+      onPlayFrom(0, { autoplay: false });
+    });
     document.getElementById("canvas-slide-play")?.addEventListener("click", (e) => {
       if (document.getElementById("view-editor")?.classList.contains("is-presenting")) return;
       e.stopPropagation();
@@ -3824,6 +4274,7 @@ export function createEditor(ctx) {
       if (step.type === "slide") {
         sizeSlideLikeImage(els.canvasSlide, els.canvasStage, getDemo(), step, resolveImageSrc);
         placeCaptionPlaceholder();
+        placeFloatToolbar();
         return;
       }
       placeHotspot(step.hotspot);
@@ -3848,6 +4299,8 @@ export function createEditor(ctx) {
     clickFx.reset();
     els.hotspot.classList.remove("is-previewing");
     hideEditorPopover();
+    ftbOpen = false;
+    syncFloatToolbar();
     for (const el of inlineFields()) {
       if (!el) continue;
       el.contentEditable = "false";
@@ -3873,6 +4326,7 @@ export function createEditor(ctx) {
   bindInlineEditing();
   bindPopoverDrag();
   bindForm();
+  bindLayoutChrome();
 
   return { refresh, selectStep, currentStep, pauseCaption, stopPreview, paintHostedBadges };
 }
