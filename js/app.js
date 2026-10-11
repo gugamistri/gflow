@@ -139,6 +139,7 @@ import {
   shouldShowLocalSave,
 } from "./paywall.js";
 import { createFixedStepsEditor } from "./fixedStepsEditor.js";
+import { createLeadsDialog } from "./leadsDialog.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -470,7 +471,7 @@ const editor = createEditor({
   coverMenuState: () => ({ enabled: cloudShareEnabled(), pro: viewerIsPro() }),
   onSetCover: (index) => setCoverStep(index),
   viewerIsPro: () => viewerIsPro(),
-  onOpenFixedStep: (kind) => fixedStepsEditor.open(kind),
+  onOpenFixedStep: (kind) => openFixedStep(kind),
 });
 
 // why: passos fixos (Início/Fim) mudam o payload, então o link fica "Desatualizado" até republicar
@@ -478,13 +479,28 @@ const fixedStepsEditor = createFixedStepsEditor({
   getProject: () => project,
   viewerIsPro: () => viewerIsPro(),
   openFeatureGate: (feature) => openFeatureGate(feature),
-  onSaved: () => {
+  openLeads: () => leadsDialog.open(),
+  onSaved: (kind) => {
     onChange();
     editor.refresh();
     paintShareMenu();
-    toast(t("fixed.saved"), 4200);
+    toast(t(kind === "start" ? "fixed.start.saved" : "fixed.saved"), 4200);
   },
 });
+
+const leadsDialog = createLeadsDialog({
+  getSlug: () => (viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : ""),
+  toast,
+});
+
+/** Início = captura de lead (Pro, precisa do link permanente); Fim = livre. */
+function openFixedStep(kind) {
+  if (kind === "start" && !cloudShareEnabled()) {
+    toast(t("fixed.start.needsCloud"), 4200);
+    return;
+  }
+  fixedStepsEditor.open(kind);
+}
 
 const player = createPlayer({
   getDemo,
@@ -707,6 +723,8 @@ function paintShareMenu() {
   if (embedBtn) embedBtn.hidden = !cloudShareEnabled();
   const embedBadge = document.getElementById("embed-pro-badge");
   if (embedBadge) embedBadge.hidden = pro;
+  const leadsBtn = document.getElementById("btn-share-leads");
+  if (leadsBtn) leadsBtn.hidden = !(pro && cloudShareEnabled() && permanentSlug(record));
   paintAccount();
 }
 
@@ -2538,6 +2556,7 @@ function bindChrome() {
   }
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
+  document.getElementById("btn-share-leads")?.addEventListener("click", () => leadsDialog.open());
   document.getElementById("btn-embed-close")?.addEventListener("click", () => embedModal?.close());
   embedModal?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) embedModal.close();

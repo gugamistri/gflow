@@ -511,7 +511,7 @@ export function createEditor(ctx) {
       listThumbs.hold("film", []);
       return;
     }
-    let html = "";
+    let html = fixedCardHtml("start", demo.startStep);
     let lastScene = null;
     const filmPairs = [];
     const lastIndex = demo.steps.length - 1;

@@ -19,8 +19,8 @@ import {
   sharedPreviewBackTarget,
   tourFromPermanentShare,
 } from "./viewShare.js";
-import { endStepActive } from "./fixedSteps.js";
-import { renderEndCard } from "./fixedStepsView.js";
+import { endStepActive, normalizeEndStep, startStepActive } from "./fixedSteps.js";
+import { cardShell, renderContactForm, renderEndCard, renderStartCard } from "./fixedStepsView.js";
 
 function showStatus(message) {
   const status = document.getElementById("view-share-status");
@@ -95,6 +95,7 @@ async function loadPermanent(slug) {
   if (!parsed.ok) {
     throw Object.assign(new Error(parsed.error), { code: parsed.error });
   }
+  shareFeatures = parsed.features;
   return parsed.tour;
 }
 
@@ -172,6 +173,8 @@ let player = null;
 let demo = null;
 let touring = false;
 let replayTour = () => {};
+let shareFeatures = { leadCapture: false, contactForm: false };
+let shareSlug = "";
 
 // why: ?embed=1 = iframe no site do cliente; a classe também vem do <head> para não piscar
 const embedOptions = parseEmbedOptions(location.search);
@@ -268,16 +271,101 @@ function tourLink() {
   return `${location.origin}${location.pathname}`;
 }
 
-const fixedState = { leadName: "" };
+const fixedState = { lead: null };
 
-function showEndStep() {
-  const card = renderEndCard(demo.endStep, {
+function leadStorageKey() {
+  return `gf.lead.${shareSlug}`;
+}
+
+function readStoredLead() {
+  try {
+    const raw = sessionStorage.getItem(leadStorageKey());
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeLead(value) {
+  try {
+    sessionStorage.setItem(leadStorageKey(), JSON.stringify(value));
+  } catch {
+    /* sessão privada: o gate volta a aparecer, sem prejuízo */
+  }
+}
+
+/** POST público do link permanente (leads ou contact); sem cookies nem token. */
+async function postShare(kind, body) {
+  const endpoint = `${permanentShareEndpoint(getCloudBaseUrl() || PUBLISHED_CLOUD_BASE, shareSlug)}/${kind}`;
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+      credentials: "omit",
+    });
+    const data = await res.json().catch(() => null);
+    return { ok: res.ok, status: res.status, data, error: data?.error || "" };
+  } catch {
+    return { ok: false, error: "network" };
+  }
+}
+
+function endCard() {
+  const step = normalizeEndStep(demo.endStep);
+  return renderEndCard(step, {
     tour: String(demo?.name || "").trim(),
     link: tourLink(),
-    nome: fixedState.leadName,
+    nome: fixedState.lead?.name || "",
+    contactForm: Boolean(shareSlug && shareFeatures.contactForm),
     onReplay: () => replayTour(),
+    onContactForm: () => {
+      const card = cardShell("end");
+      card.append(
+        renderContactForm({
+          consentText: step.contact.consentText,
+          prefill: fixedState.lead || {},
+          onSubmit: (value) => postShare("contact", value),
+          onCancel: () => showFixedCard(endCard()),
+        })
+      );
+      showFixedCard(card);
+    },
   });
-  return showFixedCard(card);
+}
+
+function showEndStep() {
+  return showFixedCard(endCard());
+}
+
+/** Passo inicial (Pro): só no /p, com o recurso ativo no servidor, uma vez por sessão. */
+function startGateNeeded() {
+  if (!shareSlug || !shareFeatures.leadCapture || !startStepActive(demo?.startStep)) return false;
+  return !readStoredLead();
+}
+
+function showStartStep(next) {
+  const card = renderStartCard(demo.startStep, {
+    onSubmit: async (value) => {
+      const res = await postShare("leads", value);
+      if (res.ok) {
+        // why: o id do lead só existe com consentimento (obrigatório no envio) — o analytics pode usá-lo
+        const lead = { leadId: String(res.data?.leadId || ""), name: value.name || "", email: value.email || "", phone: value.phone || "" };
+        fixedState.lead = lead;
+        storeLead({ leadId: lead.leadId, name: lead.name });
+        if (lead.leadId) window.__GF_LEAD = { slug: shareSlug, leadId: lead.leadId, consent: true };
+        hideFixedCard();
+        next();
+      }
+      return res;
+    },
+    onSkip: () => {
+      storeLead({ skipped: true });
+      hideFixedCard();
+      next();
+    },
+  });
+  showFixedCard(card);
 }
 
 function coverImageSrc() {
@@ -425,6 +513,7 @@ async function boot() {
     return;
   }
 
+  if (route.kind === "permanent") shareSlug = route.id;
   try {
     demo = await loadDemo(route);
   } catch (err) {
@@ -480,11 +569,22 @@ async function boot() {
     });
   };
 
+  const stored = shareSlug ? readStoredLead() : null;
+  if (stored?.leadId) {
+    fixedState.lead = { leadId: stored.leadId, name: stored.name || "" };
+    window.__GF_LEAD = { slug: shareSlug, leadId: stored.leadId, consent: true };
+  }
+
+  const begin = () => {
+    if (startGateNeeded()) showStartStep(startTour);
+    else startTour();
+  };
+
   if (embedShowsCover(embedOptions)) {
-    showCover(startTour);
+    showCover(begin);
     return;
   }
-  startTour();
+  begin();
 }
 
 boot().catch((err) => {
