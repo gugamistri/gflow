@@ -359,21 +359,20 @@ export function readableOn(fg, bg, min = 4.5) {
 /**
  * Cores explícitas dos campos (passo inicial e formulário de contato) para o tema do tour.
  * Campos não herdam cor: fundo, texto, placeholder, borda e foco têm valor próprio.
+ * Textos, título e botões do cartão usam os mesmos tokens do balão (--demo-popover-*, --demo-button,
+ * --ns-button-text); aqui ficam só os campos, o foco e o color-scheme dos controles nativos.
  */
 export function fixedFormPalette(theme = {}) {
   const bg = parseHexColor(theme.popoverBg) ? toHex(parseHexColor(theme.popoverBg)) : "#ffffff";
   const dark = relativeLuminance(parseHexColor(bg)) <= 0.18;
   const fieldBg = dark ? toHex(parseHexColor(bg).map((v) => v * 0.55)) : "#ffffff";
   const fieldInk = dark ? "#f5f5f5" : "#18181b";
-  const button = parseHexColor(theme.button) ? theme.button : theme.accent || "#1a4d6d";
   return {
-    "--demo-form-ink": readableOn(theme.text || (dark ? "#f5f5f5" : "#3f3f46"), bg, 4.5),
+    "--demo-color-scheme": dark ? "dark" : "light",
     "--demo-field-bg": fieldBg,
     "--demo-field-ink": fieldInk,
     "--demo-field-placeholder": readableOn(dark ? "#a1a1aa" : "#6b6b76", fieldBg, 4.5),
     "--demo-field-border": readableOn(dark ? "#71717a" : "#8a8a94", contrastRatio(fieldBg, bg) > 1.2 ? fieldBg : bg, 3),
-    "--demo-form-link": readableOn(theme.accent || "#2a9d8f", bg, 4.5),
     "--demo-form-focus": readableOn(theme.accent || "#2a9d8f", bg, 3),
-    "--demo-button-ink": contrastRatio("#ffffff", button) >= 3 ? "#ffffff" : "#18181b",
   };
 }

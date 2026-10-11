@@ -6854,11 +6854,15 @@ dialog.embed-modal {
   gap: clamp(8px, 1.6vh, 14px);
   padding: clamp(14px, 3vh, 26px) clamp(14px, 4vw, 24px) clamp(12px, 2.4vh, 20px);
   text-align: center;
-  background: var(--demo-popover-bg, var(--ns-panel));
-  color: var(--demo-form-ink, var(--demo-popover-text, var(--ns-ink)));
-  border: 1px solid color-mix(in srgb, var(--demo-accent, var(--ns-accent)) 28%, var(--ns-border));
-  border-radius: 14px;
-  box-shadow: 0 18px 50px color-mix(in srgb, var(--demo-overlay, #000) 25%, transparent);
+  /* why: o passo inicial e o final são balões do tour — mesmos tokens do .driver-popover.demo-popover
+     (fundo, texto, título, botão, raio, fonte), nunca as cores do app (--ns-*). */
+  background: var(--demo-popover-bg);
+  color: var(--demo-popover-text);
+  color-scheme: var(--demo-color-scheme, light);
+  font-family: var(--ns-font);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
 }
 
 .fixed-card-start {
@@ -6870,7 +6874,7 @@ dialog.embed-modal {
   font-size: clamp(1.1rem, 2.6vw, 1.4rem);
   font-weight: 700;
   line-height: 1.25;
-  color: var(--demo-popover-title, var(--ns-ink));
+  color: var(--demo-popover-title);
   overflow-wrap: anywhere;
 }
 
@@ -6878,7 +6882,7 @@ dialog.embed-modal {
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.45;
-  color: var(--demo-form-ink, inherit);
+  color: var(--demo-popover-text);
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
@@ -6897,23 +6901,26 @@ dialog.embed-modal {
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 10px;
+  border-radius: 4px;
+  font-family: inherit;
   font-size: 0.95rem;
-  font-weight: 650;
+  font-weight: 700;
   text-decoration: none;
+  text-shadow: none;
   border: 1px solid transparent;
-  background: var(--demo-button, var(--demo-accent, var(--ns-accent)));
-  color: var(--demo-button-ink, #fff);
+  background: var(--demo-button);
+  color: var(--ns-button-text);
   cursor: pointer;
 }
 
 .fixed-card-btn:hover {
-  filter: brightness(1.06);
+  background: var(--demo-accent-dark);
+  color: var(--ns-button-text);
 }
 
 .fixed-card-btn:focus-visible,
 .fixed-card-replay:focus-visible {
-  outline: 2px solid var(--demo-form-focus, var(--demo-accent, var(--ns-accent)));
+  outline: 2px solid var(--demo-form-focus);
   outline-offset: 2px;
 }
 
@@ -6924,9 +6931,16 @@ dialog.embed-modal {
 }
 
 .fixed-card-btn.fixed-card-contact {
+  /* why: botão secundário igual ao "voltar" do balão — contorno na cor do título */
   background: transparent;
-  color: var(--demo-form-link, var(--demo-accent, var(--ns-accent)));
-  border-color: currentColor;
+  color: var(--demo-popover-title);
+  border: 1.5px solid color-mix(in srgb, var(--demo-popover-title) 55%, transparent);
+}
+
+.fixed-card-btn.fixed-card-contact:hover {
+  background: color-mix(in srgb, var(--demo-popover-title) 10%, transparent);
+  color: var(--demo-popover-title);
+  border-color: var(--demo-popover-title);
 }
 
 .fixed-card-btn.fixed-card-wa {
@@ -6934,10 +6948,17 @@ dialog.embed-modal {
   color: #0b3d20;
 }
 
+.fixed-card-btn.fixed-card-wa:hover {
+  background: #25d366;
+  color: #0b3d20;
+  filter: brightness(1.06);
+}
+
 .fixed-card-replay {
   border: 0;
+  border-radius: 4px;
   background: transparent;
-  color: var(--demo-form-link, var(--demo-accent, var(--ns-accent)));
+  color: var(--demo-popover-title);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -7254,7 +7275,7 @@ dialog.fixed-modal[open] {
 .fixed-form-title {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--demo-popover-title, var(--ns-ink));
+  color: var(--demo-popover-title);
 }
 
 .fixed-form-fields {
@@ -7274,7 +7295,7 @@ dialog.fixed-modal[open] {
   font-size: 13px;
   font-weight: 650;
   line-height: 1.3;
-  color: var(--demo-form-ink, var(--demo-popover-text, var(--ns-ink)));
+  color: var(--demo-popover-text);
 }
 
 /* why: cor, fundo e placeholder explícitos — o tema do tour (ou o editor escuro) não pode apagar o texto */
@@ -7285,7 +7306,7 @@ dialog.fixed-modal[open] {
   margin: 0;
   padding: 8px 10px;
   border: 1px solid var(--demo-field-border, #8a8a94);
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--demo-field-bg, #ffffff);
   color: var(--demo-field-ink, #18181b);
   -webkit-text-fill-color: var(--demo-field-ink, #18181b);
@@ -7313,9 +7334,9 @@ dialog.fixed-modal[open] {
 }
 
 .fixed-card .fixed-form .fixed-input:focus-visible {
-  outline: 2px solid var(--demo-form-focus, var(--demo-accent, var(--ns-accent)));
+  outline: 2px solid var(--demo-form-focus);
   outline-offset: 1px;
-  border-color: var(--demo-form-focus, var(--demo-accent, var(--ns-accent)));
+  border-color: var(--demo-form-focus);
 }
 
 .fixed-card .fixed-form .fixed-input[aria-invalid="true"] {
@@ -7346,20 +7367,45 @@ dialog.fixed-modal[open] {
   font-size: 13px;
   font-weight: 400;
   line-height: 1.4;
-  color: var(--demo-form-ink, var(--demo-popover-text, var(--ns-ink)));
+  color: var(--demo-popover-text);
   cursor: pointer;
 }
 
-.fixed-consent input {
+/* why: a caixa nativa seguia o color-scheme do app (escuro → preenchimento preto mesmo desmarcada).
+   Desenhada aqui: desmarcada = mesmo fundo/borda dos campos; marcada = cor de destaque do tema. */
+.fixed-card .fixed-consent input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
   width: 18px;
   height: 18px;
   margin: 1px 0 0;
-  accent-color: var(--demo-form-focus, var(--demo-accent, var(--ns-accent)));
+  padding: 0;
+  border: 1.5px solid var(--demo-field-border, #8a8a94);
+  border-radius: 3px;
+  background: var(--demo-field-bg, #ffffff) center / 12px 12px no-repeat;
+  accent-color: var(--demo-accent);
+  cursor: pointer;
 }
 
-.fixed-consent input:focus-visible {
-  outline: 2px solid var(--demo-form-focus, var(--demo-accent, var(--ns-accent)));
+.fixed-card .fixed-consent input[type="checkbox"]:hover {
+  border-color: var(--demo-form-focus);
+}
+
+.fixed-card .fixed-consent input[type="checkbox"]:checked {
+  border-color: var(--demo-accent);
+  background-color: var(--demo-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.fixed-card .fixed-consent input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--demo-form-focus);
   outline-offset: 2px;
+}
+
+.fixed-card .fixed-consent input[type="checkbox"][aria-invalid="true"] {
+  border-color: #d93025;
 }
 
 .fixed-consent .fixed-field-error {
@@ -7402,7 +7448,7 @@ dialog.fixed-modal[open] {
   font-size: 12px;
   line-height: 1.35;
   text-align: center;
-  color: var(--demo-form-ink, inherit);
+  color: var(--demo-popover-text);
 }
 
 .fixed-form-done {
