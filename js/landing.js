@@ -11,7 +11,7 @@ import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js
  * Demo de exemplo da seção #demo: slug de um link permanente publicado (/p/<slug>).
  * why: é o único lugar a trocar quando o tour de exemplo mudar; vazio = placeholder, sem iframe.
  */
-export const LANDING_DEMO_SLUG = "";
+export const LANDING_DEMO_SLUG = "leadpronto-9e0052";
 export const LANDING_DEMO_ORIGIN = "https://guiaflow.pro";
 const DEMO_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/;
 

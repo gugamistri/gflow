@@ -75,7 +75,7 @@ test("deep links seguem: /v, /p, /oembed, auth e os rodapés apontam para /edito
   assert.ok(JSON.parse(read("package.json")).build.files.includes("editor.html"));
 });
 
-test("demo de exemplo: slug numa constante só, sem o Demo RCV, placeholder quando vazio", async () => {
+test("demo de exemplo: slug numa constante só (LeadPronto), sem o Demo RCV, placeholder quando vazio", async () => {
   const fs = await import("node:fs");
   const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const js = fs.readFileSync(new URL("../js/landing.js", import.meta.url), "utf8");
@@ -84,6 +84,8 @@ test("demo de exemplo: slug numa constante só, sem o Demo RCV, placeholder quan
   assert.match(html, /id="demo-placeholder"/);
   assert.equal((js.match(/export const LANDING_DEMO_SLUG = /g) || []).length, 1);
   const { landingDemoUrl } = await import("../js/landing.js");
+  assert.match(js, /export const LANDING_DEMO_SLUG = "leadpronto-9e0052";/);
+  assert.match(html, /\/a\/\d+\/brand\/hero-leadpronto\.webp" width="1200" height="787"/);
   assert.equal(landingDemoUrl(""), "");
   assert.equal(landingDemoUrl("../x"), "");
   assert.equal(landingDemoUrl("javascript:alert(1)"), "");

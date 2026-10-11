@@ -378,95 +378,34 @@ h3 {
   overflow: hidden;
 }
 
-.mock-body {
-  display: grid;
-  grid-template-columns: 22% 1fr;
-  aspect-ratio: 16 / 10.5;
-}
-
-.mock-side {
-  display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 16px 12px;
-  background: #fafafa;
-  border-right: 1px solid #f0f0f0;
-}
-
-.mock-side b,
-.mock-main b {
-  display: block;
-  height: 10px;
-  border-radius: 5px;
-  background: #e8e8eb;
-}
-
-.mock-side b:first-child {
-  background: #cfe9e5;
-}
-
-.mock-main {
+.mock-shot {
   position: relative;
-  display: grid;
-  align-content: start;
-  gap: 14px;
-  padding: 16px;
+  overflow: hidden;
+  aspect-ratio: 1200 / 787;
+  background: #fff;
 }
 
-.mock-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.mock-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.mock-row .w40 {
-  width: 40%;
-  height: 14px;
-}
-
-.mock-row .pill {
-  width: 22%;
-  height: 26px;
-  border-radius: 8px;
-  background: var(--teal);
-}
-
-.mock-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.mock-cards b {
-  height: 54px;
-  border-radius: 10px;
-  background: #f4f4f5;
-  border: 1px solid #ececef;
-}
-
-.mock-table {
-  display: grid;
-  gap: 9px;
-}
-
-.mock-table b:nth-child(odd) {
-  width: 92%;
-}
-
+/* why: posições em % da captura (cartão Meta do passo 1 do tour do LeadPronto) */
 .mock-target {
   position: absolute;
-  top: 11px;
-  right: 11px;
-  width: calc(22% + 10px);
-  height: 36px;
+  left: 27.6%;
+  top: 70.6%;
+  width: 28.6%;
+  height: 25.4%;
   border-radius: 10px;
-  box-shadow: 0 0 0 3px var(--teal), 0 0 0 9999px rgba(15, 50, 72, 0.26);
+  box-shadow: 0 0 0 3px var(--teal), 0 0 0 9999px rgba(15, 50, 72, 0.32);
 }
 
 .mock-hotspot {
   position: absolute;
-  top: 22px;
-  right: calc(11% - 2px);
+  left: calc(53.4% - 8px);
+  top: calc(76.9% - 8px);
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -482,27 +421,33 @@ h3 {
 
 .mock-pop {
   position: absolute;
-  top: 60px;
-  right: 14px;
-  width: min(250px, 72%);
+  left: 27.6%;
+  bottom: calc(29.4% + 12px);
+  width: min(270px, 60%);
   display: grid;
   gap: 4px;
   padding: 12px 14px;
   border-radius: 10px;
   background: #fff;
   color: var(--ink);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
 .mock-pop::before {
   content: "";
   position: absolute;
-  top: -6px;
-  right: 30px;
+  bottom: -6px;
+  left: 28px;
   width: 12px;
   height: 12px;
   background: #fff;
   transform: rotate(45deg);
+}
+
+.mock-desc {
+  color: #52525b;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .mock-pop small {
@@ -1170,5 +1115,20 @@ section {
   }
   .features-grid {
     gap: 28px;
+  }
+}
+
+@media (max-width: 520px) {
+  .mock-desc,
+  .mock-wave {
+    display: none;
+  }
+
+  .mock-pop {
+    padding: 9px 11px;
+  }
+
+  .mock-pop strong {
+    font-size: 13px;
   }
 }
