@@ -2778,6 +2778,11 @@ function bindChrome() {
   });
   document.querySelectorAll("[data-local-save-open]").forEach((button) => {
     button.addEventListener("click", () => {
+      // why: o Pro também vê o aviso até a sincronização existir; não oferecer assinar de novo
+      if (getCloudAccount().signedIn && billingEntitlement.active) {
+        toast(t("billing.localSaveTip"), 5200);
+        return;
+      }
       showUpgradeDialog({ feature: "account" });
     });
   });
