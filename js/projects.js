@@ -12,6 +12,15 @@ import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback } fr
 import { t } from "./i18n.js";
 import { downscaleImageUrl, isHeavyDataUrl, thumbKey } from "./thumbs.js";
 import { fixedStepsForPayload, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
+import {
+  collectMediaRefs,
+  createMediaCodec,
+  externalizeMedia,
+  internalizeMedia,
+  mediaFootprint,
+  parseMediaToken,
+} from "./mediaStore.js";
+import { dataUrlToBytes } from "./mediaBytes.js";
 
 const DB_NAME = "demo-studio";
 const DB_VERSION = 3;
@@ -25,6 +34,16 @@ const DEFAULT_JSON_URL = "data/demo.json";
 /** Bump when data/demo.json muda — reinstala o tour de exemplo sem apagar outros projetos. */
 const SEED_REVISION = 3;
 export const STOCK_DEMO_NAME = "Como usar o Guia";
+
+/**
+ * Arquivos de mídia (Blob por sha256) num banco à parte.
+ * why: subir a versão do "demo-studio" quebraria o save de abas antigas abertas (VersionError);
+ *      banco separado não mexe no que já existe.
+ */
+const MEDIA_DB_NAME = "demo-studio-media";
+const MEDIA_DB_VERSION = 1;
+const MEDIA_STORE = "media";
+const MEDIA_LOCK = "guiaflow-media";
 
 const DEFAULT_SCENE_LABELS = {
   1: "Cena 1",
@@ -48,6 +67,190 @@ function openDb() {
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
+}
+
+function openMediaDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(MEDIA_DB_NAME, MEDIA_DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(MEDIA_STORE)) {
+        db.createObjectStore(MEDIA_STORE, { keyPath: "sha" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+const codec = createMediaCodec();
+/** Safari antigo não guarda Blob no IndexedDB; cai para ArrayBuffer uma vez e segue. */
+let storeBlobs = typeof Blob !== "undefined";
+
+/**
+ * why: o GC (exclusivo) nunca roda no meio de um save (compartilhado) noutra aba —
+ *      senão apagaria um arquivo que o registro que está sendo gravado acabou de citar.
+ */
+function withMediaLock(mode, fn) {
+  const locks = typeof navigator !== "undefined" ? navigator.locks : null;
+  if (!locks?.request) return mode === "exclusive" ? Promise.resolve(null) : fn();
+  return locks.request(MEDIA_LOCK, { mode }, fn);
+}
+
+function mediaRowFor(sha, entry) {
+  const bytes = entry.bytes || dataUrlToBytes(entry.dataUrl).bytes;
+  const data = storeBlobs ? new Blob([bytes], { type: entry.mime }) : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  return storeBlobs
+    ? { sha, mime: entry.mime, size: entry.size, blob: data, storedAt: Date.now() }
+    : { sha, mime: entry.mime, size: entry.size, bytes: data, storedAt: Date.now() };
+}
+
+/** Grava os arquivos que ainda não existem (getKey antes do put: não regrava a cada autosave). */
+async function putMediaFiles(blobs) {
+  if (!blobs || !blobs.size) return;
+  const attempt = () =>
+    openMediaDb().then(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction(MEDIA_STORE, "readwrite");
+          const store = tx.objectStore(MEDIA_STORE);
+          for (const [sha, entry] of blobs) {
+            const probe = typeof store.getKey === "function" ? store.getKey(sha) : store.count(sha);
+            probe.onsuccess = () => {
+              const exists = typeof store.getKey === "function" ? probe.result !== undefined : probe.result > 0;
+              if (exists) return;
+              try {
+                store.put(mediaRowFor(sha, entry));
+              } catch (err) {
+                tx.abort();
+                reject(err);
+              }
+            };
+          }
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => {
+            db.close();
+            reject(tx.error || new Error("IndexedDB error"));
+          };
+          tx.onabort = () => {
+            db.close();
+            reject(tx.error || new Error("IndexedDB abort"));
+          };
+        })
+    );
+  try {
+    await attempt();
+  } catch (err) {
+    if (!storeBlobs) throw err;
+    storeBlobs = false;
+    await attempt();
+  }
+}
+
+async function loadMediaFiles(shas) {
+  const rows = new Map();
+  if (!shas.length) return rows;
+  const db = await openMediaDb();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(MEDIA_STORE, "readonly");
+    const store = tx.objectStore(MEDIA_STORE);
+    for (const sha of shas) {
+      const req = store.get(sha);
+      req.onsuccess = () => {
+        if (req.result) rows.set(sha, req.result);
+      };
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("IndexedDB error"));
+    tx.onabort = () => reject(tx.error || new Error("IndexedDB abort"));
+  }).finally(() => db.close());
+  return rows;
+}
+
+async function hydrate(record) {
+  if (!record) return record;
+  const { value } = await internalizeMedia(record, codec, loadMediaFiles);
+  return value;
+}
+
+/** Arquivos primeiro, registro depois: um registro gravado nunca cita arquivo que não existe. */
+async function externalizeForDisk(values, writeRecords) {
+  return withMediaLock("shared", async () => {
+    const out = [];
+    const blobs = new Map();
+    for (const value of values) {
+      if (value == null) {
+        out.push(value);
+        continue;
+      }
+      const ext = await externalizeMedia(value, codec);
+      for (const [sha, entry] of ext.blobs) if (!blobs.has(sha)) blobs.set(sha, entry);
+      out.push(ext.value);
+    }
+    await putMediaFiles(blobs);
+    return writeRecords(out);
+  });
+}
+
+/**
+ * Apaga arquivos que nenhum projeto, histórico ou área de transferência cita.
+ * @returns {Promise<{removed:number, kept:number}|null>} null quando não deu para travar com segurança
+ */
+export async function collectMediaGarbage({ unlocked = false } = {}) {
+  const run = async () => {
+    const refs = new Map();
+    const db = await openDb();
+    try {
+      for (const name of [STORE, HISTORY_STORE, CLIPBOARD_STORE]) {
+        if (!db.objectStoreNames.contains(name)) continue;
+        const rows = await new Promise((resolve, reject) => {
+          const req = db.transaction(name, "readonly").objectStore(name).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+        for (const row of rows) collectMediaRefs(row, refs);
+      }
+    } finally {
+      db.close();
+    }
+    const mediaDb = await openMediaDb();
+    let removed = 0;
+    let kept = 0;
+    await new Promise((resolve, reject) => {
+      const tx = mediaDb.transaction(MEDIA_STORE, "readwrite");
+      const store = tx.objectStore(MEDIA_STORE);
+      const req = store.getAllKeys();
+      req.onsuccess = () => {
+        for (const sha of req.result || []) {
+          if (refs.has(sha)) kept += 1;
+          else {
+            store.delete(sha);
+            removed += 1;
+          }
+        }
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error || new Error("IndexedDB error"));
+      tx.onabort = () => reject(tx.error || new Error("IndexedDB abort"));
+    }).finally(() => mediaDb.close());
+    return { removed, kept };
+  };
+  // why: sem Web Locks não há como saber se outra aba está no meio de um save; os testes pedem unlocked
+  return unlocked ? run() : withMediaLock("exclusive", run);
+}
+
+let gcTimer = null;
+function scheduleMediaGarbage(delay = 4000) {
+  if (typeof setTimeout === "undefined") return;
+  clearTimeout(gcTimer);
+  gcTimer = setTimeout(() => {
+    gcTimer = null;
+    collectMediaGarbage().catch((err) => console.warn("media gc", err));
+  }, delay);
+  gcTimer?.unref?.();
 }
 
 /**
@@ -175,18 +378,22 @@ function coverSource(project) {
     (s) => s.type !== "slide" && s.image
   )?.image;
   if (!firstImage) return null;
+  let src = firstImage;
   if (firstImage.startsWith("custom:")) {
-    const dataUrl = project.customImages?.[firstImage.slice(7)]?.dataUrl || "";
-    return dataUrl ? { kind: "data", dataUrl } : null;
+    src = project.customImages?.[firstImage.slice(7)]?.dataUrl || "";
+    if (!src) return null;
   }
-  if (firstImage.startsWith("data:image/")) return { kind: "data", dataUrl: firstImage };
-  return { kind: "path", path: firstImage };
+  const token = parseMediaToken(src);
+  if (token) return { kind: "media", sha: token.sha };
+  if (src.startsWith("data:image/")) return { kind: "data", dataUrl: src };
+  return { kind: "path", path: src };
 }
 
 function coverSignature(project) {
   const cover = coverSource(project);
   if (!cover) return "";
   if (cover.kind === "path") return `path:${cover.path}`;
+  if (cover.kind === "media") return `media:${cover.sha}`;
   return `img:${thumbKey(cover.dataUrl)}:${cover.dataUrl.length}`;
 }
 
@@ -194,7 +401,16 @@ async function libraryThumbFor(project) {
   const cover = coverSource(project);
   if (!cover) return null;
   if (cover.kind === "path") return cover.path;
-  return (await downscaleImageUrl(cover.dataUrl, { maxEdge: 480, quality: 0.72 })) || null;
+  let dataUrl = cover.dataUrl;
+  if (cover.kind === "media") {
+    dataUrl = codec.cachedUrl(cover.sha);
+    if (!dataUrl) {
+      const { value } = await internalizeMedia(`\u0001gfm:${cover.sha}:0`, codec, loadMediaFiles);
+      dataUrl = typeof value === "string" && value.startsWith("data:") ? value : "";
+    }
+  }
+  if (!dataUrl) return null;
+  return (await downscaleImageUrl(dataUrl, { maxEdge: 480, quality: 0.72 })) || null;
 }
 
 async function summarizeProject(project, previous) {
@@ -222,6 +438,7 @@ async function summarizeProject(project, previous) {
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
     stepCount: Array.isArray(project.steps) ? project.steps.length : 0,
+    sizeBytes: mediaFootprint(project).bytes,
     thumb,
     thumbSig,
     themePreview: themePreviewDots(project.theme),
@@ -238,11 +455,21 @@ async function upsertSummary(index, project) {
   return index;
 }
 
-export async function getProject(id) {
+/** Registro como está no disco: mídia nova vem como ficha \u0001gfm:, antiga como data:. */
+export async function getProjectRecord(id) {
   if (!id) return null;
   return withStore("readonly", (store) => store.get(id));
 }
 
+/** Projeto pronto para o editor/player: toda mídia volta como data URL. */
+export async function getProject(id) {
+  return hydrate(await getProjectRecord(id));
+}
+
+/**
+ * Registros crus (para ids, nomes, links). hazard: a mídia pode vir como ficha;
+ * quem precisa das imagens/áudio chama getProject(id).
+ */
 export async function listAllProjects() {
   const rows = await withStore("readonly", (store) => store.getAll());
   return Array.isArray(rows) ? rows : [];
@@ -253,9 +480,12 @@ export async function putProject(project, { silent = false, keepUpdatedAt = fals
     ...project,
     updatedAt: keepUpdatedAt && project.updatedAt ? project.updatedAt : Date.now(),
   };
-  await withStore("readwrite", (store) => store.put(next));
+  const [record] = await externalizeForDisk([next], async ([rec]) => {
+    await withStore("readwrite", (store) => store.put(rec));
+    return [rec];
+  });
   const index = readIndex();
-  await upsertSummary(index, next);
+  await upsertSummary(index, record);
   writeIndex(index);
   if (!silent) emitChange({ type: "put", id: next.id });
   return next;
@@ -263,7 +493,8 @@ export async function putProject(project, { silent = false, keepUpdatedAt = fals
 
 export async function getProjectHistory(id) {
   if (!id) return null;
-  const row = await withStore("readonly", (store) => store.get(id), HISTORY_STORE);
+  const raw = await withStore("readonly", (store) => store.get(id), HISTORY_STORE);
+  const row = await hydrate(raw);
   if (!row) return null;
   return {
     undo: Array.isArray(row.undo) ? row.undo : [],
@@ -283,28 +514,30 @@ export async function putProjectAndHistory(project, stacks) {
     redo: Array.isArray(stacks?.redo) ? stacks.redo : [],
     media: stacks?.media && typeof stacks.media === "object" ? stacks.media : {},
   };
-  await openDb().then(
-    (db) =>
-      new Promise((resolve, reject) => {
-        const tx = db.transaction([STORE, HISTORY_STORE], "readwrite");
-        tx.objectStore(STORE).put(next);
-        tx.objectStore(HISTORY_STORE).put(historyRow);
-        tx.oncomplete = () => {
-          db.close();
-          resolve();
-        };
-        tx.onerror = () => {
-          db.close();
-          reject(tx.error || new Error("IndexedDB error"));
-        };
-        tx.onabort = () => {
-          db.close();
-          reject(tx.error || new Error("IndexedDB abort"));
-        };
-      })
+  const [record] = await externalizeForDisk([next, historyRow], ([rec, hist]) =>
+    openDb().then(
+      (db) =>
+        new Promise((resolve, reject) => {
+          const tx = db.transaction([STORE, HISTORY_STORE], "readwrite");
+          tx.objectStore(STORE).put(rec);
+          tx.objectStore(HISTORY_STORE).put(hist);
+          tx.oncomplete = () => {
+            db.close();
+            resolve([rec, hist]);
+          };
+          tx.onerror = () => {
+            db.close();
+            reject(tx.error || new Error("IndexedDB error"));
+          };
+          tx.onabort = () => {
+            db.close();
+            reject(tx.error || new Error("IndexedDB abort"));
+          };
+        })
+    )
   );
   const index = readIndex();
-  await upsertSummary(index, next);
+  await upsertSummary(index, record);
   writeIndex(index);
   emitChange({ type: "put", id: next.id });
   return next;
@@ -339,6 +572,7 @@ export async function deleteProject(id, { silent = false } = {}) {
   if (index.activeProjectId === id) index.activeProjectId = null;
   writeIndex(index);
   if (!silent) emitChange({ type: "delete", id });
+  scheduleMediaGarbage();
 }
 
 export async function setActiveProjectId(id) {
@@ -423,7 +657,8 @@ export function demoPayloadToProject(data, { name, id } = {}) {
 }
 
 export async function duplicateProject(id) {
-  const project = await getProject(id);
+  // why: o registro cru já cita os arquivos por sha; a cópia não duplica nenhum byte
+  const project = await getProjectRecord(id);
   if (!project) throw new Error(t("err.projectNotFound"));
   const copy = {
     ...structuredClone(project),
@@ -439,7 +674,7 @@ export async function duplicateProject(id) {
 }
 
 export async function renameProject(id, name) {
-  const project = await getProject(id);
+  const project = await getProjectRecord(id);
   if (!project) throw new Error(t("err.projectNotFound"));
   project.name = (name || "").trim() || project.name;
   return putProject(project);
@@ -503,7 +738,7 @@ async function seedDefaultDemoProject({ replaceExisting = false } = {}) {
   const stockName = data.name || STOCK_DEMO_NAME;
   const index = readIndex();
   const existingSummary = (index.projects || []).find((p) => p.name === stockName || p.name === STOCK_DEMO_NAME);
-  const prev = existingSummary && replaceExisting ? await getProject(existingSummary.id) : null;
+  const prev = existingSummary && replaceExisting ? await getProjectRecord(existingSummary.id) : null;
 
   const project = demoPayloadToProject(data, {
     name: stockName,
@@ -573,6 +808,8 @@ export async function ensureMigrated() {
     writeIndex(index);
   }
 
+  // why: arquivos de projetos apagados (ou trocados por versões otimizadas) saem do disco
+  scheduleMediaGarbage(15000);
   return { index, seeded };
 }
 

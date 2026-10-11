@@ -126,5 +126,10 @@ export function createHistory({ limit = DEFAULT_LIMIT, pool } = {}) {
     syncPool();
   }
 
-  return { reset, noteChange, settle, undoChange, redoChange, canUndo, canRedo, exportStacks, restore };
+  /** Mesma mídia, versão mais leve: vale para o estado atual e para todo o desfazer/refazer. */
+  function replaceMedia(map) {
+    return media.replace(map);
+  }
+
+  return { reset, noteChange, settle, undoChange, redoChange, canUndo, canRedo, exportStacks, restore, replaceMedia };
 }

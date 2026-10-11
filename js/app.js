@@ -32,6 +32,14 @@ import {
   STOCK_DEMO_NAME,
 } from "./projects.js";
 import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks } from "./cloudSync.js";
+import { formatBytes } from "./mediaBytes.js";
+import {
+  applyMediaMap,
+  collectProjectMedia,
+  optimizeProjectMedia,
+  projectSizeBytes,
+  replaceMediaStrings,
+} from "./projectOptimize.js";
 import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
 import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
@@ -457,7 +465,55 @@ function flushAutosave() {
   return saveChain;
 }
 
+/* ---------- mídia leve na entrada ---------- */
+
+let ingestChain = Promise.resolve();
+
+/**
+ * Otimiza em segundo plano a mídia que acabou de entrar (captura, upload, colar, importar).
+ * why: a captura ao vivo entra na hora com o original; a versão leve troca de lugar logo depois,
+ *      no projeto e em todo o desfazer (mesma imagem, menos bytes), sem criar passo de desfazer.
+ * @param {Set<string>|null} sources data URLs novos; null = toda a mídia do projeto aberto
+ */
+function optimizeIncomingMedia(sources, { audio = true } = {}) {
+  const targetId = project?.id;
+  if (!targetId) return ingestChain;
+  if (sources && !sources.size) return ingestChain;
+  ingestChain = ingestChain
+    .then(async () => {
+      const base = project && project.id === targetId ? project : await getProject(targetId);
+      if (!base) return;
+      const res = await optimizeProjectMedia(base, { only: sources || undefined, audio });
+      if (!res.map.size) return;
+      if (project && project.id === targetId) {
+        replaceMediaStrings(project, res.map);
+        history.replaceMedia(res.map);
+        saveDirty = true;
+        await flushAutosave();
+        paintProjectSize();
+      } else {
+        const saved = await getProject(targetId);
+        if (!saved) return;
+        replaceMediaStrings(saved, res.map);
+        await putProject(saved, { keepUpdatedAt: true });
+      }
+    })
+    .catch((err) => console.warn("media optimize", err));
+  return ingestChain;
+}
+
+function paintProjectSize() {
+  const label = document.getElementById("file-optimize-size");
+  if (!label) return;
+  if (!project) {
+    label.textContent = "";
+    return;
+  }
+  label.textContent = formatBytes(projectSizeBytes(project), getLocale());
+}
+
 const editor = createEditor({
+  onMediaAdded: (sources) => void optimizeIncomingMedia(new Set(sources)),
   getDemo,
   setDemo,
   getSelectedIndex,
@@ -1759,6 +1815,138 @@ function formatDate(ts) {
   }
 }
 
+/* ---------- Otimizar projeto ---------- */
+
+let optimizeRun = null;
+
+function optimizeEls() {
+  return {
+    modal: document.getElementById("modal-optimize"),
+    name: document.getElementById("optimize-name"),
+    progress: document.getElementById("optimize-progress"),
+    status: document.getElementById("optimize-status"),
+    sizes: document.getElementById("optimize-sizes"),
+    before: document.getElementById("optimize-before"),
+    after: document.getElementById("optimize-after"),
+    apply: document.getElementById("btn-optimize-apply"),
+  };
+}
+
+/**
+ * Mede e recomprime numa cópia; só grava depois do "Aplicar".
+ * why: aberto no editor vira uma edição comum (Desfazer volta ao original);
+ *      fechado, o original entra no histórico salvo do projeto antes da troca.
+ */
+async function openOptimizeProject(id) {
+  const els = optimizeEls();
+  if (!els.modal || !id) return;
+  optimizeRun?.controller.abort();
+  const controller = new AbortController();
+  const run = { id, controller, result: null };
+  optimizeRun = run;
+  els.apply.disabled = true;
+  els.sizes.hidden = true;
+  els.progress.hidden = false;
+  els.progress.removeAttribute("value");
+  els.status.textContent = t("optimize.loading");
+  els.name.textContent = "";
+  if (!els.modal.open) els.modal.showModal();
+  try {
+    const isOpen = project && project.id === id;
+    if (isOpen) await flushAutosave();
+    const source = isOpen ? project : await getProject(id);
+    if (!source) throw new Error(t("toast.projectNotFound"));
+    els.name.textContent = source.name || "";
+    const res = await optimizeProjectMedia(source, {
+      signal: controller.signal,
+      onProgress: (i, n) => {
+        if (optimizeRun !== run) return;
+        els.progress.max = n;
+        els.progress.value = i - 1;
+        els.status.textContent = t("optimize.analyzing", { i, n });
+      },
+    });
+    if (optimizeRun !== run) return;
+    run.result = res;
+    const locale = getLocale();
+    els.progress.hidden = true;
+    els.sizes.hidden = false;
+    els.before.textContent = formatBytes(res.before, locale);
+    els.after.textContent = formatBytes(res.after, locale);
+    if (!res.map.size) {
+      els.status.textContent = t("optimize.nothing");
+      return;
+    }
+    const pct = res.before ? Math.max(1, Math.round((1 - res.after / res.before) * 100)) : 0;
+    els.status.textContent = t("optimize.ready", { images: res.changedImages, audio: res.changedAudio, pct });
+    els.apply.disabled = false;
+  } catch (err) {
+    if (optimizeRun !== run || err?.code === "aborted") return;
+    console.error(err);
+    els.progress.hidden = true;
+    els.status.textContent = err?.message || t("optimize.fail");
+  }
+}
+
+async function applyOptimizeResult(run) {
+  const { id, result } = run;
+  const locale = getLocale();
+  const sizes = { before: formatBytes(result.before, locale), after: formatBytes(result.after, locale) };
+  if (project && project.id === id) {
+    commitPendingEdit();
+    replaceMediaStrings(project, result.map);
+    onChange();
+    commitPendingEdit();
+    saveDirty = true;
+    await flushAutosave();
+    editor.refresh();
+    paintProjectSize();
+    toast(t("optimize.applied", sizes), 4200);
+    return;
+  }
+  const saved = await getProject(id);
+  if (!saved) throw new Error(t("toast.projectNotFound"));
+  const savedHistory = await getProjectHistory(id);
+  const stacks = createHistory();
+  if (savedHistory && (savedHistory.undo.length || savedHistory.redo.length)) stacks.restore(saved, savedHistory);
+  else stacks.reset(saved);
+  const next = applyMediaMap(saved, result.map);
+  stacks.noteChange();
+  stacks.settle(next);
+  await putProjectAndHistory(next, stacks.exportStacks());
+  if (chromeView === "library") renderLibrary();
+  toast(t("optimize.appliedClosed", sizes), 4200);
+}
+
+function bindOptimizeModal() {
+  const els = optimizeEls();
+  if (!els.modal) return;
+  const close = () => {
+    optimizeRun?.controller.abort();
+    optimizeRun = null;
+    if (els.modal.open) els.modal.close();
+  };
+  document.getElementById("btn-optimize-cancel")?.addEventListener("click", close);
+  els.modal.addEventListener("cancel", () => {
+    optimizeRun?.controller.abort();
+    optimizeRun = null;
+  });
+  els.apply.addEventListener("click", async () => {
+    const run = optimizeRun;
+    if (!run?.result?.map.size) return;
+    els.apply.disabled = true;
+    try {
+      await applyOptimizeResult(run);
+      optimizeRun = null;
+      els.modal.close();
+    } catch (err) {
+      console.error(err);
+      els.status.textContent = err?.message || t("optimize.fail");
+      els.apply.disabled = false;
+    }
+  });
+}
+
 function renderLibrary() {
   const index = readIndex();
   const grid = document.getElementById("library-grid");
@@ -1795,7 +1983,7 @@ function renderLibrary() {
           <div class="project-card-body">
             <h3 class="project-card-title" data-action="rename-inline" title="${escapeAttr(t("library.renameTitle"))}">${escapeHtml(p.name)}</h3>
             <p>${p.stepCount || 0} passo(s) · ${escapeHtml(formatDate(p.updatedAt))}</p>
-            <div class="project-card-dots">${dots}</div>
+            <div class="project-card-dots">${dots}${p.sizeBytes ? `<span class="project-card-size" title="${escapeAttr(t("file.sizeTitle"))}">${escapeHtml(formatBytes(p.sizeBytes, getLocale()))}</span>` : ""}</div>
             <div class="project-card-actions">
               <button type="button" class="btn btn-sm" data-action="export">
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
@@ -1804,6 +1992,9 @@ function renderLibrary() {
               <button type="button" class="btn btn-sm" data-action="duplicate">
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
                 Duplicar
+              </button>
+              <button type="button" class="btn btn-sm btn-icon project-card-optimize" data-action="optimize" title="${escapeAttr(t("library.optimizeTitle"))}" aria-label="${escapeAttr(t("library.optimize"))}">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-compress"></use></svg>
               </button>
             </div>
           </div>
@@ -2380,6 +2571,12 @@ function bindChrome() {
         toast(t("toast.jsonExported"));
         return;
       }
+      if (action === "optimize") {
+        e.preventDefault();
+        e.stopPropagation();
+        await openOptimizeProject(id);
+        return;
+      }
       if (action === "duplicate") {
         const copy = await duplicateProject(id);
         renderLibrary();
@@ -2536,6 +2733,15 @@ function bindChrome() {
   cancelBtn.addEventListener("click", () => {
     exportAbort?.abort();
   });
+
+  document.getElementById("btn-file-optimize")?.addEventListener("click", () => {
+    document.getElementById("file-panel")?.removeAttribute("open");
+    if (project?.id) void openOptimizeProject(project.id);
+  });
+  document.getElementById("file-panel")?.addEventListener("toggle", (event) => {
+    if (event.currentTarget.open) paintProjectSize();
+  });
+  bindOptimizeModal();
 
   document.getElementById("btn-export-json").addEventListener("click", () => {
     closeExportMenu();
@@ -3286,6 +3492,7 @@ async function importCapturePayload(data, { name } = {}) {
   if (!created.sceneLabels) created.sceneLabels = data.sceneLabels || {};
   await putProject(created);
   await openProject(created.id);
+  void optimizeIncomingMedia(null);
   return created;
 }
 
@@ -3297,6 +3504,7 @@ async function appendCapturePayload(data) {
     throw new Error(t("ext.appendNoProject"));
   }
   clampStepClickPoints(data.steps);
+  const incoming = new Set(collectProjectMedia(data).keys());
   const { startIndex } = appendCaptureToProject(project, data, {
     sceneLabel: data.sceneLabels?.[1] || data.sceneLabels?.["1"] || data.name,
   });
@@ -3305,6 +3513,7 @@ async function appendCapturePayload(data) {
   onChange();
   editor.refresh?.();
   paintChrome();
+  void optimizeIncomingMedia(incoming);
   return project;
 }
 

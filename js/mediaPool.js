@@ -112,5 +112,23 @@ export function createMediaPool() {
     }
   }
 
-  return { pack, unpack, exportMedia, importMedia, retain };
+  /**
+   * Troca o conteúdo guardado (old → new) em todos os snapshots de uma vez.
+   * why: a versão otimizada de uma captura entra no lugar sem virar passo de desfazer.
+   */
+  function replace(map) {
+    if (!map || !map.size) return 0;
+    let count = 0;
+    for (const [id, dataUrl] of [...payloads.entries()]) {
+      const next = map.get(dataUrl);
+      if (typeof next !== "string" || next === dataUrl) continue;
+      payloads.set(id, next);
+      if (byExact.get(dataUrl) === id) byExact.delete(dataUrl);
+      if (!byExact.has(next)) byExact.set(next, id);
+      count += 1;
+    }
+    return count;
+  }
+
+  return { pack, unpack, exportMedia, importMedia, retain, replace };
 }

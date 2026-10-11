@@ -8487,3 +8487,96 @@ dialog.analytics-modal {
     padding: 5px 8px;
   }
 }
+
+/* Otimizar projeto: tamanho discreto no menu e no cartão, modal com antes/depois */
+.file-size-tag {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ns-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.file-size-tag:empty {
+  display: none;
+}
+
+.project-card-dots .project-card-size {
+  margin-left: auto;
+  font-size: 0.68rem;
+  line-height: 10px;
+  color: var(--ns-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.project-card-actions .project-card-optimize {
+  flex: none;
+  width: 26px;
+  padding: 0;
+  margin-left: auto;
+}
+
+.optimize-dialog {
+  width: min(420px, calc(100vw - 32px));
+}
+
+.optimize-name {
+  margin: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optimize-progress {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--ns-accent);
+}
+
+.optimize-progress[hidden] {
+  display: none;
+}
+
+.optimize-status {
+  margin: 0;
+  min-height: 1.3em;
+  font-size: 0.85rem;
+  color: var(--ns-muted);
+}
+
+.optimize-sizes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+}
+
+.optimize-sizes[hidden] {
+  display: none;
+}
+
+.optimize-sizes > div {
+  padding: 10px 12px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  background: var(--ns-input-bg);
+}
+
+.optimize-sizes dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ns-muted);
+}
+
+.optimize-sizes dd {
+  margin: 2px 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

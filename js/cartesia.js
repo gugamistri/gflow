@@ -85,7 +85,8 @@ export function ttsRequest({ text, voiceURI, rate } = {}) {
     transcript: String(text || "").trim(),
     voice: { id: narration.voiceId },
     locale: narration.locale,
-    output_format: { container: "mp3", sample_rate: 44100, bit_rate: 128000 },
+    // why: voz não precisa de 128 kbps; 64 kbps corta a narração pela metade e segue MP3 (toca no iOS)
+    output_format: { container: "mp3", sample_rate: 44100, bit_rate: 64000 },
     generation_config: { speed: speechSpeed(rate) },
   };
 }

@@ -13,7 +13,10 @@ export const LEGACY_SHARE_MAX_BODY_BYTES = 4 * 1024 * 1024;
 export const SHARE_IMAGE_QUALITY = 0.85;
 /** Abaixo disto a captura já é leve; recomprimir não compensa. */
 const MIN_COMPRESS_CHARS = 48 * 1024;
-const COMPRESSIBLE_RE = /^data:image\/(png|jpeg|jpg|webp|bmp);base64,/i;
+// why: WebP já saiu otimizado da entrada (imageOptimize.js); recodificar só perderia qualidade
+const COMPRESSIBLE_RE = /^data:image\/(png|jpeg|jpg|bmp);base64,/i;
+/** JPEG→WebP só troca com ganho real (evita perda de geração à toa). */
+const MIN_GAIN = 0.1;
 
 export function utf8Bytes(text) {
   const value = String(text ?? "");
@@ -125,7 +128,7 @@ export async function compressTourImages(
     } catch {
       out = "";
     }
-    if (typeof out === "string" && out.startsWith("data:image/") && out.length < src.length) {
+    if (typeof out === "string" && out.startsWith("data:image/") && out.length < src.length * (1 - MIN_GAIN)) {
       replaced.set(src, out);
     }
   }
