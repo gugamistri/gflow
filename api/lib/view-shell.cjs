@@ -39,6 +39,7 @@ function renderViewPage({
   imageWidth = null,
   imageHeight = null,
   stepCount = null,
+  ratio = null,
 }) {
   const base = String(origin || "").replace(/\/$/, "");
   const permanent = kind === "permanent";
@@ -59,6 +60,14 @@ function renderViewPage({
   const imgW = hasCover && Number.isInteger(imageWidth) && imageWidth > 0 ? imageWidth : 1200;
   const imgH = hasCover && Number.isInteger(imageHeight) && imageHeight > 0 ? imageHeight : 630;
   const imageAlt = !missing && name ? name : "GuiaFlow";
+  // Descoberta de embed (oEmbed + Iframely): só no /p que existe; o /v expira e não é incorporável.
+  const embedRatio = /^\d{1,4}(?:\.\d{1,2})?\/\d{1,4}(?:\.\d{1,2})?$/.test(String(ratio || "")) ? String(ratio) : "16/9";
+  const discovery =
+    permanent && !missing && id
+      ? `
+  <link rel="alternate" type="application/json+oembed" href="${escapeHtml(`${base}/oembed?url=${encodeURIComponent(canonical)}&format=json`)}" title="${escapeHtml(title)}" />
+  <link rel="iframely app" href="${escapeHtml(`${canonical}?embed=1`)}" media="aspect-ratio: ${embedRatio}" />`
+      : "";
   const safeTitle = escapeHtml(title);
   const safeDesc = escapeHtml(description);
   const safeName = escapeHtml(name || "");
@@ -73,7 +82,7 @@ function renderViewPage({
   <meta name="description" content="${safeDesc}" />
   <meta name="theme-color" content="#1A4D6D" />
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="canonical" href="${escapeHtml(canonical)}" />
+  <link rel="canonical" href="${escapeHtml(canonical)}" />${discovery}
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="GuiaFlow" />
   <meta property="og:title" content="${safeTitle}" />
