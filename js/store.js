@@ -236,6 +236,29 @@ export function clampClickToHotspot(point, hotspot, { inset = CLICK_INSET } = {}
   };
 }
 
+/** Ponto (em % da imagem) cai dentro do destaque, bordas incluídas */
+export function pointInHotspot(point, hotspot) {
+  if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y) || !hasHotspot(hotspot)) return false;
+  return (
+    point.x >= hotspot.x &&
+    point.x <= hotspot.x + hotspot.w &&
+    point.y >= hotspot.y &&
+    point.y <= hotspot.y + hotspot.h
+  );
+}
+
+/**
+ * Clique simples no canvas: novo ponto do clique simulado, ou null para não mexer.
+ * Com destaque, só um clique dentro dele move o clique (fora dele é ignorado,
+ * sem "pular" para a borda). Sem destaque, o clique continua livre.
+ */
+export function clickPointForCanvasClick(point, hotspot) {
+  if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+  if (!hasHotspot(hotspot)) return { x: point.x, y: point.y };
+  if (!pointInHotspot(point, hotspot)) return null;
+  return clampClickToHotspot(point, hotspot);
+}
+
 /**
  * Novo clique quando o destaque muda: se só moveu (mesmo tamanho), o clique
  * acompanha o deslocamento; se redimensionou, fica onde estava e é preso dentro.

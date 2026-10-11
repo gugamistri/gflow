@@ -10,6 +10,7 @@ import {
   clampClickToHotspot,
   followHotspot,
   hasHotspot,
+  clickPointForCanvasClick,
   applyTheme,
   formToTheme,
   bindImage,
@@ -2091,7 +2092,10 @@ export function createEditor(ctx) {
     const rect = getImageContentRect(els.canvasImage);
     const x = ((clientX - frame.left - rect.left) / rect.width) * 100;
     const y = ((clientY - frame.top - rect.top) / rect.height) * 100;
-    step.clickPoint = clampClickToHotspot({ x: clamp(x, 0, 100), y: clamp(y, 0, 100) }, step.hotspot);
+    // why: clique fora do destaque não mexe o clique (nem o "puxa" para a borda)
+    const next = clickPointForCanvasClick({ x: clamp(x, 0, 100), y: clamp(y, 0, 100) }, step.hotspot);
+    if (!next) return;
+    step.clickPoint = next;
     placeClickPoint(step.clickPoint);
     onChange();
   }
@@ -3380,10 +3384,26 @@ export function createEditor(ctx) {
       if (!popoverDrag) placeEditorPopover();
     });
 
-    els.hotspot.addEventListener("pointerup", () => {
+    els.hotspot.addEventListener("pointerup", (e) => {
       if (!dragMode) return;
+      const mode = dragMode;
+      const start = dragStart;
       dragMode = null;
       dragStart = null;
+      const moved = start ? Math.hypot(e.clientX - start.x, e.clientY - start.y) : Infinity;
+      // why: clique simples dentro do destaque (sem arrastar) posiciona o clique simulado ali
+      if (mode === "move" && moved < 4) {
+        const step = currentStep();
+        if (step && step.type !== "slide") {
+          placeHotspot(step.hotspot); // desfaz o tremor de até 3px do pointermove
+          if (step.simulateClick !== false) {
+            placeClickPoint(ensureClickPoint(step));
+            setClickPointAtClient(e.clientX, e.clientY);
+          }
+          placeEditorPopover();
+        }
+        return;
+      }
       commitHotspot();
     });
 

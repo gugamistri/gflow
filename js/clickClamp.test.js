@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   CLICK_INSET,
+  clickPointForCanvasClick,
+  pointInHotspot,
   clampClickToHotspot,
   clampStepClickPoints,
   ensureClickPoint,
@@ -100,4 +102,22 @@ test("HTML exportado usa a mesma regra de clique", () => {
     { hotspot: { x: 10, y: 10, w: 1, h: 0.5 }, clickPoint: { x: 0, y: 99 } },
   ];
   for (const step of cases) assert.deepEqual(ensure(step), ensureClickPoint(step));
+});
+
+test("clique no canvas fora do destaque não mexe o clique", () => {
+  assert.equal(clickPointForCanvasClick({ x: 5, y: 95 }, HS), null);
+  assert.equal(clickPointForCanvasClick({ x: 61, y: 45 }, HS), null);
+  assert.equal(pointInHotspot({ x: 39.9, y: 45 }, HS), false);
+});
+
+test("clique no canvas dentro do destaque move o clique (preso à margem)", () => {
+  assert.deepEqual(clickPointForCanvasClick({ x: 45, y: 44 }, HS), { x: 45, y: 44 });
+  // na borda do destaque: entra e fica na margem
+  assert.deepEqual(clickPointForCanvasClick({ x: 60, y: 40 }, HS), { x: 59, y: 41 });
+  assert.equal(pointInHotspot({ x: 60, y: 50 }, HS), true);
+});
+
+test("clique no canvas sem destaque continua livre", () => {
+  assert.deepEqual(clickPointForCanvasClick({ x: 3, y: 97 }, null), { x: 3, y: 97 });
+  assert.equal(clickPointForCanvasClick({ x: NaN, y: 1 }, HS), null);
 });
