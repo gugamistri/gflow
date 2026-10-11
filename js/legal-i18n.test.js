@@ -12,8 +12,8 @@ test("privacidade e termos usam o mesmo i18n da /ajuda", () => {
     assert.match(html, /localStorage\.getItem\("ns-locale"\)/, file);
     assert.match(html, /<select id="locale-select"[^>]*>/, file);
     for (const loc of SUPPORTED_LOCALES) assert.match(html, new RegExp(`<option value="${loc}">`), file);
-    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/49\/js\/i18n\.js"/, file);
-    assert.match(html, /import "\.\/a\/49\/js\/legal-i18n\.js"/, file);
+    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/51\/js\/i18n\.js"/, file);
+    assert.match(html, /import "\.\/a\/51\/js\/legal-i18n\.js"/, file);
     const keys = [...html.matchAll(/data-i18n(?:-html|-aria)?="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(keys.length > 40, file);
     for (const key of keys) {
@@ -66,4 +66,18 @@ test("privacidade e termos explicam a captura de contatos: autor controlador, Gu
   assert.match(legalCatalogs.en["privacy.leads.p2"], /processor/);
   assert.match(legalCatalogs.es["privacy.leads.p2"], /encargado/);
   assert.equal(legalCatalogs.pt["terms.contato.title"], "14. Contato");
+});
+
+test("privacidade separa o link de login (15 min) do link de convite (7 dias)", () => {
+  const html = read("privacidade.html");
+  const week = { pt: /7 dias/, es: /7 días/, en: /7 days/ };
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const key of ["privacy.pro.p3", "privacy.retencao.li4"]) {
+      const value = legalCatalogs[loc][key];
+      assert.match(value, /15/, `${loc} ${key}`);
+      assert.match(value, week[loc], `${loc} ${key}`);
+    }
+  }
+  assert.match(html, /convite do GuiaFlow Pro vale 7 dias/);
+  assert.match(html, /link de ativação de um convite vale 7 dias/);
 });
