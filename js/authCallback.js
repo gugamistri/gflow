@@ -13,7 +13,9 @@ function goHome(href) {
   let next = "/editor";
   try {
     const url = new URL(href || "/editor", location.origin);
-    if (url.origin === location.origin) {
+    // why: sem ?code o href é a própria página — voltar para ela recarregava em loop
+    const isCallback = /^\/auth\/callback(\.html)?\/?$/.test(url.pathname);
+    if (url.origin === location.origin && !isCallback) {
       next = `${url.pathname}${url.search}${url.hash}` || "/editor";
     }
   } catch {
