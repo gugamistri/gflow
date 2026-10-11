@@ -5304,7 +5304,26 @@ body.standalone .caption-bar,
   color: var(--ns-ink);
 }
 
+.filmstrip-metrics {
+  align-items: center;
+  cursor: default;
+}
+
+.filmstrip-metrics .metrics-ico {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: var(--ns-muted);
+}
+
+.filmstrip-metrics .metrics-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ns-muted);
+}
+
 .filmstrip-metrics .metrics-count {
+  display: none;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--ns-muted);
@@ -6288,6 +6307,16 @@ body.standalone .caption-bar,
 
   .film-item .film-actions {
     display: flex;
+  }
+
+  /* why: no celular não há "Passo x de y" — o total de passos volta ao lado da duração, como antes. */
+  .filmstrip-metrics .metrics-count {
+    display: inline;
+  }
+
+  .filmstrip-metrics .metrics-ico,
+  .filmstrip-metrics .metrics-label {
+    display: none;
   }
 
   /* why: no celular só sobra o grupo desfazer/refazer — os separadores ficariam soltos. */

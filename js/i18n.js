@@ -779,6 +779,9 @@ export const catalogs = {
     "filmstrip.addImagesTitle": "Criar vários passos de uma vez a partir de imagens",
     "editor.stepsOne": "1 passo",
     "editor.stepsMany": "{n} passos",
+    "editor.durationLabel": "Duração",
+    "editor.durationTitle": "Duração total do tour",
+    "editor.durationAria": "Duração total do tour: {time}",
   },
   es: {
     "cartesia.voice.en-GB": "Inglés (Reino Unido)",
@@ -1552,6 +1555,9 @@ export const catalogs = {
     "filmstrip.addImagesTitle": "Crear varios pasos a la vez a partir de imágenes",
     "editor.stepsOne": "1 paso",
     "editor.stepsMany": "{n} pasos",
+    "editor.durationLabel": "Duración",
+    "editor.durationTitle": "Duración total del tour",
+    "editor.durationAria": "Duración total del tour: {time}",
   },
   en: {
     "cartesia.voice.en-GB": "English (UK)",
@@ -2325,6 +2331,9 @@ export const catalogs = {
     "filmstrip.addImagesTitle": "Create several steps at once from images",
     "editor.stepsOne": "1 step",
     "editor.stepsMany": "{n} steps",
+    "editor.durationLabel": "Duration",
+    "editor.durationTitle": "Total tour duration",
+    "editor.durationAria": "Total tour duration: {time}",
   },
 };
 
