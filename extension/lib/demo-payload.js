@@ -35,6 +35,16 @@ export function hotspotAround(point, w = 14, h = 8) {
   };
 }
 
+/** Clique preso dentro do destaque (margem de 1 ponto), igual ao editor. */
+export function clickInsideHotspot(point, hotspot, inset = 1) {
+  const ix = Math.min(inset, hotspot.w / 2);
+  const iy = Math.min(inset, hotspot.h / 2);
+  return {
+    x: round1(clamp(point.x, hotspot.x + ix, hotspot.x + hotspot.w - ix)),
+    y: round1(clamp(point.y, hotspot.y + iy, hotspot.y + hotspot.h - iy)),
+  };
+}
+
 /**
  * O último passo ainda sem clique só recebe o destaque.
  * Qualquer outro clique vira uma captura nova.
@@ -67,6 +77,7 @@ export function buildDemoPayload({ name, shots }) {
     }
     const label = shot.label || t("ext.defaultStep", { n: index + 1 });
     const point = shot.clickPoint || { x: 47, y: 44 };
+    const hotspot = hotspotAround(point);
     customImages[shot.imageId] = {
       name: shot.name || `passo-${index + 1}.jpg`,
       dataUrl: shot.dataUrl,
@@ -78,8 +89,8 @@ export function buildDemoPayload({ name, shots }) {
       label,
       type: "screen",
       image: `custom:${shot.imageId}`,
-      hotspot: hotspotAround(point),
-      clickPoint: { x: point.x, y: point.y },
+      hotspot,
+      clickPoint: clickInsideHotspot(point, hotspot),
       popover: {
         title: label,
         description: t("editor.editExplain"),

@@ -7,6 +7,7 @@ import {
   normalizeSteps,
   resolveImageSrc,
   createStepId,
+  clampStepClickPoints,
 } from "./store.js";
 import {
   ensureMigrated,
@@ -3080,6 +3081,8 @@ async function importCapturePayload(data, { name } = {}) {
   if (!data || !Array.isArray(data.steps)) {
     throw new Error(t("err.captureNoSteps"));
   }
+  // why: extensões antigas mandam clique e destaque soltos; captura nova já entra com o clique dentro
+  clampStepClickPoints(data.steps);
   const created = demoPayloadToProject(data, {
     name: name || data.name || t("default.capturedProject"),
   });
@@ -3096,6 +3099,7 @@ async function appendCapturePayload(data) {
   if (!project?.id) {
     throw new Error(t("ext.appendNoProject"));
   }
+  clampStepClickPoints(data.steps);
   const { startIndex } = appendCaptureToProject(project, data, {
     sceneLabel: data.sceneLabels?.[1] || data.sceneLabels?.["1"] || data.name,
   });
