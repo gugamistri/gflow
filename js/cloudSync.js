@@ -7,6 +7,10 @@
  * Conflito (409): mantém as duas versões — a do servidor vira uma cópia local nova.
  */
 
+import { bytesToDataUrl, dataUrlToBytes, sha256Hex } from "./mediaBytes.js";
+
+export { bytesToDataUrl, dataUrlToBytes, sha256Hex };
+
 export const SYNC_META_KEY = "guiaflow.sync.v1";
 export const ASSET_PREFIX = "asset:";
 const MEDIA_MIN_CHARS = 512;
@@ -17,34 +21,6 @@ const DATA_URL_RE = /^data:((?:image|audio|video)\/[a-z0-9.+-]+)(;[^,]*)?,/i;
 
 export function isSyncableDataUrl(value) {
   return typeof value === "string" && value.length >= MEDIA_MIN_CHARS && DATA_URL_RE.test(value);
-}
-
-export function dataUrlToBytes(dataUrl) {
-  const comma = dataUrl.indexOf(",");
-  const head = dataUrl.slice(5, comma);
-  const mime = head.split(";")[0].toLowerCase();
-  const body = dataUrl.slice(comma + 1);
-  if (/;base64/i.test(head)) {
-    const binary = atob(body);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-    return { mime, bytes };
-  }
-  return { mime, bytes: new TextEncoder().encode(decodeURIComponent(body)) };
-}
-
-export function bytesToDataUrl(bytes, mime) {
-  let binary = "";
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-  }
-  return `data:${mime};base64,${btoa(binary)}`;
-}
-
-export async function sha256Hex(bytes) {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** Troca cada data: grande por asset:<sha>. Devolve o payload e os arquivos a subir. */

@@ -2572,6 +2572,8 @@ export function createEditor(ctx) {
       };
       refs.push(`custom:${id}`);
     }
+    // why: entra na hora com o original; a versão leve (WebP ≤2560 px) troca de lugar em segundo plano
+    ctx.onMediaAdded?.(refs.map((ref) => demo.customImages[ref.slice(7)]?.dataUrl).filter(Boolean));
 
     if (createSteps) {
       let idx = demo.steps.length ? getSelectedIndex() + 1 : 0;
@@ -4064,6 +4066,7 @@ export function createEditor(ctx) {
       };
       enforceHoldFloor(step);
       onChange();
+      ctx.onMediaAdded?.(clips);
       syncCaptionAudio();
       toast(t("toast.audioUploaded"));
     } catch (err) {
@@ -4183,6 +4186,7 @@ export function createEditor(ctx) {
       demo.narration.background = { name: file.name, dataUrl };
       syncNarrationPanel();
       onChange();
+      ctx.onMediaAdded?.([dataUrl]);
       toast(t("toast.bgAdded"));
     });
     els.btnNarrationBgClear?.addEventListener("click", () => {
