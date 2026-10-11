@@ -462,7 +462,14 @@ export function createEditor(ctx) {
       `<strong class="metrics-time">${escapeHtml(time)}</strong>` +
       `<span class="metrics-count">${escapeHtml(count)}</span>`;
     el.setAttribute("aria-label", label);
-    el.title = compact ? full : t("editor.durationTitle");
+    // why: o title nativo abria por cima do rótulo "Duração"; no desktop a dica é desenhada pelo CSS, abaixo da barra.
+    if (compact) {
+      el.title = full;
+      delete el.dataset.tip;
+    } else {
+      el.removeAttribute("title");
+      el.dataset.tip = t("editor.durationTitle");
+    }
     paintStepPosition();
   }
 
