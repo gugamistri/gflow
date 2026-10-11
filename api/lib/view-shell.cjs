@@ -84,20 +84,31 @@ function renderViewPage({ id, name, origin, missing, kind }) {
       } catch (e) {}
     })();
   </script>
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        var v = String(q.get("embed") || "").trim().toLowerCase();
+        if (q.has("embed") && (v === "" || v === "1" || v === "true" || v === "yes" || v === "sim" || v === "on")) {
+          document.documentElement.classList.add("is-embed");
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/44/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/44/css/theme.css" />
-  <link rel="stylesheet" href="/a/44/css/app.css" />
+  <link rel="stylesheet" href="/a/45/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/45/css/theme.css" />
+  <link rel="stylesheet" href="/a/45/css/app.css" />
   <script>window.__GF_SHARE = ${JSON.stringify({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/44/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/44/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/45/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/45/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
   </header>
@@ -105,9 +116,22 @@ function renderViewPage({ id, name, origin, missing, kind }) {
   <main id="view-editor" class="view view-editor is-presenting">
     <section class="canvas-wrap">
       <p class="present-hint" id="present-chrome" data-i18n="present.escHint">Clique fora ou Esc para sair</p>
+      <div class="present-progress" id="present-progress" hidden aria-hidden="true">
+        <div class="present-progress-fill" id="present-progress-fill"></div>
+      </div>
       <div class="canvas-stage" id="canvas-stage">
         <div class="view-share-status" id="view-share-status"${missing ? "" : ""}>
           <p id="view-share-status-text">${missing ? escapeHtml("Este link não está mais disponível.") : "Carregando o tour…"}</p>
+        </div>
+        <div class="view-share-cover" id="view-share-cover" hidden>
+          <img class="view-share-cover-image" id="view-share-cover-image" alt="" hidden />
+          <div class="view-share-cover-body">
+            <h1 class="view-share-cover-title" id="view-share-cover-title"></h1>
+            <button type="button" class="btn btn-primary view-share-cover-play" id="view-share-cover-play">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+              <span data-i18n="view.coverPlay">Ver tour</span>
+            </button>
+          </div>
         </div>
         <div class="view-share-closed" id="view-share-closed" hidden>
           <h1 id="view-share-closed-title"></h1>
@@ -149,8 +173,8 @@ function renderViewPage({ id, name, origin, missing, kind }) {
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/44/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/44/js/viewApp.js"></script>
+  <script src="/a/45/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/45/js/viewApp.js"></script>
 </body>
 </html>
 `;

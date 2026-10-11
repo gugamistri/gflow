@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
 import {
   decideEscape,
+  embedShowsCover,
+  parseEmbedOptions,
   parseViewRoute,
   permanentShareEndpoint,
   sameOriginReferrer,
@@ -111,6 +114,11 @@ test("Esc sai do ecrã cheio, fecha painel, volta, ou fecha o tour", () => {
   assert.equal(decideEscape({ overlay: true, back: true }), "overlay");
   assert.equal(decideEscape({ back: true }), "back");
   assert.equal(decideEscape({}), "close");
+  // embed: Esc só sai do fullscreen ou fecha overlays; nunca fecha o tour nem volta
+  assert.equal(decideEscape({ embed: true, fullscreen: true }), "fullscreen");
+  assert.equal(decideEscape({ embed: true, overlay: true }), "overlay");
+  assert.equal(decideEscape({ embed: true, back: true }), "");
+  assert.equal(decideEscape({ embed: true }), "");
   assert.equal(sameOriginReferrer("https://guiaflow.pro/editor", "https://guiaflow.pro"), true);
   assert.equal(sameOriginReferrer("https://example.com/", "https://guiaflow.pro"), false);
   assert.equal(
@@ -144,7 +152,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo — GuiaFlow"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/44\/js\/viewApp\.js/);
+  assert.match(html, /a\/45\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);
@@ -245,5 +253,54 @@ test("GET /api/p/:slug publica a meta e o 404 usa a mesma página", async () => 
   } finally {
     if (prev === undefined) delete globalThis.fetch;
     else globalThis.fetch = prev;
+  }
+});
+
+test("?embed=1 liga o modo incorporado; autoplay só vale no embed", () => {
+  assert.deepEqual(parseEmbedOptions(""), { embed: false, autoplay: false });
+  assert.deepEqual(parseEmbedOptions("?embed=1"), { embed: true, autoplay: false });
+  assert.deepEqual(parseEmbedOptions("embed=true&autoplay=1"), { embed: true, autoplay: true });
+  assert.deepEqual(parseEmbedOptions("?embed"), { embed: true, autoplay: false });
+  assert.deepEqual(parseEmbedOptions("?embed=0&autoplay=1"), { embed: false, autoplay: false });
+  assert.deepEqual(parseEmbedOptions("?autoplay=1"), { embed: false, autoplay: false });
+  assert.deepEqual(parseEmbedOptions("?embed=1&autoplay=0&step=2"), { embed: true, autoplay: false });
+  assert.equal(embedShowsCover({ embed: true, autoplay: false }), true);
+  assert.equal(embedShowsCover({ embed: true, autoplay: true }), false);
+  assert.equal(embedShowsCover({ embed: false, autoplay: false }), false);
+  // passo inicial continua valendo junto com embed
+  assert.equal(shareStartIndex("?embed=1&step=2", 3), 1);
+});
+
+test("no embed, clique fora do cartão não fecha o tour", () => {
+  assert.equal(clickClosesSharedTour(mockTarget("path"), { embed: true }), false);
+  assert.equal(clickClosesSharedTour(mockTarget("div"), { embed: true }), false);
+  assert.equal(clickClosesSharedTour(mockTarget("path"), { embed: false }), true);
+});
+
+test("o shell do /p e do /v traz a capa do embed e liga a classe cedo", () => {
+  for (const kind of ["permanent", "temporary"]) {
+    const html = renderViewPage({ id: "slug-permanente", name: "Tour", origin: "https://guiaflow.pro", kind });
+    assert.match(html, /id="view-share-cover"[^>]*hidden/);
+    assert.match(html, /id="view-share-cover-play"/);
+    assert.match(html, /data-i18n="view.coverPlay"/);
+    assert.match(html, /classList\.add\("is-embed"\)/);
+    assert.match(html, /id="present-progress"/);
+  }
+  const view = readFileSync(new URL("../view.html", import.meta.url), "utf8");
+  assert.match(view, /id="view-share-cover"[^>]*hidden/);
+  assert.match(view, /classList\.add\("is-embed"\)/);
+});
+
+test("nenhum header impede o /p e o /v de abrir em iframe", () => {
+  // why: o embed depende disso. Se um dia houver CSP, usar frame-ancestors * em /p e /v.
+  const vercel = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+  for (const rule of vercel.headers || []) {
+    for (const header of rule.headers || []) {
+      const key = String(header.key || "").toLowerCase();
+      assert.notEqual(key, "x-frame-options", rule.source);
+      if (key === "content-security-policy") {
+        assert.equal(/frame-ancestors\s+'(none|self)'/.test(header.value) && /\/(p|v)|\(\.\*\)/.test(rule.source), false, rule.source);
+      }
+    }
   }
 });

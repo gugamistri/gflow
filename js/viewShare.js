@@ -51,11 +51,35 @@ export function tourFromPermanentShare(data) {
  * overlay = lista de passos, ajuda ou partilha — não o véu do tour.
  * Sem página anterior, fecha o tour nesta página.
  */
-export function decideEscape({ fullscreen = false, overlay = false, back = false } = {}) {
+export function decideEscape({ fullscreen = false, overlay = false, back = false, embed = false } = {}) {
   if (fullscreen) return "fullscreen";
   if (overlay) return "overlay";
+  // why: dentro do site de outra pessoa o Esc nunca fecha o tour
+  if (embed) return "";
   if (back) return "back";
   return "close";
+}
+
+function truthyParam(value) {
+  if (value == null) return false;
+  const raw = String(value).trim().toLowerCase();
+  return raw === "" || raw === "1" || raw === "true" || raw === "yes" || raw === "sim" || raw === "on";
+}
+
+/**
+ * `?embed=1` liga o modo incorporado (iframe no site do cliente).
+ * `?autoplay=1` só vale no embed: sem ele, o tour espera o clique em ▶.
+ */
+export function parseEmbedOptions(search) {
+  const params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
+  const embed = params.has("embed") && truthyParam(params.get("embed"));
+  const autoplay = embed && params.has("autoplay") && truthyParam(params.get("autoplay"));
+  return { embed, autoplay };
+}
+
+/** No embed sem autoplay, o tour abre na capa com ▶ «Ver tour». */
+export function embedShowsCover({ embed = false, autoplay = false } = {}) {
+  return Boolean(embed && !autoplay);
 }
 
 /**
@@ -96,7 +120,9 @@ export const TOUR_CHROME_SELECTOR = "a, button, input, textarea, select, summary
  * Clique na área escurecida, fora do cartão.
  * why: o véu do Driver tem pointer-events no path, mas o clique nem sempre chega ao handler dele.
  */
-export function clickClosesSharedTour(target) {
+export function clickClosesSharedTour(target, { embed = false } = {}) {
+  // why: no embed um clique sem querer na página do cliente não pode fechar o tour
+  if (embed) return false;
   const node = target?.nodeType === 3 ? target.parentElement : target;
   if (!node || typeof node.closest !== "function") return false;
   if (node.closest(TOUR_CARD_SELECTOR)) return false;

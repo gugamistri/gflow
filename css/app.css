@@ -2360,6 +2360,118 @@ body.view-share:focus {
   outline: none;
 }
 
+/* Capa do embed: ▶ antes de qualquer áudio */
+.view-share-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ns-overlay, #101010);
+}
+
+.view-share-cover[hidden] {
+  display: none;
+}
+
+.view-share-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  filter: blur(2px) brightness(0.5);
+  transform: scale(1.04);
+}
+
+.view-share-cover-image[hidden] {
+  display: none;
+}
+
+.view-share-cover-body {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+}
+
+.view-share-cover-title {
+  margin: 0;
+  max-width: 28ch;
+  font-size: clamp(1.1rem, 3.2vw, 1.75rem);
+  font-weight: 650;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
+.view-share-cover-title:empty {
+  display: none;
+}
+
+.view-share-cover-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-size: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.view-share-cover-play svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Embed (?embed=1): barra mínima com o logo, sem dica de Esc, palco na altura do iframe */
+html.is-embed body.view-share {
+  min-height: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+html.is-embed body.view-share .topbar,
+html.is-embed body.view-share.is-presenting .topbar {
+  display: flex;
+  height: 36px;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+html.is-embed body.view-share .topbar .logo-full {
+  height: 18px;
+  width: auto;
+}
+
+html.is-embed body.view-share .topbar .logo-mark {
+  height: 22px;
+  width: 22px;
+}
+
+html.is-embed body.view-share .topbar-title {
+  font-size: 0.8rem;
+}
+
+html.is-embed body.view-share .view-editor,
+html.is-embed body.view-share.is-presenting .view-editor {
+  height: calc(100dvh - 36px);
+}
+
+html.is-embed .present-hint {
+  display: none !important;
+}
+
 .export-option strong {
   display: flex;
   align-items: center;

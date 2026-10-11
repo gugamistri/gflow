@@ -15,10 +15,18 @@ import {
 import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
 import { createPresentProgress } from "./presentProgress.js";
+import { createTourLifecycle } from "./tourLifecycle.js";
 
 export function createPlayer(ctx) {
   const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit, presentHintKey } = ctx;
   const presentProgress = createPresentProgress();
+  // why: onStep/onComplete/onExit servem a tela final e o analytics; o editor não os passa
+  const lifecycle = createTourLifecycle({
+    onStep: ctx.onStep,
+    onComplete: ctx.onComplete,
+    onExit: ctx.onExit,
+  });
+  let pendingExitReason = "";
 
   const els = {
     stage: document.getElementById("canvas-stage"),
@@ -327,6 +335,17 @@ export function createPlayer(ctx) {
     await clickFx.animateTo(clickTarget(step), { pressHotspot: true });
   }
 
+  function reportStep(steps, position, total) {
+    const index = activeIndex;
+    lifecycle.step({ index, stepId: steps[index]?.id ?? null, position, total });
+  }
+
+  /** Saída pedida pelo visitante (Esc, fechar, clique fora). Conclusão não passa aqui. */
+  function requestExit(reason) {
+    if (!lifecycle.completed) lifecycle.exit(reason);
+    onRequestExit?.({ reason: lifecycle.completed ? "complete" : reason || "close" });
+  }
+
   function advanceAllowed() {
     const wait = Number(ctx.ignoreAdvanceMs) || 0;
     if (!wait) return true;
@@ -358,6 +377,8 @@ export function createPlayer(ctx) {
     }
 
     running = true;
+    lifecycle.start();
+    pendingExitReason = "";
     setPresentHint(presentStopHintKey());
     // why: sem índices a lista é o tour inteiro (volta antes do início);
     // com índices, só a seleção, em ordem, e para no último.
@@ -375,6 +396,7 @@ export function createPlayer(ctx) {
     elevateCaption();
     await showStepVisual(steps[activeIndex], { speak: true });
     if (token !== driveToken) return;
+    reportStep(steps, playlistPos, playOrder.length);
     // why: is-presenting muda o grid; o driver precisa do hotspot já no layout final (ainda em 1×)
     await prepareStepCamera(steps[activeIndex]);
     if (token !== driveToken) return;
@@ -389,6 +411,12 @@ export function createPlayer(ctx) {
       showProgress: true,
       animate: true,
       allowClose: ctx.allowClose !== false,
+      // why: no embed o clique no véu não fecha nem avança ("none" é ignorado pelo Driver)
+      overlayClickBehavior: ctx.overlayClickBehavior || "close",
+      onCloseClick: (_el, _step, navOpts) => {
+        pendingExitReason = "close";
+        navOpts?.driver?.destroy?.();
+      },
       // why: setas tratadas em keydown abaixo — o keyup nativo do driver falhava no próximo com onNextClick async.
       allowKeyboardControl: false,
       overlayColor: veil.color,
@@ -424,6 +452,7 @@ export function createPlayer(ctx) {
               if (token !== driveToken) return;
               const nextPos = playlistPos + 1;
               if (nextPos >= playOrder.length) {
+                lifecycle.complete();
                 drv.destroy();
                 driverObj = null;
                 narration.stop();
@@ -436,6 +465,7 @@ export function createPlayer(ctx) {
               setProgress(stepProgress());
               await showStepVisual(steps[activeIndex], { speak: true });
               if (token !== driveToken) return;
+              reportStep(steps, playlistPos, playOrder.length);
               await prepareStepCamera(steps[activeIndex]);
               if (token !== driveToken) return;
               drv.moveNext();
@@ -456,6 +486,7 @@ export function createPlayer(ctx) {
               setProgress(stepProgress());
               await showStepVisual(steps[activeIndex], { speak: true });
               if (token !== driveToken) return;
+              reportStep(steps, playlistPos, playOrder.length);
               await prepareStepCamera(steps[activeIndex]);
               if (token !== driveToken) return;
               drv.movePrevious();
@@ -477,10 +508,13 @@ export function createPlayer(ctx) {
         animating = false;
         running = false;
         if (suppressExitArm) return;
+        const reason = lifecycle.completed ? "complete" : pendingExitReason || "close";
+        pendingExitReason = "";
+        if (reason !== "complete") lifecycle.exit(reason);
         // why: overlay/Done/fechar saem no mesmo gesto — dois cliques deixavam limbo confuso
         queueMicrotask(() => {
           if (!isPresenting()) return;
-          onRequestExit?.();
+          onRequestExit?.({ reason });
         });
       },
     });
@@ -550,7 +584,7 @@ export function createPlayer(ctx) {
         if (!isPresenting()) return;
         e.preventDefault();
         e.stopPropagation();
-        onRequestExit?.();
+        requestExit("close");
       },
       true
     );
@@ -560,7 +594,7 @@ export function createPlayer(ctx) {
       if (e.key === "Escape") {
         if (document.querySelector("dialog[open]")) return;
         e.preventDefault();
-        onRequestExit?.();
+        requestExit("esc");
         return;
       }
       if (!driverObj || animating) return;
@@ -602,6 +636,8 @@ export function createPlayer(ctx) {
   return {
     play: (opts = {}) => buildAndDrive(opts.from ?? startIndex(), opts),
     stop,
+    /** Sai do tour reportando o motivo ao onExit (ex.: "click_outside" vindo da página). */
+    exit: (reason) => requestExit(reason),
     isRunning: () => running,
   };
 }

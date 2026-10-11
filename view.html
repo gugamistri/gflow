@@ -51,19 +51,30 @@
       } catch (e) {}
     })();
   </script>
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(location.search);
+        var v = String(q.get("embed") || "").trim().toLowerCase();
+        if (q.has("embed") && (v === "" || v === "1" || v === "true" || v === "yes" || v === "sim" || v === "on")) {
+          document.documentElement.classList.add("is-embed");
+        }
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/44/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/44/css/theme.css" />
-  <link rel="stylesheet" href="/a/44/css/app.css" />
+  <link rel="stylesheet" href="/a/45/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/45/css/theme.css" />
+  <link rel="stylesheet" href="/a/45/css/app.css" />
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/44/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/44/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/45/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/45/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title" data-i18n="view.loading">Carregando o tour…</span>
     </div>
   </header>
@@ -77,6 +88,16 @@
       <div class="canvas-stage" id="canvas-stage">
         <div class="view-share-status" id="view-share-status">
           <p id="view-share-status-text" data-i18n="view.loading">Carregando o tour…</p>
+        </div>
+        <div class="view-share-cover" id="view-share-cover" hidden>
+          <img class="view-share-cover-image" id="view-share-cover-image" alt="" hidden />
+          <div class="view-share-cover-body">
+            <h1 class="view-share-cover-title" id="view-share-cover-title"></h1>
+            <button type="button" class="btn btn-primary view-share-cover-play" id="view-share-cover-play">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+              <span data-i18n="view.coverPlay">Ver tour</span>
+            </button>
+          </div>
         </div>
         <div class="view-share-closed" id="view-share-closed" hidden>
           <h1 id="view-share-closed-title"></h1>
@@ -118,7 +139,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/44/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/44/js/viewApp.js"></script>
+  <script src="/a/45/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/45/js/viewApp.js"></script>
 </body>
 </html>
