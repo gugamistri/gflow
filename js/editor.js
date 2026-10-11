@@ -572,6 +572,8 @@ export function createEditor(ctx) {
         </div>`;
     });
 
+    html += fixedCardHtml("end", demo.endStep);
+
     els.filmstrip.innerHTML = html;
     els.filmstrip.querySelectorAll("img").forEach((img) => {
       img.addEventListener("error", () => {
@@ -583,6 +585,28 @@ export function createEditor(ctx) {
       });
     });
     assignThumbs(listThumbs, "film", els.filmstrip, filmPairs);
+  }
+
+  /** Cartão fixo (início/fim): sem data-index, então arrastar, selecionar e excluir o ignoram. */
+  function fixedCardHtml(kind, config) {
+    const on = Boolean(config?.enabled);
+    const name = t(`fixed.${kind}.card`);
+    const state = on ? t("fixed.on") : t("fixed.off");
+    const pro =
+      kind === "start" && !ctx.viewerIsPro?.()
+        ? `<span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span>${escapeHtml(t("billing.badge"))}</span></span>`
+        : "";
+    const label = `${name} · ${state} — ${t("fixed.pinnedHint")}`;
+    return `
+        <div class="film-fixed film-fixed-${kind}${on ? " is-on" : ""}" data-fixed="${kind}" role="button" tabindex="0"
+             title="${escapeAttr(label)}" aria-label="${escapeAttr(label)}">
+          <span class="film-fixed-icon" aria-hidden="true">${kind === "start" ? "▶" : "⚑"}</span>
+          <span class="film-fixed-text">
+            <strong>${escapeHtml(name)}${pro}</strong>
+            <small>${escapeHtml(state)}</small>
+          </span>
+          <span class="film-fixed-pin" aria-hidden="true" title="${escapeAttr(t("fixed.pinnedHint"))}">📌</span>
+        </div>`;
   }
 
   function syncSideAlignControls(step) {
@@ -3224,6 +3248,12 @@ export function createEditor(ctx) {
         return;
       }
 
+      const fixed = e.target.closest(".film-fixed");
+      if (fixed) {
+        e.preventDefault();
+        ctx.onOpenFixedStep?.(fixed.dataset.fixed);
+        return;
+      }
       const actionBtn = e.target.closest("[data-action]");
       const item = e.target.closest("[data-index]");
       if (!item) return;
@@ -3251,6 +3281,12 @@ export function createEditor(ctx) {
 
     els.filmstrip.addEventListener("keydown", (e) => {
       if (e.key !== "Enter" && e.key !== " ") return;
+      const fixed = e.target.closest(".film-fixed");
+      if (fixed) {
+        e.preventDefault();
+        ctx.onOpenFixedStep?.(fixed.dataset.fixed);
+        return;
+      }
       const item = e.target.closest("[data-index]");
       if (!item) return;
       e.preventDefault();
