@@ -229,6 +229,7 @@ export function upgradeCopyKeys(feature) {
   if (feature === "branding") return { title: "billing.brandTitle", subtitle: "billing.brandSubtitle" };
   if (feature === "embed") return { title: "billing.embedTitle", subtitle: "billing.embedSubtitle" };
   if (feature === "cover") return { title: "billing.coverTitle", subtitle: "billing.coverSubtitle" };
+  if (feature === "analytics") return { title: "billing.analyticsTitle", subtitle: "billing.analyticsSubtitle" };
   if (feature === "leads") return { title: "billing.leadsTitle", subtitle: "billing.leadsSubtitle" };
   if (feature === "contactForm") return { title: "billing.contactTitle", subtitle: "billing.contactSubtitle" };
   return { title: "billing.title", subtitle: "billing.message" };
