@@ -491,7 +491,11 @@ function exitSharedTour(reason) {
   // why: passo final ao concluir (e no embed, onde sair não pode mexer na página do cliente)
   if (endStepActive(demo?.endStep) && (reason === "complete" || isEmbed) && showEndStep()) return;
   // why: no embed nunca history.back() nem window.close() — isso mexeria na página do cliente
-  if (!isEmbed && tryLeaveSharedPreview()) return;
+  if (!isEmbed) {
+    // why: voltar/fechar a aba é assíncrono; a narração não pode seguir tocando até lá
+    player?.stop?.({ silent: true });
+    if (tryLeaveSharedPreview()) return;
+  }
   showClosedState();
 }
 
@@ -538,6 +542,8 @@ window.addEventListener(
   (event) => {
     if (!touring || event.button !== 0) return;
     if (!clickClosesSharedTour(event.target, { embed: isEmbed })) return;
+    // why: a folga do recorte em volta do destaque é clique no destaque (= Próximo), não fora
+    if (player?.highlightContains?.(event.clientX, event.clientY)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     requestSharedExit("click_outside");

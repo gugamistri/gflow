@@ -102,6 +102,8 @@
   color: var(--demo-popover-title) !important;
   font-size: 16px;
   font-weight: 700;
+  /* why: o título (position: relative) cobria o X e engolia o clique */
+  padding-right: 26px;
 }
 
 .driver-popover.demo-popover .driver-popover-description {
@@ -255,10 +257,18 @@
   cursor: pointer;
   text-shadow: none;
   box-shadow: none;
+  /* why: `all: unset` zerava o z-index do Driver e o título ficava por cima do X */
+  z-index: 2;
 }
 
 .driver-popover.demo-popover .driver-popover-close-btn:hover {
   background: transparent !important;
+  color: var(--ns-ink) !important;
+}
+
+.driver-popover.demo-popover .driver-popover-close-btn:focus-visible {
+  outline: 2px solid var(--demo-accent, currentColor);
+  outline-offset: 1px;
   color: var(--ns-ink) !important;
 }
 

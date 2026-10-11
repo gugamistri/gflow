@@ -9,6 +9,13 @@ export const NEXT_ARROW_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" f
  * Layout do footer: ← | N de X | Próximo
  * @param {import('driver.js').PopoverDOM} popover
  */
+/** X do balão: rótulo acessível (o Driver traz «Close» fixo em inglês). */
+export function labelCloseButton(btn, label) {
+  if (!btn || !label) return;
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
 export function renderDemoPopoverFooter(popover) {
   const { footer, progress, previousButton, nextButton, footerButtons } = popover;
 

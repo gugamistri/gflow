@@ -538,6 +538,8 @@ const player = createPlayer({
   getSelectedIndex,
   setSelectedIndex,
   toast,
+  // why: no editor o X do balão sai da prévia (igual ao Esc)
+  closeLabelKey: "player.exitPreview",
   onRequestExit: () => exitPresentation(),
 });
 
@@ -644,6 +646,11 @@ function exitPresentation() {
   document.getElementById("hotspot")?.classList.remove("is-previewing");
   paintChrome();
   if (project && chromeView === "editor") editor.refresh();
+  // why: sair pelo X/Esc não pode largar o foco no body (teclado perde o lugar)
+  const active = document.activeElement;
+  if (!active || active === document.body) {
+    document.getElementById("btn-play-from")?.focus({ preventScroll: true });
+  }
 }
 
 function openEditor() {
@@ -1885,6 +1892,9 @@ async function openProject(id, { autoPreview = false } = {}) {
     normalizeSteps(loaded.steps);
     ensurePlayback(loaded);
     ensureNarration(loaded);
+    // why: o áudio do projeto anterior (prévia ou player do passo) não pode seguir tocando
+    exitPresentation();
+    editor.stopAudio?.();
     project = loaded;
     selectedIndex = 0;
     await attachSavedHistory(project);
@@ -1942,6 +1952,7 @@ function openNewProjectDialog() {
 function showLibrary() {
   exitPresentation();
   player.stop?.();
+  editor.stopAudio?.();
   applyChromeAppearance();
   setChrome("library");
   renderLibrary();
@@ -2061,6 +2072,8 @@ function bindChrome() {
     void flushAutosave();
   };
   window.addEventListener("pagehide", persistOnLeave);
+  // why: sair da página (fechar aba, navegar) cala o player de áudio do passo
+  window.addEventListener("pagehide", () => editor.stopAudio?.());
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") persistOnLeave();
   });
