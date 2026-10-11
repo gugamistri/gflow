@@ -3,9 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   PROPS_PANEL_STORAGE_KEY,
-  boxesOverlap,
   isPropsPanelShortcut,
-  placeFloatToolbarBox,
+  planToolbarOverflow,
   readPropsPanelOpen,
   writePropsPanelOpen,
 } from "./editorLayout.js";
@@ -57,40 +56,20 @@ test("Ctrl/⌘ + \\ alterna o painel, inclusive no ABNT2", () => {
   assert.equal(isPropsPanelShortcut({ ctrlKey: true, code: "KeyP", key: "p" }), false);
 });
 
-test("a barra flutuante fica acima do destaque quando cabe", () => {
-  const box = placeFloatToolbarBox(
-    { left: 300, top: 200, width: 100, height: 40 },
-    { width: 200, height: 36 },
-    { width: 800, height: 500 }
-  );
-  assert.equal(box.placement, "above");
-  assert.equal(box.left, 250);
-  assert.ok(box.top + 36 <= 200);
+test("a barra do passo cabe inteira quando há espaço", () => {
+  assert.deepEqual([...planToolbarOverflow([80, 200, 120, 180], [4, 1, 2, 3], 700, 13)], []);
 });
 
-test("sem espaço em cima, a barra vai para baixo e respeita as bordas", () => {
-  const box = placeFloatToolbarBox(
-    { left: 700, top: 10, width: 90, height: 40 },
-    { width: 200, height: 36 },
-    { width: 800, height: 500 }
-  );
-  assert.equal(box.placement, "below");
-  assert.equal(box.top, 60);
-  assert.equal(box.left, 800 - 200 - 4);
+test("sem espaço, sai primeiro o grupo de menor prioridade", () => {
+  // 80 + 200 + 120 + 180 + 3 separadores (13) = 619
+  assert.deepEqual([...planToolbarOverflow([80, 200, 120, 180], [4, 1, 2, 3], 600, 13)], [1]);
+  assert.deepEqual([...planToolbarOverflow([80, 200, 120, 180], [4, 1, 2, 3], 300, 13)].sort(), [1, 2]);
+  assert.deepEqual([...planToolbarOverflow([80, 200, 120, 180], [4, 1, 2, 3], 90, 13)].sort(), [1, 2, 3]);
 });
 
-test("a barra não cobre o balão: desce para depois dele", () => {
-  const anchor = { left: 300, top: 10, width: 100, height: 40 };
-  const popover = { left: 230, top: 60, width: 240, height: 120 };
-  const box = placeFloatToolbarBox(anchor, { width: 200, height: 36 }, { width: 800, height: 500 }, popover);
-  assert.equal(boxesOverlap({ left: box.left, top: box.top, width: 200, height: 36 }, popover), false);
-  assert.ok(box.top >= popover.top + popover.height);
-});
-
-test("boxesOverlap ignora caixas encostadas", () => {
-  assert.equal(boxesOverlap({ left: 0, top: 0, width: 10, height: 10 }, { left: 10, top: 0, width: 5, height: 5 }), false);
-  assert.equal(boxesOverlap({ left: 0, top: 0, width: 10, height: 10 }, { left: 9, top: 9, width: 5, height: 5 }), true);
-  assert.equal(boxesOverlap(null, { left: 0, top: 0, width: 1, height: 1 }), false);
+test("empate de prioridade: sai o grupo mais à direita; nada cabe → tudo no menu", () => {
+  assert.deepEqual([...planToolbarOverflow([100, 100, 100], [1, 1, 1], 250, 0)], [2]);
+  assert.equal(planToolbarOverflow([100, 100], [1, 2], 10, 0).size, 2);
 });
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
@@ -103,7 +82,7 @@ function block(startNeedle, endNeedle) {
 }
 
 test("+ Passo, + Slide e + Cena são só ícone, com tooltip e aria-label", () => {
-  const toolbar = block('class="canvas-toolbar"', 'id="canvas-titlebar"');
+  const toolbar = block('class="canvas-toolbar"', 'id="step-toolbar"');
   for (const [id, icon] of [
     ["btn-add-step", "i-plus"],
     ["btn-add-slide", "i-slide"],
@@ -149,30 +128,65 @@ test("o painel recolhido mantém um trilho com as seções", () => {
   }
 });
 
-test("barra de narração fora do painel com os controles de áudio", () => {
-  const bar = block('id="narration-bar"', "</section>");
-  for (const id of ["caption-player", "btn-generate-caption", "pro-badge-audio", "btn-upload-caption", "btn-clear-caption-audio", "prop-show-caption", "caption-audio-status"]) {
+test("barra do passo fixa reúne todos os controles do passo", () => {
+  const bar = block('id="step-toolbar"', 'id="present-chrome"');
+  for (const id of [
+    "stb-type",
+    "stb-image",
+    "stb-side",
+    "stb-align",
+    "stb-simulate",
+    "stb-zoom",
+    "stb-hold",
+    "btn-step-generate-copy",
+    "pro-badge-copy-title",
+    "btn-generate-caption",
+    "pro-badge-audio",
+    "btn-upload-caption",
+    "btn-clear-caption-audio",
+    "prop-show-caption",
+    "stb-more",
+    "stb-open-panel",
+  ]) {
     assert.match(bar, new RegExp(`id="${id}"`), id);
   }
+  // Todo botão da barra tem tooltip e nome acessível (traduzidos).
+  for (const m of bar.matchAll(/<button\b[^>]*>/g)) {
+    const tag = m[0];
+    if (/id="stb-open-panel"/.test(tag)) continue;
+    if (/data-value="(start|center|end)"/.test(tag) && !/data-scope/.test(tag)) continue; // rótulo vem do JS
+    assert.match(tag, /data-i18n-aria="/, tag);
+    assert.match(tag, /data-i18n-title="/, tag);
+  }
+  assert.match(bar, /class="stb-btn stb-screen-only" id="stb-image"/);
+  assert.match(bar, /id="stb-simulate"/);
+  assert.equal((bar.match(/data-stb-group="/g) || []).length, 4);
+});
+
+test("sem barra flutuante nem título acima da imagem", () => {
+  for (const id of ["float-toolbar", "canvas-titlebar", "canvas-step-title", "ftb-more"]) {
+    assert.equal(html.includes(`id="${id}"`), false, id);
+  }
+});
+
+test("barra de baixo é só o player do áudio", () => {
+  const bar = block('id="narration-bar"', "</section>");
+  for (const id of ["caption-player", "btn-caption-play", "caption-seek", "caption-time", "caption-duration", "btn-caption-rate"]) {
+    assert.match(bar, new RegExp(`id="${id}"`), id);
+  }
+  for (const id of ["btn-generate-caption", "btn-upload-caption", "btn-clear-caption-audio", "prop-show-caption", "btn-narr-write"]) {
+    assert.equal(bar.includes(`id="${id}"`), false, id);
+  }
+  assert.match(bar, /^id="narration-bar"[^>]*\shidden>/);
   const panel = block('id="props-panel"', "</aside>");
   assert.equal(panel.includes('id="caption-player"'), false);
   assert.match(panel, /id="prop-caption"/);
-});
-
-test("barra flutuante e título acima da imagem existem com Pro no Gerar textos", () => {
-  const title = block('id="canvas-titlebar"', 'id="present-chrome"');
-  assert.match(title, /id="canvas-step-title"[^>]*data-inline="title"/);
-  assert.match(title, /id="pro-badge-copy-title"/);
-  assert.match(title, /id="title-type"/);
-  const ftb = block('id="float-toolbar"', 'id="ph-caption"');
-  for (const id of ["ftb-side", "ftb-align", "ftb-simulate", "ftb-zoom", "ftb-hold", "ftb-more"]) {
-    assert.match(ftb, new RegExp(`id="${id}"`), id);
-  }
+  assert.match(panel, /id="caption-audio-status"/);
 });
 
 test("textos novos do layout existem em pt, es e en, sem falar em nuvem", () => {
   const keys = Object.keys(catalogs.pt).filter((k) =>
-    /^(file|prefs|preview|panel|ftb|narrbar)\./.test(k) ||
+    /^(file|prefs|preview|panel|stb|narrbar)\./.test(k) ||
     ["toolbar.addStep", "toolbar.addSlide", "toolbar.addScene", "toolbar.cut", "toolbar.cutTitle", "toolbar.delete", "toolbar.deleteTitle", "toolbar.pos", "canvas.changeImage", "filmstrip.addImagesTitle"].includes(k)
   );
   assert.ok(keys.length >= 30, `poucas chaves: ${keys.length}`);
