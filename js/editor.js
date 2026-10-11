@@ -3414,12 +3414,7 @@ export function createEditor(ctx) {
       commitHotspot();
     });
 
-    els.hotspot.addEventListener("click", (e) => {
-      if (!els.hotspot.classList.contains("is-previewing")) return;
-      e.preventDefault();
-      e.stopPropagation();
-      clickDriverNext();
-    });
+    // why: clique no destaque durante a prévia é tratado pelo player (createPlayer), igual ao /p
 
     els.canvasSlide.addEventListener("click", (e) => {
       if (!previewDriver || presenting()) return;
@@ -4462,7 +4457,13 @@ export function createEditor(ctx) {
   bindForm();
   bindLayoutChrome();
 
-  return { refresh, selectStep, currentStep, pauseCaption, stopPreview, paintHostedBadges };
+  /** Para o player de áudio do passo e qualquer fala do editor (troca de projeto, saída). */
+  function stopAudio() {
+    stopCaptionPlayer();
+    stopSpeech();
+  }
+
+  return { refresh, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges };
 }
 
 function getImageContentRect(img) {

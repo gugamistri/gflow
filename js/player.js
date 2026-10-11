@@ -1,7 +1,14 @@
 import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
-import { renderDemoPopoverFooter, clickDriverNext, clickDriverPrev, setPopoverHiddenForSlide } from "./popoverFooter.js";
+import {
+  renderDemoPopoverFooter,
+  clickDriverNext,
+  clickDriverPrev,
+  setPopoverHiddenForSlide,
+  labelCloseButton,
+} from "./popoverFooter.js";
+import { highlightClickAdvances, pointInHighlight } from "./highlightClick.js";
 import { sizeSlideLikeImage, applySlideLayout } from "./editor.js";
 import { computeZoomCamera, zoomCameraStyle } from "./zoomHighlight.js";
 import {
@@ -342,6 +349,8 @@ export function createPlayer(ctx) {
 
   /** Saída pedida pelo visitante (Esc, fechar, clique fora). Conclusão não passa aqui. */
   function requestExit(reason) {
+    // why: Esc/X/clique fora calam a narração já — não dependem de quem trata a saída
+    silenceAudio();
     if (!lifecycle.completed) lifecycle.exit(reason);
     onRequestExit?.({ reason: lifecycle.completed ? "complete" : reason || "close" });
   }
@@ -353,9 +362,9 @@ export function createPlayer(ctx) {
   }
 
   async function buildAndDrive(startIndex = 0, opts = {}) {
+    stop({ silent: true });
     const token = ++driveToken;
     advanceArmedAt = Infinity;
-    stop({ silent: true });
     if (typeof opts.autoplay === "boolean") {
       autoplayEnabled = opts.autoplay;
     }
@@ -429,6 +438,7 @@ export function createPlayer(ctx) {
       progressText: t("player.progress"),
       onPopoverRender: (popover) => {
         renderDemoPopoverFooter(popover);
+        labelCloseButton(popover?.closeButton, t(ctx.closeLabelKey || "player.closeTour"));
         setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
         armAutoplay();
       },
@@ -499,6 +509,8 @@ export function createPlayer(ctx) {
         };
       }),
       onDestroyed: () => {
+        // why: um Próximo/Anterior em voo não pode voltar a falar depois de fechar
+        driveToken += 1;
         clearAutoplay();
         narration.stop();
         setProgress(t("player.stopped"));
@@ -526,9 +538,16 @@ export function createPlayer(ctx) {
     advanceArmedAt = performance.now() + (Number(ctx.ignoreAdvanceMs) || 0);
   }
 
-  function stop({ silent = false } = {}) {
+  /** Para narração, áudio do passo e trilha de fundo (sem mexer no Driver). */
+  function silenceAudio() {
     clearAutoplay();
     narration.stop();
+  }
+
+  function stop({ silent = false } = {}) {
+    // why: invalida o buildAndDrive/onNextClick em voo (senão o passo seguinte volta a falar)
+    driveToken += 1;
+    silenceAudio();
     if (driverObj) {
       suppressExitArm = true;
       try {
@@ -553,6 +572,34 @@ export function createPlayer(ctx) {
     return 0;
   }
 
+  function highlightRect() {
+    const step = getDemo()?.steps?.[activeIndex];
+    if (!step || step.type === "slide") return null;
+    const el = els.hotspot;
+    if (!el || el.hidden) return null;
+    return el.getBoundingClientRect();
+  }
+
+  function highlightClickInfo(e) {
+    const step = getDemo()?.steps?.[activeIndex];
+    return {
+      presenting: isPresenting(),
+      driverActive: Boolean(driverObj),
+      stepType: step?.type,
+      button: e.button,
+      target: e.target,
+      x: e.clientX,
+      y: e.clientY,
+      rect: driverObj ? highlightRect() : null,
+    };
+  }
+
+  /** O ponto está no destaque do passo atual? (o /p não fecha o tour por esse clique) */
+  function highlightContains(x, y) {
+    if (!driverObj || !isPresenting()) return false;
+    return pointInHighlight(x, y, highlightRect());
+  }
+
   function bind() {
     function onHighlightClick(e) {
       if (!driverObj || !isPresenting()) return;
@@ -563,8 +610,25 @@ export function createPlayer(ctx) {
       clickDriverNext();
     }
 
-    // why: o editor já avança o hotspot em is-previewing; o slide só o previewDriver cobre
     els.slide?.addEventListener("click", onHighlightClick);
+
+    // why: clicar no destaque (hotspot / marcador de clique) = Próximo, em todo player.
+    // Em captura na janela: o recorte do Driver tem folga e o cursor simulado não recebe clique.
+    window.addEventListener(
+      "click",
+      (e) => {
+        if (!highlightClickAdvances(highlightClickInfo(e))) return;
+        e.preventDefault();
+        e.stopPropagation();
+        // why: igual ao botão Próximo — sem a carência do slide (que só arma depois do zoom)
+        if (animating) return;
+        clickDriverNext();
+      },
+      true
+    );
+
+    // why: sair da página (fechar aba, voltar) não pode deixar a narração tocando
+    window.addEventListener("pagehide", () => silenceAudio());
 
     document.getElementById("canvas-slide-play")?.addEventListener(
       "click",
@@ -638,6 +702,7 @@ export function createPlayer(ctx) {
     stop,
     /** Sai do tour reportando o motivo ao onExit (ex.: "click_outside" vindo da página). */
     exit: (reason) => requestExit(reason),
+    highlightContains,
     isRunning: () => running,
   };
 }

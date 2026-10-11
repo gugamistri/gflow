@@ -882,6 +882,10 @@ function gfT(key, vars) {
       progressText: gfT("player.progress"),
       onPopoverRender: (popover) => {
         renderDemoPopoverFooter(popover);
+        if (popover?.closeButton) {
+          popover.closeButton.setAttribute("aria-label", gfT("player.closeTour"));
+          popover.closeButton.title = gfT("player.closeTour");
+        }
         setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
         armAutoplay();
       },
@@ -1004,6 +1008,11 @@ function gfT(key, vars) {
     clickDriverNext();
   }
   els.hotspot.addEventListener("click", onHighlightClick);
+  // why: fechar/sair da página não pode deixar a narração tocando
+  window.addEventListener("pagehide", () => {
+    clearAutoplay();
+    narration.stop();
+  });
   els.slide.addEventListener("click", onHighlightClick);
   document.getElementById("player-slide-play")?.addEventListener("click", (e) => {
     e.preventDefault();
