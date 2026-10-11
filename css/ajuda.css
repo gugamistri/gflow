@@ -166,3 +166,8 @@ html.is-embedded .site-footer {
 html[data-appearance="documento"] .legal .card a {
   color: var(--ns-accent-dark);
 }
+
+.card h3 {
+  margin: 18px 0 6px;
+  font-size: 1rem;
+}

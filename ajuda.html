@@ -61,14 +61,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/45/css/theme.css" />
-  <link rel="stylesheet" href="a/45/css/app.css" />
-  <link rel="stylesheet" href="a/45/css/ajuda.css" />
+  <link rel="stylesheet" href="a/46/css/theme.css" />
+  <link rel="stylesheet" href="a/46/css/app.css" />
+  <link rel="stylesheet" href="a/46/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="index.html" aria-label="GuiaFlow"><img class="logo-full" src="a/45/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/45/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="index.html" aria-label="GuiaFlow"><img class="logo-full" src="a/46/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/46/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
@@ -145,6 +145,26 @@
       <p data-i18n-html="help.editorTip">Sem a extensão, dá para criar um projeto vazio e enviar prints com <strong>+ Imagens</strong>.</p>
     </section>
 
+    <section class="card" id="incorporar">
+      <h2 data-i18n="help.embedTitle">Incorporar o tour no seu site</h2>
+      <p data-i18n="help.embedLead">Com o GuiaFlow&nbsp;Pro, o link permanente vira um tour dentro da sua página: ajusta à largura da tela, não fecha com um clique sem querer e espera o visitante clicar em ▶ para começar.</p>
+      <p data-i18n-html="help.embedGet">No editor, abra <strong>Compartilhar</strong> → <strong>Incorporar no site</strong>, escolha a aba e clique em <strong>Copiar código</strong>. Se ainda não houver link permanente, o diálogo oferece <strong>Publicar link permanente</strong>.</p>
+      <h3 data-i18n="help.embedHtmlTitle">HTML puro</h3>
+      <p data-i18n="help.embedHtml">Cole o código no ponto da página onde o tour deve aparecer. Ele ocupa a largura disponível (até 1200 px) e mantém a proporção das capturas.</p>
+      <h3 data-i18n="help.embedWpTitle">WordPress</h3>
+      <ol>
+        <li data-i18n-html="help.embedWp1">No editor de blocos, clique em <strong>+</strong> e escolha <strong>HTML personalizado</strong>.</li>
+        <li data-i18n-html="help.embedWp2">Cole o código da aba <strong>WordPress</strong> e publique a página.</li>
+        <li data-i18n-html="help.embedWp3">Se o tour não aparecer, algum plugin de segurança ou de AMP pode estar removendo iframes. Libere o domínio <code>guiaflow.pro</code> nesse plugin.</li>
+      </ol>
+      <h3 data-i18n="help.embedWfTitle">Webflow</h3>
+      <ol>
+        <li data-i18n-html="help.embedWf1">No Designer, abra <strong>Add</strong> (+) e arraste o elemento <strong>Code Embed</strong> para a página.</li>
+        <li data-i18n-html="help.embedWf2">Cole o código da aba <strong>Webflow</strong>, salve e publique o site. O tour só aparece no site publicado, não no Designer.</li>
+      </ol>
+      <p data-i18n-html="help.embedNotes">Republicar o tour atualiza todos os sites onde ele está incorporado. A opção <strong>Começar automaticamente</strong> pula o botão ▶; o navegador pode segurar o som até o visitante interagir. Se o seu site usar <code>sandbox</code> no iframe, inclua <code>allow-scripts</code> e <code>allow-same-origin</code>, senão o tour não roda.</p>
+    </section>
+
     <section class="card" id="privacidade">
       <h2 data-i18n="help.privacyTitle">Privacidade</h2>
       <ul>
@@ -166,7 +186,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/45/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/46/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

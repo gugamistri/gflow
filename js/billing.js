@@ -227,6 +227,7 @@ export function upgradeCopyKeys(feature) {
   if (feature === "hostedAi") return { title: "billing.hostedAiTitle", subtitle: "billing.hostedAiSubtitle" };
   if (feature === "tts") return { title: "billing.ttsTitle", subtitle: "billing.ttsSubtitle" };
   if (feature === "branding") return { title: "billing.brandTitle", subtitle: "billing.brandSubtitle" };
+  if (feature === "embed") return { title: "billing.embedTitle", subtitle: "billing.embedSubtitle" };
   return { title: "billing.title", subtitle: "billing.message" };
 }
 
