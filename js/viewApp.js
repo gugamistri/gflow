@@ -98,6 +98,7 @@ async function loadPermanent(slug) {
     throw Object.assign(new Error(parsed.error), { code: parsed.error });
   }
   shareFeatures = parsed.features;
+  shareServerBranding = parsed.branding;
   return parsed.tour;
 }
 
@@ -178,9 +179,10 @@ let demo = null;
 let touring = false;
 let replayTour = () => {};
 let shareFeatures = { leadCapture: false, contactForm: false };
+let shareServerBranding = null;
 let shareSlug = "";
-// why: /p começa sem marca (classe também vem do <head>); /v mostra o logo
-let branding = /^\/p\//.test(location.pathname) ? "none" : "full";
+// why: o shell do /p já vem com ou sem a classe conforme o plano do dono (meta do Cloud)
+let branding = document.documentElement.classList.contains("is-unbranded") ? "none" : "full";
 
 function applyBranding(mode) {
   branding = mode;
@@ -563,7 +565,8 @@ async function boot() {
   }
 
   if (route.kind === "permanent") shareSlug = route.id;
-  applyBranding(route.kind === "permanent" ? "none" : "full");
+  // why: no /p mantém o que o shell decidiu até o tour chegar (sem piscar o logo)
+  if (route.kind !== "permanent") applyBranding("full");
   try {
     demo = await loadDemo(route);
   } catch (err) {
@@ -582,7 +585,7 @@ async function boot() {
   ensureNarration(demo);
   applyTheme(demo.theme);
 
-  applyBranding(shareBranding(route.kind, demo));
+  applyBranding(shareBranding(route.kind, demo, shareServerBranding));
   applyShareTitle(demo.name || shareBoot?.name || "");
 
   // why: o índice do editor no storage não pode abrir o link no passo 2

@@ -26,6 +26,7 @@ const EMPTY_META = Object.freeze({
   stepCount: null,
   ratio: null,
   updatedAt: null,
+  branding: null,
 });
 
 function positiveInt(value) {
@@ -65,7 +66,13 @@ function metaFromData(data) {
           : null,
     ratio: safeRatio(data?.ratio),
     updatedAt: typeof data?.updatedAt === "string" ? data.updatedAt : null,
+    branding: serverBranding(data?.branding),
   };
+}
+
+/** "shown" = dono sem Pro agora (o /p volta a mostrar a marca); "hidden" = Pro; null = Cloud antigo. */
+function serverBranding(value) {
+  return value === "shown" || value === "hidden" ? value : null;
 }
 
 async function getJson(url, fetchImpl) {
@@ -104,5 +111,6 @@ module.exports = {
   isPermanentSlug,
   fetchPermanentShare,
   metaFromData,
+  serverBranding,
   sharesOrigin,
 };

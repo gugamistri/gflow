@@ -183,7 +183,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/65\/js\/viewApp\.js/);
+  assert.match(html, /a\/66\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);
@@ -411,4 +411,46 @@ test("tourFromPermanentShare repassa só os recursos que o servidor liga (leads/
     tourFromPermanentShare({ ...base, features: { leadCapture: true, contactForm: "yes" } }).features,
     { leadCapture: true, contactForm: false }
   );
+});
+
+test("dono sem Pro agora: o Cloud manda branding shown e o /p volta a mostrar a marca", async () => {
+  // player: "shown" ganha da opção salva no tour; "hidden"/ausente mantém o comportamento do Pro
+  assert.equal(shareBranding("permanent", { removeBranding: false }, "shown"), "full");
+  assert.equal(shareBranding("permanent", {}, "shown"), "full");
+  assert.equal(shareBranding("permanent", {}, "hidden"), "none");
+  assert.equal(shareBranding("permanent", { removeBranding: false }, "hidden"), "credit");
+  assert.equal(shareBranding("permanent", { removeBranding: false }, null), "credit");
+  assert.equal(shareBranding("temporary", {}, "hidden"), "full");
+  const base = { ok: true, payload: { steps: [{}] } };
+  assert.equal(tourFromPermanentShare(base).branding, null);
+  assert.equal(tourFromPermanentShare({ ...base, branding: "shown" }).branding, "shown");
+  assert.equal(tourFromPermanentShare({ ...base, branding: "hidden" }).branding, "hidden");
+  assert.equal(tourFromPermanentShare({ ...base, branding: "yes" }).branding, null);
+  assert.equal(metaFromData({ ok: true, branding: "shown" }).branding, "shown");
+  assert.equal(metaFromData({ ok: true, branding: 1 }).branding, null);
+
+  // shell: sem Pro → logo, título «— GuiaFlow» e og:site_name de volta; Pro/ausente → sem marca
+  const shown = renderViewPage({ id: "s", name: "Tour", origin: "https://guiaflow.pro", kind: "permanent", branding: "shown" });
+  assert.equal(shown.includes("is-unbranded"), false);
+  assert.match(shown, /<title>Tour — GuiaFlow<\/title>/);
+  assert.match(shown, /og:site_name" content="GuiaFlow"/);
+  const hidden = renderViewPage({ id: "s", name: "Tour", origin: "https://guiaflow.pro", kind: "permanent", branding: "hidden" });
+  assert.match(hidden, /<html lang="pt-BR" class="is-unbranded">/);
+
+  const prev = globalThis.fetch;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ ok: true, slug: "slug-lapsed", title: "Tour antigo", stepCount: 2, branding: "shown" }),
+  });
+  try {
+    const res = fakeRes();
+    await permanentHandler({ method: "GET", query: { slug: "slug-lapsed" }, headers: { host: "guiaflow.pro" } }, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.includes('class="is-unbranded"'), false);
+    assert.match(res.body, /<title>Tour antigo — GuiaFlow<\/title>/);
+  } finally {
+    if (prev === undefined) delete globalThis.fetch;
+    else globalThis.fetch = prev;
+  }
 });

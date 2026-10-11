@@ -63,6 +63,7 @@ module.exports = async function handler(req, res) {
       imageHeight: share.imageHeight,
       stepCount: share.stepCount,
       ratio: share.ratio,
+      branding: share.branding,
     }),
     200
   );
