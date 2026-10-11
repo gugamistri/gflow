@@ -218,3 +218,27 @@ test("topo da filmstrip: só a duração, com ícone de relógio e tooltip tradu
   }
   assert.equal(catalogs.pt["editor.durationTitle"], "Duração total do tour");
 });
+
+test("Preview ocupa a tela toda mesmo com o painel recolhido (sem grade de 3 colunas)", () => {
+  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const offenders = [];
+  let presentingOneColumn = false;
+  for (const [, selectorList, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const cols = body.match(/grid-template-columns\s*:\s*([^;]+)/);
+    if (!cols) continue;
+    for (const raw of selectorList.split(",")) {
+      const sel = raw.trim();
+      if (!/^\.view-editor(?![\w-])/.test(sel) || /\s/.test(sel)) continue;
+      if (/\.is-presenting(?!\))/.test(sel) && cols[1].trim() === "1fr") presentingOneColumn = true;
+      // .view-editor sozinho perde para .view-editor.is-presenting; qualquer modificador a mais
+      // (ex.: .is-props-collapsed) empata em especificidade e, vindo depois, sobrescreve o Preview.
+      // A exclusão vai dentro de :where() para não subir a especificidade e vencer a regra
+      // de 1 coluna do celular (.view-editor:not(.is-presenting)).
+      const extraClasses = (sel.replace(/:where\((?:[^()]|\([^()]*\))*\)|:not\([^)]*\)/g, "").match(/\.[\w-]+/g) || []).length - 1;
+      const multiColumn = cols[1].trim().split(/\s+(?![^(]*\))/).length > 1;
+      if (multiColumn && extraClasses > 0 && !sel.includes(":where(:not(.is-presenting))")) offenders.push(sel);
+    }
+  }
+  assert.equal(presentingOneColumn, true);
+  assert.deepEqual(offenders, []);
+});
