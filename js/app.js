@@ -138,6 +138,7 @@ import {
   paywallOffer,
   shouldShowLocalSave,
 } from "./paywall.js";
+import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -468,6 +469,21 @@ const editor = createEditor({
   noteHostedUsage: rememberHostedUsage,
   coverMenuState: () => ({ enabled: cloudShareEnabled(), pro: viewerIsPro() }),
   onSetCover: (index) => setCoverStep(index),
+  viewerIsPro: () => viewerIsPro(),
+  onOpenFixedStep: (kind) => fixedStepsEditor.open(kind),
+});
+
+// why: passos fixos (Início/Fim) mudam o payload, então o link fica "Desatualizado" até republicar
+const fixedStepsEditor = createFixedStepsEditor({
+  getProject: () => project,
+  viewerIsPro: () => viewerIsPro(),
+  openFeatureGate: (feature) => openFeatureGate(feature),
+  onSaved: () => {
+    onChange();
+    editor.refresh();
+    paintShareMenu();
+    toast(t("fixed.saved"), 4200);
+  },
 });
 
 const player = createPlayer({
