@@ -242,3 +242,43 @@ test("Preview ocupa a tela toda mesmo com o painel recolhido (sem grade de 3 col
   assert.equal(presentingOneColumn, true);
   assert.deepEqual(offenders, []);
 });
+
+test("topo da filmstrip e barra do canvas têm a mesma altura (variável compartilhada)", () => {
+  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => ({
+    sels: sel.split(",").map((s) => s.trim()),
+    body,
+  }));
+  const defs = rules.filter((r) => /--editor-bar-h\s*:/.test(r.body));
+  assert.equal(defs.length, 1, "--editor-bar-h definida uma vez só");
+  assert.deepEqual(defs[0].sels, [".view-editor"]);
+  const shared = rules.find(
+    (r) =>
+      r.sels.includes(".filmstrip-header") &&
+      r.sels.includes(".canvas-toolbar") &&
+      /(^|[;\s])height\s*:\s*var\(--editor-bar-h\)/.test(r.body)
+  );
+  assert.ok(shared, "uma regra só dá height: var(--editor-bar-h) às duas barras");
+  assert.match(shared.body, /min-height\s*:\s*var\(--editor-bar-h\)/);
+  assert.match(shared.body, /box-sizing\s*:\s*border-box/);
+  assert.match(shared.body, /border-bottom\s*:\s*1px solid/);
+  // Nenhuma outra regra de desktop muda a altura de uma das duas sozinha.
+  for (const r of rules) {
+    if (r === shared) continue;
+    const one = r.sels.filter((s) => s === ".filmstrip-header" || s === ".canvas-toolbar");
+    if (!one.length) continue;
+    assert.equal(/(^|[;\s])(min-)?height\s*:/.test(r.body) && !/height\s*:\s*auto/.test(r.body), false, `${r.sels} muda a altura`);
+  }
+  // O topo da filmstrip só tem a duração: avisos ficam fora da barra de altura fixa.
+  const header = block('class="filmstrip-header"', "</div>");
+  assert.match(header, /id="filmstrip-metrics"/);
+  assert.equal(header.includes("local-save"), false);
+  assert.equal(header.includes("filmstrip-multi-hint"), false);
+  assert.match(html, /class="filmstrip-notices">\s*<p class="local-save" id="local-save-editor"/);
+  // O rótulo "Duração" não usa o cinza apagado e a dica não é o title nativo (abria por cima dele).
+  const label = rules.filter((r) => r.sels.includes(".filmstrip-metrics .metrics-label")).pop();
+  assert.equal(/color\s*:\s*var\(--ns-muted\)/.test(label.body), false);
+  const editor = readFileSync(new URL("./editor.js", import.meta.url), "utf8");
+  assert.match(editor, /el\.dataset\.tip = t\("editor\.durationTitle"\)/);
+  assert.equal(/el\.title = compact \? full : t\("editor\.durationTitle"\)/.test(editor), false);
+});
