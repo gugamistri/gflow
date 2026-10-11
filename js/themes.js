@@ -305,3 +305,75 @@ function normalizeHex(value) {
   }
   return String(value).toLowerCase();
 }
+
+/* ── Contraste dos formulários dos passos fixos ─────────────────────────── */
+
+function parseHexColor(value) {
+  let h = String(value || "").trim().replace(/^#/, "");
+  if (/^[0-9a-f]{3}$/i.test(h)) h = h.replace(/./g, (c) => c + c);
+  if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+}
+
+function toHex(rgb) {
+  return `#${rgb.map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0")).join("")}`;
+}
+
+function relativeLuminance(rgb) {
+  const [r, g, b] = rgb.map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Razão de contraste WCAG entre duas cores #hex (1–21). Cor inválida → 1. */
+export function contrastRatio(a, b) {
+  const x = parseHexColor(a);
+  const y = parseHexColor(b);
+  if (!x || !y) return 1;
+  const l1 = relativeLuminance(x);
+  const l2 = relativeLuminance(y);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+/**
+ * Mantém o tom de `fg`, mas o aproxima do branco ou do preto até ter `min`:1 sobre `bg`.
+ * why: o autor escolhe as cores do tour; o formulário nunca pode sumir no fundo.
+ */
+export function readableOn(fg, bg, min = 4.5) {
+  const base = parseHexColor(fg);
+  const back = parseHexColor(bg);
+  if (!back) return fg;
+  const target = relativeLuminance(back) > 0.18 ? [0, 0, 0] : [255, 255, 255];
+  const start = base || target;
+  for (let step = 0; step <= 20; step += 1) {
+    const t = step / 20;
+    const mixed = start.map((v, i) => v + (target[i] - v) * t);
+    const hex = toHex(mixed);
+    if (contrastRatio(hex, toHex(back)) >= min) return hex;
+  }
+  return toHex(target);
+}
+
+/**
+ * Cores explícitas dos campos (passo inicial e formulário de contato) para o tema do tour.
+ * Campos não herdam cor: fundo, texto, placeholder, borda e foco têm valor próprio.
+ */
+export function fixedFormPalette(theme = {}) {
+  const bg = parseHexColor(theme.popoverBg) ? toHex(parseHexColor(theme.popoverBg)) : "#ffffff";
+  const dark = relativeLuminance(parseHexColor(bg)) <= 0.18;
+  const fieldBg = dark ? toHex(parseHexColor(bg).map((v) => v * 0.55)) : "#ffffff";
+  const fieldInk = dark ? "#f5f5f5" : "#18181b";
+  const button = parseHexColor(theme.button) ? theme.button : theme.accent || "#1a4d6d";
+  return {
+    "--demo-form-ink": readableOn(theme.text || (dark ? "#f5f5f5" : "#3f3f46"), bg, 4.5),
+    "--demo-field-bg": fieldBg,
+    "--demo-field-ink": fieldInk,
+    "--demo-field-placeholder": readableOn(dark ? "#a1a1aa" : "#6b6b76", fieldBg, 4.5),
+    "--demo-field-border": readableOn(dark ? "#71717a" : "#8a8a94", contrastRatio(fieldBg, bg) > 1.2 ? fieldBg : bg, 3),
+    "--demo-form-link": readableOn(theme.accent || "#2a9d8f", bg, 4.5),
+    "--demo-form-focus": readableOn(theme.accent || "#2a9d8f", bg, 3),
+    "--demo-button-ink": contrastRatio("#ffffff", button) >= 3 ? "#ffffff" : "#18181b",
+  };
+}

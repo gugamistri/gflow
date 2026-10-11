@@ -123,7 +123,7 @@ function inputField({ key, label, type = "text", required = false, autocomplete 
   input.id = id;
   input.name = key;
   if (type !== "textarea") input.type = type;
-  else input.rows = 3;
+  else input.rows = 2;
   input.maxLength = maxLength;
   if (required) input.required = true;
   if (autocomplete) input.autocomplete = autocomplete;
@@ -212,6 +212,8 @@ export function renderStartCard(rawStep, opts = {}) {
   if (bodyText) form.append(el("p", "fixed-card-body", bodyText));
 
   const inputs = {};
+  // why: campos lado a lado quando cabem — o gate precisa caber num embed de 420px sem rolagem
+  const fieldsBox = el("div", "fixed-form-fields");
   const specs = {
     name: { label: t("fixed.lead.name"), type: "text", autocomplete: "name", maxLength: 120 },
     email: { label: t("fixed.lead.email"), type: "email", autocomplete: "email", inputmode: "email", maxLength: 254 },
@@ -225,8 +227,9 @@ export function renderStartCard(rawStep, opts = {}) {
       attachPhoneMask(field.input, formatBrPhone);
     }
     inputs[key] = field;
-    form.append(field.wrap);
+    fieldsBox.append(field.wrap);
   }
+  if (fieldsBox.childElementCount) form.append(fieldsBox);
   const consent = consentField(opts.consentText || step.consentText || t("fixed.consentDefault"));
   form.append(consent.wrap);
   const hp = honeypot();
@@ -240,16 +243,17 @@ export function renderStartCard(rawStep, opts = {}) {
   const actions = el("div", "fixed-card-actions");
   const submit = el("button", "btn fixed-card-btn", step.submitLabel || t("fixed.start.submit"));
   submit.type = opts.preview ? "button" : "submit";
+  actions.classList.add("fixed-form-actions");
   actions.append(submit);
-  form.append(actions);
   if (step.allowSkip) {
     const skip = el("button", "fixed-card-replay fixed-card-skip", step.skipLabel || t("fixed.start.skip"));
     skip.type = "button";
     skip.addEventListener("click", () => {
       if (!opts.preview) opts.onSkip?.();
     });
-    form.append(skip);
+    actions.append(skip);
   }
+  form.append(actions);
   form.append(el("p", "fixed-privacy", t("fixed.lead.privacyNote")));
 
   form.addEventListener("submit", async (event) => {
@@ -312,8 +316,11 @@ export function renderContactForm(opts = {}) {
   const cancel = el("button", "fixed-card-replay", t("fixed.contact.back"));
   cancel.type = "button";
   cancel.addEventListener("click", () => opts.onCancel?.());
-  actions.append(submit);
-  form.append(name.wrap, email.wrap, phone.wrap, message.wrap, consent.wrap, hp.wrap, status, actions, cancel);
+  actions.classList.add("fixed-form-actions");
+  actions.append(submit, cancel);
+  const fieldsBox = el("div", "fixed-form-fields");
+  fieldsBox.append(name.wrap, email.wrap, phone.wrap);
+  form.append(fieldsBox, message.wrap, consent.wrap, hp.wrap, status, actions);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
