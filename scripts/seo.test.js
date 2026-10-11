@@ -99,3 +99,14 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
   const home = read("index.html");
   assert.match(home, /data-i18n-html="billing.legal"/);
 });
+
+test("/oembed é uma rota pública (rewrite para a função, fora de /api/ no robots)", () => {
+  const config = JSON.parse(read("vercel.json"));
+  const rule = (config.rewrites || []).find((entry) => entry.source === "/oembed");
+  assert.equal(rule?.destination, "/api/oembed");
+  const robots = read("robots.txt");
+  assert.equal(/^Disallow:\s*\/oembed/m.test(robots), false);
+  const shell = read("api/lib/view-shell.cjs");
+  assert.match(shell, /application\/json\+oembed/);
+  assert.match(shell, /rel="iframely app"/);
+});
