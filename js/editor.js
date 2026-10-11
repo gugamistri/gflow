@@ -448,10 +448,17 @@ export function createEditor(ctx) {
         : t("editor.metricsMany", { n: steps.length, time });
     const count =
       steps.length === 1 ? t("editor.stepsOne") : t("editor.stepsMany", { n: steps.length });
-    // why: a duração é o dado principal do topo da filmstrip; o total de passos vem ao lado.
-    el.innerHTML = `<strong class="metrics-time">${escapeHtml(time)}</strong><span class="metrics-count">${escapeHtml(count)}</span>`;
-    el.setAttribute("aria-label", full);
-    el.title = full;
+    // why: no desktop o "Passo x de y" já está na barra do canvas — o topo da filmstrip mostra só a duração.
+    // No celular (sem essa barra) o total de passos continua ao lado, como antes.
+    const compact = isCompactTouch();
+    const label = compact ? full : t("editor.durationAria", { time });
+    el.innerHTML =
+      `<svg class="metrics-ico" aria-hidden="true"><use href="#i-clock"></use></svg>` +
+      `<span class="metrics-label">${escapeHtml(t("editor.durationLabel"))}</span>` +
+      `<strong class="metrics-time">${escapeHtml(time)}</strong>` +
+      `<span class="metrics-count">${escapeHtml(count)}</span>`;
+    el.setAttribute("aria-label", label);
+    el.title = compact ? full : t("editor.durationTitle");
     paintStepPosition();
   }
 
