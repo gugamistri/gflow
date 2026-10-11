@@ -13,6 +13,7 @@ import {
   shareViewUrl,
 } from "./shareSnapshot.js";
 import { permanentPublicUrl, permanentSlug, shouldRecreatePermanent } from "./shareLink.js";
+import { renderCover, tourRatio } from "./coverImage.js";
 
 const BLOB_API = "https://vercel.com/api/blob";
 const BLOB_API_VERSION = "12";
@@ -198,15 +199,49 @@ function readPermanentPayload(data) {
   const slug = String(nested?.slug || body.slug || "").trim();
   const id = String(nested?.id || body.id || slug || "").trim();
   const updatedAt = Date.parse(nested?.updatedAt || body.updatedAt || "");
-  return { url, id, slug, updatedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now() };
+  const rawCover = nested?.cover && typeof nested.cover === "object" ? nested.cover : null;
+  const coverUrl = typeof rawCover?.url === "string" && /^https:\/\//.test(rawCover.url) ? rawCover.url : "";
+  return {
+    url,
+    id,
+    slug,
+    updatedAt: Number.isFinite(updatedAt) ? updatedAt : Date.now(),
+    coverUrl,
+  };
 }
 
-function permanentRequestBody(project, snapshot) {
+/** Corpo do POST/PUT /shares. cover: data URL JPEG; sem capa o Cloud mantém a anterior. */
+export function permanentRequestBody(project, snapshot, { cover = "", ratio = "" } = {}) {
   const title = String(project?.name || snapshot?.name || "").trim().slice(0, 200);
   const body = { tour: snapshot };
   // why: no POST o título é obrigatório; no PUT um título vazio deixaria o nome atual
   if (title) body.title = title;
+  if (cover) body.cover = cover;
+  if (ratio) body.ratio = ratio;
   return JSON.stringify(body);
+}
+
+function isCoverRejected(result) {
+  const code = String(result?.error || result?.data?.error || "");
+  return code === "invalid_cover" || code === "cover_too_large" || result?.status === 413;
+}
+
+async function safeCover(project, buildCover) {
+  try {
+    const cover = await buildCover(project, { badge: t("share.cover.badge") });
+    return typeof cover?.dataUrl === "string" ? cover.dataUrl : "";
+  } catch (err) {
+    console.warn("cover", err);
+    return "";
+  }
+}
+
+async function safeRatio(project, measureRatio) {
+  try {
+    return String((await measureRatio(project)) || "");
+  } catch {
+    return "";
+  }
 }
 
 function permanentFailure(result) {
@@ -233,6 +268,7 @@ function permanentShareFromResult(result) {
     slug: slug || payload.id,
     url,
     updatedAt: payload.updatedAt || Date.now(),
+    coverUrl: payload.coverUrl,
   };
 }
 
@@ -240,7 +276,17 @@ function permanentShareFromResult(result) {
  * Publica ou atualiza o link permanente.
  * why: o primeiro envio é POST /shares; republicar é PUT /shares/:slug e, se o slug já não for nosso, cria outro.
  */
-export async function publishPermanentShare(project, { onProgress, env, slug = "", buildSnapshot = buildShareSnapshot } = {}) {
+export async function publishPermanentShare(
+  project,
+  {
+    onProgress,
+    env,
+    slug = "",
+    buildSnapshot = buildShareSnapshot,
+    buildCover = renderCover,
+    measureRatio = tourRatio,
+  } = {}
+) {
   if (!isCloudEnabled(env) || !getCloudFlags(env).permanentShare) {
     const err = new Error(permanentShareErrorMessage({ reason: "cloud-not-configured" }));
     err.code = "cloud-not-configured";
@@ -254,17 +300,26 @@ export async function publishPermanentShare(project, { onProgress, env, slug = "
     err.code = "share_failed";
     throw err;
   }
+  onProgress?.(t("share.cover.progress"));
+  const cover = await safeCover(project, buildCover);
+  const ratio = await safeRatio(project, measureRatio);
   onProgress?.(t("share.cloud.progress"));
-  const body = permanentRequestBody(project, snapshot);
   const current = String(slug || "").trim();
+  // why: se o Cloud recusar a capa, o link sai mesmo assim (sem trocar a capa anterior)
+  const send = async (path, method) => {
+    const withCover = await cloudFetch(path, { method, body: permanentRequestBody(project, snapshot, { cover, ratio }) }, env);
+    if (withCover.ok || !cover || !isCoverRejected(withCover)) return { result: withCover, coverSkipped: !cover };
+    const plain = await cloudFetch(path, { method, body: permanentRequestBody(project, snapshot, { ratio }) }, env);
+    return { result: plain, coverSkipped: true };
+  };
   if (current) {
-    const put = await cloudFetch(`/shares/${encodeURIComponent(current)}`, { method: "PUT", body }, env);
-    if (put.ok) return permanentShareFromResult(put);
-    if (!shouldRecreatePermanent(put)) throw permanentFailure(put);
+    const put = await send(`/shares/${encodeURIComponent(current)}`, "PUT");
+    if (put.result.ok) return { ...permanentShareFromResult(put.result), coverSkipped: put.coverSkipped };
+    if (!shouldRecreatePermanent(put.result)) throw permanentFailure(put.result);
   }
-  const result = await cloudFetch("/shares", { method: "POST", body }, env);
-  if (!result.ok) throw permanentFailure(result);
-  return permanentShareFromResult(result);
+  const created = await send("/shares", "POST");
+  if (!created.result.ok) throw permanentFailure(created.result);
+  return { ...permanentShareFromResult(created.result), coverSkipped: created.coverSkipped };
 }
 
 function copyWithTextarea(text) {

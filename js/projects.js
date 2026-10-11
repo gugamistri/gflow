@@ -361,6 +361,8 @@ export function projectToDemoPayload(project) {
     playback: project.playback || defaultPlayback(),
     narration: project.narration || defaultNarration(),
   };
+  // why: só entra quando escolhida, para não mudar o hash de links já publicados
+  if (project.coverStepId) payload.coverStepId = String(project.coverStepId);
   ensurePlayback(payload);
   ensureNarration(payload);
   return payload;
@@ -384,6 +386,7 @@ export function demoPayloadToProject(data, { name, id } = {}) {
     playback: data.playback || defaultPlayback(),
     narration: data.narration || defaultNarration(),
   };
+  if (typeof data.coverStepId === "string" && data.coverStepId) project.coverStepId = data.coverStepId;
   ensurePlayback(project);
   ensureNarration(project);
   return project;

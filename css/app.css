@@ -1308,6 +1308,57 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
   height: 32px;
 }
 
+.share-cover {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.share-cover[hidden] {
+  display: none;
+}
+
+.share-cover-img {
+  width: 120px;
+  height: 63px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--ns-border);
+  background: var(--ns-panel);
+}
+
+.share-cover-text {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.share-cover-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ns-ink);
+}
+
+.share-cover-change {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ns-accent-dark);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.share-cover-note {
+  color: var(--ns-muted);
+  font-size: 0.66rem;
+  line-height: 1.35;
+}
+
 .share-link-extra {
   display: flex;
   align-items: center;
