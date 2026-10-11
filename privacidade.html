@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/65/css/theme.css" />
-  <link rel="stylesheet" href="a/65/css/app.css" />
-  <link rel="stylesheet" href="a/65/css/ajuda.css" />
+  <link rel="stylesheet" href="a/67/css/theme.css" />
+  <link rel="stylesheet" href="a/67/css/app.css" />
+  <link rel="stylesheet" href="a/67/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/65/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/65/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/67/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/67/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -72,7 +72,7 @@
       <ul>
         <li data-i18n="privacy.resumo.li1">Você pode usar o editor sem conta. Nesse caso, seus projetos ficam só no seu navegador, neste aparelho, e não chegam até nós.</li>
         <li data-i18n="privacy.resumo.li2">Um link temporário guarda o tour publicado por 7 dias. Depois disso ele é apagado.</li>
-        <li data-i18n="privacy.resumo.li3">Quem assina o GuiaFlow Pro tem uma conta com e-mail. Guardamos o mínimo para a conta, a assinatura, os links permanentes e os limites de uso.</li>
+        <li data-i18n="privacy.resumo.li3">Quem assina o GuiaFlow Pro tem uma conta com e-mail. Guardamos o mínimo para a conta, a assinatura, os links permanentes e os limites de uso, além dos projetos do editor, que ficam salvos na sua conta.</li>
         <li data-i18n="privacy.resumo.li4">O pagamento é feito no Stripe. Nós não recebemos nem guardamos os dados do seu cartão.</li>
         <li data-i18n="privacy.resumo.li5">Não usamos publicidade nem rastreamento entre sites, e não vendemos dados.</li>
         <li data-i18n="privacy.resumo.li6">Se um tour publicado pedir seu nome, e-mail ou telefone, ou se você usar o formulário de contato no fim dele, esses dados vão para o autor do tour, que é o responsável por eles. O GuiaFlow só os guarda e entrega em nome do autor.</li>
@@ -119,11 +119,22 @@
         <li data-i18n-html="privacy.pro.li4"><strong>Dados da assinatura</strong>: plano, periodicidade, situação, fim do período pago e os códigos de cliente e de assinatura do Stripe;</li>
         <li data-i18n-html="privacy.pro.li5"><strong>Conteúdo que você publica</strong> em links permanentes: título, telas, textos e áudios do tour;</li>
         <li data-i18n-html="privacy.pro.li6"><strong>Contadores de uso</strong> por mês: quantos textos foram gerados com IA e quantos segundos de áudio foram narrados, para aplicar os limites do plano;</li>
-        <li data-i18n-html="privacy.pro.li7"><strong>Registros técnicos</strong>: avisos de pagamento enviados pelo Stripe e registro das ações feitas no painel administrativo.</li>
+        <li data-i18n-html="privacy.pro.li7"><strong>Registros técnicos</strong>: avisos de pagamento enviados pelo Stripe e registro das ações feitas no painel administrativo;</li>
+        <li data-i18n-html="privacy.pro.li8"><strong>Projetos do editor</strong>: o conteúdo completo de cada projeto, com telas, textos, áudios, temas personalizados e o endereço do link permanente (veja abaixo).</li>
       </ul>
       <p data-i18n="privacy.pro.p2">Esses dados ficam em um banco de dados Postgres, em servidor no Brasil (São Paulo), contratado pelo GuiaFlow e administrado com a ferramenta Coolify.</p>
       <p data-i18n="privacy.pro.p3">O acesso é feito por um link enviado por e-mail, que vale 15 minutos e só pode ser usado uma vez, ou por senha. O link de ativação de um convite do GuiaFlow Pro vale 7 dias e também só pode ser usado uma vez. Depois do login, o navegador guarda um token de sessão no armazenamento local (localStorage), válido por 12 horas. O painel administrativo usa um cookie de sessão com as proteções HttpOnly e Secure.</p>
     </section>
+
+    <section class="card" id="projetos">
+      <h2 data-i18n="privacy.projetos.title">Projetos salvos na conta (Pro)</h2>
+      <p data-i18n="privacy.projetos.p1">Com o Pro ativo e a conta conectada no editor, todos os projetos deste navegador sobem para a sua conta. Depois disso, cada alteração é enviada automaticamente. Em outro navegador ou aparelho, basta entrar na mesma conta para os projetos aparecerem.</p>
+      <p data-i18n="privacy.projetos.p2">Guardamos o conteúdo completo de cada projeto: título, telas, textos, áudios, configurações, temas personalizados e o endereço do link permanente, se houver. Imagens e áudios ficam como arquivos privados da sua conta, identificados por um resumo (hash) para não guardar o mesmo arquivo duas vezes. Só a sua conta conectada consegue baixá-los. Os limites são 15 MB por arquivo, 1 GB de mídia por conta e 500 projetos.</p>
+      <p data-i18n="privacy.projetos.p3">Esses dados ficam no mesmo banco de dados Postgres da conta, em servidor no Brasil (São Paulo).</p>
+      <p data-i18n="privacy.projetos.p4">Se a assinatura terminar, nada é apagado: os projetos continuam guardados na conta. A sincronização para, o editor continua funcionando com as cópias deste navegador e as alterações novas ficam só nele. Ao voltar para o Pro, a sincronização recomeça e os projetos guardados voltam a aparecer.</p>
+      <p data-i18n="privacy.projetos.p5">Um projeto apagado no editor também é apagado da conta. Fica só um registro sem conteúdo, para avisar os outros navegadores. Para apagar tudo de uma vez, peça a exclusão da conta pelo contato@guiaflow.pro.</p>
+    </section>
+
     <section class="card" id="pagamento">
       <h2 data-i18n="privacy.pagamento.title">Pagamento</h2>
       <p data-i18n="privacy.pagamento.p1">A assinatura é paga no Stripe Checkout, com cartão, Pix, Apple Pay ou Google Pay, conforme o que estiver disponível para você. Os dados de pagamento são digitados nas páginas do Stripe e tratados pelo Stripe, conforme a política de privacidade dele.</p>
@@ -214,6 +225,7 @@
         <li data-i18n-html="privacy.retencao.li4"><strong>Links de acesso por e-mail</strong>: o link de login vale 15 minutos e o link de ativação de um convite vale 7 dias;</li>
         <li data-i18n-html="privacy.retencao.li6"><strong>Contatos de visitantes</strong>: até o autor do tour excluí-los, apagar o link permanente ou encerrar a conta;</li>
         <li data-i18n-html="privacy.retencao.li7"><strong>Visitas a tours publicados</strong>: dados de cada visita por 90 dias e totais diários por 25 meses, ou até o autor apagar o link;</li>
+        <li data-i18n-html="privacy.retencao.li8"><strong>Projetos salvos na conta (Pro)</strong>: até você apagar o projeto no editor ou a conta ser excluída, inclusive depois que a assinatura termina;</li>
         <li data-i18n-html="privacy.retencao.li5"><strong>Conta e assinatura</strong>: enquanto a conta existir. Depois de um pedido de exclusão, apagamos os dados da conta, exceto o que a lei manda guardar, como registros de pagamento e fiscais, pelo prazo legal.</li>
       </ul>
     </section>
@@ -259,8 +271,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/65/js/i18n.js";
-    import "./a/65/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/67/js/i18n.js";
+    import "./a/67/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
