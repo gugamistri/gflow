@@ -59,6 +59,8 @@
         if (q.has("embed") && (v === "" || v === "1" || v === "true" || v === "yes" || v === "sim" || v === "on")) {
           document.documentElement.classList.add("is-embed");
         }
+        // why: link permanente (/p) é Pro — sem marca GuiaFlow desde o primeiro quadro
+        if (/^\/p\//.test(location.pathname)) document.documentElement.classList.add("is-unbranded");
       } catch (e) {}
     })();
   </script>
@@ -67,16 +69,17 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/62/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/62/css/theme.css" />
-  <link rel="stylesheet" href="/a/62/css/app.css" />
+  <link rel="stylesheet" href="/a/63/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/63/css/theme.css" />
+  <link rel="stylesheet" href="/a/63/css/app.css" />
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/62/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/62/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/63/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/63/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title" data-i18n="view.loading">Carregando o tour…</span>
     </div>
+    <a class="view-credit" id="view-credit" href="/" target="_blank" rel="noopener" hidden><img src="/a/63/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
   </header>
 
   <main id="view-editor" class="view view-editor is-presenting">
@@ -140,7 +143,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/62/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/62/js/viewApp.js"></script>
+  <script src="/a/63/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/63/js/viewApp.js"></script>
 </body>
 </html>

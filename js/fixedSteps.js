@@ -4,6 +4,8 @@
  * Os passos fixos não entram em `steps`, por isso ficam fora do vídeo e do drop-off.
  */
 
+import { isValidE164Digits, parseE164, validatePhone } from "./phoneCountries.js";
+
 export const LEAD_FIELDS = ["name", "email", "phone"];
 
 export const LIMITS = {
@@ -46,12 +48,38 @@ export function normalizeWhatsAppNumber(input, defaultDdi = "55") {
   return digits.slice(0, 15);
 }
 
-/** Número com DDI completo o bastante para o wa.me (DDI + DDD + número). */
+/**
+ * Número E.164 (só dígitos: DDI + número) válido para o wa.me — DDI conhecido e tamanho do país
+ * (Brasil: DDD + 8 ou 9 dígitos; EUA/Canadá: 10; demais: 6–13, até 15 no total).
+ */
 export function isValidWhatsAppNumber(digits) {
   const value = String(digits ?? "");
-  if (!/^\d{10,15}$/.test(value)) return false;
-  if (value.startsWith("55")) return value.length === 12 || value.length === 13;
-  return true;
+  if (!/^\d{8,15}$/.test(value)) return false;
+  return isValidE164Digits(value);
+}
+
+/**
+ * Número salvo → E.164 só com dígitos. Com "+"/"00" ou já um E.164 válido, fica como está;
+ * senão, a regra antiga (DDD + número do Brasil ganha o 55). Inválido → "".
+ */
+export function whatsAppE164(input) {
+  const raw = String(input ?? "").trim();
+  if (!raw) return "";
+  const international = /^(\+|00)/.test(raw);
+  const digits = raw.replace(/\D/g, "").replace(international ? /^00/ : /^$/, "");
+  if (!international) {
+    // why: 10–11 dígitos sem DDI = DDD + número do Brasil (como o campo antigo gravava)
+    const legacy = normalizeWhatsAppNumber(raw);
+    if (legacy !== digits && isValidWhatsAppNumber(legacy)) return legacy;
+  }
+  return isValidWhatsAppNumber(digits) ? digits : "";
+}
+
+/** País + número nacional de um número salvo (para o editor). */
+export function splitWhatsAppNumber(input) {
+  const digits = whatsAppE164(input);
+  const parsed = digits ? parseE164(digits) : null;
+  return parsed && validatePhone(parsed.dial, parsed.national).ok ? parsed : null;
 }
 
 /** Troca {tour}, {link} e {nome}; variável vazia some sem deixar o marcador. */
@@ -72,7 +100,7 @@ export function interpolate(template, vars = {}) {
 
 /** https://wa.me/<digitos>?text=… — sem número, o visitante escolhe o contato. */
 export function buildWhatsAppUrl({ phone = "", message = "", vars = {} } = {}) {
-  const digits = normalizeWhatsAppNumber(phone);
+  const digits = whatsAppE164(phone);
   const body = interpolate(message, vars).slice(0, LIMITS.message);
   const base = isValidWhatsAppNumber(digits) ? `https://wa.me/${digits}` : "https://wa.me/";
   return body ? `${base}?text=${encodeURIComponent(body)}` : base;
@@ -141,7 +169,8 @@ export function defaultEndStep() {
     enabled: false,
     title: "",
     body: "",
-    whatsapp: { enabled: true, phone: "", message: "", label: "" },
+    // why: o botão só existe com um número válido — começa desligado até o autor informar o número
+    whatsapp: { enabled: false, phone: "", message: "", label: "" },
     contact: { enabled: false, mode: "link", url: "", label: "", consentText: "" },
     showReplay: true,
   };
@@ -179,7 +208,7 @@ export function normalizeEndStep(raw) {
     body: text(raw.body, LIMITS.body),
     whatsapp: {
       enabled: bool(wa.enabled, true),
-      phone: normalizeWhatsAppNumber(wa.phone),
+      phone: whatsAppE164(wa.phone),
       message: text(wa.message, LIMITS.message),
       label: line(wa.label, LIMITS.label),
     },
@@ -218,7 +247,8 @@ export function fixedStepsForPayload(project) {
 export function endStepActions(raw, { tour = "", link = "", nome = "", contactForm = false } = {}) {
   const step = normalizeEndStep(raw);
   const actions = [];
-  if (step.whatsapp.enabled) {
+  // why: sem número válido não há botão (tours antigos publicados sem número ou com número incompleto)
+  if (step.whatsapp.enabled && isValidWhatsAppNumber(step.whatsapp.phone)) {
     actions.push({
       kind: "whatsapp",
       label: step.whatsapp.label,

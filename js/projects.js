@@ -364,6 +364,8 @@ export function projectToDemoPayload(project) {
   };
   // why: só entra quando escolhida, para não mudar o hash de links já publicados
   if (project.coverStepId) payload.coverStepId = String(project.coverStepId);
+  // why: link permanente sai sem marca por padrão; só o pedido de crédito vai no payload (hash estável)
+  if (project.removeBranding === false) payload.removeBranding = false;
   Object.assign(payload, fixedStepsForPayload(project));
   ensurePlayback(payload);
   ensureNarration(payload);
@@ -389,6 +391,7 @@ export function demoPayloadToProject(data, { name, id } = {}) {
     narration: data.narration || defaultNarration(),
   };
   if (typeof data.coverStepId === "string" && data.coverStepId) project.coverStepId = data.coverStepId;
+  if (data.removeBranding === false) project.removeBranding = false;
   // why: passos fixos só existem no payload quando ligados; desligado = ausente
   if (data.startStep && typeof data.startStep === "object") project.startStep = normalizeStartStep(data.startStep);
   if (data.endStep && typeof data.endStep === "object") project.endStep = normalizeEndStep(data.endStep);

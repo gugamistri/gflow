@@ -11,6 +11,7 @@ import {
   sameOriginReferrer,
   clickClosesSharedTour,
   sharePageTitle,
+  shareBranding,
   shareStartIndex,
   sharedPreviewBackTarget,
   tourFromPermanentShare,
@@ -100,6 +101,36 @@ test("o link partilhado começa no passo 1, salvo pedido na URL", () => {
   assert.equal(sharePageTitle("E2E Pro Test"), "E2E Pro Test — GuiaFlow");
   assert.equal(sharePageTitle("  "), "GuiaFlow — Tour");
   assert.equal(sharePageTitle(""), "GuiaFlow — Tour");
+  assert.equal(sharePageTitle("Tour fixo", "GuiaFlow — Tour", { branded: false }), "Tour fixo");
+  assert.equal(sharePageTitle(" ", "GuiaFlow — Tour", { branded: false }), "Tour");
+});
+
+test("marca GuiaFlow: /v com logo; /p sem marca por padrão e crédito só quando o tour pede", () => {
+  assert.equal(shareBranding("temporary", {}), "full");
+  assert.equal(shareBranding("temporary", { removeBranding: false }), "full");
+  // why: links /p publicados antes desta opção não têm o campo — saem sem marca sem republicar
+  assert.equal(shareBranding("permanent", {}), "none");
+  assert.equal(shareBranding("permanent", null), "none");
+  assert.equal(shareBranding("permanent", { removeBranding: true }), "none");
+  assert.equal(shareBranding("permanent", { removeBranding: "false" }), "none");
+  assert.equal(shareBranding("permanent", { removeBranding: false }), "credit");
+});
+
+test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mantêm a marca", () => {
+  const permanent = renderViewPage({ id: "slug", name: "Tour fixo", origin: "https://guiaflow.pro", kind: "permanent" });
+  assert.match(permanent, /<html lang="pt-BR" class="is-unbranded">/);
+  assert.match(permanent, /<title>Tour fixo<\/title>/);
+  assert.equal(permanent.includes("og:site_name"), false);
+  assert.match(permanent, /id="view-credit"[^>]*hidden/);
+  assert.match(permanent, /data-i18n="view\.credit">Feito com GuiaFlow</);
+  const temporary = renderViewPage({ id: "tmp123", name: "Tour", origin: "https://guiaflow.pro", kind: "temporary" });
+  assert.equal(temporary.includes("is-unbranded"), false);
+  assert.match(temporary, /<title>Tour — GuiaFlow<\/title>/);
+  const missing = renderViewPage({ id: "slug", origin: "https://guiaflow.pro", kind: "permanent", missing: true });
+  assert.equal(missing.includes('class="is-unbranded"'), false);
+  const viewHtml = readFileSync(new URL("../view.html", import.meta.url), "utf8");
+  assert.match(viewHtml, /\/\^\\\/p\\\/\/\.test\(location\.pathname\)\) document\.documentElement\.classList\.add\("is-unbranded"\)/);
+  assert.match(viewHtml, /id="view-credit"[^>]*hidden/);
 });
 
 test("o endpoint do link permanente aponta para /api/shares", () => {
@@ -149,10 +180,10 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
     kind: "permanent",
   });
   assert.match(html, /rel="canonical" href="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
-  assert.match(html, /property="og:title" content="Tour fixo — GuiaFlow"/);
+  assert.match(html, /property="og:title" content="Tour fixo"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/62\/js\/viewApp\.js/);
+  assert.match(html, /a\/63\/js\/viewApp\.js/);
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);
@@ -224,7 +255,7 @@ test("GET /api/p/:slug publica a meta e o 404 usa a mesma página", async () => 
       ok
     );
     assert.equal(ok.statusCode, 200);
-    assert.match(ok.body, /og:title" content="Tour fixo — GuiaFlow"/);
+    assert.match(ok.body, /og:title" content="Tour fixo"/);
     assert.match(ok.body, /\/p\/slug-permanente/);
     assert.equal(ok.body.includes("customImages"), false);
     assert.equal(ok.body.includes("7 dias"), false);

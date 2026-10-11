@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 11 de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/62\/css\/ajuda\.css/);
+    assert.match(html, /a\/63\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
