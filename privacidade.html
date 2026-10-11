@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/48/css/theme.css" />
-  <link rel="stylesheet" href="a/48/css/app.css" />
-  <link rel="stylesheet" href="a/48/css/ajuda.css" />
+  <link rel="stylesheet" href="a/49/css/theme.css" />
+  <link rel="stylesheet" href="a/49/css/app.css" />
+  <link rel="stylesheet" href="a/49/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/48/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/48/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/49/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/49/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -66,7 +66,7 @@
   <main class="page legal">
     <h1 data-i18n="privacy.h1">Política de Privacidade</h1>
     <p class="lead" data-i18n="privacy.lead">Explicamos aqui, em linguagem direta, quais dados o GuiaFlow trata, por quê, onde ficam e como você controla isso.</p>
-    <p class="legal-updated" data-i18n="privacy.updated">Última atualização: 10 de outubro de 2026</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Última atualização: 11 de outubro de 2026</p>
     <section class="card" id="resumo">
       <h2 data-i18n="privacy.resumo.title">Em resumo</h2>
       <ul>
@@ -75,6 +75,7 @@
         <li data-i18n="privacy.resumo.li3">Quem assina o GuiaFlow Pro tem uma conta com e-mail. Guardamos o mínimo para a conta, a assinatura, os links permanentes e os limites de uso.</li>
         <li data-i18n="privacy.resumo.li4">O pagamento é feito no Stripe. Nós não recebemos nem guardamos os dados do seu cartão.</li>
         <li data-i18n="privacy.resumo.li5">Não usamos ferramentas de análise de audiência, publicidade ou rastreamento, e não vendemos dados.</li>
+        <li data-i18n="privacy.resumo.li6">Se um tour publicado pedir seu nome, e-mail ou telefone, ou se você usar o formulário de contato no fim dele, esses dados vão para o autor do tour, que é o responsável por eles. O GuiaFlow só os guarda e entrega em nome do autor.</li>
       </ul>
     </section>
     <section class="card" id="controlador">
@@ -137,6 +138,19 @@
       <h2 data-i18n="privacy.emails.title">E-mails</h2>
       <p data-i18n="privacy.emails.p1">Os e-mails do serviço são enviados pela Resend, a partir de noreply@guiaflow.pro: links de acesso, convites e avisos sobre a assinatura. Não usamos o seu e-mail para propaganda.</p>
     </section>
+    <section class="card" id="contatos-visitantes">
+      <h2 data-i18n="privacy.leads.title">Contatos de visitantes de tours (Pro)</h2>
+      <p data-i18n="privacy.leads.p1">Autores com GuiaFlow Pro podem pedir, antes de um tour publicado em link permanente, o nome, o e-mail e/ou o telefone de quem assiste. Também podem oferecer, no fim do tour, um formulário de contato com nome, e-mail, telefone (opcional) e mensagem.</p>
+      <p data-i18n-html="privacy.leads.p2">Nesses casos, <strong>o autor do tour é o controlador</strong> desses dados: é ele quem decide pedi-los, para que usá-los e por quanto tempo guardá-los. <strong>O GuiaFlow é o operador</strong>: guarda os dados em nome do autor, mostra-os só a ele no editor (com exportação em CSV) e envia as mensagens do formulário para o e-mail da conta do autor, pela Resend, a partir de noreply@guiaflow.pro. Não usamos esses dados para nenhuma outra finalidade.</p>
+      <p data-i18n="privacy.leads.p3">Para cada contato guardamos:</p>
+      <ul>
+        <li data-i18n="privacy.leads.li1">os dados que o visitante preencheu (nome, e-mail, telefone e, no formulário, a mensagem);</li>
+        <li data-i18n="privacy.leads.li2">o registro do consentimento: o texto exibido, a data e a hora em que a caixa foi marcada;</li>
+        <li data-i18n="privacy.leads.li3">o link de onde o contato veio e, no formulário, se o aviso por e-mail foi entregue.</li>
+      </ul>
+      <p data-i18n="privacy.leads.p4">O endereço IP é usado apenas na hora do envio, para limitar tentativas e evitar abuso, e não fica guardado junto do contato.</p>
+      <p data-i18n-html="privacy.leads.p5">O envio depende do consentimento do visitante (art. 7º, I, da LGPD): sem marcar a caixa, nada é enviado. Para acessar, corrigir ou excluir seus dados, fale com o autor do tour. Se não conseguir, escreva para <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>; encaminharemos o pedido ao autor e ajudaremos no que couber ao operador.</p>
+    </section>
     <section class="card" id="cookies">
       <h2 data-i18n="privacy.cookies.title">Cookies e medição de uso</h2>
       <p data-i18n="privacy.cookies.p1">O GuiaFlow não usa ferramentas de análise de audiência, pixels de publicidade ou rastreamento entre sites.</p>
@@ -183,6 +197,7 @@
         <li data-i18n-html="privacy.retencao.li2"><strong>Links temporários</strong>: 7 dias a partir da primeira publicação;</li>
         <li data-i18n-html="privacy.retencao.li3"><strong>Links permanentes</strong>: até você apagar o link ou a conta ser excluída;</li>
         <li data-i18n-html="privacy.retencao.li4"><strong>Links de acesso por e-mail</strong>: valem 15 minutos;</li>
+        <li data-i18n-html="privacy.retencao.li6"><strong>Contatos de visitantes</strong>: até o autor do tour excluí-los, apagar o link permanente ou encerrar a conta;</li>
         <li data-i18n-html="privacy.retencao.li5"><strong>Conta e assinatura</strong>: enquanto a conta existir. Depois de um pedido de exclusão, apagamos os dados da conta, exceto o que a lei manda guardar, como registros de pagamento e fiscais, pelo prazo legal.</li>
       </ul>
     </section>
@@ -228,8 +243,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/48/js/i18n.js";
-    import "./a/48/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/49/js/i18n.js";
+    import "./a/49/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

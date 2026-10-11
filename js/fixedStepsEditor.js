@@ -4,14 +4,17 @@
  */
 import { t } from "./i18n.js";
 import {
+  LEAD_FIELDS,
   defaultEndStep,
+  defaultStartStep,
+  normalizeStartStep,
   formatBrPhone,
   isValidWhatsAppNumber,
   normalizeEndStep,
   normalizeWhatsAppNumber,
   safeContactHref,
 } from "./fixedSteps.js";
-import { renderEndCard } from "./fixedStepsView.js";
+import { renderEndCard, renderStartCard } from "./fixedStepsView.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -22,7 +25,7 @@ function displayPhone(digits) {
 }
 
 export function createFixedStepsEditor(ctx) {
-  const { getProject, onSaved, viewerIsPro, openFeatureGate } = ctx;
+  const { getProject, onSaved, viewerIsPro, openFeatureGate, openLeads } = ctx;
   let bound = false;
 
   function endEls() {
@@ -172,14 +175,132 @@ export function createFixedStepsEditor(ctx) {
       }
       const project = getProject();
       if (!project) return;
+      if (step.contact.mode === "form" && !step.contact.consentText) step.contact.consentText = t("fixed.consentDefault");
       project.endStep = step;
       els.dialog.close();
       onSaved("end");
     });
   }
 
+  function startEls() {
+    return {
+      dialog: $("modal-fixed-start"),
+      form: $("fixed-start-form"),
+      enabled: $("fixed-start-enabled"),
+      config: $("fixed-start-config"),
+      title: $("fixed-start-title"),
+      body: $("fixed-start-body"),
+      fields: $("fixed-start-fields"),
+      fieldsError: $("fixed-start-fields-error"),
+      consent: $("fixed-start-consent"),
+      submit: $("fixed-start-submit"),
+      skip: $("fixed-start-skip"),
+      skipLabelWrap: $("fixed-start-skip-label-wrap"),
+      skipLabel: $("fixed-start-skip-label"),
+      leads: $("btn-fixed-start-leads"),
+      preview: $("fixed-start-preview"),
+    };
+  }
+
+  function fieldBox(els, key, prop) {
+    return els.fields.querySelector(`input[data-field="${key}"][data-prop="${prop}"]`);
+  }
+
+  function readStart(els) {
+    const fields = {};
+    for (const key of LEAD_FIELDS) {
+      const show = fieldBox(els, key, "show").checked;
+      fields[key] = { show, required: show && fieldBox(els, key, "required").checked };
+    }
+    const step = normalizeStartStep({
+      enabled: els.enabled.checked,
+      title: els.title.value,
+      body: els.body.value,
+      fields,
+      consentText: els.consent.value.trim(),
+      allowSkip: els.skip.checked,
+      submitLabel: els.submit.value,
+      skipLabel: els.skipLabel.value,
+    });
+    const errors = { fields: !LEAD_FIELDS.some((key) => step.fields[key].show) };
+    return { step, errors };
+  }
+
+  function paintStart(els, { showErrors = false } = {}) {
+    const { step, errors } = readStart(els);
+    els.config.classList.toggle("is-off", !els.enabled.checked);
+    for (const key of LEAD_FIELDS) {
+      const req = fieldBox(els, key, "required");
+      req.disabled = !fieldBox(els, key, "show").checked;
+      if (req.disabled) req.checked = false;
+    }
+    els.fieldsError.hidden = !(showErrors && step.enabled && errors.fields);
+    els.skipLabelWrap.hidden = !els.skip.checked;
+    const card = renderStartCard(step, { preview: true, consentText: step.consentText || t("fixed.consentDefault") });
+    els.preview.replaceChildren(card);
+    els.preview.classList.toggle("is-off", !step.enabled);
+    return { step, errors };
+  }
+
+  function fillStart(els, raw) {
+    const base = raw ? normalizeStartStep(raw) : defaultStartStep();
+    els.enabled.checked = raw ? base.enabled : true;
+    els.title.value = base.title;
+    els.body.value = base.body;
+    for (const key of LEAD_FIELDS) {
+      fieldBox(els, key, "show").checked = base.fields[key].show;
+      fieldBox(els, key, "required").checked = base.fields[key].required;
+    }
+    els.consent.value = base.consentText || t("fixed.consentDefault");
+    els.submit.value = base.submitLabel;
+    els.skip.checked = base.allowSkip;
+    els.skipLabel.value = base.skipLabel;
+  }
+
+  let startBound = false;
+  function bindStart() {
+    if (startBound) return;
+    startBound = true;
+    const els = startEls();
+    if (!els.dialog) return;
+    els.form.addEventListener("input", () => paintStart(els));
+    els.form.addEventListener("change", () => paintStart(els));
+    els.dialog.querySelectorAll("[data-fixed-close]").forEach((btn) =>
+      btn.addEventListener("click", () => els.dialog.close())
+    );
+    els.leads?.addEventListener("click", () => {
+      els.dialog.close();
+      openLeads?.();
+    });
+    els.form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const { step, errors } = paintStart(els, { showErrors: true });
+      if (step.enabled && errors.fields) return;
+      const project = getProject();
+      if (!project) return;
+      // why: o servidor grava o texto publicado como prova do aceite — nunca deixar vazio
+      if (!step.consentText) step.consentText = t("fixed.consentDefault");
+      project.startStep = step;
+      els.dialog.close();
+      onSaved("start");
+    });
+  }
+
   function open(kind) {
     bind();
+    if (kind === "start") {
+      if (!viewerIsPro()) {
+        openFeatureGate("leads");
+        return false;
+      }
+      bindStart();
+      const els = startEls();
+      if (!els.dialog) return false;
+      fillStart(els, getProject()?.startStep || null);
+      paintStart(els);
+      els.dialog.showModal();
+      return true;
+    }
     if (kind !== "end") return false;
     const els = endEls();
     if (!els.dialog) return false;

@@ -20,6 +20,9 @@ const FEATURE_ALIASES = {
   // why: embutir depende do link permanente; não precisa de flag nova no cloudConfig
   embed: "permanentShare",
   cover: "permanentShare",
+  // why: passo inicial (leads) e formulário de contato vivem no link permanente
+  leads: "permanentShare",
+  contactform: "permanentShare",
   hostedai: "hostedAi",
   ai: "hostedAi",
   copy: "hostedAi",

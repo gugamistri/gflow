@@ -72,9 +72,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/48/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/48/css/theme.css" />
-  <link rel="stylesheet" href="a/48/css/app.css" />
+  <link rel="stylesheet" href="a/49/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/49/css/theme.css" />
+  <link rel="stylesheet" href="a/49/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -151,7 +151,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/48/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/48/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/49/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/49/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -442,6 +442,10 @@
               </strong>
               <span data-i18n="embed.buttonDesc">Código para colar na sua página. Ajusta ao tamanho da tela.</span>
             </button>
+            <button type="button" class="export-option" id="btn-share-leads" hidden>
+              <strong><span data-i18n="leads.open">Ver contatos recebidos</span></strong>
+              <span data-i18n="leads.buttonDesc">Contatos do passo inicial e do formulário do passo final, com exportação CSV.</span>
+            </button>
             <button type="button" class="export-option" id="btn-export-html">
               <strong data-i18n="export.htmlTitle">HTML navegável</strong>
               <span data-i18n="export.htmlDesc">Tour em um arquivo para percorrer os passos ou assistir no navegador.</span>
@@ -496,7 +500,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/48/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/48/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/49/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/49/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -955,7 +959,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/48/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/49/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1123,6 +1127,72 @@
     </div>
   </dialog>
 
+  <dialog class="studio-modal fixed-modal" id="modal-fixed-start" aria-labelledby="fixed-start-heading">
+    <form class="studio-modal-body fixed-dialog" id="fixed-start-form" novalidate>
+      <div class="account-dialog-head">
+        <h3 id="fixed-start-heading"><span data-i18n="fixed.start.dialogTitle">Passo inicial: captura de contatos</span>
+          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </h3>
+        <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
+      <div class="fixed-grid">
+        <div class="fixed-fields">
+          <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
+          <div class="fixed-config" id="fixed-start-config">
+            <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
+            <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
+            <fieldset class="fixed-group">
+              <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
+              <div class="fixed-fields-table" id="fixed-start-fields">
+                <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
+                <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
+                <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
+                <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+              </div>
+              <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
+            </fieldset>
+            <label><span data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
+            <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
+            <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
+            <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
+            <label id="fixed-start-skip-label-wrap"><span data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
+            <button type="button" class="btn" id="btn-fixed-start-leads" data-i18n="leads.open">Ver contatos recebidos</button>
+          </div>
+        </div>
+        <div class="fixed-preview-wrap">
+          <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+          <div class="fixed-preview" id="fixed-start-preview"></div>
+        </div>
+      </div>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="studio-modal leads-modal" id="modal-leads" aria-labelledby="leads-heading">
+    <div class="studio-modal-body leads-dialog">
+      <div class="account-dialog-head">
+        <h3 id="leads-heading" data-i18n="leads.title">Contatos recebidos</h3>
+        <button type="button" class="btn btn-icon" id="btn-leads-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <p class="leads-meta" id="leads-meta"></p>
+      <p class="leads-status" id="leads-status" role="status"></p>
+      <div class="leads-list" id="leads-list" role="list"></div>
+      <p class="fixed-hint" data-i18n="leads.controllerNote">Você é o controlador destes dados (LGPD): use-os só para a finalidade informada ao visitante e exclua um contato quando o titular pedir.</p>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
+        <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="studio-modal fixed-modal" id="modal-fixed-end" aria-labelledby="fixed-end-heading">
     <form class="studio-modal-body fixed-dialog" id="fixed-end-form" novalidate>
       <div class="account-dialog-head">
@@ -1152,7 +1222,7 @@
             <fieldset class="fixed-group">
               <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
               <div class="fixed-sub" id="fixed-end-contact-fields">
-                <div class="fixed-seg" id="fixed-end-mode" hidden role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
+                <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
                   <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
                   <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
                     <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1650,7 +1720,7 @@
     </symbol>
   </svg>
 
-  <script src="a/48/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/48/js/app.js"></script>
+  <script src="a/49/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/49/js/app.js"></script>
 </body>
 </html>

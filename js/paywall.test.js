@@ -193,3 +193,9 @@ test("o aviso de salvar no navegador some para quem assina e para quem dispensou
   assert.equal(shouldShowLocalSave({ signedIn: false, dismissed: true }), false);
   assert.equal(shouldShowLocalSave({ signedIn: true, active: false, billingReady: true }), true);
 });
+
+test("leads e formulário de contato abrem o paywall do link permanente", async () => {
+  const { normalizePaywallFeature } = await import("./paywall.js");
+  assert.equal(normalizePaywallFeature("leads"), "permanentShare");
+  assert.equal(normalizePaywallFeature("contactForm"), "permanentShare");
+});
