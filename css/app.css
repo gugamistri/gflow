@@ -1224,6 +1224,63 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
   display: none;
 }
 
+/* Pro: marca GuiaFlow no link permanente (ligado = sem marca; desligado = crédito discreto) */
+.share-brand-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.share-brand-toggle:hover {
+  background: var(--ns-hover);
+}
+
+.share-brand-toggle[hidden] {
+  display: none;
+}
+
+.share-brand-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  flex: 0 0 auto;
+  accent-color: var(--ns-accent);
+}
+
+.share-brand-toggle input:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.share-brand-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.share-brand-text strong {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--ns-ink);
+  font-size: 0.85rem;
+}
+
+.share-brand-text .pro-badge {
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.share-brand-text small {
+  color: var(--ns-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 .export-panel > summary.share-menu {
   position: relative;
   overflow: visible;
@@ -2367,6 +2424,49 @@ body.view-share .topbar .logo {
   color: inherit;
 }
 
+/* why: link permanente (/p) é Pro — sem logo GuiaFlow; o autor pode ligar um crédito discreto */
+html.is-unbranded body.view-share .topbar .logo {
+  display: none;
+}
+
+.view-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--ns-topbar-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.view-credit img {
+  width: 14px;
+  height: 14px;
+}
+
+.view-credit:hover,
+.view-credit:focus-visible {
+  opacity: 1;
+  color: var(--ns-button-text);
+  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+}
+
+.view-credit:focus-visible {
+  outline: 2px solid var(--ns-topbar-muted);
+  outline-offset: 1px;
+}
+
+.view-credit[hidden] {
+  display: none;
+}
+
 .view-share-status {
   display: grid;
   place-items: center;
@@ -2512,6 +2612,11 @@ html.is-embed body.view-share .topbar .logo-mark {
 
 html.is-embed body.view-share .topbar-title {
   font-size: 0.8rem;
+}
+
+html.is-embed body.view-share .view-credit {
+  padding: 2px 6px;
+  font-size: 0.68rem;
 }
 
 html.is-embed body.view-share .view-editor,
@@ -7170,6 +7275,160 @@ dialog.fixed-modal[open] {
   font-weight: 600;
 }
 
+/* Telefone do WhatsApp: país (bandeira + DDI) + número nacional, com a lista de países no fluxo
+   do diálogo (não flutuante) para não ser cortada pela rolagem. */
+.wa-phone-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.studio-modal-body .wa-phone-field > label {
+  display: block;
+  font-size: 0.8rem;
+}
+
+.wa-phone {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wa-phone > input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.studio-modal-body .wa-cc {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 8px 0 10px;
+  border: 1px solid color-mix(in srgb, var(--ns-ink) 42%, var(--ns-input-bg));
+  border-radius: 8px;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  font: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.studio-modal-body .wa-cc:hover {
+  border-color: color-mix(in srgb, var(--ns-ink) 62%, var(--ns-input-bg));
+}
+
+.studio-modal-body .wa-cc:focus-visible,
+.studio-modal-body .wa-cc[aria-expanded="true"] {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 1px;
+  border-color: var(--ns-accent);
+}
+
+.wa-cc-flag {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.wa-cc-chevron {
+  width: 12px;
+  height: 12px;
+  color: var(--ns-muted);
+}
+
+.studio-modal-body .fixed-config input[aria-invalid="true"] {
+  border-color: var(--ns-danger);
+}
+
+.wa-cc-pop {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  background: var(--ns-panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.wa-cc-pop[hidden] {
+  display: none !important;
+}
+
+.studio-modal-body .fixed-config .wa-cc-search {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--ns-ink) 42%, var(--ns-input-bg));
+  border-radius: 8px;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  -webkit-text-fill-color: var(--ns-ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.wa-cc-list {
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.wa-cc-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--ns-ink);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.wa-cc-option:hover {
+  background: color-mix(in srgb, var(--ns-accent) 7%, transparent);
+}
+
+.wa-cc-option.is-active {
+  background: color-mix(in srgb, var(--ns-accent) 16%, transparent);
+}
+
+.wa-cc-option[aria-selected="true"] {
+  font-weight: 700;
+}
+
+.wa-cc-option-flag {
+  font-size: 1.1em;
+}
+
+.wa-cc-option-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wa-cc-option-dial {
+  color: var(--ns-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-cc-empty {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  color: var(--ns-muted);
+}
+
 .fixed-seg {
   display: flex;
   flex-wrap: wrap;
@@ -7237,8 +7496,15 @@ dialog.fixed-modal[open] {
     position: static;
   }
 
-  .studio-modal-body .fixed-config :is(input[type="text"], input[type="tel"], input[type="email"], textarea) {
+  .studio-modal-body .fixed-config :is(input[type="text"], input[type="tel"], input[type="email"], textarea),
+  .studio-modal-body .fixed-config .wa-cc-search,
+  .studio-modal-body .wa-cc {
     font-size: 16px;
+  }
+
+  .studio-modal-body .wa-cc,
+  .wa-cc-option {
+    min-height: 40px;
   }
 }
 
