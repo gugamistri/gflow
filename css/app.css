@@ -5493,9 +5493,13 @@ body.standalone .caption-bar,
 }
 
 .filmstrip-metrics .metrics-label {
-  font-size: 0.72rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--ns-muted);
+  /* why: o cinza "muted" sumia no painel escuro — o rótulo precisa ser lido, só um pouco mais suave que o tempo. */
+  color: color-mix(in srgb, var(--ns-ink) 78%, var(--ns-panel));
 }
 
 .filmstrip-metrics .metrics-count {
@@ -5507,6 +5511,105 @@ body.standalone .caption-bar,
 
 .filmstrip-multi-hint {
   display: none;
+}
+
+/* Topo da filmstrip e barra do canvas: mesma altura, divisória de baixo na mesma linha.
+   why: com alturas próprias (padding + conteúdo) as bordas de baixo ficavam desencontradas. */
+.view-editor {
+  --editor-bar-h: 49px;
+}
+
+.filmstrip-header,
+.canvas-toolbar {
+  box-sizing: border-box;
+  height: var(--editor-bar-h);
+  min-height: var(--editor-bar-h);
+  padding-block: 0;
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.filmstrip-header {
+  justify-content: center;
+  padding-inline: 10px;
+}
+
+.filmstrip-metrics {
+  position: relative;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.filmstrip-metrics {
+  column-gap: 6px;
+}
+
+.filmstrip-metrics .metrics-time {
+  flex: 0 0 auto;
+}
+
+/* why: o title nativo abria em cima do rótulo "Duração"; a dica agora aparece abaixo da barra. */
+.filmstrip-metrics[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  top: calc(100% + (var(--editor-bar-h) - 100%) / 2 + 6px);
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--ns-ink);
+  color: var(--ns-panel);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.filmstrip-metrics[data-tip]:hover::after {
+  opacity: 1;
+  transition-delay: 0.35s;
+}
+
+.canvas-toolbar .toolbar-divider {
+  align-self: center;
+  height: 32px;
+}
+
+/* why: com altura fixa a barra não pode quebrar linha — os grupos ficam numa fila só e,
+   se faltar espaço, a barra rola na horizontal (sem trilho ocupando a altura). */
+.canvas-toolbar {
+  scrollbar-width: none;
+}
+
+.canvas-toolbar > .toolbar-group {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 1000px) {
+  /* "Passo x de y" continua no topo do painel; aqui só ocuparia o espaço dos botões. */
+  .canvas-toolbar .toolbar-pos {
+    display: none;
+  }
+}
+
+.filmstrip-notices {
+  display: none;
+}
+
+.filmstrip-notices:has(> .local-save:not([hidden])) {
+  display: block;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.filmstrip-notices .local-save {
+  margin: 0;
 }
 
 .filmstrip {
@@ -6483,6 +6586,13 @@ body.standalone .caption-bar,
 
   .film-item .film-actions {
     display: flex;
+  }
+
+  /* why: no celular a filmstrip fica embaixo e os botões têm 44px — as barras não ficam lado a lado. */
+  .filmstrip-header,
+  .canvas-toolbar {
+    height: auto;
+    padding-block: 8px;
   }
 
   /* why: no celular não há "Passo x de y" — o total de passos volta ao lado da duração, como antes. */
