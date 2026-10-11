@@ -5444,7 +5444,9 @@ body.standalone .caption-bar,
   grid-template-columns: 168px minmax(0, 1fr) 300px;
 }
 
-.view-editor.is-props-collapsed {
+/* Só no modo edição: no Preview (.is-presenting) a grade é uma coluna só.
+   :where() mantém a especificidade, para a regra de 1 coluna do celular seguir valendo. */
+.view-editor.is-props-collapsed:where(:not(.is-presenting)) {
   grid-template-columns: 168px minmax(0, 1fr) 48px;
 }
 
@@ -6114,7 +6116,7 @@ body.standalone .caption-bar,
     grid-template-columns: 148px minmax(0, 1fr) 260px;
   }
 
-  .view-editor.is-props-collapsed {
+  .view-editor.is-props-collapsed:where(:not(.is-presenting)) {
     grid-template-columns: 148px minmax(0, 1fr) 48px;
   }
 
