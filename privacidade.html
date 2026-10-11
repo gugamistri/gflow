@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/49/css/theme.css" />
-  <link rel="stylesheet" href="a/49/css/app.css" />
-  <link rel="stylesheet" href="a/49/css/ajuda.css" />
+  <link rel="stylesheet" href="a/51/css/theme.css" />
+  <link rel="stylesheet" href="a/51/css/app.css" />
+  <link rel="stylesheet" href="a/51/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/49/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/49/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/51/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/51/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -121,7 +121,7 @@
         <li data-i18n-html="privacy.pro.li7"><strong>Registros técnicos</strong>: avisos de pagamento enviados pelo Stripe e registro das ações feitas no painel administrativo.</li>
       </ul>
       <p data-i18n="privacy.pro.p2">Esses dados ficam em um banco de dados Postgres, em servidor no Brasil (São Paulo), contratado pelo GuiaFlow e administrado com a ferramenta Coolify.</p>
-      <p data-i18n="privacy.pro.p3">O acesso é feito por um link enviado por e-mail, que vale 15 minutos e só pode ser usado uma vez, ou por senha. Depois do login, o navegador guarda um token de sessão no armazenamento local (localStorage), válido por 12 horas. O painel administrativo usa um cookie de sessão com as proteções HttpOnly e Secure.</p>
+      <p data-i18n="privacy.pro.p3">O acesso é feito por um link enviado por e-mail, que vale 15 minutos e só pode ser usado uma vez, ou por senha. O link de ativação de um convite do GuiaFlow Pro vale 7 dias e também só pode ser usado uma vez. Depois do login, o navegador guarda um token de sessão no armazenamento local (localStorage), válido por 12 horas. O painel administrativo usa um cookie de sessão com as proteções HttpOnly e Secure.</p>
     </section>
     <section class="card" id="pagamento">
       <h2 data-i18n="privacy.pagamento.title">Pagamento</h2>
@@ -196,7 +196,7 @@
         <li data-i18n-html="privacy.retencao.li1"><strong>Projetos no navegador</strong>: até você apagar ou limpar os dados do site;</li>
         <li data-i18n-html="privacy.retencao.li2"><strong>Links temporários</strong>: 7 dias a partir da primeira publicação;</li>
         <li data-i18n-html="privacy.retencao.li3"><strong>Links permanentes</strong>: até você apagar o link ou a conta ser excluída;</li>
-        <li data-i18n-html="privacy.retencao.li4"><strong>Links de acesso por e-mail</strong>: valem 15 minutos;</li>
+        <li data-i18n-html="privacy.retencao.li4"><strong>Links de acesso por e-mail</strong>: o link de login vale 15 minutos e o link de ativação de um convite vale 7 dias;</li>
         <li data-i18n-html="privacy.retencao.li6"><strong>Contatos de visitantes</strong>: até o autor do tour excluí-los, apagar o link permanente ou encerrar a conta;</li>
         <li data-i18n-html="privacy.retencao.li5"><strong>Conta e assinatura</strong>: enquanto a conta existir. Depois de um pedido de exclusão, apagamos os dados da conta, exceto o que a lei manda guardar, como registros de pagamento e fiscais, pelo prazo legal.</li>
       </ul>
@@ -243,8 +243,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/49/js/i18n.js";
-    import "./a/49/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/51/js/i18n.js";
+    import "./a/51/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
