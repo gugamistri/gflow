@@ -2307,12 +2307,20 @@ function bindChrome() {
     if (exportPanel) exportPanel.open = false;
   }
 
+  const overlayCard = overlay?.querySelector(".export-overlay-card");
+  const overlayActions = document.getElementById("export-overlay-actions");
+  const overlayRetry = document.getElementById("btn-export-retry");
+  let overlayRetryAction = null;
+
   function showExportOverlay(title, { cancelable = false, preview = false } = {}) {
     overlayTitle.textContent = title;
     overlayStatus.textContent = "";
     overlay.hidden = false;
     cancelBtn.hidden = !cancelable;
     previewCanvas.hidden = !preview;
+    overlayCard?.classList.remove("is-error");
+    if (overlayActions) overlayActions.hidden = true;
+    overlayRetryAction = null;
   }
 
   function hideExportOverlay() {
@@ -2320,7 +2328,32 @@ function bindChrome() {
     previewCanvas.hidden = true;
     cancelBtn.hidden = true;
     exportAbort = null;
+    overlayCard?.classList.remove("is-error");
+    if (overlayActions) overlayActions.hidden = true;
+    overlayRetryAction = null;
   }
+
+  /** Erro no próprio painel, com "Tentar de novo" e "Fechar" — nunca fica parado sem saída. */
+  function showExportOverlayError(title, message, onRetry) {
+    overlay.hidden = false;
+    previewCanvas.hidden = true;
+    cancelBtn.hidden = true;
+    exportAbort = null;
+    overlayTitle.textContent = title;
+    overlayStatus.textContent = message;
+    overlayCard?.classList.add("is-error");
+    overlayRetryAction = typeof onRetry === "function" ? onRetry : null;
+    if (overlayRetry) overlayRetry.hidden = !overlayRetryAction;
+    if (overlayActions) overlayActions.hidden = false;
+    (overlayRetryAction ? overlayRetry : document.getElementById("btn-export-close"))?.focus();
+  }
+
+  overlayRetry?.addEventListener("click", () => {
+    const retry = overlayRetryAction;
+    hideExportOverlay();
+    retry?.();
+  });
+  document.getElementById("btn-export-close")?.addEventListener("click", () => hideExportOverlay());
 
   cancelBtn.addEventListener("click", () => {
     exportAbort?.abort();
@@ -2942,13 +2975,16 @@ function bindChrome() {
       return;
     }
     project.theme = formToTheme(project.theme);
-    showExportOverlay(t("share.cloud.overlay"));
+    showExportOverlay(t("share.cloud.overlay"), { cancelable: true });
+    const abort = new AbortController();
+    exportAbort = abort;
     try {
       const updating = Boolean(permanentSlug(project.cloudShare));
       const share = await publishPermanentShare(project, {
         slug: updating ? permanentSlug(project.cloudShare) : "",
+        signal: abort.signal,
         onProgress: (msg) => {
-          overlayStatus.textContent = msg;
+          if (!abort.signal.aborted) overlayStatus.textContent = msg;
         },
       });
       const previousCover = updating ? project.cloudShare?.coverUrl || "" : "";
@@ -3008,7 +3044,14 @@ function bindChrome() {
         toast(t("billing.unavailable"));
         return;
       }
-      toast(err?.message || t("share.cloud.generic"));
+      if (err?.code === "aborted") {
+        toast(t("share.cloud.aborted"));
+        return;
+      }
+      // why: tamanho, prazo e rede ficam no painel com a causa e um "Tentar de novo"
+      showExportOverlayError(t("share.cloud.failedTitle"), err?.message || t("share.cloud.generic"), () => {
+        void runCloudPublish();
+      });
     }
   }
 
