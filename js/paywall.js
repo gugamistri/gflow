@@ -3,7 +3,7 @@
  * why: o editor mostra o valor; o pedido só manda intervalo, moeda e a origem do clique.
  */
 
-export const PAYWALL_FEATURES = ["account", "permanentShare", "hostedAi", "tts", "branding"];
+export const PAYWALL_FEATURES = ["account", "permanentShare", "analytics", "hostedAi", "tts", "branding"];
 
 export const PAYWALL_PRICES = {
   usd: { month: 7, year: 69 },
@@ -23,6 +23,8 @@ const FEATURE_ALIASES = {
   // why: passo inicial (leads) e formulário de contato vivem no link permanente
   leads: "permanentShare",
   contactform: "permanentShare",
+  analytics: "analytics",
+  stats: "analytics",
   hostedai: "hostedAi",
   ai: "hostedAi",
   copy: "hostedAi",
