@@ -165,7 +165,7 @@ test("validateLeadForm: obrigatórios, formato e consentimento", () => {
   assert.deepEqual(r.errors, { name: "required", email: "invalid", consent: "consent" });
   r = validateLeadForm({ name: "Ana", email: "ana@x.com", phone: "(11) 99999-8888", consent: true }, cfg);
   assert.equal(r.ok, true);
-  assert.deepEqual(r.value, { name: "Ana", email: "ana@x.com", phone: "11999998888" });
+  assert.deepEqual(r.value, { name: "Ana", email: "ana@x.com", phone: "+5511999998888" });
   r = validateLeadForm({ name: "Ana", email: "ana@x.com", phone: "123", consent: true }, cfg);
   assert.equal(r.errors.phone, "invalid");
 });
@@ -176,5 +176,5 @@ test("leadsToCsv: BOM, ; e proteção contra fórmula", () => {
   assert.equal(csvCell('a;"b"'), '"a;""b"""');
   const csv = leadsToCsv([{ createdAt: "2026-10-11T10:00:00Z", source: "start", name: "@Ana", email: "a@b.co", phone: "11999998888", consent: true, consentAt: "x", consentText: "Aceito" }], { source_start: "Início" });
   assert.ok(csv.startsWith("\uFEFFData;Origem;Nome"));
-  assert.ok(csv.includes(";Início;'@Ana;a@b.co;11999998888;;sim;x;Aceito"));
+  assert.ok(csv.includes(";Início;'@Ana;a@b.co;'+5511999998888;BR +55 (11) 99999-8888;;sim;x;Aceito"));
 });

@@ -4,7 +4,7 @@
  */
 import { t, getLocale } from "./i18n.js";
 import { cloudFetch } from "./cloudConfig.js";
-import { leadsToCsv } from "./fixedSteps.js";
+import { formatLeadPhone, leadPhoneE164, leadsToCsv } from "./fixedSteps.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -22,11 +22,8 @@ function formatDate(iso) {
   return date.toLocaleString(locale, { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" });
 }
 
-function formatPhone(digits) {
-  const d = String(digits || "");
-  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return d ? `+${d}` : "";
+function formatPhone(stored) {
+  return formatLeadPhone(stored);
 }
 
 /** Data do CSV no fuso America/Sao_Paulo ("2026-10-11 11:03:04"), que o Excel reconhece. */
@@ -92,7 +89,7 @@ export function createLeadsDialog({ getSlug, toast }) {
       }
       if (lead.phone) {
         const a = el("a", "", formatPhone(lead.phone));
-        a.href = `https://wa.me/${String(lead.phone).length <= 11 ? `55${lead.phone}` : lead.phone}`;
+        a.href = `https://wa.me/${leadPhoneE164(lead.phone).slice(1)}`;
         a.target = "_blank";
         a.rel = "noopener noreferrer";
         contact.append(a);
@@ -150,6 +147,7 @@ export function createLeadsDialog({ getSlug, toast }) {
       name: t("fixed.lead.name"),
       email: t("fixed.lead.email"),
       phone: t("leads.col.phone"),
+      phoneFormatted: t("leads.col.phoneFormatted"),
       message: t("fixed.contact.message"),
       consent: t("leads.col.consent"),
       consentAt: t("leads.col.consentAt"),

@@ -4,7 +4,7 @@
 import { applyTheme, normalizeSteps, resolveImageSrc } from "./store.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createPlayer } from "./player.js";
-import { initLocale, applyI18n, t } from "./i18n.js";
+import { getLocale, initLocale, applyI18n, t } from "./i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
 import {
@@ -21,7 +21,7 @@ import {
   sharedPreviewBackTarget,
   tourFromPermanentShare,
 } from "./viewShare.js";
-import { endStepActive, normalizeEndStep, startStepActive } from "./fixedSteps.js";
+import { endStepActive, leadPhoneDefaultIso, normalizeEndStep, startStepActive } from "./fixedSteps.js";
 import { cardShell, renderContactForm, renderEndCard, renderStartCard } from "./fixedStepsView.js";
 
 function showStatus(message) {
@@ -340,6 +340,7 @@ function endCard() {
       card.append(
         renderContactForm({
           consentText: step.contact.consentText,
+          phoneCountry: leadPhoneCountry(),
           prefill: fixedState.lead || {},
           onSubmit: (value) => postShare("contact", value),
           onCancel: () => showFixedCard(endCard()),
@@ -392,8 +393,15 @@ function startGateNeeded() {
   return !readStoredLead();
 }
 
+/** País inicial do telefone do visitante: o do WhatsApp do passo final; senão o do idioma. */
+function leadPhoneCountry() {
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  return leadPhoneDefaultIso(demo?.endStep, getLocale(), nav.languages?.length ? nav.languages : [nav.language].filter(Boolean));
+}
+
 function showStartStep(next) {
   const card = renderStartCard(demo.startStep, {
+    phoneCountry: leadPhoneCountry(),
     onSubmit: async (value) => {
       const res = await postShare("leads", value);
       if (res.ok) {
