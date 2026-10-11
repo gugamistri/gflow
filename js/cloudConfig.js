@@ -469,15 +469,18 @@ export function readAuthCallbackCode(href) {
   return code && code.trim() ? code.trim() : "";
 }
 
-/** Depois da troca, o browser fica na raiz do editor, sem o code. */
+/** Onde o editor mora no site. why: a raiz virou a landing; o editor saiu de / para /editor. */
+export const EDITOR_PATH = "/editor";
+
+/** Depois da troca, o browser fica no editor (/editor), sem o code. */
 export function editorHomeFromCallback(href) {
   let url;
   try {
     url = new URL(String(href || ""), `${CLOUD_EDITOR_ORIGIN}/`);
   } catch {
-    return `${CLOUD_EDITOR_ORIGIN}/`;
+    return `${CLOUD_EDITOR_ORIGIN}${EDITOR_PATH}`;
   }
-  if (pathnameOf(url) === CLOUD_CALLBACK_PATH) url.pathname = "/";
+  if (pathnameOf(url) === CLOUD_CALLBACK_PATH) url.pathname = EDITOR_PATH;
   url.searchParams.delete("code");
   for (const key of CALLBACK_STRIP_KEYS) url.searchParams.delete(key);
   const hash = url.hash.startsWith("#") ? url.hash.slice(1) : "";

@@ -72,7 +72,7 @@ test("empate de prioridade: sai o grupo mais à direita; nada cabe → tudo no m
   assert.equal(planToolbarOverflow([100, 100], [1, 2], 10, 0).size, 2);
 });
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
 
 function block(startNeedle, endNeedle) {
   const start = html.indexOf(startNeedle);
@@ -200,7 +200,7 @@ test("textos novos do layout existem em pt, es e en, sem falar em nuvem", () => 
   }
   const usedInHtml = [...html.matchAll(/data-i18n(?:-title|-aria|-placeholder|-alt)?="([^"]+)"/g)].map((m) => m[1]);
   for (const key of usedInHtml) {
-    assert.equal(typeof catalogs.pt[key], "string", `index.html usa ${key}`);
+    assert.equal(typeof catalogs.pt[key], "string", `editor.html usa ${key}`);
   }
 });
 

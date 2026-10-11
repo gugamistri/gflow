@@ -99,7 +99,7 @@ test("textos do embed e do guia existem em pt, es e en, sem 'nuvem'", () => {
 });
 
 test("o editor tem o botão e o diálogo; a ajuda tem a seção #incorporar", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   assert.match(html, /id="btn-share-embed"[^>]*hidden/);
   assert.match(html, /id="embed-pro-badge"/);
   assert.match(html, /<dialog class="studio-modal embed-modal" id="modal-embed"/);

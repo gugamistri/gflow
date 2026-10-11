@@ -53,6 +53,15 @@ test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {
   }
 });
 
+test("editor em /editor: canônico próprio e fora do índice", () => {
+  const editor = read("editor.html");
+  assert.match(editor, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/editor"/);
+  assert.match(editor, /<meta name="robots" content="noindex, follow"/);
+  assert.match(editor, /<meta property="og:url" content="https:\/\/guiaflow\.pro\/editor"/);
+  const sitemap = read("sitemap.xml");
+  assert.equal(sitemap.includes("/editor"), false);
+});
+
 test("home e ajuda têm título, descrição, canônico e Open Graph", () => {
   const home = read("index.html");
   assert.match(home, /<title[^>]*>[^<]*GuiaFlow[^<]*<\/title>/);
@@ -88,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 11 de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/51\/css\/ajuda\.css/);
+    assert.match(html, /a\/55\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -96,8 +105,8 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
   const ajuda = read("ajuda.html");
   assert.match(ajuda, /href="\/privacidade"/);
   assert.match(ajuda, /href="\/termos"/);
-  const home = read("index.html");
-  assert.match(home, /data-i18n-html="billing.legal"/);
+  const editor = read("editor.html");
+  assert.match(editor, /data-i18n-html="billing.legal"/);
 });
 
 test("/oembed é uma rota pública (rewrite para a função, fora de /api/ no robots)", () => {
