@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 1[12] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/74\/css\/ajuda\.css/);
+    assert.match(html, /a\/75\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -132,4 +132,16 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(llms, /^# GuiaFlow$/m);
   assert.match(llms, /https:\/\/app\.guiaflow\.pro\/mcp/);
   assert.match(llms, /https:\/\/app\.guiaflow\.pro\/v1\/openapi\.json/);
+});
+
+test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos absolutos", () => {
+  const html = read("integracoes.html");
+  assert.match(html, /cursor:\/\/anysphere\.cursor-deeplink\/mcp\/install\?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=/);
+  assert.match(html, /vscode:mcp\/install\?/);
+  assert.match(html, /claude mcp add --transport http guiaflow https:\/\/app\.guiaflow\.pro\/mcp/);
+  for (const loc of ["pt", "es", "en"]) assert.match(html, new RegExp(`data-doc-locale="${loc}"`));
+  assert.equal(/(href|src)="a\//.test(html), false);
+  assert.match(html, /a\/75\/css\/ajuda\.css/);
+  assert.match(read("sitemap.xml"), /guiaflow\.pro\/integracoes/);
+  assert.match(read("index.html"), /href="\/integracoes"/);
 });

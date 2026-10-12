@@ -12,6 +12,7 @@
 ## Docs
 
 - [API and MCP guide](https://guiaflow.pro/ajuda/api): setup for Cursor, Claude Code, Claude.ai, ChatGPT, VS Code; tools; limits.
+- [Integrations](https://guiaflow.pro/integracoes): one-click install for Cursor and VS Code, steps for Claude Code, Claude.ai and ChatGPT.
 - [OpenAPI 3.1](https://app.guiaflow.pro/v1/openapi.json): REST contract (includes `POST /v1/tours/{id}/steps/{stepId}/generate-text`, `POST .../narration`, `GET /v1/tours/{id}/analytics`, `GET /v1/analytics`).
 - [Help](https://guiaflow.pro/ajuda): recording screenshots with the Chrome extension and editing tours.
 - [Privacy](https://guiaflow.pro/privacidade)
