@@ -442,6 +442,8 @@ async function summarizeProject(project, previous) {
     thumb,
     thumbSig,
     themePreview: themePreviewDots(project.theme),
+    // why: a / só manda para o editor quem tem projeto próprio — o exemplo intocado não conta
+    stock: isUntouchedStockDemo(project),
     ...(project.createdBy?.kind === "agent"
       ? { agent: true, agentClient: String(project.createdBy.client || "").slice(0, 60) }
       : {}),
