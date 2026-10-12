@@ -696,10 +696,22 @@ export function createPlayer(ctx) {
         const dx = t.clientX - s.x;
         const dy = t.clientY - s.y;
         if (Date.now() - s.at > 700 || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+        swipedAt = Date.now();
         if (dx < 0) clickDriverNext();
         else clickDriverPrev();
       },
       { passive: true }
+    );
+    // why: o clique sintético depois do gesto cairia na sombra e fecharia o tour
+    let swipedAt = 0;
+    window.addEventListener(
+      "click",
+      (e) => {
+        if (!e.isTrusted || Date.now() - swipedAt > 600) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      },
+      true
     );
 
     window.addEventListener("resize", () => {
