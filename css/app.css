@@ -8801,3 +8801,47 @@ dialog.api-keys-modal {
   padding: 2px 6px;
   font-size: 0.62rem;
 }
+
+/* Celular apresentando, em pé: captura no alto; embaixo ficam a legenda e o balão (folha) */
+@media (hover: none) and (pointer: coarse) and (max-width: 900px) and (orientation: portrait) {
+  body.is-presenting .canvas-stage {
+    align-items: start;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+  }
+
+  body.is-presenting .canvas-stage > .canvas-frame,
+  body.is-presenting .canvas-stage > #canvas-frame {
+    align-self: start;
+  }
+
+  body.is-presenting .canvas-frame img,
+  body.is-presenting .slide-card {
+    max-height: calc(100dvh - 56px - min(300px, 40dvh) - 140px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+
+  body.is-presenting .caption-bar,
+  body.view-share .caption-bar,
+  .caption-bar.is-above-overlay {
+    bottom: calc(var(--gf-pop-h, 180px) + 16px + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+}
+
+/* Celular deitado: captura à esquerda; legenda e balão na coluna da direita */
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  body.is-presenting .canvas-stage {
+    padding-right: calc(min(320px, 40vw) + 16px + env(safe-area-inset-right, 0px));
+  }
+
+  body.is-presenting .caption-bar,
+  body.view-share .caption-bar,
+  .caption-bar.is-above-overlay {
+    left: auto;
+    right: calc(8px + env(safe-area-inset-right, 0px));
+    transform: none;
+    width: min(320px, 40vw);
+    bottom: calc(var(--gf-pop-h, 180px) + 16px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - var(--gf-pop-h, 180px) - 32px);
+    overflow: auto;
+  }
+}
