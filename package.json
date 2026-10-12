@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node scripts/dev-server.mjs",
     "pack:extension": "node scripts/pack-extension.mjs",
-    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/*.test.js electron/cartesia.test.js",
+    "test": "node --test extension/lib/*.test.js scripts/*.test.js js/*.test.js js/tour-schema/*.test.js electron/cartesia.test.js",
     "desktop": "electron .",
     "dist:desktop": "electron-builder --dir"
   },
