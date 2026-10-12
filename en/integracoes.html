@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" data-page-locale="en" data-alt-pt="/integracoes" data-alt-en="/en/integracoes" data-alt-es="/es/integracoes">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrations — GuiaFlow</title>
+  <meta name="description" content="Connect GuiaFlow to Cursor, Claude Code, Claude.ai, ChatGPT and VS Code through the MCP server: one-click install and step-by-step guide." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/en/integracoes" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integracoes" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integracoes" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Integrations — GuiaFlow" />
+  <meta property="og:description" content="Connect GuiaFlow to Cursor, Claude Code, Claude.ai, ChatGPT and VS Code through the MCP server: one-click install and step-by-step guide." />
+  <meta property="og:url" content="https://guiaflow.pro/en/integracoes" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Create interactive guided tours" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Integrations — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var fixed = document.documentElement.getAttribute("data-page-locale");
+        var stored = fixed || localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/85/css/theme.css" />
+  <link rel="stylesheet" href="/a/85/css/app.css" />
+  <link rel="stylesheet" href="/a/85/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+    .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+    .page .install-row a.btn-primary { color: var(--ns-button-text); text-decoration: none; }
+    .page ol { padding-left: 1.2em; }
+    .page ol li { margin: 4px 0; }
+    .api-doc[hidden] { display: none; }
+    .page pre { overflow: auto; padding: 10px 12px; border-radius: 8px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); font-size: 0.8rem; line-height: 1.45; }
+    .page pre code { background: none; padding: 0; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--ns-border); }
+    .page th { color: var(--ns-muted); font-weight: 600; }
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"GuiaFlow MCP","applicationCategory":"DeveloperApplication","url":"https://guiaflow.pro/en/integracoes","operatingSystem":"Any"}</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/85/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/85/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title"><span data-int-title>Integrations</span></span>
+    </div>
+    <div class="topbar-appearance">
+      <label class="locale-select">
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Language">
+          <option value="pt">PT</option>
+          <option value="es">ES</option>
+          <option value="en" selected>EN</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main class="page">
+  <div class="api-doc" data-doc-locale="pt" hidden>
+    <h1>Integrações</h1>
+    <p class="lead">Use o GuiaFlow direto do seu assistente de IA: conecte o servidor MCP e peça para criar, ajustar e publicar tours guiados a partir de capturas de tela. Exclusivo do plano Pro; o login é pelo navegador (OAuth), sem chave para copiar.</p>
+    <section class="card">
+      <h2>Endereço do servidor</h2>
+      <pre><code>https://app.guiaflow.pro/mcp</code></pre>
+      <p>Streamable HTTP, OAuth 2.1. Também aceita chave de API (<code>Authorization: Bearer gf_live_…</code>), veja <a href="/en/ajuda/api">API e MCP</a>.</p>
+      <p class="smithery-link"><a href="https://smithery.ai/servers/gmistrinelli/guiaflow" target="_blank" rel="noopener"><img src="https://smithery.ai/badge/gmistrinelli/guiaflow" alt="smithery badge" height="20" loading="lazy" style="vertical-align:middle" /> Também no Smithery</a></p>
+    </section>
+    <section class="card" id="cursor-pt">
+      <h2>Cursor</h2>
+      <div class="install-row"><a class="btn btn-primary" href="cursor://anysphere.cursor-deeplink/mcp/install?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=">Adicionar ao Cursor</a></div>
+      <ol><li>Clique em <strong>Adicionar ao Cursor</strong> e confirme em <strong>Install</strong>.</li><li>Na primeira chamada, o Cursor abre o login do GuiaFlow: entre e escolha as permissões.</li></ol>
+      <p>Ou cole em <code>~/.cursor/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="claude-code-pt">
+      <h2>Claude Code</h2>
+      <p>Rode no terminal:</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Dentro do Claude Code, rode <code>/mcp</code>, escolha <strong>guiaflow</strong> e faça login.</p>
+    </section>
+    <section class="card" id="claude-pt">
+      <h2>Claude.ai</h2>
+      <ol><li>Abra <strong>Configurações → Conectores</strong> e clique em <strong>Adicionar conector personalizado</strong>.</li><li>Nome: <code>GuiaFlow</code>. URL: <code>https://app.guiaflow.pro/mcp</code>.</li><li>Clique em <strong>Conectar</strong> e faça login no GuiaFlow. Em uma conversa, ative o conector no menu de ferramentas.</li></ol>
+      <p>Funciona também no Claude Desktop. Em planos Team/Enterprise, um administrador adiciona o conector para a organização.</p>
+    </section>
+    <section class="card" id="chatgpt-pt">
+      <h2>ChatGPT</h2>
+      <ol><li>Em <strong>Configurações → Apps e conectores → Configurações avançadas</strong>, ative o <strong>Modo desenvolvedor</strong>.</li><li>Volte em <strong>Apps e conectores</strong> e clique em <strong>Criar</strong>.</li><li>Nome: <code>GuiaFlow</code>. URL do servidor MCP: <code>https://app.guiaflow.pro/mcp</code>. Autenticação: <strong>OAuth</strong>. Confirme e faça login.</li><li>Em uma conversa, escolha <strong>Modo desenvolvedor</strong> no menu <strong>+</strong> e ative o GuiaFlow.</li></ol>
+      <p>O modo desenvolvedor está disponível nos planos pagos do ChatGPT na web.</p>
+    </section>
+    <section class="card" id="vscode-pt">
+      <h2>VS Code</h2>
+      <div class="install-row"><a class="btn btn-primary" href="vscode:mcp/install?%7B%22name%22%3A%22guiaflow%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//app.guiaflow.pro/mcp%22%7D">Instalar no VS Code</a></div>
+      <ol><li>Clique em <strong>Instalar no VS Code</strong> e confirme em <strong>Install</strong>.</li><li>Na primeira chamada, o VS Code pede o login do GuiaFlow.</li></ol>
+      <p>Ou cole em <code>.vscode/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>O que pedir</h2>
+      <p>Exemplos: “Crie um tour com estas 4 capturas e publique”, “Escreva os textos dos passos com IA”, “Quantas pessoas concluíram o tour do checkout esta semana?”.</p>
+      <p>Ferramentas, permissões, limites e API REST: <a href="/en/ajuda/api">API e MCP</a>. Dúvidas: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>
+  <div class="api-doc" data-doc-locale="es" hidden>
+    <h1>Integraciones</h1>
+    <p class="lead">Usa GuiaFlow desde tu asistente de IA: conecta el servidor MCP y pídele crear, ajustar y publicar tours guiados a partir de capturas de pantalla. Exclusivo del plan Pro; el login es en el navegador (OAuth), sin clave que copiar.</p>
+    <section class="card">
+      <h2>Dirección del servidor</h2>
+      <pre><code>https://app.guiaflow.pro/mcp</code></pre>
+      <p>Streamable HTTP, OAuth 2.1. También acepta clave de API (<code>Authorization: Bearer gf_live_…</code>), mira <a href="/en/ajuda/api">API y MCP</a>.</p>
+      <p class="smithery-link"><a href="https://smithery.ai/servers/gmistrinelli/guiaflow" target="_blank" rel="noopener"><img src="https://smithery.ai/badge/gmistrinelli/guiaflow" alt="smithery badge" height="20" loading="lazy" style="vertical-align:middle" /> También en Smithery</a></p>
+    </section>
+    <section class="card" id="cursor-es">
+      <h2>Cursor</h2>
+      <div class="install-row"><a class="btn btn-primary" href="cursor://anysphere.cursor-deeplink/mcp/install?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=">Añadir a Cursor</a></div>
+      <ol><li>Haz clic en <strong>Añadir a Cursor</strong> y confirma en <strong>Install</strong>.</li><li>En la primera llamada, Cursor abre el login de GuiaFlow: entra y elige los permisos.</li></ol>
+      <p>O pega en <code>~/.cursor/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="claude-code-es">
+      <h2>Claude Code</h2>
+      <p>Ejecuta en la terminal:</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Dentro de Claude Code, ejecuta <code>/mcp</code>, elige <strong>guiaflow</strong> e inicia sesión.</p>
+    </section>
+    <section class="card" id="claude-es">
+      <h2>Claude.ai</h2>
+      <ol><li>Abre <strong>Configuración → Conectores</strong> y pulsa <strong>Añadir conector personalizado</strong>.</li><li>Nombre: <code>GuiaFlow</code>. URL: <code>https://app.guiaflow.pro/mcp</code>.</li><li>Pulsa <strong>Conectar</strong> e inicia sesión en GuiaFlow. En una conversación, activa el conector en el menú de herramientas.</li></ol>
+      <p>Funciona también en Claude Desktop. En planes Team/Enterprise, un administrador añade el conector para la organización.</p>
+    </section>
+    <section class="card" id="chatgpt-es">
+      <h2>ChatGPT</h2>
+      <ol><li>En <strong>Configuración → Apps y conectores → Configuración avanzada</strong>, activa el <strong>Modo desarrollador</strong>.</li><li>Vuelve a <strong>Apps y conectores</strong> y pulsa <strong>Crear</strong>.</li><li>Nombre: <code>GuiaFlow</code>. URL del servidor MCP: <code>https://app.guiaflow.pro/mcp</code>. Autenticación: <strong>OAuth</strong>. Confirma e inicia sesión.</li><li>En una conversación, elige <strong>Modo desarrollador</strong> en el menú <strong>+</strong> y activa GuiaFlow.</li></ol>
+      <p>El modo desarrollador está disponible en los planes de pago de ChatGPT en la web.</p>
+    </section>
+    <section class="card" id="vscode-es">
+      <h2>VS Code</h2>
+      <div class="install-row"><a class="btn btn-primary" href="vscode:mcp/install?%7B%22name%22%3A%22guiaflow%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//app.guiaflow.pro/mcp%22%7D">Instalar en VS Code</a></div>
+      <ol><li>Haz clic en <strong>Instalar en VS Code</strong> y confirma en <strong>Install</strong>.</li><li>En la primera llamada, VS Code pide el login de GuiaFlow.</li></ol>
+      <p>O pega en <code>.vscode/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>Qué pedir</h2>
+      <p>Ejemplos: “Crea un tour con estas 4 capturas y publícalo”, “Escribe los textos de los pasos con IA”, “¿Cuántas personas completaron el tour del checkout esta semana?”.</p>
+      <p>Herramientas, permisos, límites y API REST: <a href="/en/ajuda/api">API y MCP</a>. Dudas: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>
+  <div class="api-doc" data-doc-locale="en">
+    <h1>Integrations</h1>
+    <p class="lead">Use GuiaFlow from your AI assistant: connect the MCP server and ask it to build, edit and publish guided tours from screenshots. Pro plan only; sign-in happens in the browser (OAuth), no key to copy.</p>
+    <section class="card">
+      <h2>Server URL</h2>
+      <pre><code>https://app.guiaflow.pro/mcp</code></pre>
+      <p>Streamable HTTP, OAuth 2.1. API keys also work (<code>Authorization: Bearer gf_live_…</code>), see <a href="/en/ajuda/api">API and MCP</a>.</p>
+      <p class="smithery-link"><a href="https://smithery.ai/servers/gmistrinelli/guiaflow" target="_blank" rel="noopener"><img src="https://smithery.ai/badge/gmistrinelli/guiaflow" alt="smithery badge" height="20" loading="lazy" style="vertical-align:middle" /> Also on Smithery</a></p>
+    </section>
+    <section class="card" id="cursor-en">
+      <h2>Cursor</h2>
+      <div class="install-row"><a class="btn btn-primary" href="cursor://anysphere.cursor-deeplink/mcp/install?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=">Add to Cursor</a></div>
+      <ol><li>Click <strong>Add to Cursor</strong> and confirm with <strong>Install</strong>.</li><li>On first use, Cursor opens the GuiaFlow sign-in: sign in and pick the permissions.</li></ol>
+      <p>Or paste into <code>~/.cursor/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="claude-code-en">
+      <h2>Claude Code</h2>
+      <p>Run in your terminal:</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Inside Claude Code, run <code>/mcp</code>, pick <strong>guiaflow</strong> and sign in.</p>
+    </section>
+    <section class="card" id="claude-en">
+      <h2>Claude.ai</h2>
+      <ol><li>Open <strong>Settings → Connectors</strong> and click <strong>Add custom connector</strong>.</li><li>Name: <code>GuiaFlow</code>. URL: <code>https://app.guiaflow.pro/mcp</code>.</li><li>Click <strong>Connect</strong> and sign in to GuiaFlow. In a chat, enable the connector from the tools menu.</li></ol>
+      <p>Also works in Claude Desktop. On Team/Enterprise plans, an admin adds the connector for the organization.</p>
+    </section>
+    <section class="card" id="chatgpt-en">
+      <h2>ChatGPT</h2>
+      <ol><li>In <strong>Settings → Apps &amp; Connectors → Advanced settings</strong>, turn on <strong>Developer mode</strong>.</li><li>Back in <strong>Apps &amp; Connectors</strong>, click <strong>Create</strong>.</li><li>Name: <code>GuiaFlow</code>. MCP server URL: <code>https://app.guiaflow.pro/mcp</code>. Authentication: <strong>OAuth</strong>. Confirm and sign in.</li><li>In a chat, pick <strong>Developer mode</strong> from the <strong>+</strong> menu and enable GuiaFlow.</li></ol>
+      <p>Developer mode is available on paid ChatGPT plans on the web.</p>
+    </section>
+    <section class="card" id="vscode-en">
+      <h2>VS Code</h2>
+      <div class="install-row"><a class="btn btn-primary" href="vscode:mcp/install?%7B%22name%22%3A%22guiaflow%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//app.guiaflow.pro/mcp%22%7D">Install in VS Code</a></div>
+      <ol><li>Click <strong>Install in VS Code</strong> and confirm with <strong>Install</strong>.</li><li>On first use, VS Code asks you to sign in to GuiaFlow.</li></ol>
+      <p>Or paste into <code>.vscode/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>What to ask</h2>
+      <p>Examples: “Build a tour from these 4 screenshots and publish it”, “Write the step copy with AI”, “How many people finished the checkout tour this week?”.</p>
+      <p>Tools, permissions, limits and REST API: <a href="/en/ajuda/api">API and MCP</a>. Questions: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/en/ajuda" data-i18n="topbar.help">Help</a>
+      <a href="/en/privacidade" data-i18n="legal.privacy">Privacy</a>
+      <a href="/en/termos" data-i18n="legal.terms">Terms</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module">
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/85/js/i18n.js";
+    const show = (loc) => {
+      document.querySelectorAll("[data-doc-locale]").forEach((el) => {
+        el.hidden = el.dataset.docLocale !== loc;
+      });
+    };
+    initLocale();
+    applyI18n(document);
+    show(getLocale());
+    const titles = { pt: "Integrações", es: "Integraciones", en: "Integrations" };
+    const setTitle = (loc) => { const t = document.querySelector("[data-int-title]"); if (t) t.textContent = titles[loc] || titles.pt; };
+    setTitle(getLocale());
+    bindLocaleSelect(document.getElementById("locale-select"), (loc) => { show(loc); setTitle(loc); });
+  </script>
+</body>
+</html>
