@@ -356,13 +356,18 @@
     font-size: 14px;
   }
 
-  /* why: X com 22px visíveis, mas área de toque de 44px */
+  /* why: X com 22px visíveis, mas área de toque de 44px; o título reserva a altura para o X não cobrir o texto */
   .driver-popover.demo-popover .driver-popover-close-btn {
     top: 0;
     right: 0;
     width: 44px;
     height: 44px;
     font-size: 20px;
+  }
+
+  .driver-popover.demo-popover .driver-popover-title {
+    min-height: 32px;
+    padding-right: 40px;
   }
 }
 
@@ -374,5 +379,44 @@
 
   .driver-popover.demo-popover .driver-popover-description {
     font-size: 14px;
+  }
+}
+
+/*
+ * Celular apresentando: o balão vira uma folha presa embaixo (em pé) ou na coluna da direita (deitado),
+ * e a captura fica no espaço livre — o destaque não fica mais por baixo do balão.
+ * why: !important vence o top/left inline que o Driver calcula para o balão flutuante.
+ */
+@media (hover: none) and (pointer: coarse) and (max-width: 900px) and (orientation: portrait) {
+  body.is-presenting .driver-popover.demo-popover {
+    position: fixed !important;
+    top: auto !important;
+    left: calc(8px + env(safe-area-inset-left, 0px)) !important;
+    right: calc(8px + env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto;
+    max-width: none;
+    max-height: min(300px, 40dvh);
+  }
+
+  body.is-presenting .driver-popover.demo-popover .driver-popover-arrow {
+    display: none;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  body.is-presenting .driver-popover.demo-popover {
+    position: fixed !important;
+    top: auto !important;
+    left: auto !important;
+    right: calc(8px + env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    width: min(320px, 40vw);
+    max-width: none;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+
+  body.is-presenting .driver-popover.demo-popover .driver-popover-arrow {
+    display: none;
   }
 }

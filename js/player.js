@@ -673,6 +673,22 @@ export function createPlayer(ctx) {
       }
     });
 
+    // why: no celular o balão fica preso embaixo; a legenda sobe para ficar logo acima dele (--gf-pop-h)
+    if (typeof ResizeObserver === "function" && typeof MutationObserver === "function") {
+      let watched = null;
+      const ro = new ResizeObserver(() => {
+        if (!watched?.isConnected) return;
+        document.documentElement.style.setProperty("--gf-pop-h", `${Math.round(watched.getBoundingClientRect().height)}px`);
+      });
+      new MutationObserver(() => {
+        const pop = document.querySelector(".driver-popover");
+        if (pop === watched) return;
+        ro.disconnect();
+        watched = pop;
+        if (pop) ro.observe(pop);
+      }).observe(document.body, { childList: true });
+    }
+
     // why: no celular, deslizar para os lados troca de passo (só um dedo, gesto claramente horizontal, fora de campos)
     let swipe = null;
     window.addEventListener(
@@ -696,10 +712,22 @@ export function createPlayer(ctx) {
         const dx = t.clientX - s.x;
         const dy = t.clientY - s.y;
         if (Date.now() - s.at > 700 || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+        swipedAt = Date.now();
         if (dx < 0) clickDriverNext();
         else clickDriverPrev();
       },
       { passive: true }
+    );
+    // why: o clique sintético depois do gesto cairia na sombra e fecharia o tour
+    let swipedAt = 0;
+    window.addEventListener(
+      "click",
+      (e) => {
+        if (!e.isTrusted || Date.now() - swipedAt > 600) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      },
+      true
     );
 
     window.addEventListener("resize", () => {
