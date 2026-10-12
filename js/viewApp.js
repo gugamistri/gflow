@@ -554,10 +554,33 @@ window.addEventListener(
     if (player?.highlightContains?.(event.clientX, event.clientY)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
+    // why: no toque, só um toque parado fecha; deslizar (trocar de passo) não pode sair do tour
+    if (event.pointerType === "touch") {
+      pendingTouchExit = { id: event.pointerId, x: event.clientX, y: event.clientY, at: Date.now() };
+      return;
+    }
     requestSharedExit("click_outside");
   },
   true
 );
+
+let pendingTouchExit = null;
+window.addEventListener(
+  "pointerup",
+  (event) => {
+    const p = pendingTouchExit;
+    if (!p || p.id !== event.pointerId) return;
+    pendingTouchExit = null;
+    if (!touring) return;
+    const moved = Math.hypot(event.clientX - p.x, event.clientY - p.y);
+    if (moved > 12 || Date.now() - p.at > 800) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    requestSharedExit("click_outside");
+  },
+  true
+);
+window.addEventListener("pointercancel", () => { pendingTouchExit = null; }, true);
 
 async function boot() {
   initLocale();
