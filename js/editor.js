@@ -15,6 +15,7 @@ import {
   formToTheme,
   bindImage,
 } from "./store.js";
+import { stepImageAlt } from "./a11y.js";
 import { createClickFxController } from "./clickFx.js";
 import { clickDriverNext } from "./popoverFooter.js";
 import {
@@ -265,6 +266,8 @@ export function createEditor(ctx) {
     propImageName: document.getElementById("prop-image-name"),
     propTitle: document.getElementById("prop-title"),
     propDescription: document.getElementById("prop-description"),
+    propAlt: document.getElementById("prop-alt"),
+    propAltDecorative: document.getElementById("prop-alt-decorative"),
     propCaption: document.getElementById("prop-caption"),
     propShowCaption: document.getElementById("prop-show-caption"),
     propHold: document.getElementById("prop-hold"),
@@ -670,6 +673,11 @@ export function createEditor(ctx) {
     else els.propImage.value = "";
     els.propTitle.value = step.popover?.title || step.label || "";
     els.propDescription.value = step.popover?.description || "";
+    if (els.propAlt) {
+      els.propAlt.value = step.alt || "";
+      els.propAlt.disabled = step.altDecorative === true;
+    }
+    if (els.propAltDecorative) els.propAltDecorative.checked = step.altDecorative === true;
     if (els.propCaption) els.propCaption.value = step.caption || "";
     if (els.propShowCaption) els.propShowCaption.checked = step.showCaption !== false;
     if (els.propHold) {
@@ -1656,6 +1664,7 @@ export function createEditor(ctx) {
     hideEditorPopover();
 
     const src = resolveImageSrc(demo, step.image);
+    els.canvasImage.alt = stepImageAlt(step);
     bindImage(els.canvasImage, src, (ok) => {
       if (currentStep() !== step) return;
       if (els.canvasMissing) els.canvasMissing.hidden = ok;
@@ -2124,6 +2133,16 @@ export function createEditor(ctx) {
     }
     if (els.propZoom) step.zoomHighlight = els.propZoom.checked;
     step.caption = els.propCaption?.value || "";
+    if (els.propAlt) {
+      const alt = els.propAlt.value.slice(0, 300);
+      if (alt.trim()) step.alt = alt;
+      else delete step.alt;
+    }
+    if (els.propAltDecorative) {
+      if (els.propAltDecorative.checked) step.altDecorative = true;
+      else delete step.altDecorative;
+      if (els.propAlt) els.propAlt.disabled = els.propAltDecorative.checked;
+    }
     step.showCaption = els.propShowCaption ? els.propShowCaption.checked : true;
     writeHoldFromInput(step, options?.clampHold !== false);
     const isSlide = step.type === "slide";
@@ -3747,6 +3766,10 @@ export function createEditor(ctx) {
     step.popover.title = parsed.title;
     step.popover.description = parsed.description;
     step.caption = parsed.narration;
+    // why: a IA também descreve a captura; só preenche o alt se o autor ainda não escreveu nem marcou decorativa
+    if (parsed.alt && !String(step.alt || "").trim() && step.altDecorative !== true && step.type !== "slide") {
+      step.alt = parsed.alt.slice(0, 300);
+    }
   }
 
   async function generateCopyForStep(demo, step, idx) {
@@ -4102,7 +4125,7 @@ export function createEditor(ctx) {
   }
 
   function bindForm() {
-    [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate, els.propZoom].forEach((el) => {
+    [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate, els.propZoom, els.propAlt, els.propAltDecorative].forEach((el) => {
       if (!el) return;
       el.addEventListener("input", applyFormToStep);
       el.addEventListener("change", applyFormToStep);

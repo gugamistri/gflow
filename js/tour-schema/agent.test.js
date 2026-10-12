@@ -70,3 +70,16 @@ test("publicar exige passos com imagem", () => {
   assert.equal(checkTourForPublish({ steps: [{ ...step, image: "custom:a" }] }).ok, true);
   assert.equal(checkTourForPublish({ steps: [] }).ok, false);
 });
+
+test("alt e altDecorative entram no passo e voltam no stepForAgent", () => {
+  const r = applyAgentStepInput({ title: "Menu", alt: "  Tela de vendas com o menu aberto ", altDecorative: false });
+  assert.equal(r.ok, true);
+  assert.equal(r.step.alt, "Tela de vendas com o menu aberto");
+  assert.equal(r.step.altDecorative, undefined);
+  const d = applyAgentStepInput({ altDecorative: true, alt: "" }, r.step);
+  assert.equal(d.step.alt, undefined);
+  assert.equal(stepForAgent(d.step, 0).altDecorative, true);
+  const long = applyAgentStepInput({ alt: "x".repeat(400) });
+  assert.equal(long.step.alt.length, 300);
+  assert.ok(long.warnings.some((w) => w.startsWith("alt cortado")));
+});

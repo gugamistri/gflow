@@ -3663,7 +3663,7 @@ body.is-presenting .slide-card-close {
 
 .slide-kicker {
   margin: 0;
-  color: var(--demo-accent);
+  color: var(--demo-accent-text, var(--demo-accent));
   font-family: var(--ns-font-mono);
   font-size: 0.8rem;
   font-weight: 700;
@@ -8843,5 +8843,157 @@ dialog.api-keys-modal {
     bottom: calc(var(--gf-pop-h, 180px) + 16px + env(safe-area-inset-bottom, 0px));
     max-height: calc(100dvh - var(--gf-pop-h, 180px) - 32px);
     overflow: auto;
+  }
+}
+
+/* ---- Acessibilidade do player (WCAG 2.1 AA) ---- */
+.gf-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* why: 2.2.2 / 1.4.2 — pausar o avanço automático e silenciar ficam sempre visíveis no tour */
+.gf-player-controls {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  z-index: 1000000012;
+  display: flex;
+  gap: 8px;
+}
+
+.gf-player-controls[hidden],
+.gf-player-ctl[hidden] {
+  display: none !important;
+}
+
+.gf-player-ctl {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.78);
+  color: #ffffff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.gf-player-ctl svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.gf-player-ctl[aria-pressed="true"] {
+  background: #ffffff;
+  color: #111111;
+  border-color: #111111;
+}
+
+.gf-player-ctl:hover {
+  background: rgba(17, 17, 17, 0.92);
+}
+
+.gf-player-ctl[aria-pressed="true"]:hover {
+  background: #f1f1f1;
+}
+
+/* no toque o aviso "Toque fora para sair" ocupa o topo: abre espaço para os controles à direita */
+@media (hover: none) and (pointer: coarse) {
+  body.is-presenting .present-hint {
+    right: calc(116px + env(safe-area-inset-right, 0px));
+  }
+}
+
+/* why: 2.4.7 — foco sempre visível nos controles do player (halo duplo funciona em fundo claro e escuro) */
+.gf-player-ctl:focus-visible,
+.driver-popover.demo-popover button:focus-visible,
+.driver-popover.demo-popover a:focus-visible,
+.slide-card button:focus-visible,
+.fixed-card :is(button, a, input, select, textarea, summary):focus-visible,
+#view-share-replay:focus-visible {
+  outline: 3px solid #111111 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 7px #ffffff !important;
+}
+
+/* título/texto recebem foco só para o leitor de tela começar dali (não são controles) */
+.driver-popover.demo-popover .driver-popover-title:focus,
+.driver-popover.demo-popover .driver-popover-description:focus,
+.slide-card h2:focus {
+  outline: none !important;
+}
+
+
+/* why: 3.3.2 — legenda do asterisco nos formulários do tour */
+.fixed-required-legend {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--demo-popover-text, #3f3f46);
+}
+
+/* why: 1.4.4 — com texto a 200% o balão rola por dentro em vez de cortar (desktop) */
+@media (hover: hover), (pointer: fine) {
+  /* o balão em si não rola (cortaria a seta do Driver); o texto sim */
+  .driver-popover.demo-popover .driver-popover-description {
+    max-height: calc(100vh - 170px);
+    max-height: calc(100dvh - 170px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+/* why: 2.3.3 / preferências do sistema — sem animações nem transições para quem pede menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .is-presenting *,
+  .is-presenting *::before,
+  .is-presenting *::after,
+  .driver-popover,
+  .driver-popover *,
+  .driver-overlay,
+  .fixed-card,
+  .fixed-card *,
+  .view-share-cover,
+  .view-share-cover * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.theme-contrast-warn {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #b45309;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.theme-contrast-warn[hidden] {
+  display: none;
+}
+
+/* no editor o topo tem a barra do app (conta/assinar): os controles descem para baixo dela */
+@media (hover: hover), (pointer: fine) {
+  body:not(.view-share) .gf-player-controls {
+    top: 52px;
+  }
+
+  body:not(.view-share).is-presenting .present-hint {
+    top: 104px;
   }
 }

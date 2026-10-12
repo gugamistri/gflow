@@ -8,7 +8,7 @@ import { CLICK_INSET, clampClickToHotspot, hasHotspot, pointInHotspot } from "./
 import { LIMITS as FIXED_LIMITS, isValidWhatsAppNumber, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
 import { THEME_COLOR_KEYS, THEME_PRESETS, cloneTheme, getPreset } from "./theme.js";
 
-export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, maxSteps: 200 });
+export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
 export const POPOVER_SIDES = Object.freeze(["top", "bottom", "left", "right", "over"]);
 export const POPOVER_ALIGNS = Object.freeze(["start", "center", "end"]);
 /** Destaque padrão quando só vem o ponto de clique (mesmo tamanho do editor: 14% × 8%). */
@@ -96,7 +96,7 @@ function readUnitRect(raw, field, errors, warnings) {
 
 /**
  * Aplica a entrada de um agente sobre um passo (novo ou existente).
- * @param {object} input {title, text, label, narrationScript, type, scene, highlight, click, popoverSide, popoverAlign, simulateClick}
+ * @param {object} input {title, text, label, narrationScript, type, scene, highlight, click, popoverSide, popoverAlign, simulateClick, alt, altDecorative}
  * @param {object} [base] passo atual (update) — campos ausentes ficam como estão
  * @returns {{ ok: boolean, step: object|null, warnings: string[], errors: {field:string,message:string,hint?:string}[] }}
  */
@@ -140,6 +140,17 @@ export function applyAgentStepInput(input = {}, base = null) {
   }
   if (input.label != null) step.label = clean(input.label, STEP_LIMITS.label);
   if (input.narrationScript != null) step.caption = clean(input.narrationScript, STEP_LIMITS.caption);
+  // why: WCAG 1.1.1 — texto alternativo da captura; vazio cai no título/texto do balão no player
+  if (input.alt != null) {
+    const alt = clean(input.alt, STEP_LIMITS.alt + 1);
+    if (alt.length > STEP_LIMITS.alt) warnings.push(`alt cortado em ${STEP_LIMITS.alt} caracteres.`);
+    if (alt) step.alt = alt.slice(0, STEP_LIMITS.alt);
+    else delete step.alt;
+  }
+  if (input.altDecorative != null) {
+    if (input.altDecorative === true) step.altDecorative = true;
+    else delete step.altDecorative;
+  }
   if (input.scene != null) {
     if (!Number.isInteger(input.scene) || input.scene < 1 || input.scene > 99) errors.push(issue("scene", "scene precisa ser um inteiro de 1 a 99."));
     else step.scene = input.scene;
@@ -187,6 +198,8 @@ export function stepForAgent(step, index) {
     text: step.popover?.description || "",
     label: step.label || "",
     narrationScript: step.caption || "",
+    alt: step.alt || "",
+    altDecorative: step.altDecorative === true,
     hasNarrationAudio: Boolean(step.narrationAudio),
     hasImage: Boolean(step.image),
     highlight: rectToUnit(step.hotspot),
