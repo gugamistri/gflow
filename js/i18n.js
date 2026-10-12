@@ -3406,7 +3406,21 @@ export function setLocale(locale, { persist = true } = {}) {
   return next;
 }
 
+/** Idioma fixo da página (/en, /es): vem no HTML pré-renderizado e vence a preferência salva. */
+function pageLocale() {
+  if (typeof document === "undefined") return null;
+  return normalizeLocaleTag(document.documentElement.getAttribute("data-page-locale"));
+}
+
+/** URL da mesma página no idioma pedido (data-alt-pt|en|es no <html> das páginas públicas). */
+export function localizedPageUrl(locale) {
+  if (typeof document === "undefined") return null;
+  return document.documentElement.getAttribute(`data-alt-${locale}`) || null;
+}
+
 export function initLocale() {
+  const fixed = pageLocale();
+  if (fixed) return setLocale(fixed, { persist: false });
   return setLocale(detectLocale(), { persist: Boolean(readStoredLocale()) });
 }
 
@@ -3466,6 +3480,12 @@ export function bindLocaleSelect(selectEl, onChange) {
   selectEl.value = getLocale();
   selectEl.addEventListener("change", () => {
     setLocale(selectEl.value);
+    // why: cada idioma tem a própria URL — a escolha do usuário leva à página certa (sem redirect automático)
+    const href = localizedPageUrl(getLocale());
+    if (href && typeof location !== "undefined" && href !== location.pathname) {
+      location.assign(href + (location.hash || ""));
+      return;
+    }
     applyI18n(document);
     if (typeof onChange === "function") onChange(getLocale());
     try {

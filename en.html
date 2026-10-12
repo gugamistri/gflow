@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en" data-page-locale="en" data-alt-pt="/" data-alt-en="/en" data-alt-es="/es">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    /*
+     * why: a raiz era o editor. Quem já usa (projetos locais ou a extensão de captura) e
+     * qualquer ?parâmetro de app (retorno do Stripe, login, extensão) continua indo para
+     * /editor, com query e hash. /?landing=1 sempre mostra esta página.
+     * Precisa rodar antes de qualquer pintura; por isso fica inline e no topo do <head>.
+     */
+    (function () {
+      try {
+        var l = window.location;
+        var q = new URLSearchParams(l.search);
+        if (q.get("landing") === "1") { window.__gfLandingForced = true; return; }
+        var go = false;
+        q.forEach(function (_v, k) {
+          if (!/^(utm_[a-z0-9_]+|gclid|fbclid|msclkid|ref|landing)$/i.test(k)) go = true;
+        });
+        if (l.hash && l.hash.indexOf("=") !== -1) go = true;
+        if (!go && document.documentElement.getAttribute("data-guia-extension") === "1") go = true;
+        if (!go) {
+          var raw = localStorage.getItem("demo-studio-index-v2");
+          if (raw) {
+            var idx = JSON.parse(raw);
+            if (idx && idx.projects && idx.projects.length) go = true;
+          }
+          if (!go && localStorage.getItem("interactive-demo-v1")) go = true;
+        }
+        if (go) {
+          document.documentElement.style.visibility = "hidden";
+          l.replace("/editor" + l.search + l.hash);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title data-i18n="lp.doc.title">GuiaFlow — An interactive demo of your product, no call needed</title>
+  <meta name="description" content="Turn screenshots of your product into an interactive, narrated demo in minutes. Send the link to a lead, put it on your site or in your pitch. Free in the browser." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/en" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/" />
+  <!-- /i18n-alternates -->
+  <meta name="theme-color" content="#101010" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Your product, demoed without a call — GuiaFlow" />
+  <meta property="og:description" content="Turn screenshots of your product into an interactive, narrated demo in minutes. Send the link to a lead, put it on your site or in your pitch." />
+  <meta property="og:url" content="https://guiaflow.pro/en" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-landing.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Your product, demoed without a call." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Your product, demoed without a call — GuiaFlow" />
+  <meta name="twitter:description" content="Turn screenshots of your product into an interactive, narrated demo in minutes. Send the link to a lead, put it on your site or in your pitch." />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing.png" />
+  <meta name="twitter:image:alt" content="GuiaFlow — Your product, demoed without a call." />
+  <script>
+    (function () {
+      try {
+        if (window.__GUIAFLOW_CLOUD__) return;
+        var host = location.hostname;
+        if (host === "guiaflow-seven.vercel.app" || host === "guiaflow.pro") {
+          window.__GUIAFLOW_CLOUD__ = "https://app.guiaflow.pro";
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preload" href="/a/85/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/a/85/css/landing.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GuiaFlow",
+    "url": "https://guiaflow.pro/en",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web, Chrome",
+    "description": "Transforme prints do seu produto em um demo interativo e narrado em minutos.",
+    "offers": [
+      { "@type": "Offer", "name": "Grátis", "price": "0", "priceCurrency": "BRL" },
+      { "@type": "Offer", "name": "GuiaFlow Pro (mensal)", "price": "36", "priceCurrency": "BRL" },
+      { "@type": "Offer", "name": "GuiaFlow Pro (anual)", "price": "359", "priceCurrency": "BRL" }
+    ],
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#conteudo" data-i18n="lp.skip">Skip to content</a>
+  <header class="site-header" id="topo">
+    <div class="wrap header-row">
+      <a class="brand" href="/en?landing=1" aria-label="GuiaFlow">
+        <img src="/a/85/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
+      </a>
+      <nav class="nav" aria-label="Sections" data-i18n-aria="lp.nav.aria">
+        <a href="#como-funciona" data-i18n="lp.nav.how">How it works</a>
+        <a href="#recursos" data-i18n="lp.nav.features">Features</a>
+        <a href="#precos" data-i18n="lp.nav.pricing">Pricing</a>
+        <a href="#faq" data-i18n="lp.nav.faq">FAQ</a>
+      </nav>
+      <a class="btn btn-primary btn-sm" href="/editor" data-i18n="lp.openEditor">Open editor</a>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="lp.hero.eyebrow">Interactive demos for sales, startups and founders</p>
+          <h1 data-i18n="lp.hero.title">Your product, demoed without a call.</h1>
+          <p class="hero-sub" data-i18n="lp.hero.sub">Turn screenshots of your product into an interactive, narrated demo in minutes. Send the link to a lead, put it on your site or in your pitch — they click through on their own and you see who made it to the end.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary btn-lg" href="/editor" data-i18n="lp.hero.ctaPrimary">Create my free demo</a>
+            <a class="btn btn-ghost btn-lg" href="#demo" data-i18n="lp.hero.ctaSecondary">See a sample demo</a>
+          </div>
+          <ul class="hero-proof">
+            <li data-i18n="lp.hero.proof1">No account, no card</li>
+            <li data-i18n="lp.hero.proof2">Runs in the browser</li>
+            <li data-i18n="lp.hero.proof3">Open source (MIT)</li>
+          </ul>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="mock">
+            <div class="mock-bar"><span></span><span></span><span></span><i>app.leadpronto.ai</i></div>
+            <div class="mock-shot">
+              <img src="/a/85/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
+              <span class="mock-target"></span>
+              <span class="mock-hotspot"></span>
+              <div class="mock-pop">
+                <small data-i18n="lp.mock.step">Step 1 of 11</small>
+                <strong data-i18n="lp.mock.title">Meta integration</strong>
+                <span class="mock-desc" data-i18n="lp.mock.desc">Capture leads from Facebook and Instagram ads straight into the funnel.</span>
+                <span class="mock-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <em data-i18n="lp.mock.next">Next →</em>
+              </div>
+            </div>
+          </div>
+          <div class="mock-toast"><span class="dot"></span><span data-i18n="lp.mock.toast">New lead: ana@company.com</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="demo" id="demo">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.demo.eyebrow">Try it now</p>
+          <h2 data-i18n="lp.demo.title">A real demo, made with GuiaFlow</h2>
+          <p data-i18n="lp.demo.lead">Click to move forward, just like your lead will. It is the same player that goes in your link or on your site.</p>
+        </div>
+        <div class="demo-frame" id="demo-frame">
+          <div class="demo-placeholder" id="demo-placeholder">
+            <img src="/a/85/brand/symbol-simple.svg" alt="" width="40" height="40" />
+            <p data-i18n="lp.demo.soon">The sample demo is coming soon. Meanwhile, create yours in minutes.</p>
+            <a class="btn btn-primary" href="/editor" data-i18n="lp.hero.ctaPrimary">Create my free demo</a>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cases" id="casos">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.cases.eyebrow">Who it is for</p>
+          <h2 data-i18n="lp.cases.title">For anyone who needs to show the product without being in the room</h2>
+        </div>
+        <div class="grid-3">
+          <article class="card case">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+            <h3 data-i18n="lp.cases.sales.title">Sales</h3>
+            <p data-i18n="lp.cases.sales.body">Send the demo before the meeting so the lead shows up prepared, or after, so they can show their team. Capture name and email at the start and finish with a WhatsApp button.</p>
+          </article>
+          <article class="card case">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2c3 2 5 6 5 10l-2 5H9l-2-5c0-4 2-8 5-10z"/><circle cx="12" cy="10" r="2"/><path d="M9 17l-2 4M15 17l2 4"/></svg></span>
+            <h3 data-i18n="lp.cases.startups.title">Startups</h3>
+            <p data-i18n="lp.cases.startups.body">Put the demo on your home page and in your Product Hunt launch. Product changed? Swap the screens and update the demo in minutes, no re-recording.</p>
+          </article>
+          <article class="card case">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+            <h3 data-i18n="lp.cases.founders.title">Founders</h3>
+            <p data-i18n="lp.cases.founders.body">Show the product in your investor pitch and in outbound email. It looks professional without a designer or video editing.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how" id="como-funciona">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.how.eyebrow">How it works</p>
+          <h2 data-i18n="lp.how.title">From screenshot to link in 3 steps</h2>
+        </div>
+        <ol class="steps">
+          <li class="card step">
+            <span class="step-n">1</span>
+            <h3 data-i18n="lp.how.s1.title">Capture with the extension</h3>
+            <p data-i18n-html="lp.how.s1.body">Install the <a href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener">Chrome extension</a> and click through your product. Every click becomes a demo screen, with the clicked spot marked.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">2</span>
+            <h3 data-i18n="lp.how.s2.title">Edit with AI and narration</h3>
+            <p data-i18n="lp.how.s2.body">Adjust highlights and copy in the editor. AI writes each step's title and description, and the voice narration comes from the same text.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">3</span>
+            <h3 data-i18n="lp.how.s3.title">Share or embed</h3>
+            <p data-i18n="lp.how.s3.body">Send the link to a lead, paste it in an email or embed it on your site with a code snippet. Viewers click through on their own, on mobile or desktop.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="features" id="recursos">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.features.eyebrow">Features</p>
+          <h2 data-i18n="lp.features.title">Built to turn into a sales conversation</h2>
+        </div>
+        <div class="grid-3 features-grid">
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+            <h3><span data-i18n="lp.f.leads.title">Lead capture</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.leads.body">Ask for name, email or phone on the first step, with consent. Contacts stay in the editor and export to CSV.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.3A8.5 8.5 0 1 1 21 12z"/></svg></span>
+            <h3 data-i18n="lp.f.cta.title">WhatsApp and contact at the end</h3>
+            <p data-i18n="lp.f.cta.body">The last step takes the lead to your WhatsApp, to a link, or to a contact form (Pro 👑) that lands in your inbox.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span>
+            <h3><span data-i18n="lp.f.embed.title">Embed on your site</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.embed.body">A code snippet for HTML, WordPress or Webflow. The demo adapts to the page width.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7v10M4 10v4M16 7v10M20 10v4"/></svg></span>
+            <h3 data-i18n="lp.f.ai.title">AI copy and narration</h3>
+            <p data-i18n="lp.f.ai.body">Generate each step's copy and turn it into voice. With Pro 👑 the AI is included; on Free, use your own key.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>
+            <h3><span data-i18n="lp.f.links.title">Permanent links</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.links.body">An address that never expires, with a cover image in WhatsApp and LinkedIn previews. Update the demo and the link stays the same.</p>
+          </article>
+          <article class="feature">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+            <h3><span data-i18n="lp.f.analytics.title">Who made it to the end</span> <span class="tag tag-pro">Pro 👑</span></h3>
+            <p data-i18n="lp.f.analytics.body">See how many people opened the demo, how many reached the end, who clicked the final button and which step people stop at.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing" id="precos">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.pricing.eyebrow">Pricing</p>
+          <h2 data-i18n="lp.pricing.title">Start free. Subscribe when the demo becomes a sales channel.</h2>
+        </div>
+        <div class="plans">
+          <article class="card plan">
+            <h3 data-i18n="lp.plan.free.name">Free</h3>
+            <p class="price"><span class="amount" data-i18n="lp.plan.free.price">US$0</span></p>
+            <p class="plan-lead" data-i18n="lp.plan.free.lead">To create and test as much as you like.</p>
+            <ul class="checks">
+              <li data-i18n="lp.plan.free.f1">Full editor in the browser</li>
+              <li data-i18n="lp.plan.free.f2">Projects saved in this browser</li>
+              <li data-i18n="lp.plan.free.f3">Temporary 7-day links</li>
+              <li data-i18n="lp.plan.free.f4">WhatsApp or link at the end</li>
+              <li data-i18n="lp.plan.free.f5">AI and narration with your own key</li>
+              <li data-i18n="lp.plan.free.f6">No account, no card</li>
+            </ul>
+            <a class="btn btn-ghost btn-block" href="/editor" data-i18n="lp.plan.free.cta">Open the editor</a>
+          </article>
+          <article class="card plan plan-pro">
+            <p class="plan-badge" data-i18n="lp.plan.pro.badge">Pro 👑</p>
+            <h3 data-i18n="lp.plan.pro.name">GuiaFlow Pro</h3>
+            <p class="price"><span class="amount" data-price="month">US$7</span><span class="per" data-i18n="lp.plan.perMonth">/month</span></p>
+            <p class="plan-alt"><span data-i18n="lp.plan.orYear">or</span> <strong data-price="year">US$69</strong><span data-i18n="lp.plan.perYear">/year</span> · <span class="save" data-free-months="1">2 months free</span></p>
+            <ul class="checks">
+              <li data-i18n="lp.plan.pro.f1">Everything in Free</li>
+              <li data-i18n="lp.plan.pro.f2">Permanent links with a cover</li>
+              <li data-i18n="lp.plan.pro.f3">Lead capture and contact form</li>
+              <li data-i18n="lp.plan.pro.f4">Embed on your site</li>
+              <li data-i18n="lp.plan.pro.f8">Analytics: who opened it and who reached the end</li>
+              <li data-i18n="lp.plan.pro.f5">AI and narration included, no key</li>
+              <li data-i18n="lp.plan.pro.f6">Projects saved to your account</li>
+              <li data-i18n="lp.plan.pro.f7">Exported video without the GuiaFlow mark</li>
+            </ul>
+            <a class="btn btn-primary btn-block" href="/editor?pro=1" data-i18n="lp.plan.pro.cta">Subscribe to Pro</a>
+            <p class="plan-note" data-i18n="lp.plan.pro.note">Billed through Stripe. Cancel anytime.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="testers" id="testers">
+      <div class="wrap testers-grid">
+        <div class="testers-copy">
+          <p class="eyebrow" data-i18n="lp.testers.eyebrow">Tester program</p>
+          <h2 data-i18n="lp.testers.title">Have a real use case? Ask for Pro access in exchange for feedback</h2>
+          <p data-i18n="lp.testers.lead">We are opening GuiaFlow Pro to people who will use the demo with real customers. Tell us about your case: if it fits, you get an invite by email.</p>
+          <ul class="checks">
+            <li data-i18n="lp.testers.b1">GuiaFlow Pro access during the test</li>
+            <li data-i18n="lp.testers.b2">A direct line to the people building the product</li>
+            <li data-i18n="lp.testers.b3">Your feedback becomes a roadmap priority</li>
+          </ul>
+        </div>
+        <form class="card tester-form" id="tester-form" novalidate>
+          <div class="field">
+            <label for="tf-name" data-i18n="lp.form.name">Name</label>
+            <input id="tf-name" name="name" type="text" autocomplete="name" maxlength="80" required />
+          </div>
+          <div class="field">
+            <label for="tf-email" data-i18n="lp.form.email">Email</label>
+            <input id="tf-email" name="email" type="email" autocomplete="email" maxlength="200" required />
+          </div>
+          <div class="field">
+            <label for="tf-company" data-i18n="lp.form.company">Company or product</label>
+            <input id="tf-company" name="company" type="text" autocomplete="organization" maxlength="120" required />
+          </div>
+          <div class="field">
+            <label for="tf-usecase" data-i18n="lp.form.useCase">How will you use the demo?</label>
+            <textarea id="tf-usecase" name="useCase" rows="3" maxlength="1000" required placeholder="E.g. send it to leads after the first call" data-i18n-placeholder="lp.form.useCasePh"></textarea>
+          </div>
+          <div class="field">
+            <label for="tf-linkedin" data-i18n="lp.form.linkedin">LinkedIn (URL)</label>
+            <input id="tf-linkedin" name="linkedin" type="url" inputmode="url" maxlength="200" placeholder="https://www.linkedin.com/in/…" />
+          </div>
+          <div class="hp" aria-hidden="true">
+            <label for="tf-website">Website</label>
+            <input id="tf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <label class="consent">
+            <input id="tf-consent" name="consent" type="checkbox" required />
+            <span data-i18n-html="lp.form.consent">I agree that GuiaFlow may use this data to review the request and contact me about Pro access, as described in the <a href="/privacidade" target="_blank" rel="noopener">Privacy Policy</a>.</span>
+          </label>
+          <button class="btn btn-primary btn-block" type="submit" data-i18n="lp.form.submit">Request Pro access</button>
+          <p class="form-status" id="tf-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <div class="wrap faq-wrap">
+        <div class="section-head">
+          <p class="eyebrow" data-i18n="lp.faq.eyebrow">FAQ</p>
+          <h2 data-i18n="lp.faq.title">Frequently asked questions</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary data-i18n="lp.faq.q1">Where does my data live?</summary>
+            <p data-i18n="lp.faq.a1">On Free, projects stay only in your browser, on this device, and never reach us; a temporary link keeps the published tour for 7 days. On Pro, projects, permanent links and leads live on the GuiaFlow server, tied to your account.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q2">Does GuiaFlow comply with the LGPD (Brazil's data protection law)?</summary>
+            <p data-i18n-html="lp.faq.a2">Yes. We keep the minimum needed for the account and links, use no advertising trackers and never sell data. Lead capture asks the visitor for explicit consent. Details are in the <a href="/privacidade">Privacy Policy</a>.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q3">Is GuiaFlow open source?</summary>
+            <p data-i18n-html="lp.faq.a3">Yes. The editor and the player are MIT-licensed and the code is at <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">github.com/gugamistri/gflow</a>.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q4">Do I need a credit card?</summary>
+            <p data-i18n="lp.faq.a4">Not for Free: no account and no card, just open the editor. GuiaFlow Pro is a monthly or yearly subscription billed through Stripe, and you can cancel anytime.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q5">Does the person receiving the demo need to install anything?</summary>
+            <p data-i18n="lp.faq.a5">No. The demo opens in the browser, on mobile or desktop, from the link or from your site. Only the person creating the demo needs the Chrome extension.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="wrap final-inner">
+        <h2 data-i18n="lp.final.title">Your next lead can see the product today.</h2>
+        <a class="btn btn-primary btn-lg" href="/editor" data-i18n="lp.hero.ctaPrimary">Create my free demo</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <img src="/a/85/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
+      <nav aria-label="Footer links" data-i18n-aria="lp.footer.aria">
+        <a href="/editor" data-i18n="lp.footer.editor">Editor</a>
+        <a href="/en/ajuda" data-i18n="lp.footer.help">Help</a>
+        <a href="/en/integracoes" data-i18n="lp.footer.integrations">Integrations</a>
+        <a href="/en/privacidade" data-i18n="lp.footer.privacy">Privacy</a>
+        <a href="/en/termos" data-i18n="lp.footer.terms">Terms</a>
+        <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>
+      </nav>
+      <label class="locale">
+        <span class="visually-hidden" data-i18n="lp.locale">Language</span>
+        <select id="locale-select" aria-label="Language" data-i18n-aria="lp.locale">
+          <option value="pt">Português</option>
+          <option value="es">Español</option>
+          <option value="en" selected>English</option>
+        </select>
+      </label>
+    </div>
+    <p class="wrap copy">© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module" src="/a/85/js/landing.js"></script>
+</body>
+</html>

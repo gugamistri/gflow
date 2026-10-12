@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es" data-appearance="social" data-page-locale="es" data-alt-pt="/privacidade" data-alt-en="/en/privacidade" data-alt-es="/es/privacidade">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="doc.title.privacy">Política de Privacidad — GuiaFlow</title>
+  <meta name="description" content="Cómo GuiaFlow trata los datos personales: lo que queda en tu navegador, lo que guardamos en la cuenta Pro, proveedores y tus derechos según la LGPD." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/es/privacidade" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/privacidade" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacidade" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidade" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/privacidade" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:title" content="Política de Privacidad — GuiaFlow" />
+  <meta property="og:description" content="Cómo GuiaFlow trata los datos personales: lo que queda en tu navegador, lo que guardamos en la cuenta Pro, proveedores y tus derechos según la LGPD." />
+  <meta property="og:url" content="https://guiaflow.pro/es/privacidade" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Crea tours guiados interactivos" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Política de Privacidad — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#101010" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/85/css/theme.css" />
+  <link rel="stylesheet" href="/a/85/css/app.css" />
+  <link rel="stylesheet" href="/a/85/css/ajuda.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/85/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/85/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title" data-i18n="legal.privacy">Privacidad</span>
+    </div>
+    <div class="topbar-appearance">
+      <label class="locale-select">
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
+          <option value="pt">PT</option>
+          <option value="es" selected>ES</option>
+          <option value="en">EN</option>
+        </select>
+      </label>
+    </div>
+  </header>
+  <main class="page legal">
+    <h1 data-i18n="privacy.h1">Política de Privacidad</h1>
+    <p class="lead" data-i18n="privacy.lead">Aquí explicamos, con lenguaje directo, qué datos trata GuiaFlow, por qué, dónde se guardan y cómo los controlas.</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Última actualización: 12 de octubre de 2026</p>
+    <section class="card" id="resumo">
+      <h2 data-i18n="privacy.resumo.title">En resumen</h2>
+      <ul>
+        <li data-i18n="privacy.resumo.li1">Puedes usar el editor sin cuenta. En ese caso, tus proyectos quedan solo en tu navegador, en este dispositivo, y no nos llegan.</li>
+        <li data-i18n="privacy.resumo.li2">Un enlace temporal guarda el tour publicado durante 7 días. Después se borra.</li>
+        <li data-i18n="privacy.resumo.li3">Quien se suscribe a GuiaFlow Pro tiene una cuenta con correo electrónico. Guardamos lo mínimo para la cuenta, la suscripción, los enlaces permanentes y los límites de uso, además de los proyectos del editor, que quedan guardados en tu cuenta.</li>
+        <li data-i18n="privacy.resumo.li4">El pago se hace en Stripe. No recibimos ni guardamos los datos de tu tarjeta.</li>
+        <li data-i18n="privacy.resumo.li5">No usamos publicidad ni rastreo entre sitios, y no vendemos datos.</li>
+        <li data-i18n="privacy.resumo.li6">Si un tour publicado te pide nombre, correo o teléfono, o si usas el formulario de contacto al final, esos datos van al autor del tour, que es el responsable de ellos. GuiaFlow solo los guarda y entrega en nombre del autor.</li>
+        <li data-i18n="privacy.resumo.li7">En los tours publicados con enlace permanente por suscriptores Pro, contamos las visitas (cuántas personas abrieron, hasta qué paso llegaron y si hicieron clic en el botón final) sin cookies y sin guardar la IP. Si tu navegador pide no ser rastreado (“No rastrear” o GPC), no se mide nada.</li>
+      </ul>
+    </section>
+    <section class="card" id="controlador">
+      <h2 data-i18n="privacy.controlador.title">Quién cuida tus datos</h2>
+      <p data-i18n="privacy.controlador.p1">GuiaFlow lo mantiene Gustavo Ariel Mistrinelli, persona física, en Brasil, que es el responsable (controlador) de los datos personales tratados en el servicio, en los términos de la Ley General de Protección de Datos de Brasil (Ley 13.709/2018, LGPD).</p>
+      <p data-i18n-html="privacy.controlador.p2">Para cualquier asunto de privacidad, incluido el ejercicio de tus derechos, escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>. Este es el canal de atención al titular.</p>
+    </section>
+    <section class="card" id="sem-conta">
+      <h2 data-i18n="privacy.sem-conta.title">Uso sin cuenta: todo queda en tu navegador</h2>
+      <p data-i18n="privacy.sem-conta.p1">El editor funciona sin iniciar sesión. Los proyectos, las pantallas capturadas, los textos, los audios y los temas se guardan en el almacenamiento del propio navegador (IndexedDB y localStorage), en este dispositivo. Este contenido no se envía a GuiaFlow mientras no publiques un enlace.</p>
+      <p data-i18n="privacy.sem-conta.p2">El navegador también guarda preferencias simples, como el idioma, la apariencia y los avisos que ya cerraste.</p>
+      <p data-i18n="privacy.sem-conta.p3">Si borras los datos del sitio en el navegador, los proyectos desaparecen. Para guardar una copia, usa la exportación del proyecto.</p>
+      <p data-i18n="privacy.sem-conta.p4">Si registras una clave propia de IA (por ejemplo, OpenRouter) o de voz (Cartesia), la clave se guarda en el navegador o en la app de escritorio, y las solicitudes van directamente de tu dispositivo a ese proveedor, bajo sus términos y su política. GuiaFlow no recibe esa clave.</p>
+    </section>
+    <section class="card" id="link-temporario">
+      <h2 data-i18n="privacy.link-temporario.title">Enlaces temporales</h2>
+      <p data-i18n="privacy.link-temporario.p1">Al crear un enlace temporal, el contenido del tour (título, pantallas, textos y audios) se envía y se guarda en Vercel Blob, el almacenamiento de archivos de Vercel. No hace falta tener cuenta.</p>
+      <p data-i18n="privacy.link-temporario.p2">El enlace vale 7 días, contados desde la primera publicación. Una rutina diaria borra los tours vencidos.</p>
+      <p data-i18n="privacy.link-temporario.p3">Cualquier persona que tenga la dirección del enlace puede ver el tour. No publiques pantallas con contraseñas, datos de clientes u otra información que no deba ver quien reciba el enlace.</p>
+    </section>
+    <section class="card" id="extensao">
+      <h2 data-i18n="privacy.extensao.title">Extensión de Chrome y app de escritorio</h2>
+      <p data-i18n="privacy.extensao.p1">La extensión “GuiaFlow — Captura” sirve para fotografiar las pantallas del producto que quieres mostrar. Pide estos permisos de Chrome:</p>
+      <ul>
+        <li data-i18n-html="privacy.extensao.li1"><strong>activeTab</strong>, <strong>tabs</strong> y <strong>scripting</strong>: ver qué pestaña está activa y tomarle la foto cuando capturas o haces clic durante una grabación;</li>
+        <li data-i18n-html="privacy.extensao.li2"><strong>storage</strong> y <strong>unlimitedStorage</strong>: guardar las capturas en el propio Chrome hasta que crees el proyecto;</li>
+        <li data-i18n-html="privacy.extensao.li3"><strong>downloads</strong>: guardar el archivo del proyecto, si lo pides;</li>
+        <li data-i18n-html="privacy.extensao.li4">acceso a <strong>guiaflow.pro</strong>: entregar las capturas al editor abierto en tu navegador.</li>
+      </ul>
+      <p data-i18n="privacy.extensao.p2">La foto solo se toma cuando capturas. Las imágenes quedan en Chrome hasta que creas el proyecto, descargas el archivo o cancelas. La extensión no envía capturas a ningún servidor.</p>
+      <p data-i18n="privacy.extensao.p3">La app de escritorio captura solo la ventana que ella misma abre y guarda los proyectos en tu ordenador.</p>
+    </section>
+    <section class="card" id="pro">
+      <h2 data-i18n="privacy.pro.title">Cuenta GuiaFlow Pro</h2>
+      <p data-i18n="privacy.pro.p1">Cuando te suscribes a GuiaFlow Pro, tratamos estos datos:</p>
+      <ul>
+        <li data-i18n-html="privacy.pro.li1"><strong>Correo electrónico</strong>: identifica la cuenta y recibe los enlaces de acceso;</li>
+        <li data-i18n-html="privacy.pro.li2"><strong>Contraseña</strong>, si creas una: guardamos solo un resumen criptográfico (hash), nunca la contraseña en sí;</li>
+        <li data-i18n-html="privacy.pro.li3"><strong>Nombre</strong>, opcional: solo cuando un administrador envía una invitación o concede acceso de cortesía;</li>
+        <li data-i18n-html="privacy.pro.li4"><strong>Datos de la suscripción</strong>: plan, periodicidad, estado, fin del período pagado y los códigos de cliente y de suscripción de Stripe;</li>
+        <li data-i18n-html="privacy.pro.li5"><strong>Contenido que publicas</strong> en enlaces permanentes: título, pantallas, textos y audios del tour;</li>
+        <li data-i18n-html="privacy.pro.li6"><strong>Contadores de uso</strong> mensuales: cuántos textos se generaron con IA y cuántos segundos de audio se narraron, para aplicar los límites del plan;</li>
+        <li data-i18n-html="privacy.pro.li7"><strong>Registros técnicos</strong>: avisos de pago enviados por Stripe y registro de las acciones realizadas en el panel de administración;</li>
+        <li data-i18n-html="privacy.pro.li8"><strong>Proyectos del editor</strong>: el contenido completo de cada proyecto, con pantallas, textos, audios, temas personalizados y la dirección del enlace permanente (ver abajo).</li>
+      </ul>
+      <p data-i18n="privacy.pro.p2">Estos datos se guardan en una base de datos Postgres, en un servidor en Brasil (São Paulo), contratado por GuiaFlow y administrado con la herramienta Coolify.</p>
+      <p data-i18n="privacy.pro.p3">El acceso se hace con un enlace enviado por correo, que vale 15 minutos y solo puede usarse una vez, o con contraseña. El enlace de activación de una invitación a GuiaFlow Pro vale 7 días y también puede usarse una sola vez. Tras iniciar sesión, el navegador guarda un token de sesión en el almacenamiento local (localStorage), válido durante 12 horas. El panel de administración usa una cookie de sesión con las protecciones HttpOnly y Secure.</p>
+    </section>
+
+    <section class="card" id="projetos">
+      <h2 data-i18n="privacy.projetos.title">Proyectos guardados en la cuenta (Pro)</h2>
+      <p data-i18n="privacy.projetos.p1">Con Pro activo y la cuenta conectada en el editor, todos los proyectos de este navegador se suben a tu cuenta. Después, cada cambio se envía automáticamente. En otro navegador o dispositivo, basta con entrar con la misma cuenta para que aparezcan los proyectos.</p>
+      <p data-i18n="privacy.projetos.p2">Guardamos el contenido completo de cada proyecto: título, pantallas, textos, audios, configuración, temas personalizados y la dirección del enlace permanente, si existe. Las imágenes y los audios se guardan como archivos privados de tu cuenta, identificados por un resumen (hash) para no guardar dos veces el mismo archivo. Solo tu cuenta conectada puede descargarlos. Los límites son 15 MB por archivo, 1 GB de multimedia por cuenta y 500 proyectos.</p>
+      <p data-i18n="privacy.projetos.p3">El contenido de cada proyecto (textos y configuración) se guarda en la base de datos Postgres de la cuenta, en un servidor en Brasil (São Paulo). Las imágenes y los audios se guardan en DigitalOcean Spaces, el almacenamiento de archivos de DigitalOcean, en Estados Unidos (San Francisco), como archivos privados. Las copias de seguridad diarias de la base de datos también se guardan allí, hasta por 14 días.</p>
+      <p data-i18n="privacy.projetos.p4">Si la suscripción termina, no se borra nada: los proyectos siguen guardados en la cuenta. La sincronización se detiene, el editor sigue funcionando con las copias de este navegador y los cambios nuevos quedan solo en él. Al volver a Pro, la sincronización se reanuda y los proyectos guardados vuelven a aparecer.</p>
+      <p data-i18n="privacy.projetos.p5">Un proyecto borrado en el editor también se borra de la cuenta. Solo queda un registro sin contenido, para avisar a los otros navegadores. Para borrar todo de una vez, pide la eliminación de la cuenta en contato@guiaflow.pro.</p>
+    </section>
+
+    <section class="card" id="pagamento">
+      <h2 data-i18n="privacy.pagamento.title">Pago</h2>
+      <p data-i18n="privacy.pagamento.p1">La suscripción se paga en Stripe Checkout, con tarjeta, Pix, Apple Pay o Google Pay, según lo que esté disponible para ti. Los datos de pago se introducen en las páginas de Stripe y los trata Stripe, conforme a su política de privacidad.</p>
+      <p data-i18n="privacy.pagamento.p2">GuiaFlow no recibe ni guarda números de tarjeta ni datos bancarios. De Stripe recibimos solo lo necesario para activar y mantener el plan: correo, códigos de cliente y de suscripción, estado y fechas.</p>
+    </section>
+    <section class="card" id="ia-audio">
+      <h2 data-i18n="privacy.ia-audio.title">Textos con IA y audio narrado (Pro)</h2>
+      <p data-i18n="privacy.ia-audio.p1">Cuando pides un texto con IA, la solicitud (el texto del paso y las instrucciones, sin las imágenes) pasa por nuestro servidor y se envía a OpenRouter, que la reenvía al modelo de IA elegido.</p>
+      <p data-i18n="privacy.ia-audio.p2">Cuando generas audio, el texto de la narración se envía a Cartesia, que devuelve el archivo de audio.</p>
+      <p data-i18n="privacy.ia-audio.p3">Evita poner datos personales o información confidencial en estos textos.</p>
+    </section>
+    <section class="card" id="api">
+      <h2 data-i18n="privacy.api.title">API, MCP y agentes de IA (Pro)</h2>
+      <p data-i18n="privacy.api.p1">Los suscriptores Pro pueden conectar herramientas de IA (como Cursor, Claude o ChatGPT) a la cuenta, con una clave de API o con el login OAuth, para crear, editar y publicar tours. Esas herramientas actúan en tu nombre y solo con los permisos que elegiste; lo que envían pasa a formar parte de tus proyectos, tratado como se describe arriba.</p>
+      <p data-i18n="privacy.api.p2">Para ello guardamos: el nombre, los 4 últimos caracteres, los permisos y las fechas de cada clave; el nombre de las apps conectadas por OAuth; y un registro de uso (app o clave, acción, resultado, fecha y hora y un resumen de la IP hecho con una clave secreta, que no permite recuperar la IP). Las claves y los tokens se guardan solo como resumen (hash), nunca completos. El registro de uso aparece para ti en Claves de API y se borra a los 90 días.</p>
+      <p data-i18n="privacy.api.p3">Cuando pasas una URL de imagen, el servidor de GuiaFlow descarga ese archivo (solo direcciones https públicas). Puedes revocar una clave o desconectar una app en cualquier momento, y el acceso termina al instante. Si la suscripción termina, la API deja de aceptar llamadas.</p>
+      <p data-i18n="privacy.api.p4">Por la API y el MCP, cuando un agente pide un texto con IA para un paso (permiso ai), la captura de ese paso también se envía a OpenRouter junto con la solicitud, para que la IA lea la pantalla (el agente puede desactivarlo con useImage:false). Las narraciones pedidas por la API van a Cartesia como en el editor. Ambas cuentan en la misma cuota mensual de Pro. Las estadísticas que devuelve la API son solo conteos, sin datos personales de los visitantes.</p>
+    </section>
+    <section class="card" id="emails">
+      <h2 data-i18n="privacy.emails.title">Correos electrónicos</h2>
+      <p data-i18n="privacy.emails.p1">Los correos del servicio los envía Resend, desde noreply@guiaflow.pro: enlaces de acceso, invitaciones y avisos sobre la suscripción. No usamos tu correo para publicidad.</p>
+    </section>
+    <section class="card" id="contatos-visitantes">
+      <h2 data-i18n="privacy.leads.title">Contactos de visitantes de tours (Pro)</h2>
+      <p data-i18n="privacy.leads.p1">Los autores con GuiaFlow Pro pueden pedir, antes de un tour publicado en enlace permanente, el nombre, el correo y/o el teléfono de quien lo ve. También pueden ofrecer, al final del tour, un formulario de contacto con nombre, correo, teléfono (opcional) y mensaje.</p>
+      <p data-i18n-html="privacy.leads.p2">En estos casos, <strong>el autor del tour es el responsable del tratamiento</strong> de esos datos: decide pedirlos, para qué usarlos y por cuánto tiempo guardarlos. <strong>GuiaFlow es el encargado del tratamiento</strong>: guarda los datos en nombre del autor, se los muestra solo a él en el editor (con exportación CSV) y envía los mensajes del formulario al correo de la cuenta del autor, mediante Resend, desde noreply@guiaflow.pro. No usamos estos datos para ninguna otra finalidad.</p>
+      <p data-i18n="privacy.leads.p3">Para cada contacto guardamos:</p>
+      <ul>
+        <li data-i18n="privacy.leads.li1">los datos que completó el visitante (nombre, correo, teléfono y, en el formulario, el mensaje);</li>
+        <li data-i18n="privacy.leads.li2">el registro del consentimiento: el texto mostrado, la fecha y la hora en que se marcó la casilla;</li>
+        <li data-i18n="privacy.leads.li3">el enlace de donde vino el contacto y, en el formulario, si el aviso por correo se entregó.</li>
+      </ul>
+      <p data-i18n="privacy.leads.p4">La dirección IP se usa solo en el momento del envío, para limitar intentos y evitar abusos, y no se guarda junto con el contacto.</p>
+      <p data-i18n-html="privacy.leads.p5">El envío depende del consentimiento del visitante (art. 7, I, de la LGPD): sin marcar la casilla, no se envía nada. Para acceder, corregir o eliminar tus datos, habla con el autor del tour. Si no lo logras, escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>; reenviaremos el pedido al autor y ayudaremos en lo que corresponda al encargado.</p>
+    </section>
+    <section class="card" id="visitas-tours">
+      <h2 data-i18n="privacy.analytics.title">Visitas a tours publicados (análisis del Pro)</h2>
+      <p data-i18n="privacy.analytics.p1">Cuando un suscriptor Pro publica un tour con enlace permanente (incluso insertado en otro sitio), el reproductor registra cómo se vio el tour para mostrar al autor un análisis agregado: vistas, finalización, dónde se detienen las personas, clics en el botón final y de dónde vinieron las visitas. Los enlaces temporales, el editor y el HTML o vídeo exportados no se miden.</p>
+      <p data-i18n="privacy.analytics.p2">De cada visita guardamos solo:</p>
+      <ul>
+        <li data-i18n="privacy.analytics.li1">los eventos del tour: abrió, empezó, pasos vistos y el tiempo en cada uno (hasta 10 minutos por paso), si terminó o salió (y cómo: Esc, clic fuera, cerrar o salir de la página), y si vio o hizo clic en el botón del paso final (WhatsApp, enlace, correo o formulario);</li>
+        <li data-i18n="privacy.analytics.li2">el contexto: si el tour estaba insertado en un sitio, el dominio de la página de origen (sin la dirección completa), los parámetros UTM del enlace, el tipo de dispositivo (móvil u ordenador) y el idioma del navegador;</li>
+        <li data-i18n="privacy.analytics.li3">un identificador de visita aleatorio, que vive solo en la memoria de la página y desaparece al cerrarla;</li>
+        <li data-i18n="privacy.analytics.li4">un código para estimar visitantes únicos, calculado en el servidor a partir de la IP, el navegador y el enlace con un valor aleatorio que cambia cada día y se borra. La IP y el navegador no se guardan, y una vez borrado el valor del día el código no permite saber quién fue el visitante.</li>
+      </ul>
+      <p data-i18n="privacy.analytics.p3">No usamos cookies ni guardamos nada en el navegador del visitante para esto. Si el navegador envía la señal “No rastrear” (DNT) o Global Privacy Control (GPC), el reproductor no envía ningún dato. Las visitas del propio autor abiertas desde el editor como vista previa tampoco cuentan.</p>
+      <p data-i18n="privacy.analytics.p4">Si el visitante completa el paso inicial del tour y marca la casilla de consentimiento, la visita queda vinculada a ese contacto, y el análisis muestra al autor cuántas visitas vinieron de personas que dejaron su contacto. Sin ese consentimiento, la visita no se vincula a nadie.</p>
+      <p data-i18n-html="privacy.analytics.p5">Aquí también <strong>el autor del tour es el responsable</strong> y <strong>GuiaFlow es el encargado</strong>, que trata estos datos solo para generar el análisis del autor. La base legal es el interés legítimo del autor en entender el uso de su propio tour (art. 7, IX, de la LGPD), con el mínimo de datos; el vínculo con un contacto depende del consentimiento dado en el paso inicial (art. 7, I). Los datos de cada visita se guardan 90 días; los totales por día (en horario de Brasilia), 25 meses. Todo se borra antes si el autor elimina el enlace. Para ejercer tus derechos, habla con el autor del tour o escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+    <section class="card" id="cookies">
+      <h2 data-i18n="privacy.cookies.title">Cookies y medición de uso</h2>
+      <p data-i18n="privacy.cookies.p1">GuiaFlow no usa píxeles de publicidad ni rastreo entre sitios. La medición de visitas de los tours publicados, descrita arriba, no usa cookies.</p>
+      <ul>
+        <li data-i18n="privacy.cookies.li1">El editor usa el almacenamiento local del navegador para funcionar, como se explica arriba.</li>
+        <li data-i18n="privacy.cookies.li2">El panel de administración usa una cookie de sesión.</li>
+        <li data-i18n="privacy.cookies.li3">Cloudflare, que entrega el sitio, puede usar cookies técnicas de seguridad.</li>
+        <li data-i18n="privacy.cookies.li4">Stripe usa cookies propias en las páginas de pago.</li>
+        <li data-i18n="privacy.cookies.li5">El botón “Feedback” abre un formulario de Tally, que se carga en el editor. Si respondes, las respuestas van a Tally.</li>
+        <li data-i18n="privacy.cookies.li6">Al conectar una app de IA con OAuth, la página de autorización usa una cookie de sesión de 1 hora, solo para esa pantalla.</li>
+      </ul>
+    </section>
+    <section class="card" id="bases">
+      <h2 data-i18n="privacy.bases.title">Para qué los usamos y con qué base legal</h2>
+      <ul>
+        <li data-i18n-html="privacy.bases.li1"><strong>Ejecución de un contrato</strong> (art. 7, V, de la LGPD): crear y mantener la cuenta, cobrar la suscripción, guardar enlaces, generar textos y audios y enviar correos del servicio;</li>
+        <li data-i18n-html="privacy.bases.li2"><strong>Obligación legal</strong> (art. 7, II): guardar registros de pago y fiscales durante el plazo legal;</li>
+        <li data-i18n-html="privacy.bases.li3"><strong>Interés legítimo</strong> (art. 7, IX): seguridad, prevención de abusos y límites de uso, siempre en la medida mínima necesaria;</li>
+        <li data-i18n-html="privacy.bases.li4"><strong>Consentimiento</strong> (art. 7, I): cuando eliges enviar algo opcional, como una respuesta de feedback.</li>
+      </ul>
+    </section>
+    <section class="card" id="compartilhamento">
+      <h2 data-i18n="privacy.compartilhamento.title">Con quién se comparten los datos</h2>
+      <p data-i18n="privacy.compartilhamento.p1">No vendemos ni alquilamos datos personales. Para que el servicio funcione, usamos estos proveedores, que tratan datos en nuestro nombre o como responsables de su propio servicio:</p>
+      <ul>
+        <li data-i18n-html="privacy.compartilhamento.li1"><strong>Vercel</strong> (EE. UU.): alojamiento del sitio y de los enlaces temporales;</li>
+        <li data-i18n-html="privacy.compartilhamento.li2"><strong>Cloudflare</strong> (EE. UU., red global): DNS y entrega del sitio;</li>
+        <li data-i18n-html="privacy.compartilhamento.li3"><strong>Hostinger</strong> (servidor en São Paulo): servidor de la cuenta Pro, de los enlaces permanentes y del análisis de visitas;</li>
+        <li data-i18n-html="privacy.compartilhamento.li9"><strong>DigitalOcean</strong> (EE. UU.): imágenes y audios de los proyectos guardados en la cuenta Pro y copias de seguridad de la base de datos;</li>
+        <li data-i18n-html="privacy.compartilhamento.li4"><strong>Stripe</strong> (EE. UU. e Irlanda): pagos;</li>
+        <li data-i18n-html="privacy.compartilhamento.li5"><strong>Resend</strong> (EE. UU.): envío de correos;</li>
+        <li data-i18n-html="privacy.compartilhamento.li6"><strong>OpenRouter</strong> (EE. UU.) y el proveedor del modelo elegido: textos con IA;</li>
+        <li data-i18n-html="privacy.compartilhamento.li7"><strong>Cartesia</strong> (EE. UU.): audio narrado;</li>
+        <li data-i18n-html="privacy.compartilhamento.li8"><strong>Tally</strong> (Bélgica): formulario de feedback.</li>
+      </ul>
+      <p data-i18n="privacy.compartilhamento.p2">También podemos entregar datos cuando la ley o una orden judicial lo exija.</p>
+    </section>
+    <section class="card" id="transferencia">
+      <h2 data-i18n="privacy.transferencia.title">Transferencia internacional</h2>
+      <p data-i18n="privacy.transferencia.p1">Varios de estos proveedores están fuera de Brasil, principalmente en Estados Unidos. La transferencia ocurre porque es necesaria para prestar el servicio que pediste y se realiza con las garantías contractuales y de seguridad que ofrecen estos proveedores, conforme al art. 33 de la LGPD.</p>
+    </section>
+    <section class="card" id="retencao">
+      <h2 data-i18n="privacy.retencao.title">Cuánto tiempo los guardamos</h2>
+      <ul>
+        <li data-i18n-html="privacy.retencao.li1"><strong>Proyectos en el navegador</strong>: hasta que los borres o borres los datos del sitio;</li>
+        <li data-i18n-html="privacy.retencao.li2"><strong>Enlaces temporales</strong>: 7 días desde la primera publicación;</li>
+        <li data-i18n-html="privacy.retencao.li3"><strong>Enlaces permanentes</strong>: hasta que borres el enlace o se elimine la cuenta;</li>
+        <li data-i18n-html="privacy.retencao.li4"><strong>Enlaces de acceso por correo</strong>: el enlace de inicio de sesión vale 15 minutos y el enlace de activación de una invitación vale 7 días;</li>
+        <li data-i18n-html="privacy.retencao.li6"><strong>Contactos de visitantes</strong>: hasta que el autor del tour los elimine, borre el enlace permanente o cierre la cuenta;</li>
+        <li data-i18n-html="privacy.retencao.li7"><strong>Visitas a tours publicados</strong>: datos de cada visita durante 90 días y totales diarios durante 25 meses, o hasta que el autor borre el enlace;</li>
+        <li data-i18n-html="privacy.retencao.li8"><strong>Proyectos guardados en la cuenta (Pro)</strong>: hasta que borres el proyecto en el editor o se elimine la cuenta, incluso después de que termine la suscripción;</li>
+        <li data-i18n-html="privacy.retencao.li9"><strong>Claves de API y apps conectadas</strong>: hasta que las revoques o la clave venza; el registro de uso de la API durante 90 días;</li>
+        <li data-i18n-html="privacy.retencao.li5"><strong>Cuenta y suscripción</strong>: mientras exista la cuenta. Tras una solicitud de eliminación, borramos los datos de la cuenta, salvo lo que la ley obliga a guardar, como los registros de pago y fiscales, durante el plazo legal.</li>
+      </ul>
+    </section>
+    <section class="card" id="direitos">
+      <h2 data-i18n="privacy.direitos.title">Tus derechos</h2>
+      <p data-i18n="privacy.direitos.p1">Según la LGPD (art. 18), puedes pedir en cualquier momento:</p>
+      <ul>
+        <li data-i18n="privacy.direitos.li1">confirmación de que tratamos tus datos y acceso a ellos;</li>
+        <li data-i18n="privacy.direitos.li2">corrección de datos incompletos, inexactos o desactualizados;</li>
+        <li data-i18n="privacy.direitos.li3">anonimización, bloqueo o eliminación de datos innecesarios o tratados en desacuerdo con la ley;</li>
+        <li data-i18n="privacy.direitos.li4">portabilidad de los datos;</li>
+        <li data-i18n="privacy.direitos.li5">eliminación de los datos tratados con base en tu consentimiento y revocación de ese consentimiento;</li>
+        <li data-i18n="privacy.direitos.li6">información sobre con quién compartimos tus datos;</li>
+        <li data-i18n="privacy.direitos.li7">oposición a un tratamiento que no cumpla la ley.</li>
+      </ul>
+      <p data-i18n-html="privacy.direitos.p2">Para pedirlo, escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>, preferiblemente desde el correo de la cuenta, para que podamos confirmar que eres tú. Respondemos en un plazo de 15 días. También puedes reclamar ante la Autoridad Nacional de Protección de Datos de Brasil (ANPD).</p>
+      <p data-i18n="privacy.direitos.p3">Los datos que quedan solo en tu navegador están bajo tu control: puedes exportar o borrar los proyectos en el propio editor.</p>
+    </section>
+    <section class="card" id="seguranca">
+      <h2 data-i18n="privacy.seguranca.title">Seguridad</h2>
+      <p data-i18n="privacy.seguranca.p1">Usamos conexiones HTTPS, contraseñas guardadas solo como hash, enlaces de acceso de corta duración, tokens de sesión con caducidad y acceso restringido al servidor. Ningún sistema es totalmente inmune a fallos; si ocurre un incidente que pueda causar un riesgo o daño relevante, avisaremos a los afectados y a la ANPD, como exige la ley.</p>
+    </section>
+    <section class="card" id="menores">
+      <h2 data-i18n="privacy.menores.title">Niños y adolescentes</h2>
+      <p data-i18n="privacy.menores.p1">GuiaFlow es una herramienta de trabajo y no está dirigida a niños ni adolescentes. La suscripción Pro es para mayores de 18 años.</p>
+    </section>
+    <section class="card" id="mudancas">
+      <h2 data-i18n="privacy.mudancas.title">Cambios en esta política</h2>
+      <p data-i18n="privacy.mudancas.p1">Podemos actualizar esta política cuando cambie el producto. La fecha de arriba indica la última versión. Si el cambio es relevante, avisaremos a los suscriptores por correo antes de que entre en vigor.</p>
+    </section>
+    <section class="card" id="contato">
+      <h2 data-i18n="privacy.contato.title">Contacto</h2>
+      <p data-i18n-html="privacy.contato.p1">Dudas o solicitudes sobre privacidad: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/es/ajuda" data-i18n="topbar.help">Ayuda</a>
+      <a href="/es/privacidade" data-i18n="legal.privacy">Privacidad</a>
+      <a href="/es/termos" data-i18n="legal.terms">Términos</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module">
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/85/js/i18n.js";
+    import "./a/85/js/legal-i18n.js";
+    initLocale();
+    applyI18n(document);
+    bindLocaleSelect(document.getElementById("locale-select"));
+  </script>
+</body>
+</html>

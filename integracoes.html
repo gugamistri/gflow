@@ -1,13 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-alt-pt="/integracoes" data-alt-en="/en/integracoes" data-alt-es="/es/integracoes">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Integrações — GuiaFlow</title>
   <meta name="description" content="Conecte o GuiaFlow ao Cursor, Claude Code, Claude.ai, ChatGPT e VS Code pelo servidor MCP: instalação em um clique e passo a passo." />
+  <!-- i18n-alternates -->
   <link rel="canonical" href="https://guiaflow.pro/integracoes" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integracoes" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integracoes" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes" />
+  <!-- /i18n-alternates -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
   <meta property="og:title" content="Integrações — GuiaFlow" />
   <meta property="og:description" content="Conecte o GuiaFlow ao Cursor, Claude Code, Claude.ai, ChatGPT e VS Code pelo servidor MCP: instalação em um clique e passo a passo." />
   <meta property="og:url" content="https://guiaflow.pro/integracoes" />
@@ -23,7 +30,8 @@
   <script>
     (function () {
       try {
-        var stored = localStorage.getItem("ns-locale");
+        var fixed = document.documentElement.getAttribute("data-page-locale");
+        var stored = fixed || localStorage.getItem("ns-locale");
         var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
         var pick = stored;
         if (!pick) {
@@ -61,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/84/css/theme.css" />
-  <link rel="stylesheet" href="/a/84/css/app.css" />
-  <link rel="stylesheet" href="/a/84/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/85/css/theme.css" />
+  <link rel="stylesheet" href="/a/85/css/app.css" />
+  <link rel="stylesheet" href="/a/85/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -82,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/84/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/84/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/85/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/85/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Integrações</span></span>
     </div>
     <div class="topbar-appearance">
@@ -267,7 +275,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/84/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/85/js/i18n.js";
     const show = (loc) => {
       document.querySelectorAll("[data-doc-locale]").forEach((el) => {
         el.hidden = el.dataset.docLocale !== loc;

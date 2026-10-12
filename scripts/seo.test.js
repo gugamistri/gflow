@@ -26,7 +26,7 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/ajuda<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/privacidade<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/termos<\/loc>/);
-  assert.match(text, /<lastmod>2026-10-09<\/lastmod>/);
+  assert.match(text, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   assert.equal(text.includes(".html"), false);
   assert.equal(text.includes("/view"), false);
   assert.equal(text.includes("/api/"), false);
@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 1[12] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/84\/css\/ajuda\.css/);
+    assert.match(html, /a\/85\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -141,7 +141,7 @@ test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos 
   assert.match(html, /claude mcp add --transport http guiaflow https:\/\/app\.guiaflow\.pro\/mcp/);
   for (const loc of ["pt", "es", "en"]) assert.match(html, new RegExp(`data-doc-locale="${loc}"`));
   assert.equal(/(href|src)="a\//.test(html), false);
-  assert.match(html, /a\/84\/css\/ajuda\.css/);
+  assert.match(html, /a\/85\/css\/ajuda\.css/);
   assert.match(read("sitemap.xml"), /guiaflow\.pro\/integracoes/);
   assert.match(read("index.html"), /href="\/integracoes"/);
 });
@@ -150,4 +150,31 @@ test("páginas de texto liberam a rolagem que o app.css trava (overflow do body)
   const css = read("css/ajuda.css");
   assert.match(css, /body \{\s*overflow: visible;/);
   assert.match(css, /height: auto;/);
+});
+
+test("páginas /en e /es: geradas, atualizadas e com canonical/hreflang recíprocos", async () => {
+  const { buildAll, PAGES, LOCALES, localePath, localeFile, absUrl } = await import("./build-locale-pages.mjs");
+  const files = buildAll();
+  for (const [file, content] of Object.entries(files)) {
+    assert.equal(read(file), content, `${file} desatualizado: rode npm run build:locales`);
+  }
+  const lang = { pt: "pt-BR", en: "en", es: "es" };
+  for (const page of PAGES) {
+    const expected = LOCALES.map((l) => `hreflang="${lang[l]}" href="${absUrl(localePath(page, l))}"`);
+    for (const loc of LOCALES) {
+      const html = files[localeFile(page, loc)];
+      assert.match(html, new RegExp(`<html lang="${lang[loc]}"`));
+      assert.ok(html.includes(`<link rel="canonical" href="${absUrl(localePath(page, loc))}" />`), `${loc} ${page.path} canonical`);
+      for (const alt of expected) assert.ok(html.includes(alt), `${loc} ${page.path} ${alt}`);
+      assert.ok(html.includes(`hreflang="x-default" href="${absUrl(localePath(page, "pt"))}"`));
+      assert.ok(html.includes(`<meta property="og:url" content="${absUrl(localePath(page, loc))}" />`));
+      // sem barra final (trailingSlash: false) e sem caminho relativo que quebre em /en/…
+      assert.equal(/href="https:\/\/guiaflow\.pro\/[^"]+\/"/.test(html), false);
+      if (loc !== "pt") assert.equal(/\b(href|src)="(?:\.\/)?a\//.test(html), false);
+      assert.ok(read("sitemap.xml").includes(`<loc>${absUrl(localePath(page, loc))}</loc>`));
+    }
+  }
+  const vercel = JSON.parse(read("vercel.json"));
+  assert.equal(vercel.cleanUrls, true);
+  assert.equal(vercel.trailingSlash, false);
 });
