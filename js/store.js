@@ -3,6 +3,39 @@
  */
 
 import { ensureContrast } from "./a11y.js";
+import { getThemeFont, themeFontFaceCss } from "./tour-schema/fonts.js";
+
+/** Pasta dos woff2 auto-hospedados (relativa a este módulo: /a/N/js → /a/N/fonts). */
+export function themeFontBase() {
+  try {
+    return new URL("../fonts/", import.meta.url).href;
+  } catch {
+    return "/fonts/";
+  }
+}
+
+/** Define --demo-font e injeta só o @font-face da fonte escolhida. */
+export function applyThemeFont(fontId) {
+  if (typeof document === "undefined") return;
+  const font = getThemeFont(fontId);
+  const root = document.documentElement;
+  root.style.setProperty("--demo-font", font.stack);
+  root.style.setProperty("--demo-font-display", font.stack);
+  let style = document.getElementById("gf-theme-font");
+  const css = themeFontFaceCss(font.id, themeFontBase());
+  if (!css) {
+    style?.remove();
+    return;
+  }
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "gf-theme-font";
+    document.head.append(style);
+  }
+  if (style.textContent !== css) style.textContent = css;
+  document.fonts?.load?.(`400 16px "${font.family}"`).catch(() => {});
+  document.fonts?.load?.(`700 16px "${font.family}"`).catch(() => {});
+}
 import { darkenHex, fixedFormPalette } from "./themes.js";
 import {
   clickPointFromHotspot,
@@ -44,16 +77,8 @@ export function applyTheme(theme) {
   root.style.setProperty("--demo-button", theme.button);
   root.style.setProperty("--demo-hotspot", theme.hotspot);
   for (const [name, value] of Object.entries(fixedFormPalette(theme))) root.style.setProperty(name, value);
-  const darkDemo =
-    theme.presetId === "social" ||
-    theme.appearance === "social" ||
-    isDarkHex(theme.popoverBg);
-  root.style.setProperty(
-    "--demo-font-display",
-    darkDemo
-      ? 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif'
-      : 'Georgia, "Times New Roman", serif'
-  );
+  // why: uma fonte só para balão, slide de texto, cartões e formulário (antes o slide usava Georgia e o balão Inter)
+  applyThemeFont(theme.font);
 }
 
 function isDarkHex(hex) {

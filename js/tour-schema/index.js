@@ -8,4 +8,5 @@ export * from "./fixedSteps.js";
 export * from "./phoneCountries.js";
 export * from "./scenes.js";
 export * from "./theme.js";
+export * from "./fonts.js";
 export * from "./agent.js";

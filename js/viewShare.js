@@ -132,6 +132,7 @@ export const TOUR_CARD_SELECTOR = [
   ".driver-popover:not(.is-slide-hidden)",
   "#hotspot",
   ".driver-active-element",
+  ".gf-player-controls",
 ].join(", ");
 
 /** Controlos fora do cartão, como o logótipo, que não fecham o tour. */

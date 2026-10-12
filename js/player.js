@@ -810,7 +810,7 @@ export function createPlayer(ctx) {
       (e) => {
         swipe = null;
         if (!isPresenting() || !driverObj || e.touches.length !== 1) return;
-        if (e.target.closest?.("input, textarea, select, label, form, audio, video, a, [contenteditable]")) return;
+        if (e.target.closest?.("input, textarea, select, label, form, audio, video, a, [contenteditable], .gf-player-controls")) return;
         const t = e.touches[0];
         swipe = { x: t.clientX, y: t.clientY, at: Date.now() };
       },

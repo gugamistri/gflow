@@ -41,13 +41,7 @@ function gfT(key, vars) {
     root.style.setProperty("--demo-popover-text", theme.text);
     root.style.setProperty("--demo-button", theme.button);
     root.style.setProperty("--demo-hotspot", theme.hotspot);
-    const darkDemo = appearance === "social";
-    root.style.setProperty(
-      "--demo-font-display",
-      darkDemo
-        ? 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif'
-        : 'Georgia, "Times New Roman", serif'
-    );
+    // a fonte do tema (--demo-font) vem no CSS exportado; não sobrescrever aqui
   }
 
   function wait(ms) {

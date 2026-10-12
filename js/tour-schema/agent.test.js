@@ -83,3 +83,17 @@ test("alt e altDecorative entram no passo e voltam no stepForAgent", () => {
   assert.equal(long.step.alt.length, 300);
   assert.ok(long.warnings.some((w) => w.startsWith("alt cortado")));
 });
+
+test("themeFromAgentInput aceita font sozinha, com preset e recusa id desconhecido", async () => {
+  const { themeFromAgentInput, themeFontFaceCss } = await import("./index.js");
+  const a = themeFromAgentInput({ font: "poppins" });
+  assert.equal(a.ok, true);
+  assert.equal(a.theme.font, "poppins");
+  const b = themeFromAgentInput({ preset: "dark" }, a.theme);
+  assert.equal(b.theme.font, "poppins");
+  const c = themeFromAgentInput({ preset: "dark", font: "default" }, a.theme);
+  assert.equal(c.theme.font, undefined);
+  assert.equal(themeFromAgentInput({ font: "comic-sans" }).ok, false);
+  assert.match(themeFontFaceCss("lato", "/fonts/"), /lato-latin-700\.woff2/);
+  assert.equal(themeFontFaceCss("default"), "");
+});
