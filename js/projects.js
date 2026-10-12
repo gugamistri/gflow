@@ -725,7 +725,15 @@ async function reconcileIndexFromIdb() {
   return { index, stored };
 }
 
-async function seedDefaultDemoProject({ replaceExisting = false } = {}) {
+/**
+ * Tour de exemplo que o usuário ainda não mexeu: fica só neste navegador.
+ * why: subir o exemplo intocado criaria a mesma cópia na conta de todo mundo; editado, ele vira do usuário e sincroniza.
+ */
+export function isUntouchedStockDemo(project) {
+  return Boolean(project && project.name === STOCK_DEMO_NAME && !project.stockEdited);
+}
+
+async function seedDefaultDemoProject({ replaceExisting = false, keepEdited = false } = {}) {
   let legacy = loadLegacyLocalStorage();
   let data = legacy?.data || null;
   let fromLegacy = Boolean(data?.steps?.length);
@@ -742,6 +750,14 @@ async function seedDefaultDemoProject({ replaceExisting = false } = {}) {
   const index = readIndex();
   const existingSummary = (index.projects || []).find((p) => p.name === stockName || p.name === STOCK_DEMO_NAME);
   const prev = existingSummary && replaceExisting ? await getProjectRecord(existingSummary.id) : null;
+  // why: a atualização automática do exemplo não apaga o que o usuário editou nele
+  if (keepEdited && prev?.stockEdited) {
+    const kept = readIndex();
+    kept.seedRevision = SEED_REVISION;
+    kept.migrated = true;
+    writeIndex(kept);
+    return prev;
+  }
 
   const project = demoPayloadToProject(data, {
     name: stockName,
@@ -801,7 +817,7 @@ export async function ensureMigrated() {
     }
   } else if ((index.seedRevision || 0) < SEED_REVISION) {
     try {
-      await seedDefaultDemoProject({ replaceExisting: true });
+      await seedDefaultDemoProject({ replaceExisting: true, keepEdited: true });
       index = readIndex();
     } catch (err) {
       console.warn("Falha ao atualizar demo padrão", err);

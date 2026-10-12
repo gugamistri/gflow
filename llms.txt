@@ -6,13 +6,13 @@
 
 - MCP server (Streamable HTTP): https://app.guiaflow.pro/mcp
 - Auth: OAuth 2.1 with PKCE (dynamic client registration and Client ID Metadata Documents supported; discovery at https://app.guiaflow.pro/.well-known/oauth-protected-resource/mcp), or an API key sent as `Authorization: Bearer gf_live_...` (created in the editor: account menu -> API keys).
-- Scopes: `tours:read`, `tours:write`, `publish`.
+- Scopes: `tours:read`, `tours:write`, `publish`, `ai` (GuiaFlow AI text and narration; uses the user's monthly quota), `analytics:read` (link stats, counts only).
 - REST API base: https://app.guiaflow.pro/v1 (same auth). OpenAPI: https://app.guiaflow.pro/v1/openapi.json
 
 ## Docs
 
 - [API and MCP guide](https://guiaflow.pro/ajuda/api): setup for Cursor, Claude Code, Claude.ai, ChatGPT, VS Code; tools; limits.
-- [OpenAPI 3.1](https://app.guiaflow.pro/v1/openapi.json): REST contract.
+- [OpenAPI 3.1](https://app.guiaflow.pro/v1/openapi.json): REST contract (includes `POST /v1/tours/{id}/steps/{stepId}/generate-text`, `POST .../narration`, `GET /v1/tours/{id}/analytics`, `GET /v1/analytics`).
 - [Help](https://guiaflow.pro/ajuda): recording screenshots with the Chrome extension and editing tours.
 - [Privacy](https://guiaflow.pro/privacidade)
 
@@ -21,7 +21,9 @@
 1. `create_tour` {name} -> tourId. The tour appears in the user's editor tagged "created by agent".
 2. For each screenshot: `upload_media` {url | base64} -> mediaId (or call it with no args to get a 15-minute upload URL for a local file), then `add_step` {tourId, image: {mediaId}, title, text, highlight: {x,y,width,height}, click: {x,y}}.
 3. Optional: `set_theme`, `set_lead_capture` (opening step asking name/email/phone with consent), `set_end_cta` (WhatsApp in E.164 like +5511999998888 and/or an https link).
-4. `publish` {tourId, dryRun: true} to validate, then `publish` {tourId} -> permanent URL + embed HTML. Publishing again updates the same link.
+4. Optional AI (scope `ai`, uses the user's quota of 100 texts and 30 audio minutes per month): `generate_step_text` {tourId, stepId, instructions?, language?, narrationScript?} looks at the screenshot and writes title/text into the step; `generate_narration` {tourId, stepId, text?} saves a mono 48 kbps MP3 as the step audio.
+5. `publish` {tourId, dryRun: true} to validate and get `preview.url` (a temporary preview link valid for 7 days, show it to the user), then `publish` {tourId} -> permanent URL + embed HTML + cover image (og:image) rendered on the server. Publishing again updates the same link.
+6. Later: `get_analytics` {tourId?, from?, to?} -> views, completions, CTA clicks, lead count, daily series and per-step funnel (scope `analytics:read`).
 
 Other tools: `list_tours`, `get_tour`, `update_step`, `reorder_steps`, `delete_step`, `unpublish` (needs confirm: true).
 
