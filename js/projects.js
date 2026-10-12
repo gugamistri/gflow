@@ -442,6 +442,9 @@ async function summarizeProject(project, previous) {
     thumb,
     thumbSig,
     themePreview: themePreviewDots(project.theme),
+    ...(project.createdBy?.kind === "agent"
+      ? { agent: true, agentClient: String(project.createdBy.client || "").slice(0, 60) }
+      : {}),
   };
 }
 

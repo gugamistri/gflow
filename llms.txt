@@ -1,0 +1,34 @@
+# GuiaFlow
+
+> GuiaFlow turns product screenshots into interactive guided tours (highlight + click + text + optional narration), published as a permanent link (https://guiaflow.pro/p/...) or embedded on a site. AI agents can build and publish tours through the GuiaFlow MCP server or REST API. Pro plan only. Interface and copy default to Brazilian Portuguese; Spanish and English are supported.
+
+## Connect
+
+- MCP server (Streamable HTTP): https://app.guiaflow.pro/mcp
+- Auth: OAuth 2.1 with PKCE (dynamic client registration and Client ID Metadata Documents supported; discovery at https://app.guiaflow.pro/.well-known/oauth-protected-resource/mcp), or an API key sent as `Authorization: Bearer gf_live_...` (created in the editor: account menu -> API keys).
+- Scopes: `tours:read`, `tours:write`, `publish`.
+- REST API base: https://app.guiaflow.pro/v1 (same auth). OpenAPI: https://app.guiaflow.pro/v1/openapi.json
+
+## Docs
+
+- [API and MCP guide](https://guiaflow.pro/ajuda/api): setup for Cursor, Claude Code, Claude.ai, ChatGPT, VS Code; tools; limits.
+- [OpenAPI 3.1](https://app.guiaflow.pro/v1/openapi.json): REST contract.
+- [Help](https://guiaflow.pro/ajuda): recording screenshots with the Chrome extension and editing tours.
+- [Privacy](https://guiaflow.pro/privacidade)
+
+## How to build a tour (MCP tools)
+
+1. `create_tour` {name} -> tourId. The tour appears in the user's editor tagged "created by agent".
+2. For each screenshot: `upload_media` {url | base64} -> mediaId (or call it with no args to get a 15-minute upload URL for a local file), then `add_step` {tourId, image: {mediaId}, title, text, highlight: {x,y,width,height}, click: {x,y}}.
+3. Optional: `set_theme`, `set_lead_capture` (opening step asking name/email/phone with consent), `set_end_cta` (WhatsApp in E.164 like +5511999998888 and/or an https link).
+4. `publish` {tourId, dryRun: true} to validate, then `publish` {tourId} -> permanent URL + embed HTML. Publishing again updates the same link.
+
+Other tools: `list_tours`, `get_tour`, `update_step`, `reorder_steps`, `delete_step`, `unpublish` (needs confirm: true).
+
+## Format rules
+
+- Coordinates are fractions of the image: x, y, width, height in 0..1 from the top-left corner. Click is kept inside the highlight; with only a click, a highlight is drawn around it. Out-of-range values are clamped and reported as warnings.
+- Step `type: "slide"` is a text card without an image.
+- Limits: title 120 chars, text 1200, narration script 3000, 200 steps, images up to 15 MB (PNG/JPEG/WebP/GIF), published tour up to 12 MB (prefer JPEG/WebP).
+- Rate limits: 60 calls/min per key or app; 600 writes and 30 publishes per hour per account. Errors: 401 invalid/revoked credential, 402 no Pro plan, 403 missing scope, 429 with Retry-After.
+- Send `Idempotency-Key` on REST POSTs to retry safely.

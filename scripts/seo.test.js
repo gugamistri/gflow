@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 11 de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/72\/css\/ajuda\.css/);
+    assert.match(html, /a\/73\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -118,4 +118,18 @@ test("/oembed é uma rota pública (rewrite para a função, fora de /api/ no ro
   const shell = read("api/lib/view-shell.cjs");
   assert.match(shell, /application\/json\+oembed/);
   assert.match(shell, /rel="iframely app"/);
+});
+
+test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
+  const html = read("ajuda/api.html");
+  assert.match(html, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/ajuda\/api"/);
+  assert.match(html, /<meta name="description" content="API REST e servidor MCP do GuiaFlow[^"]+"/);
+  assert.equal(/(href|src)="a\//.test(html), false, "caminhos relativos quebram em /ajuda/api");
+  for (const loc of ["pt", "es", "en"]) assert.match(html, new RegExp(`data-doc-locale="${loc}"`));
+  assert.match(html, /https:\/\/app\.guiaflow\.pro\/mcp/);
+  assert.match(read("sitemap.xml"), /<loc>https:\/\/guiaflow\.pro\/ajuda\/api<\/loc>/);
+  const llms = read("llms.txt");
+  assert.match(llms, /^# GuiaFlow$/m);
+  assert.match(llms, /https:\/\/app\.guiaflow\.pro\/mcp/);
+  assert.match(llms, /https:\/\/app\.guiaflow\.pro\/v1\/openapi\.json/);
 });
