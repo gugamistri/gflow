@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/73/css/theme.css" />
-  <link rel="stylesheet" href="a/73/css/app.css" />
-  <link rel="stylesheet" href="a/73/css/ajuda.css" />
+  <link rel="stylesheet" href="a/74/css/theme.css" />
+  <link rel="stylesheet" href="a/74/css/app.css" />
+  <link rel="stylesheet" href="a/74/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/73/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/73/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/74/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/74/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -66,7 +66,7 @@
   <main class="page legal">
     <h1 data-i18n="privacy.h1">Política de Privacidade</h1>
     <p class="lead" data-i18n="privacy.lead">Explicamos aqui, em linguagem direta, quais dados o GuiaFlow trata, por quê, onde ficam e como você controla isso.</p>
-    <p class="legal-updated" data-i18n="privacy.updated">Última atualização: 11 de outubro de 2026</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Última atualização: 12 de outubro de 2026</p>
     <section class="card" id="resumo">
       <h2 data-i18n="privacy.resumo.title">Em resumo</h2>
       <ul>
@@ -151,6 +151,7 @@
       <p data-i18n="privacy.api.p1">Assinantes Pro podem conectar ferramentas de IA (como Cursor, Claude ou ChatGPT) à conta, por uma chave de API ou pelo login com OAuth, para criar, editar e publicar tours. Essas ferramentas agem em seu nome e só com as permissões que você escolheu; o que elas enviam vira parte dos seus projetos, tratado como descrito acima.</p>
       <p data-i18n="privacy.api.p2">Para isso guardamos: o nome, os 4 últimos caracteres, as permissões e as datas de cada chave; o nome dos apps conectados por OAuth; e um registro de uso (app ou chave, ação, resultado, data e hora e um resumo do IP feito com uma chave secreta, que não permite recuperar o IP). Chaves e tokens são guardados só como resumo (hash), nunca por extenso. O registro de uso aparece para você em Chaves de API e é apagado depois de 90 dias.</p>
       <p data-i18n="privacy.api.p3">Quando você passa uma URL de imagem, o servidor do GuiaFlow baixa esse arquivo (só endereços https públicos). Você pode revogar uma chave ou desconectar um app a qualquer momento, e o acesso acaba na hora. Se a assinatura terminar, a API para de aceitar chamadas.</p>
+      <p data-i18n="privacy.api.p4">Pela API e pelo MCP, quando um agente pede um texto com IA para um passo (permissão ai), a captura daquele passo também vai para o OpenRouter junto com o pedido, para a IA ler a tela (o agente pode desligar isso com useImage:false). Narrações pedidas pela API vão para a Cartesia como no editor. As duas contam na mesma cota mensal do Pro. As estatísticas que a API devolve são só contagens, sem dados pessoais dos visitantes.</p>
     </section>
     <section class="card" id="emails">
       <h2 data-i18n="privacy.emails.title">E-mails</h2>
@@ -280,8 +281,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/73/js/i18n.js";
-    import "./a/73/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/74/js/i18n.js";
+    import "./a/74/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
