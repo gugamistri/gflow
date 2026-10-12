@@ -673,6 +673,22 @@ export function createPlayer(ctx) {
       }
     });
 
+    // why: no celular o balão fica preso embaixo; a legenda sobe para ficar logo acima dele (--gf-pop-h)
+    if (typeof ResizeObserver === "function" && typeof MutationObserver === "function") {
+      let watched = null;
+      const ro = new ResizeObserver(() => {
+        if (!watched?.isConnected) return;
+        document.documentElement.style.setProperty("--gf-pop-h", `${Math.round(watched.getBoundingClientRect().height)}px`);
+      });
+      new MutationObserver(() => {
+        const pop = document.querySelector(".driver-popover");
+        if (pop === watched) return;
+        ro.disconnect();
+        watched = pop;
+        if (pop) ro.observe(pop);
+      }).observe(document.body, { childList: true });
+    }
+
     // why: no celular, deslizar para os lados troca de passo (só um dedo, gesto claramente horizontal, fora de campos)
     let swipe = null;
     window.addEventListener(
