@@ -1,0 +1,9 @@
+{
+  "name": "@guiaflow/tour-schema",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Formato do tour do GuiaFlow (passos, destaque, clique, passos fixos, temas, cenas). JS puro, sem DOM: editor, player e API pública.",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT"
+}
