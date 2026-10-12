@@ -30,6 +30,7 @@ import {
   createProjectId,
   onLocalProjectChange,
   STOCK_DEMO_NAME,
+  isUntouchedStockDemo,
 } from "./projects.js";
 import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks } from "./cloudSync.js";
 import { formatBytes } from "./mediaBytes.js";
@@ -384,6 +385,7 @@ async function attachSavedHistory(state) {
 
 function onChange() {
   if (historyLock || !project) return;
+  if (project.name === STOCK_DEMO_NAME && !project.stockEdited) project.stockEdited = true;
   history.noteChange();
   updateHistoryButtons();
   schedulePersist();
@@ -911,8 +913,8 @@ const cloudSync = createCloudSync({
     saveCustomThemes,
     createProjectId,
   },
-  // why: o tour de exemplo vem com o editor; subir criaria cópias em cada navegador
-  skipProject: (p) => p?.name === STOCK_DEMO_NAME,
+  // why: o tour de exemplo vem com o editor; só sobe depois que o usuário edita (vira dele)
+  skipProject: (p) => isUntouchedStockDemo(p),
   isProjectBusy: (id) => Boolean(project && project.id === id && (saveDirty || saveTimer)),
   conflictName: (name) => t("sync.conflictCopy", { name }),
   onStatus: (next) => {

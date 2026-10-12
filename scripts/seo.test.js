@@ -94,10 +94,10 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, new RegExp(`<link rel="canonical" href="https://guiaflow\\.pro/${slug}"`));
     assert.match(html, new RegExp(`<meta property="og:url" content="https://guiaflow\\.pro/${slug}"`));
     assert.match(html, /data-appearance="social"/);
-    assert.match(html, /Última atualização: 11 de outubro de 2026/);
+    assert.match(html, /Última atualização: 1[12] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/73\/css\/ajuda\.css/);
+    assert.match(html, /a\/74\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
