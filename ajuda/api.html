@@ -61,9 +61,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/74/css/theme.css" />
-  <link rel="stylesheet" href="/a/74/css/app.css" />
-  <link rel="stylesheet" href="/a/74/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/75/css/theme.css" />
+  <link rel="stylesheet" href="/a/75/css/app.css" />
+  <link rel="stylesheet" href="/a/75/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .api-doc[hidden] { display: none; }
@@ -77,7 +77,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/74/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/74/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/75/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/75/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title">API · MCP</span>
     </div>
     <div class="topbar-appearance">
@@ -98,6 +98,7 @@
     <section class="card" id="conectar-pt">
       <h2>Conectar</h2>
       <p>O endereço do servidor MCP é <code>https://app.guiaflow.pro/mcp</code> (Streamable HTTP). Pelo login no navegador (OAuth) não há chave para copiar: o app abre a página do GuiaFlow, você entra e escolhe as permissões.</p>
+      <p>Instalação em um clique e passo a passo por app: <a href="/integracoes">Integrações</a>.</p>
       <h3>Cursor</h3>
       <p>Cole em <code>~/.cursor/mcp.json</code> (ou Settings → MCP → Add new MCP server). Na primeira chamada o Cursor pede o login.</p>
       <pre><code>{
@@ -188,6 +189,7 @@ curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization
     <section class="card" id="conectar-es">
       <h2>Conectar</h2>
       <p>La dirección del servidor MCP es <code>https://app.guiaflow.pro/mcp</code> (Streamable HTTP). Con el login en el navegador (OAuth) no hay clave que copiar: la app abre la página de GuiaFlow, entras y eliges los permisos.</p>
+      <p>Instalación en un clic y paso a paso por app: <a href="/integracoes">Integraciones</a>.</p>
       <h3>Cursor</h3>
       <p>Pega en <code>~/.cursor/mcp.json</code> (o Settings → MCP → Add new MCP server). En la primera llamada Cursor pide el login.</p>
       <pre><code>{
@@ -278,6 +280,7 @@ curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization
     <section class="card" id="conectar-en">
       <h2>Connect</h2>
       <p>The MCP server URL is <code>https://app.guiaflow.pro/mcp</code> (Streamable HTTP). With browser sign-in (OAuth) there is no key to copy: the app opens a GuiaFlow page, you sign in and pick the permissions.</p>
+      <p>One-click install and step-by-step per app: <a href="/integracoes">Integrations</a>.</p>
       <h3>Cursor</h3>
       <p>Paste into <code>~/.cursor/mcp.json</code> (or Settings → MCP → Add new MCP server). Cursor asks you to sign in on first use.</p>
       <pre><code>{
@@ -373,7 +376,7 @@ curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/74/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/75/js/i18n.js";
     const show = (loc) => {
       document.querySelectorAll("[data-doc-locale]").forEach((el) => {
         el.hidden = el.dataset.docLocale !== loc;
