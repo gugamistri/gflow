@@ -251,6 +251,12 @@ function showClosedState() {
   hideFixedCard();
   const closed = document.getElementById("view-share-closed");
   if (closed) closed.hidden = false;
+  // why: WCAG 2.4.3 — depois de sair (Esc/fechar) o foco vai para "Ver tour novamente"
+  const replay = document.getElementById("view-share-replay");
+  if (replay && !isEmbed) {
+    replay.focus({ preventScroll: true });
+    return;
+  }
   focusShareDocument();
 }
 

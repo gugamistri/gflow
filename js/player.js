@@ -23,6 +23,13 @@ import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
 import { createPresentProgress } from "./presentProgress.js";
 import { createTourLifecycle } from "./tourLifecycle.js";
+import { pauseAudio, resumeAudio, setAudioMuted } from "./playback.js";
+import { createPlayerControls, createLiveAnnouncer, playerShortcut } from "./playerControls.js";
+import { stepImageAlt } from "./a11y.js";
+
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+}
 
 export function createPlayer(ctx) {
   const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit, presentHintKey } = ctx;
@@ -34,6 +41,25 @@ export function createPlayer(ctx) {
     onExit: ctx.onExit,
   });
   let pendingExitReason = "";
+  const announce = createLiveAnnouncer();
+  // why: WCAG 2.2.2 / 1.4.2 — pausar vira modo manual (Anterior/Próximo); silenciar corta fala e trilha
+  const controls = createPlayerControls({
+    onPauseChange: (paused, { announce: say } = {}) => {
+      if (paused) {
+        clearAutoplay();
+        pauseAudio();
+      } else {
+        resumeAudio();
+        armAutoplay();
+      }
+      if (say) announce(t(paused ? "player.pausedNote" : "player.resumedNote"));
+    },
+    onMuteChange: (muted, { announce: say } = {}) => {
+      setAudioMuted(muted);
+      if (say) announce(t(muted ? "player.mutedNote" : "player.unmutedNote"));
+    },
+  });
+  setAudioMuted(controls.isMuted());
 
   const els = {
     stage: document.getElementById("canvas-stage"),
@@ -101,7 +127,7 @@ export function createPlayer(ctx) {
   }
 
   function autoplayOn() {
-    return autoplayEnabled;
+    return autoplayEnabled && !controls.isPaused();
   }
 
   function clearAutoplay() {
@@ -297,6 +323,7 @@ export function createPlayer(ctx) {
       els.hotspot.classList.add("is-previewing");
 
       const src = resolveImageSrc(getDemo(), step.image);
+      if (els.image) els.image.alt = stepImageAlt(step);
       bindImage(els.image, src, (ok) => {
         if (els.missing) els.missing.hidden = ok;
         if (ok) {
@@ -361,6 +388,37 @@ export function createPlayer(ctx) {
     return performance.now() >= advanceArmedAt;
   }
 
+  function decoratePopoverA11y(popover) {
+    const wrap = popover?.wrapper;
+    if (wrap) wrap.setAttribute("aria-modal", "true");
+    const title = popover?.title;
+    if (title) {
+      title.setAttribute("role", "heading");
+      title.setAttribute("aria-level", "2");
+      title.tabIndex = -1;
+    }
+    // why: o texto "Passo X / N" do rodapé é o indicador de progresso legível
+    popover?.progress?.setAttribute?.("aria-hidden", "false");
+  }
+
+  /** why: WCAG 2.4.3 — a cada passo o foco vai para o título (não para o X), sem roubar foco dos controles. */
+  function focusStepHeading(popover, isSlide) {
+    setTimeout(() => {
+      if (!driverObj || !isPresenting()) return;
+      const active = document.activeElement;
+      if (active?.closest?.(".gf-player-controls, input, textarea, select")) return;
+      let target = null;
+      if (isSlide) {
+        target = els.slideTitle;
+        if (target && target.tabIndex < 0) target.tabIndex = -1;
+      } else {
+        target = popover?.title && !popover.title.hidden && popover.title.style.display !== "none" ? popover.title : popover?.description;
+        if (target && !target.hasAttribute("tabindex")) target.tabIndex = -1;
+      }
+      target?.focus?.({ preventScroll: true });
+    }, 60);
+  }
+
   async function buildAndDrive(startIndex = 0, opts = {}) {
     stop({ silent: true });
     const token = ++driveToken;
@@ -387,6 +445,8 @@ export function createPlayer(ctx) {
 
     running = true;
     lifecycle.start();
+    controls.show({ pausable: autoplayEnabled });
+    setAudioMuted(controls.isMuted());
     pendingExitReason = "";
     setPresentHint(presentStopHintKey());
     // why: sem índices a lista é o tour inteiro (volta antes do início);
@@ -418,7 +478,7 @@ export function createPlayer(ctx) {
     driverObj = factory({
       popoverClass: "demo-popover",
       showProgress: true,
-      animate: true,
+      animate: !prefersReducedMotion(),
       allowClose: ctx.allowClose !== false,
       // why: no embed o clique no véu não fecha nem avança ("none" é ignorado pelo Driver)
       overlayClickBehavior: ctx.overlayClickBehavior || "close",
@@ -439,8 +499,21 @@ export function createPlayer(ctx) {
       onPopoverRender: (popover) => {
         renderDemoPopoverFooter(popover);
         labelCloseButton(popover?.closeButton, t(ctx.closeLabelKey || "player.closeTour"));
-        setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
+        const isSlide = steps[activeIndex]?.type === "slide";
+        setPopoverHiddenForSlide(isSlide);
+        decoratePopoverA11y(popover);
+        const stepTitle = steps[activeIndex]?.popover?.title || steps[activeIndex]?.label || "";
+        announce(
+          t("player.announceStep", { current: playlistPos + 1, total: playOrder.length, title: stepTitle }).replace(/:\s*$/, "")
+        );
+        focusStepHeading(popover, isSlide);
         armAutoplay();
+      },
+      onHighlighted: (el) => {
+        // why: WCAG 4.1.2 — o Driver põe aria-expanded/haspopup no destaque (inválido em div/section)
+        el?.removeAttribute?.("aria-expanded");
+        el?.removeAttribute?.("aria-haspopup");
+        el?.removeAttribute?.("aria-controls");
       },
       steps: playOrder.map((stepIndex) => {
         const step = steps[stepIndex];
@@ -511,6 +584,7 @@ export function createPlayer(ctx) {
       onDestroyed: () => {
         // why: um Próximo/Anterior em voo não pode voltar a falar depois de fechar
         driveToken += 1;
+        controls.hide();
         clearAutoplay();
         narration.stop();
         setProgress(t("player.stopped"));
@@ -547,6 +621,7 @@ export function createPlayer(ctx) {
   function stop({ silent = false } = {}) {
     // why: invalida o buildAndDrive/onNextClick em voo (senão o passo seguinte volta a falar)
     driveToken += 1;
+    controls.hide();
     silenceAudio();
     if (driverObj) {
       suppressExitArm = true;
@@ -661,6 +736,13 @@ export function createPlayer(ctx) {
         requestExit("esc");
         return;
       }
+      const shortcut = driverObj ? playerShortcut(e) : "";
+      if (shortcut) {
+        e.preventDefault();
+        if (shortcut === "pause") controls.togglePause();
+        else controls.toggleMute();
+        return;
+      }
       if (!driverObj || animating) return;
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
@@ -672,6 +754,38 @@ export function createPlayer(ctx) {
         clickDriverPrev();
       }
     });
+
+    // why: WCAG 4.1.2 — o Driver repõe aria-expanded/haspopup/controls no destaque (div/section) a cada passo
+    if (typeof MutationObserver === "function") {
+      const strip = (el) => {
+        for (const a of ["aria-expanded", "aria-haspopup", "aria-controls"]) if (el.hasAttribute(a)) el.removeAttribute(a);
+      };
+      const mo = new MutationObserver((list) => list.forEach((m) => strip(m.target)));
+      for (const el of [els.hotspot, els.slide]) {
+        if (el) mo.observe(el, { attributes: true, attributeFilter: ["aria-expanded", "aria-haspopup", "aria-controls"] });
+      }
+    }
+
+    // why: o Driver prende o Tab no balão; os controles (pausar/som) e o cartão do slide entram no ciclo
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "Tab" || !driverObj || !isPresenting()) return;
+        const visible = (n) => n && !n.hidden && !n.disabled && n.getClientRects().length > 0;
+        const pool = [
+          ...document.querySelectorAll(".gf-player-controls button"),
+          ...(els.slide && !els.slide.hidden ? els.slide.querySelectorAll("button") : []),
+          ...document.querySelectorAll(".driver-popover:not(.is-slide-hidden) button, .driver-popover:not(.is-slide-hidden) a[href]"),
+        ].filter(visible);
+        if (!pool.length) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const i = pool.indexOf(document.activeElement);
+        const next = e.shiftKey ? pool[i <= 0 ? pool.length - 1 : i - 1] : pool[i < 0 || i >= pool.length - 1 ? 0 : i + 1];
+        next.focus();
+      },
+      true
+    );
 
     // why: no celular o balão fica preso embaixo; a legenda sobe para ficar logo acima dele (--gf-pop-h)
     if (typeof ResizeObserver === "function" && typeof MutationObserver === "function") {

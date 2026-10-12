@@ -58,6 +58,7 @@ import {
 import { createEditor } from "./editor.js";
 import { isTypingTarget } from "./canvasEdit.js";
 import { createPlayer } from "./player.js";
+import { themeContrastIssues } from "./a11y.js";
 import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createHistory } from "./history.js";
@@ -1775,7 +1776,22 @@ function renderThemeSwatches(container, items, { selectedId, onPick, customActio
   });
 }
 
+function renderThemeContrastWarning() {
+  const el = document.getElementById("theme-contrast-warn");
+  if (!el) return;
+  const issues = themeContrastIssues(project?.theme);
+  el.hidden = !issues.length;
+  if (!issues.length) {
+    el.textContent = "";
+    return;
+  }
+  const names = { title: "theme.titleColor", text: "theme.textColor", accent: "theme.accent", button: "theme.buttonColor" };
+  const list = issues.map((i) => `${t(names[i.key])} ${String(i.ratio).replace(".", ",")}:1`).join(" · ");
+  el.textContent = t("theme.contrastWarn", { list });
+}
+
 function renderThemePanel() {
+  renderThemeContrastWarning();
   const customs = getCustomThemes();
   renderThemeSwatches(document.getElementById("theme-presets"), THEME_PRESETS, {
     selectedId: themeSelection.kind === "preset" ? themeSelection.id : null,

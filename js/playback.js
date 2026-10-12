@@ -134,6 +134,38 @@ export function pickVoice(voiceURI) {
 
 let speakToken = 0;
 let currentSpeech = null;
+// why: WCAG 1.4.2 — o visitante silencia/pausa a narração e a trilha pelos controles do player
+let audioMuted = false;
+let activeBg = null;
+
+export function setAudioMuted(muted) {
+  audioMuted = Boolean(muted);
+  if (currentSpeech) currentSpeech.muted = audioMuted;
+  if (activeBg) activeBg.muted = audioMuted;
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    if (audioMuted) window.speechSynthesis.pause();
+    else window.speechSynthesis.resume();
+  }
+}
+
+export function isAudioMuted() {
+  return audioMuted;
+}
+
+/** Pausa a fala e a trilha sem descartar o clip (o Retomar continua de onde parou). */
+export function pauseAudio() {
+  currentSpeech?.pause();
+  activeBg?.pause();
+  if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.pause();
+}
+
+export function resumeAudio() {
+  if (currentSpeech && currentSpeech.paused && !currentSpeech.ended && currentSpeech.getAttribute("src")) {
+    currentSpeech.play().catch(() => {});
+  }
+  activeBg?.play?.().catch?.(() => {});
+  if (typeof window !== "undefined" && window.speechSynthesis && !audioMuted) window.speechSynthesis.resume();
+}
 
 export function stopSpeech() {
   speakToken += 1;
@@ -203,6 +235,7 @@ function playSpeechUrl(url, rate, token) {
     currentSpeech = audio;
     const speed = Math.min(2, Math.max(0.7, Number(rate) || 1));
     audio.referrerPolicy = "no-referrer";
+    audio.muted = audioMuted;
     audio.preload = "auto";
     const applyRate = () => {
       audio.playbackRate = speed;
@@ -264,6 +297,7 @@ function speakWithBrowser(text, rate, token, lang = "pt-BR") {
       utterance.voice = voice;
       if (voice.lang) utterance.lang = voice.lang;
     }
+    if (audioMuted) utterance.volume = 0;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
     window.speechSynthesis.speak(utterance);
@@ -478,6 +512,8 @@ export function createNarrationController({ captionEl } = {}) {
     bgAudio.dataset.src = src;
     bgAudio.loop = true;
     bgAudio.volume = BG_VOLUME;
+    bgAudio.muted = audioMuted;
+    activeBg = bgAudio;
     try {
       await bgAudio.play();
     } catch {
@@ -487,6 +523,7 @@ export function createNarrationController({ captionEl } = {}) {
 
   function stopBackground() {
     if (!bgAudio) return;
+    if (activeBg === bgAudio) activeBg = null;
     bgAudio.pause();
     bgAudio.src = "";
     bgAudio = null;

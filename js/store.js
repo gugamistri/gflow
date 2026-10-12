@@ -2,6 +2,7 @@
  * Tema, imagens e import/export JSON
  */
 
+import { ensureContrast } from "./a11y.js";
 import { darkenHex, fixedFormPalette } from "./themes.js";
 import {
   clickPointFromHotspot,
@@ -34,6 +35,8 @@ export function applyTheme(theme) {
   // why: --demo-* isola o tema do tour do chrome do app (--ns-* via data-appearance)
   root.style.setProperty("--demo-accent", theme.accent);
   root.style.setProperty("--demo-accent-dark", theme.accentDark || theme.accent);
+  // why: WCAG 1.4.3 — texto pequeno na cor de destaque precisa de 4,5:1 sobre o fundo do cartão
+  root.style.setProperty("--demo-accent-text", ensureContrast(theme.accent, theme.popoverBg, 4.5));
   root.style.setProperty("--demo-overlay", theme.overlay);
   root.style.setProperty("--demo-popover-bg", theme.popoverBg);
   root.style.setProperty("--demo-popover-title", theme.title);
