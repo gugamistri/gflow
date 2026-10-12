@@ -257,15 +257,28 @@ function consentField(textValue) {
   input.type = "checkbox";
   input.id = id;
   input.name = "consent";
-  const lab = el("label", "", textValue);
+  const lab = el("label", "", `${textValue} *`);
   lab.htmlFor = id;
   const err = el("p", "fixed-field-error", t("fixed.lead.errConsent"));
+  err.id = `${id}-err`;
   err.hidden = true;
+  err.setAttribute("aria-live", "polite");
+  // why: WCAG 3.3.1/4.1.2 — o erro do consentimento precisa estar ligado à caixa
+  input.required = true;
+  input.setAttribute("aria-describedby", err.id);
   input.addEventListener("change", () => {
-    if (input.checked) err.hidden = true;
+    if (input.checked) {
+      err.hidden = true;
+      input.removeAttribute("aria-invalid");
+    }
   });
   wrap.append(input, lab, err);
   return { wrap, input, err };
+}
+
+/** why: WCAG 3.3.2 — explica o asterisco dos campos obrigatórios */
+function requiredLegend() {
+  return el("p", "fixed-required-legend", t("fixed.lead.requiredLegend"));
 }
 
 /** Campo-isca: invisível para pessoas; robôs que preenchem levam um "ok" falso no servidor. */
@@ -328,6 +341,7 @@ export function renderStartCard(rawStep, opts = {}) {
     inputs[key] = field;
     fieldsBox.append(field.wrap);
   }
+  form.append(requiredLegend());
   if (fieldsBox.childElementCount) form.append(fieldsBox);
   const consent = consentField(opts.consentText || step.consentText || t("fixed.consentDefault"));
   form.append(consent.wrap);
@@ -372,6 +386,8 @@ export function renderStartCard(rawStep, opts = {}) {
       if (code && !first) first = field.input;
     }
     consent.err.hidden = !result.errors.consent;
+    if (result.errors.consent) consent.input.setAttribute("aria-invalid", "true");
+    else consent.input.removeAttribute("aria-invalid");
     if (result.errors.consent && !first) first = consent.input;
     if (!result.ok) {
       first?.focus();
@@ -422,7 +438,7 @@ export function renderContactForm(opts = {}) {
   actions.append(submit, cancel);
   const fieldsBox = el("div", "fixed-form-fields");
   fieldsBox.append(name.wrap, email.wrap, phone.wrap);
-  form.append(fieldsBox, message.wrap, consent.wrap, hp.wrap, status, actions);
+  form.append(requiredLegend(), fieldsBox, message.wrap, consent.wrap, hp.wrap, status, actions);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -440,6 +456,8 @@ export function renderContactForm(opts = {}) {
       if (code && !first) first = field.input;
     }
     consent.err.hidden = consent.input.checked;
+    if (!consent.input.checked) consent.input.setAttribute("aria-invalid", "true");
+    else consent.input.removeAttribute("aria-invalid");
     if (!consent.input.checked && !first) first = consent.input;
     if (first) {
       first.focus();

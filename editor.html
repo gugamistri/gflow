@@ -73,9 +73,9 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/81/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/81/css/theme.css" />
-  <link rel="stylesheet" href="a/81/css/app.css" />
+  <link rel="stylesheet" href="a/82/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/82/css/theme.css" />
+  <link rel="stylesheet" href="a/82/css/app.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -156,7 +156,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/81/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/81/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/82/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/82/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -258,6 +258,7 @@
                 <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
                 <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
                 <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+                <p class="theme-contrast-warn" id="theme-contrast-warn" role="status" hidden></p>
               </div>
             </details>
             <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
@@ -539,7 +540,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/81/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/81/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/82/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/82/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -764,7 +765,7 @@
           </div>
         </div>
         <div class="canvas-frame" id="canvas-frame">
-          <img id="canvas-image" alt="Captura da tela" data-i18n-alt="canvas.imageAlt" hidden />
+          <img id="canvas-image" alt="" hidden />
           <div class="image-missing" id="canvas-missing" hidden data-i18n="canvas.missing">Tela sem imagem — escolha outra no painel à direita.</div>
           <div class="slide-card" id="canvas-slide" hidden>
             <button type="button" class="slide-card-close" id="canvas-slide-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -877,6 +878,14 @@
         </button>
         <select id="prop-image" hidden></select>
       </div>
+      <label class="prop-alt-field" id="wrap-alt"><span data-i18n="props.alt">Texto alternativo da imagem</span>
+        <textarea id="prop-alt" rows="2" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
+      </label>
+      <p class="props-meta" id="prop-alt-hint" data-i18n="props.altHint">Descreva o que a captura mostra para quem usa leitor de tela. Vazio usa o título e o texto do balão.</p>
+      <label class="checkbox" id="wrap-alt-decorative">
+        <input type="checkbox" id="prop-alt-decorative" />
+        <span data-i18n="props.altDecorative">Imagem decorativa (sem texto alternativo)</span>
+      </label>
         </div>
       </details>
       <details class="props-section" data-sec="texts" open>
@@ -1002,7 +1011,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/81/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/82/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1941,7 +1950,7 @@
     </symbol>
   </svg>
 
-  <script src="a/81/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/81/js/app.js"></script>
+  <script src="a/82/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/82/js/app.js"></script>
 </body>
 </html>

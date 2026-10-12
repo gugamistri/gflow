@@ -39,7 +39,7 @@ export function buildHostedPrompt(messages, locale = getLocale()) {
   const body = (Array.isArray(messages) ? messages : []).map(messageText).filter(Boolean).join("\n\n");
   const head = [
     `Respond in locale "${lang}".`,
-    'Answer ONLY with JSON {"title":"...","description":"...","narration":"..."} using only the keys that apply.',
+    'Answer ONLY with JSON {"title":"...","description":"...","narration":"...","alt":"..."} using only the keys that apply.',
   ].join("\n");
   const prompt = body ? `${head}\n\n${body}` : head;
   return prompt.slice(0, HOSTED_PROMPT_MAX);
@@ -70,6 +70,8 @@ export function parseHostedResult(raw, expected = ["title", "description", "narr
         description: String(data?.description || "").trim(),
         narration: String(data?.narration || data?.caption || "").trim(),
       };
+      const alt = String(data?.alt || "").trim().slice(0, 300);
+      if (alt) out.alt = alt;
       const filled = keys.filter((key) => out[key]);
       if (filled.length === keys.length) return { ok: true, ...out };
       if (keys.length === 1 && text && !out[keys[0]]) {
@@ -116,6 +118,7 @@ export async function completeHostedCopy(messages, env) {
       title: parsed.title,
       description: parsed.description,
       narration: parsed.narration,
+      ...(parsed.alt ? { alt: parsed.alt } : {}),
     },
     data: result.data,
   };
