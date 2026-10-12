@@ -268,6 +268,8 @@ export function createEditor(ctx) {
     propDescription: document.getElementById("prop-description"),
     propAlt: document.getElementById("prop-alt"),
     propAltDecorative: document.getElementById("prop-alt-decorative"),
+    altChip: document.getElementById("alt-chip"),
+    altPop: document.getElementById("alt-pop"),
     propCaption: document.getElementById("prop-caption"),
     propShowCaption: document.getElementById("prop-show-caption"),
     propHold: document.getElementById("prop-hold"),
@@ -1623,6 +1625,7 @@ export function createEditor(ctx) {
     setCanvasCaption(step.caption, { visible: step.showCaption !== false, editing });
 
     if (step.type === "slide") {
+      syncAltChip(null);
       els.canvasImage.hidden = true;
       els.canvasImage.removeAttribute("src");
       if (els.canvasMissing) els.canvasMissing.hidden = true;
@@ -1665,6 +1668,7 @@ export function createEditor(ctx) {
 
     const src = resolveImageSrc(demo, step.image);
     els.canvasImage.alt = stepImageAlt(step);
+    syncAltChip(step);
     bindImage(els.canvasImage, src, (ok) => {
       if (currentStep() !== step) return;
       if (els.canvasMissing) els.canvasMissing.hidden = ok;
@@ -4124,7 +4128,88 @@ export function createEditor(ctx) {
     await refreshCartesiaStatus();
   }
 
+
+  /** why: alt discreto como no Canva/Notion — chip "ALT" na própria imagem abre um popover; ponto = estado. */
+  function syncAltChip(step) {
+    const chip = els.altChip;
+    if (!chip) return;
+    const show = Boolean(step) && step.type !== "slide";
+    chip.hidden = !show;
+    if (!show) {
+      closeAltPop({ restoreFocus: false });
+      return;
+    }
+    const state = step.altDecorative === true ? "decorative" : String(step.alt || "").trim() ? "set" : "missing";
+    chip.dataset.state = state;
+    const label = t(state === "set" ? "props.altChipSet" : state === "decorative" ? "props.altChipDecorative" : "props.altChipMissing");
+    chip.setAttribute("aria-label", label);
+    chip.title = label;
+  }
+
+  function placeAltPop() {
+    const pop = els.altPop;
+    const r = els.altChip?.getBoundingClientRect();
+    if (!pop || !r) return;
+    const w = Math.min(320, window.innerWidth - 16);
+    pop.style.width = `${w}px`;
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8));
+    pop.style.left = `${left}px`;
+    const h = pop.offsetHeight || 200;
+    const top = r.top - h - 8 >= 8 ? r.top - h - 8 : Math.min(r.bottom + 8, window.innerHeight - h - 8);
+    pop.style.top = `${Math.max(8, top)}px`;
+  }
+
+  function openAltPop() {
+    if (!els.altPop || !els.altChip) return;
+    els.altPop.hidden = false;
+    els.altChip.setAttribute("aria-expanded", "true");
+    placeAltPop();
+    (els.propAlt?.disabled ? els.propAltDecorative : els.propAlt)?.focus();
+  }
+
+  function closeAltPop({ restoreFocus = true } = {}) {
+    if (!els.altPop || els.altPop.hidden) return;
+    els.altPop.hidden = true;
+    els.altChip?.setAttribute("aria-expanded", "false");
+    if (restoreFocus) els.altChip?.focus();
+  }
+
+  function bindAltChip() {
+    const chip = els.altChip;
+    if (!chip || !els.altPop) return;
+    for (const ev of ["pointerdown", "mousedown"]) chip.addEventListener(ev, (e) => e.stopPropagation());
+    chip.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (els.altPop.hidden) openAltPop();
+      else closeAltPop();
+    });
+    els.altPop.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        closeAltPop();
+      }
+    });
+    document.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (els.altPop.hidden) return;
+        if (els.altPop.contains(e.target) || chip.contains(e.target)) return;
+        closeAltPop({ restoreFocus: false });
+      },
+      true
+    );
+    window.addEventListener("resize", () => {
+      if (!els.altPop.hidden) placeAltPop();
+    });
+    const refresh = () => queueMicrotask(() => syncAltChip(currentStep()));
+    els.propAlt?.addEventListener("input", refresh);
+    els.propAltDecorative?.addEventListener("change", refresh);
+  }
+
   function bindForm() {
+    bindAltChip();
     [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate, els.propZoom, els.propAlt, els.propAltDecorative].forEach((el) => {
       if (!el) return;
       el.addEventListener("input", applyFormToStep);
