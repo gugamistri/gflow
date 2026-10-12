@@ -1,5 +1,7 @@
 # GuiaFlow
 
+[![smithery badge](https://smithery.ai/badge/gmistrinelli/guiaflow)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+
 ![Editor do GuiaFlow](docs/editor.png)
 
 ![Tour de exemplo](docs/tour.gif)
