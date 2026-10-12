@@ -8997,3 +8997,105 @@ dialog.api-keys-modal {
     top: 104px;
   }
 }
+
+/* ---- Texto alternativo discreto (chip "ALT" na imagem, como Canva/Notion) ---- */
+.alt-chip {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.62);
+  color: #ffffff;
+  font: 700 0.68rem/1 var(--ns-font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 0.15s ease;
+}
+
+.alt-chip[hidden],
+.alt-pop[hidden] {
+  display: none !important;
+}
+
+.canvas-frame:hover .alt-chip,
+.alt-chip:focus-visible,
+.alt-chip[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.alt-chip:focus-visible {
+  outline: 2px solid #111111;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px #ffffff;
+}
+
+.alt-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+  background: transparent;
+}
+
+.alt-chip[data-state="set"] .alt-chip-dot {
+  background: #34d399;
+  border-color: #34d399;
+}
+
+.alt-chip[data-state="decorative"] .alt-chip-dot {
+  background: #ffffff;
+}
+
+.is-presenting .alt-chip,
+.is-presenting .alt-pop {
+  display: none !important;
+}
+
+.alt-pop {
+  position: fixed;
+  z-index: 1000;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--ns-border, #e4e4e7);
+  border-radius: 10px;
+  background: var(--ns-surface, #ffffff);
+  color: var(--ns-ink, #18181b);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  font-size: 0.82rem;
+}
+
+.alt-pop-field {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.alt-pop-field textarea {
+  width: 100%;
+  resize: vertical;
+  font: inherit;
+  font-weight: 400;
+}
+
+.alt-pop-hint {
+  margin: 0;
+  color: var(--ns-muted, #52525b);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.alt-pop-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+}
