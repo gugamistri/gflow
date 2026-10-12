@@ -7,6 +7,7 @@
 import { CLICK_INSET, clampClickToHotspot, hasHotspot, pointInHotspot } from "./geometry.js";
 import { LIMITS as FIXED_LIMITS, isValidWhatsAppNumber, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
 import { THEME_COLOR_KEYS, THEME_PRESETS, cloneTheme, getPreset } from "./theme.js";
+import { THEME_FONT_IDS, isThemeFontId } from "./fonts.js";
 
 export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
 export const POPOVER_SIDES = Object.freeze(["top", "bottom", "left", "right", "over"]);
@@ -212,16 +213,35 @@ export function stepForAgent(step, index) {
 /** Tema: preset por id ou cores (#hex). */
 export function themeFromAgentInput(input = {}, current = null) {
   const errors = [];
+  // why: fonte do tema (id da lista curada); vale com preset, com cores ou sozinha
+  let font;
+  if (input.font != null) {
+    if (!isThemeFontId(input.font)) {
+      errors.push(issue("font", `Fonte desconhecida. Use uma destas: ${THEME_FONT_IDS.join(", ")}.`));
+      return { ok: false, errors };
+    }
+    font = input.font;
+  }
+  const withFont = (theme) => {
+    const keep = font ?? current?.font;
+    if (keep && keep !== "default") theme.font = keep;
+    else delete theme.font;
+    return theme;
+  };
+  if (!input.preset && !input.colors && font != null) {
+    const base = current || cloneTheme(THEME_PRESETS[0].colors, { presetId: THEME_PRESETS[0].id });
+    return { ok: true, theme: withFont(cloneTheme(base)), errors };
+  }
   if (input.preset) {
     const preset = getPreset(input.preset);
     if (!preset) {
       errors.push(issue("preset", `Tema desconhecido. Use um destes: ${THEME_PRESETS.map((p) => p.id).join(", ")}.`));
       return { ok: false, errors };
     }
-    return { ok: true, theme: cloneTheme(preset.colors, { presetId: preset.id }), errors };
+    return { ok: true, theme: withFont(cloneTheme(preset.colors, { presetId: preset.id })), errors };
   }
   const colors = input.colors && typeof input.colors === "object" ? input.colors : null;
-  if (!colors) return { ok: false, errors: [issue("theme", "Envie preset (id) ou colors {accent, overlay, popoverBg, title, text, button, hotspot}.")] };
+  if (!colors) return { ok: false, errors: [issue("theme", "Envie preset (id), colors {accent, overlay, popoverBg, title, text, button, hotspot} e/ou font.")] };
   const base = current || cloneTheme(THEME_PRESETS[0].colors, { presetId: THEME_PRESETS[0].id });
   const next = { ...base };
   for (const [key, value] of Object.entries(colors)) {
@@ -237,7 +257,7 @@ export function themeFromAgentInput(input = {}, current = null) {
   }
   if (errors.length) return { ok: false, errors };
   delete next.presetId;
-  return { ok: true, theme: cloneTheme(next), errors };
+  return { ok: true, theme: withFont(cloneTheme(next)), errors };
 }
 
 /** Passo inicial (captura de lead) a partir da entrada do agente. */

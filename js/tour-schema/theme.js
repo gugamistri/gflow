@@ -2,6 +2,8 @@
  * Temas prontos do tour (cores do balão, destaque e fundo). Puro, sem DOM.
  */
 
+import { THEME_FONT_IDS } from "./fonts.js";
+
 export const THEME_COLOR_KEYS = [
   "accent",
   "overlay",
@@ -155,6 +157,9 @@ export function cloneTheme(colors, meta = {}) {
   };
   const presetId = meta.presetId || colors.presetId;
   const customId = meta.customId || colors.customId;
+  // why: a fonte é escolha do tema mas independe das cores — trocar o preset mantém a fonte
+  const font = meta.font ?? colors.font;
+  if (font && font !== "default" && THEME_FONT_IDS.includes(font)) next.font = font;
   if (presetId) next.presetId = presetId;
   if (customId) next.customId = customId;
   return next;

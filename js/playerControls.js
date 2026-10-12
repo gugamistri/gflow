@@ -88,7 +88,10 @@ export function createPlayerControls({ onPauseChange, onMuteChange } = {}) {
     muteBtn.className = "gf-player-ctl";
     muteBtn.dataset.ctl = "mute";
     // why: pointerdown não pode chegar ao véu do Driver (fecharia o tour)
-    for (const b of [pauseBtn, muteBtn]) b.addEventListener("pointerdown", (e) => e.stopPropagation());
+    // (toque/clique nos controles nunca conta como "fora do tour" nem como gesto de passo)
+    for (const ev of ["pointerdown", "pointerup", "mousedown", "mouseup", "touchstart", "touchend"]) {
+      root.addEventListener(ev, (e) => e.stopPropagation(), { passive: true });
+    }
     pauseBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       setPaused(!paused, { announce: true });

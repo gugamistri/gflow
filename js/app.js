@@ -1,3 +1,4 @@
+import { THEME_FONTS, getThemeFont, themeFontFaceCss } from "./tour-schema/fonts.js";
 import {
   exportDemo,
   importDemoFile,
@@ -1790,7 +1791,51 @@ function renderThemeContrastWarning() {
   el.textContent = t("theme.contrastWarn", { list });
 }
 
+/** why: a prévia de cada opção usa a própria fonte — só no editor, para o player carregar só a escolhida. */
+function ensureFontPreviewFaces() {
+  if (document.getElementById("gf-font-previews")) return;
+  const base = new URL("../fonts/", import.meta.url).href;
+  const style = document.createElement("style");
+  style.id = "gf-font-previews";
+  style.textContent = THEME_FONTS.map((f) => themeFontFaceCss(f.id, base)).join("\n");
+  document.head.appendChild(style);
+}
+
+function renderThemeFonts() {
+  const box = document.getElementById("theme-fonts");
+  if (!box) return;
+  const current = getThemeFont(project?.theme?.font).id;
+  box.textContent = "";
+  for (const f of THEME_FONTS) {
+    const label = document.createElement("label");
+    label.className = "theme-font-option";
+    label.style.fontFamily = f.stack;
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "theme-font";
+    input.value = f.id;
+    input.checked = f.id === current;
+    input.addEventListener("change", () => {
+      if (!project?.theme || !input.checked) return;
+      if (f.id === "default") delete project.theme.font;
+      else project.theme.font = f.id;
+      applyTheme(project.theme);
+      onChange();
+    });
+    const name = document.createElement("span");
+    name.textContent = f.id === "default" ? t("theme.fontDefault") : f.label;
+    const sample = document.createElement("span");
+    sample.className = "theme-font-sample";
+    sample.setAttribute("aria-hidden", "true");
+    sample.textContent = "Aa";
+    label.append(input, name, sample);
+    box.appendChild(label);
+  }
+}
+
 function renderThemePanel() {
+  ensureFontPreviewFaces();
+  renderThemeFonts();
   renderThemeContrastWarning();
   const customs = getCustomThemes();
   renderThemeSwatches(document.getElementById("theme-presets"), THEME_PRESETS, {
@@ -1807,7 +1852,9 @@ function renderThemePanel() {
 function applyPresetTheme(id) {
   const preset = getPreset(id);
   if (!preset || !project) return;
+  const keepFont = project.theme?.font;
   project.theme = cloneTheme(preset.colors, { presetId: id });
+  if (keepFont) project.theme.font = keepFont;
   delete project.theme.customId;
   themeSelection = { kind: "preset", id };
   syncThemeUi();
@@ -1817,7 +1864,9 @@ function applyPresetTheme(id) {
 function applyCustomTheme(id) {
   const custom = getCustomThemes().find((t) => t.id === id);
   if (!custom || !project) return;
+  const keepFont = project.theme?.font;
   project.theme = cloneTheme(custom.colors, { customId: id });
+  if (keepFont) project.theme.font = keepFont;
   delete project.theme.presetId;
   themeSelection = { kind: "custom", id };
   syncThemeUi();

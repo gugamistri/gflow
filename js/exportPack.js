@@ -1,9 +1,11 @@
+import { getThemeFont } from "./tour-schema/fonts.js";
 import {
   encodeAssetPath,
   resolveImageSrc,
   ensureClickPoint,
   slugifyFilename,
   spotlightVeilFill,
+  applyThemeFont,
 } from "./store.js";
 import {
   holdMs as resolveHoldMs,
@@ -48,6 +50,44 @@ async function fetchText(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(t("err.loadFail", { url }));
   return res.text();
+}
+
+/**
+ * why: o HTML exportado roda offline — a fonte do tema vai embutida (woff2 em base64);
+ * se falhar, fica a pilha de fallback (system-ui / Georgia).
+ */
+let videoFont = 'Inter, system-ui, "Segoe UI", Helvetica, Arial, sans-serif';
+
+/** why: o vídeo desenha no canvas — a fonte do tema precisa estar carregada antes do 1º quadro. */
+async function prepareVideoFont(theme) {
+  const font = getThemeFont(theme?.font);
+  videoFont = font.stack;
+  try {
+    applyThemeFont(font.id);
+    if (font.family && document.fonts?.load) {
+      await Promise.all(["400", "500", "600", "700", "800"].map((w) => document.fonts.load(`${w} 16px "${font.family}"`)));
+    }
+  } catch {
+    /* fallback da pilha */
+  }
+}
+
+async function embeddedThemeFontCss(fontId) {
+  const font = getThemeFont(fontId);
+  const faces = [];
+  for (const f of font.files) {
+    try {
+      const res = await fetch(new URL(`../fonts/${f.file}`, import.meta.url));
+      if (!res.ok) continue;
+      const buf = new Uint8Array(await res.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      faces.push(`@font-face{font-family:"${font.family}";font-style:normal;font-weight:${f.weight};font-display:swap;src:url(data:font/woff2;base64,${btoa(bin)}) format("woff2");}`);
+    } catch {
+      /* sem a fonte: fallback */
+    }
+  }
+  return [...faces, `:root{--demo-font:${font.stack};--demo-font-display:${font.stack};}`].join("\n");
 }
 
 async function fetchTextSoft(url) {
@@ -201,7 +241,8 @@ export async function exportStandaloneHtml(demo, { onProgress } = {}) {
 body.standalone .view-player { height: calc(100% - 56px); display: flex; }
 body.standalone .topbar-title { font-size: 0.78rem; }
 `;
-  const css = [driverCss, themeCss, appCss, extra].filter(Boolean).join("\n");
+  const fontCss = await embeddedThemeFontCss(embedded?.theme?.font);
+  const css = [driverCss, themeCss, appCss, extra, fontCss].filter(Boolean).join("\n");
   const html = standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance });
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   downloadBlob(blob, `${slugifyFilename(demo?.name, "demo")}.html`);
@@ -672,6 +713,7 @@ export async function exportVideo(demo, { onProgress, canvas, signal, watermark 
   const steps = demo.steps || [];
   if (!steps.length) throw new Error(t("err.noStepsRecord"));
   const framed = { ...demo, exportWatermark: Boolean(watermark) };
+  await prepareVideoFont(demo.theme);
 
   const images = await loadDemoImages(framed, onProgress);
   onProgress?.(t("export.prepNarration"));
@@ -788,7 +830,7 @@ function loadImage(src) {
 }
 
 function measurePopover(ctx, step, maxW) {
-  ctx.font = "400 14px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `400 14px ${videoFont}`;
   const lines = wrapText(ctx, step.popover?.description || "", maxW - 36).slice(0, 8);
   const h = 22 + 28 + 10 + lines.length * 20 + 56;
   return { w: maxW, h: Math.max(140, h), lines };
@@ -891,11 +933,11 @@ function drawPopover(ctx, theme, step, index, total, hs, bounds) {
 
   const title = step.popover?.title || step.label || "";
   ctx.fillStyle = titleC;
-  ctx.font = "700 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `700 16px ${videoFont}`;
   ctx.fillText(title, box.x + 18, box.y + 32);
 
   ctx.fillStyle = textC;
-  ctx.font = "400 14px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `400 14px ${videoFont}`;
   measured.lines.forEach((line, i) => {
     ctx.fillText(line, box.x + 18, box.y + 58 + i * 20);
   });
@@ -914,13 +956,13 @@ function drawPopover(ctx, theme, step, index, total, hs, bounds) {
   ctx.stroke();
 
   ctx.fillStyle = muted;
-  ctx.font = "500 13px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `500 13px ${videoFont}`;
   ctx.textAlign = "center";
   ctx.fillText(t("player.of", { current: index + 1, total }), box.x + box.w / 2, fy + 12);
   ctx.textAlign = "left";
 
   const btnLabel = index >= total - 1 ? t("player.done") : t("player.next");
-  ctx.font = "700 13px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `700 13px ${videoFont}`;
   const btnW = Math.max(88, ctx.measureText(btnLabel).width + 28);
   const btnH = 32;
   const btnX = box.x + box.w - 16 - btnW;
@@ -954,7 +996,7 @@ function renderFrame(ctx, scene, theme) {
   });
   ctx.textAlign = "right";
   ctx.fillStyle = "#e5e7eb";
-  ctx.font = "600 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `600 16px ${videoFont}`;
   ctx.fillText(`${index + 1} / ${total}`, W - 32, 38);
   ctx.textAlign = "left";
 
@@ -975,9 +1017,9 @@ function renderFrame(ctx, scene, theme) {
     const textX =
       align === "center" ? slide.x + slide.w / 2 : align === "end" ? slide.x + slide.w - padX : slide.x + padX;
 
-    ctx.font = "700 36px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `700 36px ${videoFont}`;
     const titleLines = wrapText(ctx, step.popover?.title || step.label || "", maxW).slice(0, 3);
-    ctx.font = "400 22px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `400 22px ${videoFont}`;
     const bodyLines = wrapText(ctx, step.popover?.description || "", maxW).slice(0, 8);
     const blockH = 15 + 16 + titleLines.length * 44 + (bodyLines.length ? 28 + bodyLines.length * 32 : 0);
     const innerTop = slide.y + 40;
@@ -986,12 +1028,12 @@ function renderFrame(ctx, scene, theme) {
       valign === "top" ? innerTop : valign === "bottom" ? innerTop + innerH - blockH : innerTop + (innerH - blockH) / 2;
 
     ctx.fillStyle = accent;
-    ctx.font = "700 15px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `700 15px ${videoFont}`;
     cursor += 15;
     ctx.fillText("CENA " + step.scene, textX, cursor);
     cursor += 16;
     ctx.fillStyle = "#fff";
-    ctx.font = "700 36px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `700 36px ${videoFont}`;
     titleLines.forEach((line) => {
       cursor += 36;
       ctx.fillText(line, textX, cursor);
@@ -999,7 +1041,7 @@ function renderFrame(ctx, scene, theme) {
     });
     if (bodyLines.length) cursor += 20;
     ctx.fillStyle = "#d1d5db";
-    ctx.font = "400 22px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `400 22px ${videoFont}`;
     bodyLines.forEach((line) => {
       cursor += 22;
       ctx.fillText(line, textX, cursor);
@@ -1063,7 +1105,7 @@ function renderFrame(ctx, scene, theme) {
   const caption = String(step.caption || "").trim();
   if (caption && step.showCaption !== false) {
     const maxW = stage.w - 48;
-    ctx.font = "500 18px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `500 18px ${videoFont}`;
     const lines = wrapText(ctx, caption, maxW).slice(0, 3);
     const boxH = 20 + lines.length * 24;
     const boxY = stage.y + stage.h - boxH - 16;
@@ -1088,13 +1130,13 @@ export function drawExportHeader(ctx, { showBrand = true, projectTitle = "", acc
   ctx.save();
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.font = "800 26px Segoe UI, Helvetica Neue, Arial, sans-serif";
+  ctx.font = `800 26px ${videoFont}`;
   if (showBrand) {
     ctx.fillStyle = accent;
     ctx.fillText("Guia", 32, 38);
     ctx.fillStyle = "#fff";
     ctx.fillText("Flow", 98, 38);
-    ctx.font = "500 16px Segoe UI, Helvetica Neue, Arial, sans-serif";
+    ctx.font = `500 16px ${videoFont}`;
     ctx.fillStyle = "#9ca3af";
     ctx.fillText(t("player.narratedTour"), 248, 38);
   } else {
