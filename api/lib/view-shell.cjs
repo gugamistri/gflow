@@ -153,18 +153,18 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/74/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/74/css/theme.css" />
-  <link rel="stylesheet" href="/a/74/css/app.css" />
+  <link rel="stylesheet" href="/a/75/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/75/css/theme.css" />
+  <link rel="stylesheet" href="/a/75/css/app.css" />
   <script>window.__GF_SHARE = ${scriptJson({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/74/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/74/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/75/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/75/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
-    <a class="view-credit" id="view-credit" href="/" target="_blank" rel="noopener" hidden><img src="/a/74/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
+    <a class="view-credit" id="view-credit" href="/" target="_blank" rel="noopener" hidden><img src="/a/75/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
   </header>
 
   <main id="view-editor" class="view view-editor is-presenting">
@@ -228,8 +228,8 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/74/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/74/js/viewApp.js"></script>
+  <script src="/a/75/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/75/js/viewApp.js"></script>
 </body>
 </html>
 `;
