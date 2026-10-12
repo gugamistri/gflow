@@ -8580,3 +8580,224 @@ dialog.analytics-modal {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* Chaves de API / MCP */
+dialog.api-keys-modal {
+  width: min(720px, calc(100vw - 24px));
+  max-width: 720px;
+  max-height: min(880px, calc(100dvh - 16px));
+  margin: auto;
+  overflow: auto;
+}
+
+.api-keys-lead {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ns-muted);
+}
+
+.api-keys-section {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ns-border);
+}
+
+.api-keys-section h4 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.api-keys-upsell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ns-accent) 10%, transparent);
+}
+
+.api-keys-upsell p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.api-keys-field {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.85rem;
+}
+
+.api-keys-field legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.api-key-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+#api-key-scopes .api-key-scope {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  text-align: left;
+}
+
+#api-key-scopes .api-key-scope input {
+  width: auto;
+  margin: 0;
+}
+
+.api-key-scope code,
+.api-keys-last4,
+.api-recent-row code {
+  font-size: 0.72rem;
+  color: var(--ns-muted);
+}
+
+.api-key-fresh {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--ns-accent) 55%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ns-accent) 8%, transparent);
+}
+
+.api-key-fresh-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.api-key-fresh-row {
+  display: flex;
+  gap: 8px;
+}
+
+.api-key-fresh-row input {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+
+.api-keys-list {
+  max-height: 220px;
+}
+
+.api-keys-row {
+  display: grid;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.api-keys-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.api-keys-row-head strong {
+  overflow-wrap: anywhere;
+}
+
+.api-keys-revoke {
+  margin-left: auto;
+}
+
+.api-keys-revoke:hover {
+  color: var(--ns-danger);
+}
+
+.api-keys-badge.is-off {
+  font-size: 0.68rem;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-danger) 14%, transparent);
+  color: var(--ns-danger);
+}
+
+.api-keys-meta,
+.api-keys-empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ns-muted);
+}
+
+.api-recent-list {
+  display: grid;
+  gap: 2px;
+  max-height: 180px;
+  overflow: auto;
+  font-size: 0.78rem;
+}
+
+.api-recent-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--ns-muted);
+}
+
+.api-recent-client {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.api-recent-status.is-error {
+  color: var(--ns-danger);
+}
+
+/* "criado por agente": discreto, só para saber a origem do tour */
+.topbar-agent-tag,
+.agent-tag {
+  flex: none;
+  align-self: center;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  opacity: 0.72;
+  white-space: nowrap;
+}
+
+.topbar-agent-tag {
+  color: var(--ns-topbar-muted);
+}
+
+.agent-tag {
+  display: inline-block;
+  margin-left: 4px;
+  line-height: 1.3;
+  color: var(--ns-muted);
+}
+
+.topbar-agent-tag[hidden],
+.agent-tag[hidden] {
+  display: none;
+}
+
+.project-card-dots .agent-tag {
+  line-height: 10px;
+  padding: 2px 6px;
+  font-size: 0.62rem;
+}

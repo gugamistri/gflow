@@ -156,6 +156,7 @@ import {
 } from "./paywall.js";
 import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 import { createLeadsDialog } from "./leadsDialog.js";
+import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 
 let project = null;
@@ -413,6 +414,7 @@ function applyHistoryState(next) {
     setSelectedIndex(getSelectedIndex());
     const label = document.getElementById("topbar-project");
     if (label && project) label.textContent = project.name || "";
+    paintAgentTag(Boolean(label && !label.hidden));
     syncThemeUi();
     if (presenting) exitPresentation();
     editor.refresh();
@@ -558,6 +560,16 @@ const leadsDialog = createLeadsDialog({
   toast,
 });
 
+const apiKeysDialog = createApiKeysDialog({ toast, onUpgrade: () => showUpgradeDialog() });
+
+function paintAgentTag(show) {
+  const tag = document.getElementById("topbar-agent-tag");
+  if (!tag) return;
+  const info = show ? agentTagInfo(project) : null;
+  tag.hidden = !info;
+  if (info) tag.title = t("agent.tagTitle", { client: info.client ? ` (${info.client})` : "" });
+}
+
 // why: análise (F4) é Pro; sem Pro o botão abre o paywall, sem link permanente pede para publicar
 const analyticsDialog = createAnalyticsDialog({
   getSlug: () => (viewerIsPro() ? permanentSlug(activeShareRecord()) || "" : ""),
@@ -664,6 +676,7 @@ function paintChrome() {
       projectLabel.textContent = project?.name || "";
     }
   }
+  paintAgentTag(view !== "library" && !presenting && !compact);
   paintAccount();
 }
 
@@ -1983,7 +1996,7 @@ function renderLibrary() {
           <div class="project-card-body">
             <h3 class="project-card-title" data-action="rename-inline" title="${escapeAttr(t("library.renameTitle"))}">${escapeHtml(p.name)}</h3>
             <p>${p.stepCount || 0} passo(s) · ${escapeHtml(formatDate(p.updatedAt))}</p>
-            <div class="project-card-dots">${dots}${p.sizeBytes ? `<span class="project-card-size" title="${escapeAttr(t("file.sizeTitle"))}">${escapeHtml(formatBytes(p.sizeBytes, getLocale()))}</span>` : ""}</div>
+            <div class="project-card-dots">${dots}${p.agent ? `<span class="agent-tag" title="${escapeAttr(t("agent.tagTitle", { client: p.agentClient ? ` (${p.agentClient})` : "" }))}">${escapeHtml(t("agent.tag"))}</span>` : ""}${p.sizeBytes ? `<span class="project-card-size" title="${escapeAttr(t("file.sizeTitle"))}">${escapeHtml(formatBytes(p.sizeBytes, getLocale()))}</span>` : ""}</div>
             <div class="project-card-actions">
               <button type="button" class="btn btn-sm" data-action="export">
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
@@ -3105,6 +3118,10 @@ function bindChrome() {
   document.getElementById("btn-subscription-upsell")?.addEventListener("click", () => {
     closeSubscriptionDialog();
     showUpgradeDialog();
+  });
+  document.getElementById("btn-account-api-keys")?.addEventListener("click", () => {
+    closeAccountMenus();
+    apiKeysDialog.open();
   });
   document.getElementById("btn-account-admin")?.addEventListener("click", () => {
     closeAccountMenus();

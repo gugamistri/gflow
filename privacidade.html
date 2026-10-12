@@ -43,14 +43,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/72/css/theme.css" />
-  <link rel="stylesheet" href="a/72/css/app.css" />
-  <link rel="stylesheet" href="a/72/css/ajuda.css" />
+  <link rel="stylesheet" href="a/73/css/theme.css" />
+  <link rel="stylesheet" href="a/73/css/app.css" />
+  <link rel="stylesheet" href="a/73/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/72/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/72/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/73/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/73/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -146,6 +146,12 @@
       <p data-i18n="privacy.ia-audio.p2">Quando você gera áudio, o texto da narração é enviado à Cartesia, que devolve o arquivo de áudio.</p>
       <p data-i18n="privacy.ia-audio.p3">Evite colocar dados pessoais ou informações sigilosas nesses textos.</p>
     </section>
+    <section class="card" id="api">
+      <h2 data-i18n="privacy.api.title">API, MCP e agentes de IA (Pro)</h2>
+      <p data-i18n="privacy.api.p1">Assinantes Pro podem conectar ferramentas de IA (como Cursor, Claude ou ChatGPT) à conta, por uma chave de API ou pelo login com OAuth, para criar, editar e publicar tours. Essas ferramentas agem em seu nome e só com as permissões que você escolheu; o que elas enviam vira parte dos seus projetos, tratado como descrito acima.</p>
+      <p data-i18n="privacy.api.p2">Para isso guardamos: o nome, os 4 últimos caracteres, as permissões e as datas de cada chave; o nome dos apps conectados por OAuth; e um registro de uso (app ou chave, ação, resultado, data e hora e um resumo do IP feito com uma chave secreta, que não permite recuperar o IP). Chaves e tokens são guardados só como resumo (hash), nunca por extenso. O registro de uso aparece para você em Chaves de API e é apagado depois de 90 dias.</p>
+      <p data-i18n="privacy.api.p3">Quando você passa uma URL de imagem, o servidor do GuiaFlow baixa esse arquivo (só endereços https públicos). Você pode revogar uma chave ou desconectar um app a qualquer momento, e o acesso acaba na hora. Se a assinatura terminar, a API para de aceitar chamadas.</p>
+    </section>
     <section class="card" id="emails">
       <h2 data-i18n="privacy.emails.title">E-mails</h2>
       <p data-i18n="privacy.emails.p1">Os e-mails do serviço são enviados pela Resend, a partir de noreply@guiaflow.pro: links de acesso, convites e avisos sobre a assinatura. Não usamos o seu e-mail para propaganda.</p>
@@ -186,6 +192,7 @@
         <li data-i18n="privacy.cookies.li3">A Cloudflare, que entrega o site, pode usar cookies técnicos de segurança.</li>
         <li data-i18n="privacy.cookies.li4">O Stripe usa cookies próprios nas páginas de pagamento.</li>
         <li data-i18n="privacy.cookies.li5">O botão “Feedback” abre um formulário do Tally, que é carregado no editor. Se você responder, as respostas vão para o Tally.</li>
+        <li data-i18n="privacy.cookies.li6">Ao conectar um app de IA pelo OAuth, a página de autorização usa um cookie de sessão de 1 hora, só para essa tela.</li>
       </ul>
     </section>
     <section class="card" id="bases">
@@ -227,6 +234,7 @@
         <li data-i18n-html="privacy.retencao.li6"><strong>Contatos de visitantes</strong>: até o autor do tour excluí-los, apagar o link permanente ou encerrar a conta;</li>
         <li data-i18n-html="privacy.retencao.li7"><strong>Visitas a tours publicados</strong>: dados de cada visita por 90 dias e totais diários por 25 meses, ou até o autor apagar o link;</li>
         <li data-i18n-html="privacy.retencao.li8"><strong>Projetos salvos na conta (Pro)</strong>: até você apagar o projeto no editor ou a conta ser excluída, inclusive depois que a assinatura termina;</li>
+        <li data-i18n-html="privacy.retencao.li9"><strong>Chaves de API e apps conectados</strong>: até você revogar ou a chave vencer; o registro de uso da API por 90 dias;</li>
         <li data-i18n-html="privacy.retencao.li5"><strong>Conta e assinatura</strong>: enquanto a conta existir. Depois de um pedido de exclusão, apagamos os dados da conta, exceto o que a lei manda guardar, como registros de pagamento e fiscais, pelo prazo legal.</li>
       </ul>
     </section>
@@ -272,8 +280,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/72/js/i18n.js";
-    import "./a/72/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/73/js/i18n.js";
+    import "./a/73/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
