@@ -10,7 +10,8 @@
     "pack:extension": "node scripts/pack-extension.mjs",
     "test": "node --test extension/lib/*.test.js scripts/*.test.js js/*.test.js js/tour-schema/*.test.js electron/cartesia.test.js",
     "desktop": "electron .",
-    "dist:desktop": "electron-builder --dir"
+    "dist:desktop": "electron-builder --dir",
+    "build:locales": "node scripts/build-locale-pages.mjs"
   },
   "devDependencies": {
     "electron": "^36.4.0",

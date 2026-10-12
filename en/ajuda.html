@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-page-locale="en" data-alt-pt="/ajuda" data-alt-en="/en/ajuda" data-alt-es="/es/ajuda">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="doc.title.help">How to use — GuiaFlow</title>
+  <meta name="description" content="How to record a demo in GuiaFlow: install the extension, capture the screens and build the tour with highlight, click and narration." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/en/ajuda" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="How to use — GuiaFlow" />
+  <meta property="og:description" content="How to record a demo in GuiaFlow: install the extension, capture the screens and build the tour with highlight, click and narration." />
+  <meta property="og:url" content="https://guiaflow.pro/en/ajuda" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Create interactive guided tours" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="How to use — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/85/css/theme.css" />
+  <link rel="stylesheet" href="/a/85/css/app.css" />
+  <link rel="stylesheet" href="/a/85/css/ajuda.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/85/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/85/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title" data-i18n="help.manual">Manual</span>
+    </div>
+    <div class="topbar-appearance">
+      <label class="locale-select">
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Language">
+          <option value="pt">PT</option>
+          <option value="es">ES</option>
+          <option value="en" selected>EN</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main class="page">
+    <h1 data-i18n="help.h1">How to record a demo</h1>
+    <p class="lead" data-i18n="help.lead">The extension photographs the product screen. The editor turns that into a tour with highlight, click, and narration.</p>
+
+    <section class="card" id="desktop">
+      <h2 data-i18n="help.desktopTitle">Desktop app</h2>
+      <p data-i18n-html="help.desktopBody">In the Electron app, use the <strong>Capture</strong> button in the editor. It opens a window with the product page: photograph, mark the click, and create the project. It only captures what is in that window. In the browser, continue with the extension below.</p>
+    </section>
+
+    <section class="card" id="baixar">
+      <h2 data-i18n="help.installTitle">1. Install the extension</h2>
+      <p data-i18n="help.installLead">The GuiaFlow — Capture extension is on the Chrome Web Store. One click installs it, and Chrome updates it on its own.</p>
+      <p>
+        <a class="store-link" href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener noreferrer">
+          <span data-i18n="help.storeCta">Install from the Chrome Web Store</span>
+        </a>
+      </p>
+      <ol>
+        <li data-i18n-html="help.installStore1">Open the extension page and click <strong>Add to Chrome</strong>.</li>
+        <li data-i18n-html="help.installStore2">Confirm with <strong>Add extension</strong>.</li>
+        <li data-i18n-html="help.installStore3">Pin the GuiaFlow icon on the Chrome toolbar so capture is easy to find.</li>
+      </ol>
+      <details class="manual-install">
+        <summary data-i18n="help.zipTitle">Manual install (zip)</summary>
+        <p><a href="/downloads/guiaflow-captura.zip"><span data-i18n="help.downloadZip">Download the extension (zip)</span></a></p>
+        <ol>
+          <li data-i18n-html="help.install1">Unzip the archive. The folder must contain <code>manifest.json</code>.</li>
+          <li data-i18n-html="help.install2">Open <code>chrome://extensions</code>.</li>
+          <li data-i18n-html="help.install3">Turn on <strong>Developer mode</strong>.</li>
+          <li data-i18n-html="help.install4">Click <strong>Load unpacked</strong> and choose that folder.</li>
+          <li data-i18n-html="help.install5">When a new version ships, download again and click <strong>Reload</strong> on the extension card.</li>
+        </ol>
+      </details>
+    </section>
+
+    <section class="card" id="gravar">
+      <h2 data-i18n="help.recordTitle">2. Record the screens</h2>
+      <p data-i18n-html="help.recordIntro">Keep the editor open at this address. In the store extension, the <strong>Editor</strong> field already points at the published GuiaFlow. If the address below is different, paste it into that field:</p>
+      <p class="origin" id="editor-origin"></p>
+      <ol>
+        <li data-i18n="help.record1">Open the product page you want to show.</li>
+        <li data-i18n-html="help.record2">Click the extension icon and <strong>Start on this tab</strong>.</li>
+        <li data-i18n-html="help.record3">In the capture bar, <strong>Capture</strong> freezes the current screen.</li>
+        <li data-i18n="help.record4">Click the element that should be highlighted. That click does not take another photo.</li>
+        <li data-i18n="help.record5">Follow the product flow and repeat capture + click.</li>
+        <li data-i18n-html="help.record6"><strong>Create project</strong> opens the editor with a new project, already with images and click points.</li>
+      </ol>
+      <p data-i18n-html="help.recordTips"><strong>Undo</strong> removes the last step. <strong>Download JSON</strong> saves a file if the editor is not open. Shortcuts: Option+Shift+C captures, Option+Shift+E creates the project.</p>
+      <p data-i18n-html="help.recordPrefer">Prefer <strong>Capture</strong> and only then click. A direct click on the page also creates a step, but the photo may show the screen after it already changed.</p>
+    </section>
+
+    <section class="card" id="editor">
+      <h2 data-i18n="help.editorTitle">3. Build the tour in the editor</h2>
+      <p data-i18n-html="help.editorIntro">On the first visit, GuiaFlow opens the sample project in <strong>Auto preview</strong>. <strong>Esc</strong> returns to the editor.</p>
+      <ol>
+        <li data-i18n="help.editor1">Adjust each step’s text in the right panel.</li>
+        <li data-i18n="help.editor2">Drag the rectangle to move the highlight and the point to move the simulated click.</li>
+        <li data-i18n-html="help.editor3">Use <strong>Preview</strong> (the arrow next to it starts from this step or from the beginning) or <strong>Shift+P</strong> for Auto preview to see what the audience will see; <strong>Esc</strong> returns to editing.</li>
+        <li data-i18n-html="help.editor4">In <strong>Export</strong>, choose browsable HTML or video.</li>
+      </ol>
+      <p data-i18n-html="help.editorTip">Without the extension, you can create an empty project and upload screenshots with <strong>+ Images</strong>.</p>
+    </section>
+
+    <section class="card" id="incorporar">
+      <h2 data-i18n="help.embedTitle">Embed the tour on your site</h2>
+      <p data-i18n="help.embedLead">With GuiaFlow Pro, the permanent link becomes a tour inside your page: it fits the screen width, doesn't close on an accidental click and waits for the visitor to press ▶ to start.</p>
+      <p data-i18n-html="help.embedGet">In the editor, open <strong>Share</strong> → <strong>Embed on your site</strong>, pick a tab and click <strong>Copy code</strong>. If there's no permanent link yet, the dialog offers <strong>Publish permanent link</strong>.</p>
+      <h3 data-i18n="help.embedHtmlTitle">Plain HTML</h3>
+      <p data-i18n="help.embedHtml">Paste the code where the tour should appear on the page. It takes the available width (up to 1200 px) and keeps the screenshots' aspect ratio.</p>
+      <h3 data-i18n="help.embedWpTitle">WordPress</h3>
+      <ol>
+        <li data-i18n-html="help.embedWp1">In the block editor, click <strong>+</strong> and choose <strong>Custom HTML</strong>.</li>
+        <li data-i18n-html="help.embedWp2">Paste the code from the <strong>WordPress</strong> tab and publish the page.</li>
+        <li data-i18n-html="help.embedWp3">If the tour doesn't show, a security or AMP plugin may be stripping iframes. Allow the <code>guiaflow.pro</code> domain in that plugin.</li>
+      </ol>
+      <h3 data-i18n="help.embedWfTitle">Webflow</h3>
+      <ol>
+        <li data-i18n-html="help.embedWf1">In the Designer, open <strong>Add</strong> (+) and drag the <strong>Code Embed</strong> element onto the page.</li>
+        <li data-i18n-html="help.embedWf2">Paste the code from the <strong>Webflow</strong> tab, save and publish the site. The tour only shows on the published site, not in the Designer.</li>
+      </ol>
+      <p data-i18n-html="help.embedNotes">Republishing the tour updates every site where it's embedded. <strong>Start automatically</strong> skips the ▶ button; the browser may hold the sound until the visitor interacts. If your site uses <code>sandbox</code> on the iframe, include <code>allow-scripts</code> and <code>allow-same-origin</code>, or the tour won't run.</p>
+    </section>
+
+    <section class="card" id="privacidade">
+      <h2 data-i18n="help.privacyTitle">Privacy</h2>
+      <ul>
+        <li data-i18n="help.privacy1">A photo is only taken when you capture or click during a recording.</li>
+        <li data-i18n="help.privacy2">Images stay in Chrome until you create the project, download the JSON, or cancel.</li>
+        <li data-i18n="help.privacy3">Create project sends images only to the editor address in the popup, in this browser.</li>
+        <li data-i18n="help.privacy4">The extension does not send captures to another server and does not sell that data.</li>
+      </ul>
+    </section>
+
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/en/ajuda" data-i18n="topbar.help">Help</a>
+      <a href="/en/privacidade" data-i18n="legal.privacy">Privacy</a>
+      <a href="/en/termos" data-i18n="legal.terms">Terms</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module">
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/85/js/i18n.js";
+    initLocale();
+    applyI18n(document);
+    bindLocaleSelect(document.getElementById("locale-select"));
+    document.getElementById("editor-origin").textContent = location.origin;
+  </script>
+</body>
+</html>
