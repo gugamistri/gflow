@@ -4444,6 +4444,11 @@ export function createEditor(ctx) {
     }
   }
 
+  function revealSelected() {
+    const el = els.filmstrip?.querySelector(`.film-item[data-index="${getSelectedIndex()}"]`);
+    el?.scrollIntoView({ block: "nearest" });
+  }
+
   function refresh() {
     const demo = getDemo();
     if (demo && renumberScenes(demo)) onChange();
@@ -4467,7 +4472,7 @@ export function createEditor(ctx) {
     stopSpeech();
   }
 
-  return { refresh, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges };
+  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges };
 }
 
 function getImageContentRect(img) {

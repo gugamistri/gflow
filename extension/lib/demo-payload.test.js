@@ -66,6 +66,21 @@ test("payload liga cada passo à imagem embutida", () => {
   assert.equal(payload.theme.presetId, "documento");
 });
 
+test("captura em WebP sem nome ganha extensão webp", () => {
+  const payload = buildDemoPayload({
+    name: "guia-captura",
+    shots: [
+      {
+        imageId: "img-w",
+        stepId: "step-w",
+        dataUrl: "data:image/webp;base64,bbb",
+        clickPoint: { x: 10, y: 10 },
+      },
+    ],
+  });
+  assert.equal(payload.customImages["img-w"].name, "passo-1.webp");
+});
+
 test("passo sem clique usa o centro como destaque", () => {
   const payload = buildDemoPayload({
     name: "guia-captura",

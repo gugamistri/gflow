@@ -1,3 +1,4 @@
+import { captureFileName, optimizeCaptureDataUrl } from "./lib/capture-image.js";
 import { buildDemoPayload, nextClickAction, pointFromClick } from "./lib/demo-payload.js";
 import {
   DEFAULT_EDITOR_ORIGIN,
@@ -241,10 +242,8 @@ async function captureShot(tab, meta, { withClick }) {
     await hideOverlay(tab.id).catch(() => {});
     let dataUrl;
     try {
-      dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
-        format: "jpeg",
-        quality: 70,
-      });
+      // why: PNG é a fonte sem perda; o WebP sai em seguida, nos limites do editor
+      dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
     } catch {
       const state = publicState({
         ok: false,
@@ -254,11 +253,18 @@ async function captureShot(tab, meta, { withClick }) {
       return state;
     }
 
+    const encoded = await optimizeCaptureDataUrl(dataUrl);
+    // why: sem WebP menor, o PNG da tela inteira inchava o handoff; o JPEG antigo segura o passo
+    if (!encoded.optimized) {
+      dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 70 });
+    } else {
+      dataUrl = encoded.dataUrl;
+    }
     const stepNumber = session.shots.length + 1;
     session.shots.push({
       imageId: randId("img-"),
       stepId: randId("step-"),
-      name: `passo-${stepNumber}.jpg`,
+      name: captureFileName(stepNumber, dataUrl),
       label: trimTitle(meta?.title) || `Passo ${stepNumber}`,
       dataUrl,
       addedAt: Date.now(),

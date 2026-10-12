@@ -495,6 +495,9 @@ function optimizeIncomingMedia(sources, { audio = true } = {}) {
         saveDirty = true;
         await flushAutosave();
         paintProjectSize();
+        // why: a filmstrip já pintou o original; sem isto a versão leve não aparece
+        editor.refresh?.();
+        editor.revealSelected?.();
       } else {
         const saved = await getProject(targetId);
         if (!saved) return;
@@ -3511,6 +3514,7 @@ async function importCapturePayload(data, { name } = {}) {
   if (!created.sceneLabels) created.sceneLabels = data.sceneLabels || {};
   await putProject(created);
   await openProject(created.id);
+  editor.revealSelected?.();
   void optimizeIncomingMedia(null);
   return created;
 }
@@ -3531,6 +3535,7 @@ async function appendCapturePayload(data) {
   setSelectedIndex(startIndex);
   onChange();
   editor.refresh?.();
+  editor.revealSelected?.();
   paintChrome();
   void optimizeIncomingMedia(incoming);
   return project;
