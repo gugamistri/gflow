@@ -1,5 +1,5 @@
 (() => {
-  const BRIDGE_VERSION = 2;
+  const BRIDGE_VERSION = 3;
   if (globalThis.__guiaBridgeInstalled === BRIDGE_VERSION) return;
   globalThis.__guiaBridgeInstalled = BRIDGE_VERSION;
 
@@ -68,6 +68,8 @@
 
     if (data.source === "guia-editor" && data.type === "guia-ready") {
       apply({ type: "editor-ready" });
+      // why: a primeira entrega pode ter saído antes do editor escutar; sem isto o ack nunca vem e a tela fica no projeto antigo
+      apply({ type: "retry" });
       askHandoff();
       return;
     }

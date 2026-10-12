@@ -75,7 +75,8 @@ test("ack antigo não apaga um handoff mais novo", () => {
 test("a ponte escuta guia-ready sem comparar event.source e relê no foco", () => {
   const source = readFileSync(new URL("../bridge.js", import.meta.url), "utf8");
   assert.equal(source.includes("event.source"), false);
-  assert.match(source, /BRIDGE_VERSION = 2/);
+  assert.match(source, /BRIDGE_VERSION = 3/);
+  assert.match(source, /type: "retry"/);
   assert.match(source, /guia-ready/);
   assert.match(source, /visibilitychange/);
   assert.match(source, /HANDOFF_RELAY/);

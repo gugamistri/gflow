@@ -1,3 +1,4 @@
+import { captureExtension } from "./capture-image.js";
 import { t } from "./i18n.js";
 /**
  * Monta o JSON que o editor importa (steps + customImages).
@@ -79,7 +80,7 @@ export function buildDemoPayload({ name, shots }) {
     const point = shot.clickPoint || { x: 47, y: 44 };
     const hotspot = hotspotAround(point);
     customImages[shot.imageId] = {
-      name: shot.name || `passo-${index + 1}.jpg`,
+      name: shot.name || `passo-${index + 1}.${captureExtension(shot.dataUrl)}`,
       dataUrl: shot.dataUrl,
       addedAt: shot.addedAt || Date.now(),
     };
