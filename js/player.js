@@ -673,6 +673,35 @@ export function createPlayer(ctx) {
       }
     });
 
+    // why: no celular, deslizar para os lados troca de passo (só um dedo, gesto claramente horizontal, fora de campos)
+    let swipe = null;
+    window.addEventListener(
+      "touchstart",
+      (e) => {
+        swipe = null;
+        if (!isPresenting() || !driverObj || e.touches.length !== 1) return;
+        if (e.target.closest?.("input, textarea, select, label, form, audio, video, a, [contenteditable]")) return;
+        const t = e.touches[0];
+        swipe = { x: t.clientX, y: t.clientY, at: Date.now() };
+      },
+      { passive: true }
+    );
+    window.addEventListener(
+      "touchend",
+      (e) => {
+        const s = swipe;
+        swipe = null;
+        if (!s || !driverObj || animating || !isPresenting() || e.touches.length) return;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - s.x;
+        const dy = t.clientY - s.y;
+        if (Date.now() - s.at > 700 || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 2) return;
+        if (dx < 0) clickDriverNext();
+        else clickDriverPrev();
+      },
+      { passive: true }
+    );
+
     window.addEventListener("resize", () => {
       if (!isPresenting() || !running) return;
       const demo = getDemo();
