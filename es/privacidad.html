@@ -49,14 +49,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/89/css/theme.css" />
-  <link rel="stylesheet" href="/a/89/css/app.css" />
-  <link rel="stylesheet" href="/a/89/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/90/css/theme.css" />
+  <link rel="stylesheet" href="/a/90/css/app.css" />
+  <link rel="stylesheet" href="/a/90/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/89/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/89/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/90/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/90/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidad</span>
     </div>
     <div class="topbar-appearance">
@@ -72,7 +72,7 @@
   <main class="page legal">
     <h1 data-i18n="privacy.h1">Política de Privacidad</h1>
     <p class="lead" data-i18n="privacy.lead">Aquí explicamos, con lenguaje directo, qué datos trata GuiaFlow, por qué, dónde se guardan y cómo los controlas.</p>
-    <p class="legal-updated" data-i18n="privacy.updated">Última actualización: 12 de octubre de 2026</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Última actualización: 13 de octubre de 2026</p>
     <section class="card" id="resumo">
       <h2 data-i18n="privacy.resumo.title">En resumen</h2>
       <ul>
@@ -201,6 +201,7 @@
         <li data-i18n="privacy.cookies.li5">El botón “Feedback” abre un formulario de Tally, que se carga en el editor. Si respondes, las respuestas van a Tally.</li>
         <li data-i18n="privacy.cookies.li6">Al conectar una app de IA con OAuth, la página de autorización usa una cookie de sesión de 1 hora, solo para esa pantalla.</li>
       </ul>
+      <p data-i18n="privacy.cookies.p2">GuiaFlow solo usa cookies y almacenamiento del navegador estrictamente necesarios para el servicio que pides, por eso no mostramos un banner de consentimiento de cookies. El editor carga el script del widget de Tally (tally.so) al abrirse, así que tu navegador se conecta a Tally (que recibe tu IP); el formulario en sí solo se carga cuando haces clic en “Comentarios”. En nuestras pruebas, ni el script ni el formulario guardan cookies; el script puede guardar en el navegador si ya abriste o enviaste el formulario.</p>
     </section>
     <section class="card" id="bases">
       <h2 data-i18n="privacy.bases.title">Para qué los usamos y con qué base legal</h2>
@@ -227,9 +228,30 @@
       </ul>
       <p data-i18n="privacy.compartilhamento.p2">También podemos entregar datos cuando la ley o una orden judicial lo exija.</p>
     </section>
+    <section class="card" id="suboperadores">
+      <h2 data-i18n="privacy.subproc.title">Proveedores (subencargados)</h2>
+      <p data-i18n="privacy.subproc.p1">Esta tabla muestra cada proveedor, lo que hace, qué datos recibe, dónde trata los datos y la garantía usada en las transferencias desde el EEE, el Reino Unido y Suiza.</p>
+      <div class="legal-table-wrap">
+        <table class="legal-table">
+          <thead><tr data-i18n-html="privacy.subproc.th"><th scope="col">Proveedor y función</th><th scope="col">Datos</th><th scope="col">Ubicación</th><th scope="col">Garantía de transferencia</th></tr></thead>
+          <tbody>
+          <tr data-i18n-html="privacy.subproc.r1"><td><strong>Hostinger</strong>: servidor de la cuenta Pro, de los enlaces permanentes y del análisis de visitas</td><td>Datos de la cuenta y la suscripción, proyectos guardados en la cuenta, enlaces permanentes, contactos de visitantes (leads), análisis de visitas</td><td>Brasil (São Paulo)</td><td>Decisión de adecuación de la Comisión Europea para Brasil</td></tr>
+          <tr data-i18n-html="privacy.subproc.r2"><td><strong>DigitalOcean</strong>: imágenes y audios de los proyectos Pro y copias de seguridad de la base de datos (14 días)</td><td>Medios de los proyectos; copias de la base de datos Pro</td><td>Estados Unidos</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r3"><td><strong>Vercel</strong>: alojamiento del sitio, funciones del servidor y enlaces temporales</td><td>Datos de acceso (como la IP); contenido de los tours publicados con enlace temporal</td><td>Estados Unidos</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r4"><td><strong>Cloudflare</strong>: DNS, entrega del sitio y seguridad</td><td>Datos de acceso (como la IP)</td><td>Red global</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r5"><td><strong>Stripe</strong>: pagos (responsable independiente de los datos de la tarjeta)</td><td>Correo, datos de pago y facturación</td><td>Estados Unidos e Irlanda</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r6"><td><strong>Resend</strong>: envío de correos</td><td>Dirección de correo y contenido del mensaje</td><td>Estados Unidos</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r7"><td><strong>OpenRouter</strong> y el proveedor del modelo elegido: textos con IA (Pro)</td><td>Texto y contexto del paso; por la API/MCP, posiblemente la captura del paso</td><td>Estados Unidos</td><td>Cláusulas contractuales tipo</td></tr>
+          <tr data-i18n-html="privacy.subproc.r8"><td><strong>Cartesia</strong>: audio narrado (Pro)</td><td>Texto a narrar</td><td>Estados Unidos</td><td>Cláusulas contractuales tipo</td></tr>
+          <tr data-i18n-html="privacy.subproc.r9"><td><strong>Tally</strong>: formulario de comentarios</td><td>Tus respuestas y datos técnicos de la conexión</td><td>Bélgica (UE)</td><td>Sin transferencia fuera del EEE</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
     <section class="card" id="transferencia">
       <h2 data-i18n="privacy.transferencia.title">Transferencia internacional</h2>
       <p data-i18n="privacy.transferencia.p1">Varios de estos proveedores están fuera de Brasil, principalmente en Estados Unidos. La transferencia ocurre porque es necesaria para prestar el servicio que pediste y se realiza con las garantías contractuales y de seguridad que ofrecen estos proveedores, conforme al art. 33 de la LGPD.</p>
+      <p data-i18n="privacy.transferencia.p2">Para quienes están en el Espacio Económico Europeo: nuestro servidor principal está en Brasil, que la Comisión Europea reconoció con un nivel de protección adecuado (Decisión de Ejecución (UE) 2026/179, de 26 de enero de 2026). Para proveedores en Estados Unidos, usamos el EU-U.S. Data Privacy Framework cuando el proveedor está certificado en él (con la extensión del Reino Unido y el marco Suiza-EE. UU., cuando corresponda) y, en los demás casos, las cláusulas contractuales tipo de la Comisión Europea. La decisión de la UE sobre Brasil no cubre el Reino Unido ni Suiza.</p>
     </section>
     <section class="card" id="retencao">
       <h2 data-i18n="privacy.retencao.title">Cuánto tiempo los guardamos</h2>
@@ -260,9 +282,33 @@
       <p data-i18n-html="privacy.direitos.p2">Para pedirlo, escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>, preferiblemente desde el correo de la cuenta, para que podamos confirmar que eres tú. Respondemos en un plazo de 15 días. También puedes reclamar ante la Autoridad Nacional de Protección de Datos de Brasil (ANPD).</p>
       <p data-i18n="privacy.direitos.p3">Los datos que quedan solo en tu navegador están bajo tu control: puedes exportar o borrar los proyectos en el propio editor.</p>
     </section>
+    <section class="card" id="eee">
+      <h2 data-i18n="privacy.eee.title">Usuarios en el EEE, Reino Unido y Suiza</h2>
+      <p data-i18n-html="privacy.eee.p1">Si estás en el Espacio Económico Europeo, el Reino Unido o Suiza, el RGPD (o el UK GDPR, o la ley suiza de protección de datos) también puede aplicarse al tratamiento de tus datos. El responsable es Gustavo Ariel Mistrinelli, persona física, en Brasil, en <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>. En los contactos de visitantes y el análisis de visitas de los tours publicados, el autor del tour es el responsable y GuiaFlow trata los datos en su nombre.</p>
+      <p data-i18n="privacy.eee.p2">Bases legales (art. 6 del RGPD):</p>
+      <ul>
+        <li data-i18n-html="privacy.eee.li1"><strong>Contrato</strong> (art. 6(1)(b)): cuenta, suscripción, proyectos guardados en la cuenta, enlaces temporales y permanentes, correos de acceso, IA y voz a través de GuiaFlow;</li>
+        <li data-i18n-html="privacy.eee.li2"><strong>Obligación legal</strong> (art. 6(1)(c)): registros de pago y fiscales;</li>
+        <li data-i18n-html="privacy.eee.li3"><strong>Interés legítimo</strong> (art. 6(1)(f)): seguridad del servicio, prevención de abusos y límites de uso y, en nombre de los autores de los tours, el análisis de visitas sin cookies;</li>
+        <li data-i18n-html="privacy.eee.li4"><strong>Consentimiento</strong> (art. 6(1)(a)): contactos de visitantes recogidos en los tours y el formulario de comentarios. Puedes retirar el consentimiento en cualquier momento.</li>
+      </ul>
+      <p data-i18n="privacy.eee.p3">Tus derechos:</p>
+      <ul>
+        <li data-i18n="privacy.eee.r1">acceso a tus datos;</li>
+        <li data-i18n="privacy.eee.r2">rectificación de datos inexactos o incompletos;</li>
+        <li data-i18n="privacy.eee.r3">supresión;</li>
+        <li data-i18n="privacy.eee.r4">limitación del tratamiento;</li>
+        <li data-i18n="privacy.eee.r5">portabilidad de los datos;</li>
+        <li data-i18n="privacy.eee.r6">oposición al tratamiento basado en interés legítimo;</li>
+        <li data-i18n="privacy.eee.r7">retirada del consentimiento, sin afectar el tratamiento realizado antes;</li>
+        <li data-i18n="privacy.eee.r8">reclamación ante la autoridad de protección de datos del país donde vives, trabajas o donde ocurrió la supuesta infracción (en el Reino Unido, el ICO; en Suiza, el FDPIC).</li>
+      </ul>
+      <p data-i18n-html="privacy.eee.p4">Para ejercer estos derechos, escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>. Respondemos en un mes; ese plazo puede ampliarse dos meses más en solicitudes complejas o numerosas, y en ese caso te avisamos dentro del primer mes.</p>
+    </section>
     <section class="card" id="seguranca">
       <h2 data-i18n="privacy.seguranca.title">Seguridad</h2>
       <p data-i18n="privacy.seguranca.p1">Usamos conexiones HTTPS, contraseñas guardadas solo como hash, enlaces de acceso de corta duración, tokens de sesión con caducidad y acceso restringido al servidor. Ningún sistema es totalmente inmune a fallos; si ocurre un incidente que pueda causar un riesgo o daño relevante, avisaremos a los afectados y a la ANPD, como exige la ley.</p>
+      <p data-i18n="privacy.seguranca.p2">Si una violación de datos personales afecta a personas en el EEE, el Reino Unido o Suiza, avisamos a la autoridad competente en un plazo de 72 horas desde que tengamos conocimiento, cuando sea obligatorio, e informamos a los afectados sin dilación indebida cuando haya un riesgo alto para ellos. Cuando tratamos datos en nombre de un autor de tour, avisamos al autor sin dilación indebida.</p>
     </section>
     <section class="card" id="menores">
       <h2 data-i18n="privacy.menores.title">Niños y adolescentes</h2>
@@ -287,8 +333,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/89/js/i18n.js";
-    import "./a/89/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/90/js/i18n.js";
+    import "./a/90/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
