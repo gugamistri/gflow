@@ -43,8 +43,8 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title data-i18n="lp.doc.title">GuiaFlow — Demo interativo do seu produto, sem call</title>
-  <meta name="description" content="Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch. Grátis no navegador." />
+  <title data-i18n="lp.doc.title">Demo interativo grátis do seu produto — GuiaFlow (open source)</title>
+  <meta name="description" content="Crie grátis um demo interativo do seu produto: tour interativo e narrado a partir de prints, grátis no navegador e open source (código aberto, MIT)." />
   <!-- i18n-alternates -->
   <link rel="canonical" href="https://guiaflow.pro/" />
   <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/" />
@@ -56,8 +56,8 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="GuiaFlow" />
   <meta property="og:locale" content="pt_BR" />
-  <meta property="og:title" content="Seu produto, demonstrado sem call — GuiaFlow" />
-  <meta property="og:description" content="Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch." />
+  <meta property="og:title" content="Demo interativo grátis do seu produto — GuiaFlow (open source)" />
+  <meta property="og:description" content="Crie grátis um demo interativo do seu produto: tour interativo e narrado a partir de prints, grátis no navegador e open source (código aberto, MIT)." />
   <meta property="og:url" content="https://guiaflow.pro/" />
   <meta property="og:image" content="https://guiaflow.pro/brand/og-landing.png" />
   <meta property="og:image:type" content="image/png" />
@@ -65,8 +65,8 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="GuiaFlow — Seu produto, demonstrado sem call." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Seu produto, demonstrado sem call — GuiaFlow" />
-  <meta name="twitter:description" content="Transforme prints do seu produto em um demo interativo e narrado em minutos. Mande o link para o lead, coloque no site ou no pitch." />
+  <meta name="twitter:title" content="Demo interativo grátis do seu produto — GuiaFlow (open source)" />
+  <meta name="twitter:description" content="Crie grátis um demo interativo do seu produto: tour interativo e narrado a partir de prints, grátis no navegador e open source (código aberto, MIT)." />
   <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing.png" />
   <meta name="twitter:image:alt" content="GuiaFlow — Seu produto, demonstrado sem call." />
   <script>
@@ -85,23 +85,119 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="preload" href="/a/86/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/a/86/css/landing.css" />
+  <link rel="preload" href="/a/87/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/a/87/css/landing.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "GuiaFlow",
-    "url": "https://guiaflow.pro/",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web, Chrome",
-    "description": "Transforme prints do seu produto em um demo interativo e narrado em minutos.",
-    "offers": [
-      { "@type": "Offer", "name": "Grátis", "price": "0", "priceCurrency": "BRL" },
-      { "@type": "Offer", "name": "GuiaFlow Pro (mensal)", "price": "36", "priceCurrency": "BRL" },
-      { "@type": "Offer", "name": "GuiaFlow Pro (anual)", "price": "359", "priceCurrency": "BRL" }
-    ],
-    "license": "https://opensource.org/licenses/MIT"
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://guiaflow.pro/#organization",
+        "name": "GuiaFlow",
+        "url": "https://guiaflow.pro/",
+        "logo": "https://guiaflow.pro/brand/app-icon-512.png",
+        "email": "contato@guiaflow.pro",
+        "sameAs": [
+          "https://github.com/gugamistri/gflow"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://guiaflow.pro/#website",
+        "name": "GuiaFlow",
+        "url": "https://guiaflow.pro/",
+        "inLanguage": [
+          "pt-BR",
+          "en",
+          "es"
+        ],
+        "publisher": {
+          "@id": "https://guiaflow.pro/#organization"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "name": "GuiaFlow",
+        "url": "https://guiaflow.pro/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, Chrome",
+        "description": "Crie grátis um demo interativo do seu produto: tour interativo e narrado a partir de prints, grátis no navegador e open source (código aberto, MIT).",
+        "inLanguage": "pt-BR",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/licenses/MIT",
+        "publisher": {
+          "@id": "https://guiaflow.pro/#organization"
+        },
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Grátis",
+            "price": "0",
+            "priceCurrency": "BRL"
+          },
+          {
+            "@type": "Offer",
+            "name": "GuiaFlow Pro (mensal)",
+            "price": "36",
+            "priceCurrency": "BRL"
+          },
+          {
+            "@type": "Offer",
+            "name": "GuiaFlow Pro (anual)",
+            "price": "359",
+            "priceCurrency": "BRL"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://guiaflow.pro/#faq",
+        "inLanguage": "pt-BR",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Onde ficam os meus dados?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No Grátis, os projetos ficam só no seu navegador, neste aparelho, e não chegam até nós; um link temporário guarda o tour publicado por 7 dias. No Pro, os projetos, os links permanentes e os leads ficam no servidor do GuiaFlow, ligados à sua conta."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "O GuiaFlow segue a LGPD?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sim. Guardamos o mínimo para a conta e os links, não usamos rastreamento de publicidade e não vendemos dados. A captura de leads pede consentimento explícito do visitante. Os detalhes estão na Política de Privacidade."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "O GuiaFlow é open source?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sim. O editor e o player têm licença MIT e o código está em github.com/gugamistri/gflow."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Preciso de cartão de crédito?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Não para o Grátis: não tem conta nem cartão, é só abrir o editor. O GuiaFlow Pro é uma assinatura mensal ou anual paga pelo Stripe, e você cancela quando quiser."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quem recebe o demo precisa instalar alguma coisa?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Não. O demo abre no navegador, no celular ou no computador, a partir do link ou do seu site. A extensão do Chrome só é necessária para quem cria o demo."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>
@@ -110,7 +206,7 @@
   <header class="site-header" id="topo">
     <div class="wrap header-row">
       <a class="brand" href="/?landing=1" aria-label="GuiaFlow">
-        <img src="/a/86/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
+        <img src="/a/87/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
       </a>
       <nav class="nav" aria-label="Seções" data-i18n-aria="lp.nav.aria">
         <a href="#como-funciona" data-i18n="lp.nav.how">Como funciona</a>
@@ -143,7 +239,7 @@
           <div class="mock">
             <div class="mock-bar"><span></span><span></span><span></span><i>app.leadpronto.ai</i></div>
             <div class="mock-shot">
-              <img src="/a/86/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
+              <img src="/a/87/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
               <span class="mock-target"></span>
               <span class="mock-hotspot"></span>
               <div class="mock-pop">
@@ -169,7 +265,7 @@
         </div>
         <div class="demo-frame" id="demo-frame">
           <div class="demo-placeholder" id="demo-placeholder">
-            <img src="/a/86/brand/symbol-simple.svg" alt="" width="40" height="40" />
+            <img src="/a/87/brand/symbol-simple.svg" alt="" width="40" height="40" />
             <p data-i18n="lp.demo.soon">O demo de exemplo chega em breve. Enquanto isso, crie o seu em minutos.</p>
             <a class="btn btn-primary" href="/editor" data-i18n="lp.hero.ctaPrimary">Criar meu demo grátis</a>
           </div>
@@ -402,11 +498,12 @@
 
   <footer class="site-footer">
     <div class="wrap footer-row">
-      <img src="/a/86/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
+      <img src="/a/87/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
       <nav aria-label="Links do rodapé" data-i18n-aria="lp.footer.aria">
         <a href="/editor" data-i18n="lp.footer.editor">Editor</a>
         <a href="/ajuda" data-i18n="lp.footer.help">Ajuda</a>
         <a href="/integracoes" data-i18n="lp.footer.integrations">Integrações</a>
+        <a href="/ajuda/api" data-i18n="lp.footer.api">API e MCP</a>
         <a href="/privacidade" data-i18n="lp.footer.privacy">Privacidade</a>
         <a href="/termos" data-i18n="lp.footer.terms">Termos</a>
         <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
@@ -423,6 +520,6 @@
     </div>
     <p class="wrap copy">© 2026 GuiaFlow</p>
   </footer>
-  <script type="module" src="/a/86/js/landing.js"></script>
+  <script type="module" src="/a/87/js/landing.js"></script>
 </body>
 </html>
