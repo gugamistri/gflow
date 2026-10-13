@@ -1,0 +1,53 @@
+<div class="api-doc" data-doc-locale="es">
+    <h1>Integraciones</h1>
+    <p class="lead">Usa GuiaFlow desde tu asistente de IA: conecta el servidor MCP y pídele crear, ajustar y publicar tours guiados a partir de capturas de pantalla. Exclusivo del plan Pro; el login es en el navegador (OAuth), sin clave que copiar.</p>
+    <section class="card">
+      <h2>Dirección del servidor</h2>
+      <pre><code>https://app.guiaflow.pro/mcp</code></pre>
+      <p>Streamable HTTP, OAuth 2.1. También acepta clave de API (<code>Authorization: Bearer gf_live_…</code>), mira <a href="/ajuda/api">API y MCP</a>.</p>
+      <p class="smithery-link"><a href="https://smithery.ai/servers/gmistrinelli/guiaflow" target="_blank" rel="noopener"><img src="https://smithery.ai/badge/gmistrinelli/guiaflow" alt="smithery badge" height="20" loading="lazy" style="vertical-align:middle" /> También en Smithery</a></p>
+    </section>
+    <section class="card" id="cursor-es">
+      <h2>Cursor</h2>
+      <div class="install-row"><a class="btn btn-primary" href="cursor://anysphere.cursor-deeplink/mcp/install?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=">Añadir a Cursor</a></div>
+      <ol><li>Haz clic en <strong>Añadir a Cursor</strong> y confirma en <strong>Install</strong>.</li><li>En la primera llamada, Cursor abre el login de GuiaFlow: entra y elige los permisos.</li></ol>
+      <p>O pega en <code>~/.cursor/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="claude-code-es">
+      <h2>Claude Code</h2>
+      <p>Ejecuta en la terminal:</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Dentro de Claude Code, ejecuta <code>/mcp</code>, elige <strong>guiaflow</strong> e inicia sesión.</p>
+    </section>
+    <section class="card" id="claude-es">
+      <h2>Claude.ai</h2>
+      <ol><li>Abre <strong>Configuración → Conectores</strong> y pulsa <strong>Añadir conector personalizado</strong>.</li><li>Nombre: <code>GuiaFlow</code>. URL: <code>https://app.guiaflow.pro/mcp</code>.</li><li>Pulsa <strong>Conectar</strong> e inicia sesión en GuiaFlow. En una conversación, activa el conector en el menú de herramientas.</li></ol>
+      <p>Funciona también en Claude Desktop. En planes Team/Enterprise, un administrador añade el conector para la organización.</p>
+    </section>
+    <section class="card" id="chatgpt-es">
+      <h2>ChatGPT</h2>
+      <ol><li>En <strong>Configuración → Apps y conectores → Configuración avanzada</strong>, activa el <strong>Modo desarrollador</strong>.</li><li>Vuelve a <strong>Apps y conectores</strong> y pulsa <strong>Crear</strong>.</li><li>Nombre: <code>GuiaFlow</code>. URL del servidor MCP: <code>https://app.guiaflow.pro/mcp</code>. Autenticación: <strong>OAuth</strong>. Confirma e inicia sesión.</li><li>En una conversación, elige <strong>Modo desarrollador</strong> en el menú <strong>+</strong> y activa GuiaFlow.</li></ol>
+      <p>El modo desarrollador está disponible en los planes de pago de ChatGPT en la web.</p>
+    </section>
+    <section class="card" id="vscode-es">
+      <h2>VS Code</h2>
+      <div class="install-row"><a class="btn btn-primary" href="vscode:mcp/install?%7B%22name%22%3A%22guiaflow%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//app.guiaflow.pro/mcp%22%7D">Instalar en VS Code</a></div>
+      <ol><li>Haz clic en <strong>Instalar en VS Code</strong> y confirma en <strong>Install</strong>.</li><li>En la primera llamada, VS Code pide el login de GuiaFlow.</li></ol>
+      <p>O pega en <code>.vscode/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>Qué pedir</h2>
+      <p>Ejemplos: “Crea un tour con estas 4 capturas y publícalo”, “Escribe los textos de los pasos con IA”, “¿Cuántas personas completaron el tour del checkout esta semana?”.</p>
+      <p>Herramientas, permisos, límites y API REST: <a href="/ajuda/api">API y MCP</a>. Dudas: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>

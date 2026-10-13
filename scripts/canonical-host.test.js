@@ -29,6 +29,8 @@ test("guiaflow-seven.vercel.app redireciona a raiz e os demais caminhos", () => 
 test("o redirect não pega guiaflow.pro e o rewrite /v continua", () => {
   const redirects = config.redirects || [];
   for (const rule of redirects) {
+    // why: slugs antigos en/es (/en/ajuda…) → slug localizado; valem em qualquer host, destino é caminho relativo
+    if (/^\/(en|es)\//.test(rule.source) && rule.destination.startsWith("/")) continue;
     const hosts = (rule.has || []).filter((cond) => cond.type === "host").map((cond) => cond.value);
     assert.ok(hosts.length > 0, "redirect sem host pegaria o domínio canônico");
     assert.equal(hosts.includes("guiaflow.pro"), false);
