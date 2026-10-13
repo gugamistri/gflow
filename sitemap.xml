@@ -28,120 +28,120 @@
     <loc>https://guiaflow.pro/ajuda</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/en/ajuda</loc>
+    <loc>https://guiaflow.pro/en/help</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/es/ajuda</loc>
+    <loc>https://guiaflow.pro/es/ayuda</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda" />
   </url>
   <url>
     <loc>https://guiaflow.pro/ajuda/api</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda/api" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda/api" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda/api" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help/api" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda/api" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda/api" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/en/ajuda/api</loc>
+    <loc>https://guiaflow.pro/en/help/api</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda/api" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda/api" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda/api" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help/api" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda/api" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda/api" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/es/ajuda/api</loc>
+    <loc>https://guiaflow.pro/es/ayuda/api</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda/api" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/ajuda/api" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ajuda/api" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help/api" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda/api" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda/api" />
   </url>
   <url>
     <loc>https://guiaflow.pro/integracoes</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integracoes" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integracoes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integrations" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integraciones" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/en/integracoes</loc>
+    <loc>https://guiaflow.pro/en/integrations</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integracoes" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integracoes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integrations" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integraciones" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/es/integracoes</loc>
+    <loc>https://guiaflow.pro/es/integraciones</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integracoes" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integracoes" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integrations" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integraciones" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes" />
   </url>
   <url>
     <loc>https://guiaflow.pro/privacidade</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacidade" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidade" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidad" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/privacidade" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/en/privacidade</loc>
+    <loc>https://guiaflow.pro/en/privacy</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacidade" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidade" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidad" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/privacidade" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/es/privacidade</loc>
+    <loc>https://guiaflow.pro/es/privacidad</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/privacidade" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacidade" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidade" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/privacy" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/privacidad" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/privacidade" />
   </url>
   <url>
     <loc>https://guiaflow.pro/termos</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/termos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/termos" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/termos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/terms" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/terminos" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/termos" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/en/termos</loc>
+    <loc>https://guiaflow.pro/en/terms</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/termos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/termos" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/termos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/terms" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/terminos" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/termos" />
   </url>
   <url>
-    <loc>https://guiaflow.pro/es/termos</loc>
+    <loc>https://guiaflow.pro/es/terminos</loc>
     <lastmod>2026-10-12</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/termos" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/termos" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/termos" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/terms" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/terminos" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/termos" />
   </url>
 </urlset>

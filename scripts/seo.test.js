@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 1[12] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/87\/css\/ajuda\.css/);
+    assert.match(html, /a\/88\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -125,7 +125,9 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(html, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/ajuda\/api"/);
   assert.match(html, /<meta name="description" content="API REST e servidor MCP do GuiaFlow[^"]+"/);
   assert.equal(/(href|src)="a\//.test(html), false, "caminhos relativos quebram em /ajuda/api");
-  for (const loc of ["pt", "es", "en"]) assert.match(html, new RegExp(`data-doc-locale="${loc}"`));
+  // um idioma por URL: só o PT aqui (um H1); en/es vêm de locale-src/ nas páginas localizadas
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
+  assert.equal(/data-doc-locale="(es|en)"/.test(html), false);
   assert.match(html, /https:\/\/app\.guiaflow\.pro\/mcp/);
   assert.match(read("sitemap.xml"), /<loc>https:\/\/guiaflow\.pro\/ajuda\/api<\/loc>/);
   const llms = read("llms.txt");
@@ -139,11 +141,27 @@ test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos 
   assert.match(html, /cursor:\/\/anysphere\.cursor-deeplink\/mcp\/install\?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=/);
   assert.match(html, /vscode:mcp\/install\?/);
   assert.match(html, /claude mcp add --transport http guiaflow https:\/\/app\.guiaflow\.pro\/mcp/);
-  for (const loc of ["pt", "es", "en"]) assert.match(html, new RegExp(`data-doc-locale="${loc}"`));
+  // um idioma por URL: só o PT aqui (um H1); en/es vêm de locale-src/ nas páginas localizadas
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
+  assert.equal(/data-doc-locale="(es|en)"/.test(html), false);
   assert.equal(/(href|src)="a\//.test(html), false);
-  assert.match(html, /a\/87\/css\/ajuda\.css/);
+  assert.match(html, /a\/88\/css\/ajuda\.css/);
   assert.match(read("sitemap.xml"), /guiaflow\.pro\/integracoes/);
   assert.match(read("index.html"), /href="\/integracoes"/);
+});
+
+test("slugs localizados: um H1 por página, links finais e 301 dos slugs antigos", async () => {
+  const { PAGES, localeFile, localePath, legacyRedirects } = await import("./build-locale-pages.mjs");
+  const vercel = JSON.parse(read("vercel.json"));
+  for (const r of legacyRedirects()) {
+    assert.ok(vercel.redirects.some((v) => v.source === r.source && v.destination === r.destination && v.permanent), r.source);
+  }
+  assert.equal(localePath(PAGES.find((p) => p.path === "/integracoes"), "es"), "/es/integraciones");
+  for (const page of PAGES) for (const loc of ["pt", "en", "es"]) {
+    const html = read(localeFile(page, loc));
+    assert.equal((html.match(/<h1\b/g) || []).length, 1, localeFile(page, loc));
+    assert.equal(/href="\/(en|es)\/(ajuda|integracoes|privacidade|termos)\b/.test(html), false, localeFile(page, loc));
+  }
 });
 
 test("páginas de texto liberam a rolagem que o app.css trava (overflow do body)", () => {

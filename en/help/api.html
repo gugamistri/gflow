@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-page-locale="en" data-alt-pt="/ajuda/api" data-alt-en="/en/help/api" data-alt-es="/es/ayuda/api">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API and MCP — GuiaFlow</title>
+  <meta name="description" content="GuiaFlow REST API and MCP server: connect Cursor, Claude or ChatGPT to create and publish guided tours from screenshots." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/en/help/api" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda/api" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/help/api" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/ayuda/api" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/ajuda/api" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="API and MCP — GuiaFlow" />
+  <meta property="og:description" content="GuiaFlow REST API and MCP server: connect Cursor, Claude or ChatGPT to create and publish guided tours from screenshots." />
+  <meta property="og:url" content="https://guiaflow.pro/en/help/api" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Create interactive guided tours" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="API and MCP — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/88/css/theme.css" />
+  <link rel="stylesheet" href="/a/88/css/app.css" />
+  <link rel="stylesheet" href="/a/88/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+    .api-doc[hidden] { display: none; }
+    .page pre { overflow: auto; padding: 10px 12px; border-radius: 8px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); font-size: 0.8rem; line-height: 1.45; }
+    .page pre code { background: none; padding: 0; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--ns-border); }
+    .page th { color: var(--ns-muted); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/88/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/88/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title">API · MCP</span>
+    </div>
+    <div class="topbar-appearance">
+      <label class="locale-select">
+        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Language">
+          <option value="pt">PT</option>
+          <option value="es">ES</option>
+          <option value="en" selected>EN</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main class="page">
+  <div class="api-doc" data-doc-locale="en">
+    <h1>API and MCP</h1>
+    <p class="lead">Connect an AI agent (Cursor, Claude, ChatGPT) to your GuiaFlow account to build tours from screenshots, tweak the copy and publish the permanent link. Pro plan only.</p>
+    <section class="card" id="conectar-en">
+      <h2>Connect</h2>
+      <p>The MCP server URL is <code>https://app.guiaflow.pro/mcp</code> (Streamable HTTP). With browser sign-in (OAuth) there is no key to copy: the app opens a GuiaFlow page, you sign in and pick the permissions.</p>
+      <p>One-click install and step-by-step per app: <a href="/en/integrations">Integrations</a>.</p>
+      <h3>Cursor</h3>
+      <p>Paste into <code>~/.cursor/mcp.json</code> (or Settings → MCP → Add new MCP server). Cursor asks you to sign in on first use.</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+      <p>With an API key (no browser sign-in):</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: {
+      &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot;,
+      &quot;headers&quot;: { &quot;Authorization&quot;: &quot;Bearer gf_live_xxxxxxxx&quot; }
+    }
+  }
+}</code></pre>
+      <h3>Claude Code</h3>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Then run <code>/mcp</code> inside Claude Code and pick <strong>guiaflow</strong> to sign in.</p>
+      <p>With an API key (no browser sign-in):</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp \
+  --header &quot;Authorization: Bearer gf_live_xxxxxxxx&quot;</code></pre>
+      <h3>Claude.ai, Claude Desktop and ChatGPT</h3>
+      <p>In Claude: <strong>Settings → Connectors → Add custom connector</strong>, paste <code>https://app.guiaflow.pro/mcp</code> and click Connect. In ChatGPT: <strong>Settings → Apps &amp; connectors → Developer mode → Create</strong>, same URL with OAuth authentication.</p>
+      <h3>VS Code</h3>
+      <p>Paste into <code>.vscode/mcp.json</code>.</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>API keys</h2>
+      <p>In the editor, open the account menu → <strong>API keys</strong>. Name the key, pick permissions and an expiry (30, 90 or 365 days). Keys start with <code>gf_live_</code> and are shown only once. The same place lets you revoke keys, disconnect apps and see recent activity.</p>
+      <h3>Permissions</h3>
+      <p><code>tours:read</code> reads tours · <code>tours:write</code> creates and edits · <code>publish</code> publishes and takes down the permanent link · <code>ai</code> writes copy and generates narration with GuiaFlow AI (uses your monthly quota: 100 texts and 30 min of audio) · <code>analytics:read</code> reads link analytics (counts only, no personal data).</p>
+    </section>
+    <section class="card">
+      <h2>MCP tools</h2>
+      <table><thead><tr><th>Tool</th><th>Permission</th><th>What it does</th></tr></thead><tbody><tr><td><code>list_tours</code></td><td><code>tours:read</code></td><td>Lists the account&#x27;s tours.</td></tr><tr><td><code>get_tour</code></td><td><code>tours:read</code></td><td>Steps, theme, lead capture, end CTA and published link.</td></tr><tr><td><code>create_tour</code></td><td><code>tours:write</code></td><td>Creates an empty tour (shows in the editor tagged “created by agent”).</td></tr><tr><td><code>upload_media</code></td><td><code>tours:write</code></td><td>Stores a screenshot (https url or base64) or returns a 15-minute upload URL.</td></tr><tr><td><code>add_step / update_step</code></td><td><code>tours:write</code></td><td>Screenshot, highlight and click (0..1), title, text, narration script.</td></tr><tr><td><code>reorder_steps / delete_step</code></td><td><code>tours:write</code></td><td>Reorders or removes steps.</td></tr><tr><td><code>set_theme</code></td><td><code>tours:write</code></td><td>Preset theme or #RRGGBB colors.</td></tr><tr><td><code>set_lead_capture</code></td><td><code>tours:write</code></td><td>Opening step asking name/email/phone with consent.</td></tr><tr><td><code>set_end_cta</code></td><td><code>tours:write</code></td><td>End card with WhatsApp (E.164) and/or an https link.</td></tr><tr><td><code>publish</code></td><td><code>publish</code></td><td>Publishes to the permanent /p link and returns the URL, embed code and the link cover (og:image, rendered on the server). dryRun:true validates and returns <code>preview.url</code>, a preview link valid for 7 days.</td></tr><tr><td><code>unpublish</code></td><td><code>publish</code></td><td>Takes the link down (requires confirm:true).</td></tr><tr><td><code>generate_step_text</code></td><td><code>ai</code> + <code>tours:write</code></td><td>The AI looks at the step screenshot and writes the title and text (and, if asked, the narration script); saves it to the step. 1 text from the quota.</td></tr><tr><td><code>generate_narration</code></td><td><code>ai</code> + <code>tours:write</code></td><td>Generates the narration (mono 64 kbps MP3) and saves it as the step audio; the step lasts at least as long as the narration. Counts toward the audio quota.</td></tr><tr><td><code>get_analytics</code></td><td><code>analytics:read</code></td><td>Views, completions, CTA clicks, leads (count), daily series and per-step funnel; without tourId, one summary per link.</td></tr></tbody></table>
+      <h3>Coordinates</h3>
+      <p>Highlight and click use fractions of the image: <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code> between 0 and 1, from the top-left corner. With only <code>click</code>, a highlight is drawn around it. Out-of-range values are clamped and the response says so.</p>
+    </section>
+    <section class="card">
+      <h2>REST API</h2>
+      <p>Base <code>https://app.guiaflow.pro/v1</code>, <code>Authorization: Bearer</code> auth. Full contract in <a href="https://app.guiaflow.pro/v1/openapi.json">openapi.json</a>. Send <code>Idempotency-Key</code> on POSTs to retry safely.</p>
+      <pre><code># 1. criar o tour
+curl -s https://app.guiaflow.pro/v1/tours \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot; -H &quot;Content-Type: application/json&quot; \
+  -H &quot;Idempotency-Key: demo-checkout-1&quot; \
+  -d &#x27;{&quot;name&quot;:&quot;Demo do checkout&quot;}&#x27;
+
+# 2. um passo por captura (coordenadas em fração 0..1 da imagem)
+curl -s https://app.guiaflow.pro/v1/tours/$TOUR/steps \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;image&quot;:{&quot;url&quot;:&quot;https://exemplo.com/tela1.png&quot;},
+       &quot;title&quot;:&quot;Abra o carrinho&quot;,&quot;text&quot;:&quot;Tudo o que o cliente escolheu fica aqui.&quot;,
+       &quot;highlight&quot;:{&quot;x&quot;:0.72,&quot;y&quot;:0.05,&quot;width&quot;:0.2,&quot;height&quot;:0.08},
+       &quot;click&quot;:{&quot;x&quot;:0.82,&quot;y&quot;:0.09}}&#x27;
+
+# 3. publicar (atualiza o mesmo link nas próximas vezes)
+curl -s -X POST https://app.guiaflow.pro/v1/tours/$TOUR/publish \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot;
+
+# 4. (optional) the AI writes the step copy and narration
+curl -s -X POST https://app.guiaflow.pro/v1/tours/$TOUR/steps/$STEP/generate-text \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot; -H &quot;Content-Type: application/json&quot; -d &#x27;{&quot;narrationScript&quot;:true}&#x27;
+curl -s -X POST https://app.guiaflow.pro/v1/tours/$TOUR/steps/$STEP/narration \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot;
+
+# 5. link analytics (last 30 days)
+curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot;</code></pre>
+    </section>
+    <section class="card">
+      <h2>Limits</h2>
+      <p>60 calls per minute per key/app, 600 changes and 30 publishes per hour per account. Images up to 15 MB (PNG, JPEG, WebP, GIF); the published tour up to 12 MB. Responses: 401 invalid or revoked credential, 402 no Pro plan, 403 missing permission, 429 rate limit (see <code>Retry-After</code>).</p>
+    </section>
+    <section class="card">
+      <h2>Security and privacy</h2>
+      <p>We only store hashes of keys and tokens. The usage log (app, action, time, hashed IP) is kept 90 days and shown to you under API keys. Image URLs are fetched only over public https. Details in <a href="/en/privacy">Privacy</a>.</p>
+      <p><strong>For agents:</strong> Plain-text summary: <a href="/llms.txt">/llms.txt</a>.</p>
+    </section>
+  </div>
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/en/help" data-i18n="topbar.help">Help</a>
+      <a href="/en/privacy" data-i18n="legal.privacy">Privacy</a>
+      <a href="/en/terms" data-i18n="legal.terms">Terms</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module">
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/88/js/i18n.js";
+    initLocale();
+    applyI18n(document);
+    bindLocaleSelect(document.getElementById("locale-select"));
+  </script>
+</body>
+</html>

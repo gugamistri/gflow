@@ -1,0 +1,53 @@
+<div class="api-doc" data-doc-locale="en">
+    <h1>Integrations</h1>
+    <p class="lead">Use GuiaFlow from your AI assistant: connect the MCP server and ask it to build, edit and publish guided tours from screenshots. Pro plan only; sign-in happens in the browser (OAuth), no key to copy.</p>
+    <section class="card">
+      <h2>Server URL</h2>
+      <pre><code>https://app.guiaflow.pro/mcp</code></pre>
+      <p>Streamable HTTP, OAuth 2.1. API keys also work (<code>Authorization: Bearer gf_live_…</code>), see <a href="/ajuda/api">API and MCP</a>.</p>
+      <p class="smithery-link"><a href="https://smithery.ai/servers/gmistrinelli/guiaflow" target="_blank" rel="noopener"><img src="https://smithery.ai/badge/gmistrinelli/guiaflow" alt="smithery badge" height="20" loading="lazy" style="vertical-align:middle" /> Also on Smithery</a></p>
+    </section>
+    <section class="card" id="cursor-en">
+      <h2>Cursor</h2>
+      <div class="install-row"><a class="btn btn-primary" href="cursor://anysphere.cursor-deeplink/mcp/install?name=guiaflow&amp;config=eyJ1cmwiOiJodHRwczovL2FwcC5ndWlhZmxvdy5wcm8vbWNwIn0=">Add to Cursor</a></div>
+      <ol><li>Click <strong>Add to Cursor</strong> and confirm with <strong>Install</strong>.</li><li>On first use, Cursor opens the GuiaFlow sign-in: sign in and pick the permissions.</li></ol>
+      <p>Or paste into <code>~/.cursor/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="claude-code-en">
+      <h2>Claude Code</h2>
+      <p>Run in your terminal:</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Inside Claude Code, run <code>/mcp</code>, pick <strong>guiaflow</strong> and sign in.</p>
+    </section>
+    <section class="card" id="claude-en">
+      <h2>Claude.ai</h2>
+      <ol><li>Open <strong>Settings → Connectors</strong> and click <strong>Add custom connector</strong>.</li><li>Name: <code>GuiaFlow</code>. URL: <code>https://app.guiaflow.pro/mcp</code>.</li><li>Click <strong>Connect</strong> and sign in to GuiaFlow. In a chat, enable the connector from the tools menu.</li></ol>
+      <p>Also works in Claude Desktop. On Team/Enterprise plans, an admin adds the connector for the organization.</p>
+    </section>
+    <section class="card" id="chatgpt-en">
+      <h2>ChatGPT</h2>
+      <ol><li>In <strong>Settings → Apps &amp; Connectors → Advanced settings</strong>, turn on <strong>Developer mode</strong>.</li><li>Back in <strong>Apps &amp; Connectors</strong>, click <strong>Create</strong>.</li><li>Name: <code>GuiaFlow</code>. MCP server URL: <code>https://app.guiaflow.pro/mcp</code>. Authentication: <strong>OAuth</strong>. Confirm and sign in.</li><li>In a chat, pick <strong>Developer mode</strong> from the <strong>+</strong> menu and enable GuiaFlow.</li></ol>
+      <p>Developer mode is available on paid ChatGPT plans on the web.</p>
+    </section>
+    <section class="card" id="vscode-en">
+      <h2>VS Code</h2>
+      <div class="install-row"><a class="btn btn-primary" href="vscode:mcp/install?%7B%22name%22%3A%22guiaflow%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A//app.guiaflow.pro/mcp%22%7D">Install in VS Code</a></div>
+      <ol><li>Click <strong>Install in VS Code</strong> and confirm with <strong>Install</strong>.</li><li>On first use, VS Code asks you to sign in to GuiaFlow.</li></ol>
+      <p>Or paste into <code>.vscode/mcp.json</code>:</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>What to ask</h2>
+      <p>Examples: “Build a tour from these 4 screenshots and publish it”, “Write the step copy with AI”, “How many people finished the checkout tour this week?”.</p>
+      <p>Tools, permissions, limits and REST API: <a href="/ajuda/api">API and MCP</a>. Questions: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>

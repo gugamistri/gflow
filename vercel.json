@@ -24,14 +24,79 @@
       ],
       "destination": "https://guiaflow.pro/:path*",
       "permanent": true
+    },
+    {
+      "source": "/en/ajuda",
+      "destination": "/en/help",
+      "permanent": true
+    },
+    {
+      "source": "/es/ajuda",
+      "destination": "/es/ayuda",
+      "permanent": true
+    },
+    {
+      "source": "/en/ajuda/api",
+      "destination": "/en/help/api",
+      "permanent": true
+    },
+    {
+      "source": "/es/ajuda/api",
+      "destination": "/es/ayuda/api",
+      "permanent": true
+    },
+    {
+      "source": "/en/integracoes",
+      "destination": "/en/integrations",
+      "permanent": true
+    },
+    {
+      "source": "/es/integracoes",
+      "destination": "/es/integraciones",
+      "permanent": true
+    },
+    {
+      "source": "/en/privacidade",
+      "destination": "/en/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/es/privacidade",
+      "destination": "/es/privacidad",
+      "permanent": true
+    },
+    {
+      "source": "/en/termos",
+      "destination": "/en/terms",
+      "permanent": true
+    },
+    {
+      "source": "/es/termos",
+      "destination": "/es/terminos",
+      "permanent": true
     }
   ],
   "rewrites": [
-    { "source": "/a/:version/:path*", "destination": "/:path*" },
-    { "source": "/auth/callback", "destination": "/auth/callback.html" },
-    { "source": "/v/:id", "destination": "/api/v/:id" },
-    { "source": "/p/:slug", "destination": "/api/p/:slug" },
-    { "source": "/oembed", "destination": "/api/oembed" }
+    {
+      "source": "/a/:version/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/auth/callback",
+      "destination": "/auth/callback.html"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/api/v/:id"
+    },
+    {
+      "source": "/p/:slug",
+      "destination": "/api/p/:slug"
+    },
+    {
+      "source": "/oembed",
+      "destination": "/api/oembed"
+    }
   ],
   "crons": [
     {
@@ -48,31 +113,46 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
       ]
     },
     {
       "source": "/a/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/llms.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
       ]
     },
     {
       "source": "/robots.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
       ]
     },
     {
       "source": "/sitemap.xml",
       "headers": [
-        { "key": "Content-Type", "value": "application/xml; charset=utf-8" }
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        }
       ]
     }
   ]

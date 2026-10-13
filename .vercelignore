@@ -12,3 +12,4 @@ electron
 release
 dist
 package-lock.json
+locale-src

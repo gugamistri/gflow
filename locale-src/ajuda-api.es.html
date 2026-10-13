@@ -1,0 +1,91 @@
+<div class="api-doc" data-doc-locale="es">
+    <h1>API y MCP</h1>
+    <p class="lead">Conecta un agente de IA (Cursor, Claude, ChatGPT) a tu cuenta de GuiaFlow para crear tours a partir de capturas de pantalla, ajustar textos y publicar el enlace permanente. Exclusivo del plan Pro.</p>
+    <section class="card" id="conectar-es">
+      <h2>Conectar</h2>
+      <p>La dirección del servidor MCP es <code>https://app.guiaflow.pro/mcp</code> (Streamable HTTP). Con el login en el navegador (OAuth) no hay clave que copiar: la app abre la página de GuiaFlow, entras y eliges los permisos.</p>
+      <p>Instalación en un clic y paso a paso por app: <a href="/integracoes">Integraciones</a>.</p>
+      <h3>Cursor</h3>
+      <p>Pega en <code>~/.cursor/mcp.json</code> (o Settings → MCP → Add new MCP server). En la primera llamada Cursor pide el login.</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: { &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+      <p>Con clave de API (sin login en el navegador):</p>
+      <pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;guiaflow&quot;: {
+      &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot;,
+      &quot;headers&quot;: { &quot;Authorization&quot;: &quot;Bearer gf_live_xxxxxxxx&quot; }
+    }
+  }
+}</code></pre>
+      <h3>Claude Code</h3>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp</code></pre>
+      <p>Luego ejecuta <code>/mcp</code> dentro de Claude Code y elige <strong>guiaflow</strong> para entrar.</p>
+      <p>Con clave de API (sin login en el navegador):</p>
+      <pre><code>claude mcp add --transport http guiaflow https://app.guiaflow.pro/mcp \
+  --header &quot;Authorization: Bearer gf_live_xxxxxxxx&quot;</code></pre>
+      <h3>Claude.ai, Claude Desktop y ChatGPT</h3>
+      <p>En Claude: <strong>Configuración → Conectores → Añadir conector personalizado</strong>, pega <code>https://app.guiaflow.pro/mcp</code> y pulsa Conectar. En ChatGPT: <strong>Configuración → Apps y conectores → Modo desarrollador → Crear</strong>, con la misma URL y autenticación OAuth.</p>
+      <h3>VS Code</h3>
+      <p>Pega en <code>.vscode/mcp.json</code>.</p>
+      <pre><code>{
+  &quot;servers&quot;: {
+    &quot;guiaflow&quot;: { &quot;type&quot;: &quot;http&quot;, &quot;url&quot;: &quot;https://app.guiaflow.pro/mcp&quot; }
+  }
+}</code></pre>
+    </section>
+    <section class="card">
+      <h2>Claves de API</h2>
+      <p>En el editor, abre el menú de la cuenta → <strong>Claves de API</strong>. Ponle un nombre, elige permisos y validez (30, 90 o 365 días). La clave empieza con <code>gf_live_</code> y se muestra una sola vez. Ahí mismo revocas claves, desconectas apps y ves los últimos usos.</p>
+      <h3>Permisos</h3>
+      <p><code>tours:read</code> lee tours · <code>tours:write</code> crea y edita · <code>publish</code> publica y retira el enlace permanente · <code>ai</code> escribe textos y genera narración con la IA de GuiaFlow (usa tu cuota mensual: 100 textos y 30 min de audio) · <code>analytics:read</code> lee las estadísticas de los enlaces (solo conteos, sin datos personales).</p>
+    </section>
+    <section class="card">
+      <h2>Herramientas del MCP</h2>
+      <table><thead><tr><th>Herramienta</th><th>Permiso</th><th>Qué hace</th></tr></thead><tbody><tr><td><code>list_tours</code></td><td><code>tours:read</code></td><td>Lista los tours de la cuenta.</td></tr><tr><td><code>get_tour</code></td><td><code>tours:read</code></td><td>Pasos, tema, captura de leads, CTA final y enlace publicado.</td></tr><tr><td><code>create_tour</code></td><td><code>tours:write</code></td><td>Crea un tour vacío (aparece en el editor con la etiqueta “creado por agente”).</td></tr><tr><td><code>upload_media</code></td><td><code>tours:write</code></td><td>Guarda una captura (url https o base64) o devuelve una URL de subida de 15 min.</td></tr><tr><td><code>add_step / update_step</code></td><td><code>tours:write</code></td><td>Captura, resaltado y clic (0..1), título, texto, guion de narración.</td></tr><tr><td><code>reorder_steps / delete_step</code></td><td><code>tours:write</code></td><td>Reordena o elimina pasos.</td></tr><tr><td><code>set_theme</code></td><td><code>tours:write</code></td><td>Tema predefinido o colores #RRGGBB.</td></tr><tr><td><code>set_lead_capture</code></td><td><code>tours:write</code></td><td>Paso inicial con nombre/e-mail/teléfono y consentimiento.</td></tr><tr><td><code>set_end_cta</code></td><td><code>tours:write</code></td><td>Tarjeta final con WhatsApp (E.164) y/o enlace https.</td></tr><tr><td><code>publish</code></td><td><code>publish</code></td><td>Publica en el enlace permanente /p y devuelve URL, embed y la portada del enlace (og:image, generada en el servidor). dryRun:true valida y devuelve <code>preview.url</code>, un enlace de vista previa válido por 7 días.</td></tr><tr><td><code>unpublish</code></td><td><code>publish</code></td><td>Retira el enlace (requiere confirm:true).</td></tr><tr><td><code>generate_step_text</code></td><td><code>ai</code> + <code>tours:write</code></td><td>La IA mira la captura del paso y escribe título y texto (y, si lo pides, el guion de narración); lo guarda en el paso. 1 texto de la cuota.</td></tr><tr><td><code>generate_narration</code></td><td><code>ai</code> + <code>tours:write</code></td><td>Genera la narración (MP3 mono 64 kbps) y la guarda como audio del paso; el paso dura al menos la narración. Cuenta en la cuota de audio.</td></tr><tr><td><code>get_analytics</code></td><td><code>analytics:read</code></td><td>Vistas, finalizaciones, clics en el CTA, leads (conteo), serie diaria y embudo por paso; sin tourId, un resumen por enlace.</td></tr></tbody></table>
+      <h3>Coordenadas</h3>
+      <p>Resaltado y clic usan fracciones de la imagen: <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code> entre 0 y 1, desde la esquina superior izquierda. Solo con <code>click</code>, el resaltado se crea alrededor. Los valores fuera de rango se ajustan y la respuesta lo avisa.</p>
+    </section>
+    <section class="card">
+      <h2>API REST</h2>
+      <p>Base <code>https://app.guiaflow.pro/v1</code>, autenticación <code>Authorization: Bearer</code>. Contrato completo en <a href="https://app.guiaflow.pro/v1/openapi.json">openapi.json</a>. Envía <code>Idempotency-Key</code> en los POST para reintentar con seguridad.</p>
+      <pre><code># 1. criar o tour
+curl -s https://app.guiaflow.pro/v1/tours \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot; -H &quot;Content-Type: application/json&quot; \
+  -H &quot;Idempotency-Key: demo-checkout-1&quot; \
+  -d &#x27;{&quot;name&quot;:&quot;Demo do checkout&quot;}&#x27;
+
+# 2. um passo por captura (coordenadas em fração 0..1 da imagem)
+curl -s https://app.guiaflow.pro/v1/tours/$TOUR/steps \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;image&quot;:{&quot;url&quot;:&quot;https://exemplo.com/tela1.png&quot;},
+       &quot;title&quot;:&quot;Abra o carrinho&quot;,&quot;text&quot;:&quot;Tudo o que o cliente escolheu fica aqui.&quot;,
+       &quot;highlight&quot;:{&quot;x&quot;:0.72,&quot;y&quot;:0.05,&quot;width&quot;:0.2,&quot;height&quot;:0.08},
+       &quot;click&quot;:{&quot;x&quot;:0.82,&quot;y&quot;:0.09}}&#x27;
+
+# 3. publicar (atualiza o mesmo link nas próximas vezes)
+curl -s -X POST https://app.guiaflow.pro/v1/tours/$TOUR/publish \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot;
+
+# 4. (opcional) la IA escribe el texto y la narración del paso
+curl -s -X POST https://app.guiaflow.pro/v1/tours/$TOUR/steps/$STEP/generate-text \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot; -H &quot;Content-Type: application/json&quot; -d &#x27;{&quot;narrationScript&quot;:true}&#x27;
+curl -s -X POST https://app.guiaflow.pro/v1/tours/$TOUR/steps/$STEP/narration \
+  -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot;
+
+# 5. estadísticas del enlace (últimos 30 días)
+curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization: Bearer $GUIAFLOW_KEY&quot;</code></pre>
+    </section>
+    <section class="card">
+      <h2>Límites</h2>
+      <p>60 llamadas por minuto por clave/app, 600 cambios y 30 publicaciones por hora por cuenta. Imágenes hasta 15 MB (PNG, JPEG, WebP, GIF); el tour publicado hasta 12 MB. Respuestas: 401 credencial inválida o revocada, 402 sin plan Pro, 403 sin el permiso, 429 límite (mira <code>Retry-After</code>).</p>
+    </section>
+    <section class="card">
+      <h2>Seguridad y privacidad</h2>
+      <p>Solo guardamos el hash de claves y tokens. El registro de uso (app, acción, hora, IP con hash) se guarda 90 días y lo ves en Claves de API. Las URLs de imagen solo se descargan por https público. Detalles en <a href="/privacidade">Privacidad</a>.</p>
+      <p><strong>Para agentes:</strong> Resumen en texto plano: <a href="/llms.txt">/llms.txt</a>.</p>
+    </section>
+  </div>
