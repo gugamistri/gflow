@@ -46,6 +46,7 @@ export const PAGES = [
   {
     src: "ajuda.html",
     path: "/ajuda",
+    slugs: { en: "/help", es: "/ayuda" },
     lastmod: "2026-10-12",
     meta: {
       en: { description: "How to record a demo in GuiaFlow: install the extension, capture the screens and build the tour with highlight, click and narration." },
@@ -55,6 +56,8 @@ export const PAGES = [
   {
     src: "ajuda/api.html",
     path: "/ajuda/api",
+    slugs: { en: "/help/api", es: "/ayuda/api" },
+    docSrc: "locale-src/ajuda-api",
     lastmod: "2026-10-12",
     meta: {
       en: { title: "API and MCP — GuiaFlow", description: "GuiaFlow REST API and MCP server: connect Cursor, Claude or ChatGPT to create and publish guided tours from screenshots." },
@@ -64,6 +67,8 @@ export const PAGES = [
   {
     src: "integracoes.html",
     path: "/integracoes",
+    slugs: { en: "/integrations", es: "/integraciones" },
+    docSrc: "locale-src/integracoes",
     lastmod: "2026-10-12",
     meta: {
       en: { title: "Integrations — GuiaFlow", description: "Connect GuiaFlow to Cursor, Claude Code, Claude.ai, ChatGPT and VS Code through the MCP server: one-click install and step-by-step guide." },
@@ -73,6 +78,7 @@ export const PAGES = [
   {
     src: "privacidade.html",
     path: "/privacidade",
+    slugs: { en: "/privacy", es: "/privacidad" },
     lastmod: "2026-10-12",
     meta: {
       en: { description: "How GuiaFlow handles personal data: what stays in your browser, what we store in the Pro account, providers and your rights under the LGPD." },
@@ -82,6 +88,7 @@ export const PAGES = [
   {
     src: "termos.html",
     path: "/termos",
+    slugs: { en: "/terms", es: "/terminos" },
     lastmod: "2026-10-12",
     meta: {
       en: { description: "Terms of use for GuiaFlow and the GuiaFlow Pro subscription: the service, prices, renewal, cancellation, your content and acceptable use." },
@@ -93,13 +100,27 @@ export const PAGES = [
 /** Caminho público (forma canônica: sem barra final; a raiz PT é "/"). */
 export function localePath(page, loc) {
   if (loc === "pt") return page.path || "/";
-  return `/${loc}${page.path}`;
+  return `/${loc}${page.slugs?.[loc] ?? page.path}`;
 }
 
 /** Arquivo que a Vercel serve nesse caminho (cleanUrls: /en → en.html, /en/ajuda → en/ajuda.html). */
 export function localeFile(page, loc) {
   if (loc === "pt") return page.src;
-  return page.path ? `${loc}${page.path}.html` : `${loc}.html`;
+  const p = localePath(page, loc);
+  return p === `/${loc}` ? `${loc}.html` : `${p.slice(1)}.html`;
+}
+
+/** URLs antigas en/es (slug PT) → URL final; vão para o vercel.json como redirects permanentes. */
+export function legacyRedirects() {
+  const out = [];
+  for (const page of PAGES) {
+    for (const loc of ["en", "es"]) {
+      const old = `/${loc}${page.path}`;
+      const dest = localePath(page, loc);
+      if (page.path && old !== dest) out.push({ source: old, destination: dest, permanent: true });
+    }
+  }
+  return out;
 }
 
 export const absUrl = (path) => `${ORIGIN}${path}`;
@@ -199,7 +220,7 @@ function withHtmlAttrs(html, page, loc) {
   return html.replace(/<html\b[^>]*>/, (open) => {
     let tag = open.replace(/\s(data-page-locale|data-alt-(pt|en|es))="[^"]*"/g, "");
     tag = setAttr(tag, "lang", HREFLANG[loc]);
-    if (loc !== "pt") tag = setAttr(tag, "data-page-locale", loc);
+    if (loc !== "pt" || page.docSrc) tag = setAttr(tag, "data-page-locale", loc);
     for (const l of LOCALES) tag = setAttr(tag, `data-alt-${l}`, localePath(page, l));
     return tag;
   });
@@ -284,24 +305,29 @@ function withLandingJsonLd(html, page, loc) {
 }
 
 /** Página PT → variante en/es. */
-export function renderLocale(srcHtml, page, loc) {
+export function renderLocale(srcHtml, page, loc, read = defaultRead) {
   let html = srcHtml;
+  if (page.docSrc) {
+    // why: um idioma por URL (um H1 por página) — o texto en/es fica em locale-src/, fora do deploy
+    const open = html.match(/<div class="api-doc" data-doc-locale="pt">/);
+    if (!open) throw new Error(`${page.src}: sem seção data-doc-locale="pt"`);
+    const close = closeIndex(html, "div", open.index + open[0].length);
+    html = html.slice(0, open.index) + read(`${page.docSrc}.${loc}.html`).trim() + html.slice(close.end);
+  }
   // caminhos relativos quebram em /en/…: tudo vira absoluto
   html = html.replace(/\b(href|src)="(?:\.\/)?index\.html"/g, '$1="/"');
   html = html.replace(/\b(href|src)="(?!\/|#|[a-z][a-z0-9+.-]*:)(?:\.\/)?([^"]+)"/gi, '$1="/$2"');
   html = html.replace(/from "\.\/a\//g, 'from "/a/');
-  html = html.replace(LOCALIZED_LINK, (_m, seg, rest) => `href="/${loc}${seg ? `/${seg}` : ""}${rest}"`);
+  html = html.replace(LOCALIZED_LINK, (_m, seg, rest) => {
+    const target = PAGES.find((p) => p.path === (seg ? `/${seg}` : ""));
+    return `href="${localePath(target, loc)}${rest}"`;
+  });
 
   for (const [attr, mode] of ATTRS) html = applyAttr(html, attr, mode, loc);
 
   if (page.heroOg) html = withPrices(html, loc);
   html = html.replace(/(<span data-int-title>)[^<]*(<\/span>)/, (_m, a, b) => `${a}${escText(String(page.meta[loc]?.title || "").replace(/ — GuiaFlow$/, ""))}${b}`);
 
-  // seções já escritas em cada idioma (API, integrações)
-  html = html.replace(/<([a-z]+)([^>]*)\sdata-doc-locale="(pt|es|en)"([^>]*)>/g, (_m, tag, a, l, b) => {
-    const rest = `${a} data-doc-locale="${l}"${b}`.replace(/\shidden\b/g, "");
-    return `<${tag}${rest}${l === loc ? "" : " hidden"}>`;
-  });
   html = html.replace(/(<option value="(pt|es|en)")( selected)?>/g, (_m, open, l) => `${open}${l === loc ? " selected" : ""}>`);
 
   const meta = page.meta[loc] || {};
@@ -357,12 +383,14 @@ export function renderSitemap() {
 }
 
 /** Tudo o que o build grava: { arquivo: conteúdo }. */
-export function buildAll(read = (f) => readFileSync(join(ROOT, f), "utf8")) {
+const defaultRead = (f) => readFileSync(join(ROOT, f), "utf8");
+
+export function buildAll(read = defaultRead) {
   const out = {};
   for (const page of PAGES) {
     const pt = renderPortuguese(read(page.src), page);
     out[page.src] = pt;
-    for (const loc of ["en", "es"]) out[localeFile(page, loc)] = renderLocale(pt, page, loc);
+    for (const loc of ["en", "es"]) out[localeFile(page, loc)] = renderLocale(pt, page, loc, read);
   }
   out["sitemap.xml"] = renderSitemap();
   return out;
