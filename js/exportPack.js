@@ -424,7 +424,41 @@ async function canEncodeAac(audioBuffer) {
   }
 }
 
-async function encodeAacTrack(muxer, audioBuffer, signal) {
+async function resampleBuffer(buffer, sampleRate) {
+  if (buffer.sampleRate === sampleRate || typeof OfflineAudioContext === "undefined") return buffer;
+  const length = Math.ceil((buffer.length * sampleRate) / buffer.sampleRate);
+  const ctx = new OfflineAudioContext(buffer.numberOfChannels, length, sampleRate);
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(ctx.destination);
+  src.start();
+  return ctx.startRendering();
+}
+
+/**
+ * Áudio para o MP4 via WebCodecs: AAC quando o navegador tem; senão Opus (48 kHz), que o
+ * YouTube aceita em MP4. why: sem isso, navegadores sem AAC (Chrome no Linux, Firefox)
+ * caíam no MediaRecorder em tempo real, que perde quadros e bitrate em 1440p/4K.
+ */
+async function pickMp4Audio(audioBuffer) {
+  if (!audioBuffer) return null;
+  if (await canEncodeAac(audioBuffer)) return { codec: "mp4a.40.2", mux: "aac", buffer: audioBuffer };
+  if (typeof AudioEncoder === "undefined") return false;
+  try {
+    const { supported } = await AudioEncoder.isConfigSupported({
+      codec: "opus",
+      sampleRate: 48_000,
+      numberOfChannels: audioBuffer.numberOfChannels,
+      bitrate: 128_000,
+    });
+    if (!supported) return false;
+    return { codec: "opus", mux: "opus", buffer: await resampleBuffer(audioBuffer, 48_000) };
+  } catch {
+    return false;
+  }
+}
+
+async function encodeAacTrack(muxer, audioBuffer, signal, codec = "mp4a.40.2") {
   let encodeError = null;
   const encoder = new AudioEncoder({
     output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
@@ -435,7 +469,7 @@ async function encodeAacTrack(muxer, audioBuffer, signal) {
   const sampleRate = audioBuffer.sampleRate;
   const channels = audioBuffer.numberOfChannels;
   encoder.configure({
-    codec: "mp4a.40.2",
+    codec,
     sampleRate,
     numberOfChannels: channels,
     bitrate: 128_000,
@@ -494,7 +528,8 @@ async function canUseWebCodecsMp4(width, height, { fps = 30, bitrate = 8_000_000
   return null;
 }
 
-async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer, quality }) {
+async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audio, quality }) {
+  const audioBuffer = audio?.buffer || null;
   const { Muxer, ArrayBufferTarget } = await import("../vendor/mp4-muxer/mp4-muxer.mjs");
   const steps = demo.steps || [];
   const { width: W, height: H, fps, bitrate } = quality;
@@ -510,7 +545,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
     video: { codec: "avc", width: W, height: H },
     audio: audioBuffer
       ? {
-          codec: "aac",
+          codec: audio.mux,
           sampleRate: audioBuffer.sampleRate,
           numberOfChannels: audioBuffer.numberOfChannels,
         }
@@ -600,7 +635,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   if (encodeError) throw encodeError;
   if (audioBuffer) {
     onProgress?.(t("export.encodeNarration"));
-    await encodeAacTrack(muxer, audioBuffer, signal);
+    await encodeAacTrack(muxer, audioBuffer, signal, audio.codec);
   }
   muxer.finalize();
 
@@ -738,11 +773,11 @@ export async function exportVideo(
   const quality = resolveVideoQuality({ quality: qualityId, fps, pro });
   const audioBuffer = await renderExportAudio(framed, quality.fps);
   const codec = await canUseWebCodecsMp4(quality.width, quality.height, quality);
-  const aac = await canEncodeAac(audioBuffer);
-  if (codec && (!audioBuffer || aac)) {
+  const audio = await pickMp4Audio(audioBuffer);
+  if (codec && audio !== false) {
     try {
       onProgress?.(t("export.encodeMp4"));
-      const out = await exportVideoWebCodecs(framed, { onProgress, canvas, signal, images, codec, audioBuffer, quality });
+      const out = await exportVideoWebCodecs(framed, { onProgress, canvas, signal, images, codec, audio, quality });
       return { ...out, width: quality.width, height: quality.height, fps: quality.fps };
     } catch (err) {
       if (err?.name === "AbortError") throw err;
