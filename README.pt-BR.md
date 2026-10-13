@@ -1,0 +1,85 @@
+# GuiaFlow
+
+[English](README.md) | **Português**
+
+[![smithery badge](https://smithery.ai/badge/gmistrinelli/guiaflow)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+
+**Criador de demos interativas e tours guiados de produto, gratuito e open source — alternativa ao Arcade, Supademo e Storylane.**
+
+Experimente em **[guiaflow.pro](https://guiaflow.pro)** · Integrações: [guiaflow.pro/integracoes](https://guiaflow.pro/integracoes)
+
+![Editor do GuiaFlow](docs/editor.png)
+
+![Tour de exemplo](docs/tour.gif)
+
+Editor e player de tours com capturas de tela, destaque, clique simulado e narração. Inclui uma extensão Chrome para gravar o produto e um app desktop (Electron) com captura embutida.
+
+A interface está em português, espanhol e inglês. O idioma segue o do navegador; se não for um desses três, cai em inglês. No editor, o seletor fica na barra superior (PT, ES, EN). Na extensão, o mesmo seletor fica no popup e vale também para a barra de captura na página.
+
+## GuiaFlow Pro
+
+**GuiaFlow Pro** é o plano pago opcional: links permanentes, texto e narração (TTS) com IA hospedada, analytics, captura de leads, vídeo sem marca d'água e servidor MCP em `https://app.guiaflow.pro/mcp`. Planos em [guiaflow.pro](https://guiaflow.pro).
+
+## Começar no navegador
+
+```bash
+npm start
+```
+
+Abre em `http://localhost:4173` (landing) e `http://localhost:4173/editor` (editor). O editor publicado é [https://guiaflow.pro/editor](https://guiaflow.pro/editor); a raiz [https://guiaflow.pro](https://guiaflow.pro) é a landing. Quem já tem projetos neste navegador, tem a extensão de captura ou chega com `?parâmetros`/`#token=` na raiz é levado para `/editor` com a query e o hash; `/?landing=1` sempre mostra a landing. O endereço antigo `https://guiaflow-seven.vercel.app` redireciona para lá, com o mesmo caminho e a mesma query. Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
+
+### Extensão de captura
+
+Instale pela [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd). O manual está em [`ajuda.html`](ajuda.html).
+
+Para desenvolver a extensão localmente:
+
+1. `npm run pack:extension` (ou carregue a pasta `extension/`)
+2. Em `chrome://extensions`, ative o modo do desenvolvedor e carregue a pasta da extensão
+3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow.pro`, ou `http://localhost:4173` no desenvolvimento). Depois de atualizar a extensão, recarregue o card em `chrome://extensions`.
+4. No popup, escolha PT, ES ou EN se quiser um idioma diferente do navegador
+5. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
+
+## App desktop
+
+```bash
+npm install
+npm run desktop
+```
+
+Gera a pasta de distribuição local (sem assinatura):
+
+```bash
+npm run dist:desktop
+```
+
+No desktop, use **Capturar** no editor: abre uma janela com a página do produto, fotografa e monta o projeto. No navegador continue com a extensão.
+
+## Exportar
+
+- **HTML navegável** — um arquivo único com o tour
+- **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
+- **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias (requer Blob na Vercel)
+- **Link permanente** — no mesmo menu, no app publicado. Com sessão, mostra «Conectado como …» e publica direto. Sem sessão, o email de confirmação volta para guiaflow.pro. A base HTTP da nuvem fica só em `window.__GUIAFLOW_CLOUD__` (ver [`docs/CLOUD.pt-BR.md`](docs/CLOUD.pt-BR.md)).
+
+## Testes
+
+```bash
+node --test extension/lib/*.test.js scripts/*.test.js
+```
+
+## Cloud
+
+O editor e o player deste repositório continuam MIT e gratuitos. IA e narração com a sua própria chave continuam livres. GuiaFlow Pro é o plano pago opcional, noutro código. Sem URL base, nada é chamado. Com URL base, o editor publica o link permanente e oferece texto, áudio e vídeo sem marca para quem assina. Detalhes em [`docs/CLOUD.pt-BR.md`](docs/CLOUD.pt-BR.md).
+
+## Licença
+
+MIT — ver [`LICENSE`](LICENSE).
+
+### Terceiros
+
+- [driver.js](https://github.com/kamranahmedse/driver.js) 1.3.6 — MIT © Kamran Ahmed (`vendor/driver/`)
+- [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) — MIT (`vendor/mp4-muxer/`)
+- O build Electron inclui Chromium; o empacotador gera os avisos em `LICENSES.chromium.html` na pasta de saída
+
+Este repositório não empacota ffmpeg nem libx264.
