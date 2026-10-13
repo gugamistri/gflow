@@ -1248,8 +1248,31 @@ function showHostedBadge({ hasByok = false } = {}) {
 
 function paintExportMark() {
   const btn = document.getElementById("btn-export-unbrand");
-  if (!btn) return;
-  btn.hidden = !exportShowsWatermark(billingSnapshot());
+  if (btn) btn.hidden = !exportShowsWatermark(billingSnapshot());
+  paintExportQuality();
+}
+
+/** Qualidade alta segue a mesma regra da marca d'água: quem exporta limpo exporta em alta. */
+function exportQualityUnlocked() {
+  return !exportShowsWatermark(billingSnapshot());
+}
+
+function paintExportQuality() {
+  const pro = exportQualityUnlocked();
+  const badge = document.getElementById("export-quality-badge");
+  if (badge) badge.hidden = pro;
+  const hint = document.getElementById("export-quality-hint");
+  if (hint) {
+    const key = pro ? "export.qualityHintPro" : "export.qualityHintFree";
+    hint.dataset.i18n = key;
+    hint.textContent = t(key);
+  }
+  const q = document.getElementById("export-video-quality");
+  const f = document.getElementById("export-video-fps");
+  if (!pro) {
+    if (q) q.value = "standard";
+    if (f) f.value = "30";
+  }
 }
 
 async function ensureHostedFeature(feature, resume) {
@@ -2870,6 +2893,19 @@ function bindChrome() {
     openFeatureGate("branding");
   });
 
+  const qualitySelect = document.getElementById("export-video-quality");
+  const fpsSelect = document.getElementById("export-video-fps");
+  for (const sel of [qualitySelect, fpsSelect]) {
+    sel?.addEventListener("change", (e) => {
+      const v = e.target.value;
+      const wantsPro = e.target === qualitySelect ? v !== "standard" : v !== "30";
+      if (!wantsPro || exportQualityUnlocked()) return;
+      e.target.value = e.target === qualitySelect ? "standard" : "30";
+      closeExportMenu();
+      openFeatureGate("videoQuality");
+    });
+  }
+
   document.getElementById("btn-export-video").addEventListener("click", async () => {
     closeExportMenu();
     if (!project) return;
@@ -2884,6 +2920,9 @@ function bindChrome() {
     try {
       const result = await exportVideo(project, {
         watermark,
+        pro: !watermark,
+        quality: qualitySelect?.value || "standard",
+        fps: Number(fpsSelect?.value) || 30,
         canvas: previewCanvas,
         signal: exportAbort.signal,
         onProgress: (msg) => {

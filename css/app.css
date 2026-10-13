@@ -2756,6 +2756,53 @@ html.is-embed .present-hint {
   line-height: inherit;
 }
 
+.export-quality {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px 10px;
+}
+
+.export-quality-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--ns-ink);
+}
+
+.export-quality-head .pro-badge {
+  font-size: 0.62rem;
+}
+
+.export-quality-row {
+  display: flex;
+  gap: 6px;
+}
+
+.export-quality-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 5px 6px;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-surface, #fff);
+  color: var(--ns-ink);
+}
+
+.export-quality-row select#export-video-fps {
+  flex: 0 0 auto;
+}
+
+.export-quality small {
+  color: var(--ns-muted);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
 .export-overlay {
   position: fixed;
   inset: 0;

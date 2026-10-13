@@ -1,3 +1,4 @@
+import { resolveVideoQuality, avcCodecCandidates, LOGICAL_HEIGHT } from "./videoQuality.js";
 import { getThemeFont } from "./tour-schema/fonts.js";
 import {
   encodeAssetPath,
@@ -344,7 +345,7 @@ function narrationAtPreviewPitch(ctx, buffer, tempo) {
  * Monta a trilha do vídeo: narração de cada passo no início do passo e fundo em loop.
  * @returns {Promise<AudioBuffer|null>}
  */
-async function renderExportAudio(demo) {
+async function renderExportAudio(demo, fps = 30) {
   ensurePlayback(demo);
   ensureNarration(demo);
   const steps = demo.steps || [];
@@ -353,7 +354,7 @@ async function renderExportAudio(demo) {
   let cursor = 0;
   const placements = [];
   for (const step of steps) {
-    const span = exportStepFrames(step, demo, 30);
+    const span = exportStepFrames(step, demo, fps);
     placements.push({
       start: cursor,
       clips: speak ? playableNarrationClips(step, demo) : [],
@@ -473,17 +474,17 @@ async function encodeAacTrack(muxer, audioBuffer, signal) {
   if (encodeError) throw encodeError;
 }
 
-async function canUseWebCodecsMp4(width, height) {
+async function canUseWebCodecsMp4(width, height, { fps = 30, bitrate = 8_000_000 } = {}) {
   if (typeof VideoEncoder === "undefined" || typeof VideoFrame === "undefined") return false;
-  const codecs = ["avc1.4d0028", "avc1.640028", "avc1.420028", "avc1.42001f"];
+  const codecs = [...avcCodecCandidates(width, height, fps), "avc1.4d0028", "avc1.42001f"];
   for (const codec of codecs) {
     try {
       const { supported } = await VideoEncoder.isConfigSupported({
         codec,
         width,
         height,
-        bitrate: 8_000_000,
-        framerate: 30,
+        bitrate,
+        framerate: fps,
       });
       if (supported) return codec;
     } catch {
@@ -493,12 +494,10 @@ async function canUseWebCodecsMp4(width, height) {
   return null;
 }
 
-async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer }) {
+async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, codec, audioBuffer, quality }) {
   const { Muxer, ArrayBufferTarget } = await import("../vendor/mp4-muxer/mp4-muxer.mjs");
   const steps = demo.steps || [];
-  const W = 1920;
-  const H = 1080;
-  const fps = 30;
+  const { width: W, height: H, fps, bitrate } = quality;
   const frameUs = Math.round(1_000_000 / fps);
   const cvs = canvas || document.createElement("canvas");
   cvs.width = W;
@@ -527,13 +526,26 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
       encodeError = err;
     },
   });
-  encoder.configure({
+  // why: em modo variável o encoder derruba o bitrate em telas estáticas (~0,4 Mbps em 4K),
+  // e o YouTube recomprime isso borrado. Constante garante o bitrate alvo; cai no variável
+  // quando o encoder do aparelho não aceita.
+  const encoderConfig = {
     codec: codec || "avc1.4d0028",
     width: W,
     height: H,
-    bitrate: 8_000_000,
+    bitrate,
+    bitrateMode: "constant",
+    latencyMode: "quality",
     framerate: fps,
-  });
+    avc: { format: "avc" },
+  };
+  try {
+    const { supported } = await VideoEncoder.isConfigSupported(encoderConfig);
+    if (!supported) encoderConfig.bitrateMode = "variable";
+  } catch {
+    encoderConfig.bitrateMode = "variable";
+  }
+  encoder.configure(encoderConfig);
 
   let frameIndex = 0;
   const theme = demo.theme || {};
@@ -598,7 +610,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
   return { size: blob.size, ext: "mp4" };
 }
 
-async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images, audioBuffer }) {
+async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, images, audioBuffer, quality }) {
   if (typeof MediaRecorder === "undefined") {
     throw new Error(t("err.noVideoSupport"));
   }
@@ -608,8 +620,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   }
 
   const steps = demo.steps || [];
-  const W = 1920;
-  const H = 1080;
+  const { width: W, height: H, fps, bitrate } = quality;
   const cvs = canvas || document.createElement("canvas");
   cvs.width = W;
   cvs.height = H;
@@ -617,7 +628,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
 
   let audioCtx = null;
   let audioSource = null;
-  const videoStream = cvs.captureStream(30);
+  const videoStream = cvs.captureStream(fps);
   let stream = videoStream;
   if (audioBuffer && typeof AudioContext !== "undefined") {
     // why: contexto num sample rate diferente do buffer faz o MediaRecorder
@@ -636,7 +647,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   }
   const recorder = new MediaRecorder(stream, {
     mimeType: mime,
-    videoBitsPerSecond: 8_000_000,
+    videoBitsPerSecond: bitrate,
   });
   const chunks = [];
   recorder.ondataavailable = (e) => {
@@ -673,7 +684,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
     for (let i = 0; i < steps.length; i++) {
       if (signal?.aborted) throw new DOMException(t("export.cancelled"), "AbortError");
       const step = steps[i];
-      const span = exportStepFrames(step, demo, 30);
+      const span = exportStepFrames(step, demo, fps);
       const timing = span.timing;
       scene = {
         step,
@@ -709,7 +720,14 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   return { size: blob.size, ext };
 }
 
-export async function exportVideo(demo, { onProgress, canvas, signal, watermark = true } = {}) {
+/**
+ * Exporta o filme. `quality`/`fps` só valem com `pro: true` (mesma regra da marca d'água);
+ * sem Pro sai no padrão 1080p30 8 Mbps.
+ */
+export async function exportVideo(
+  demo,
+  { onProgress, canvas, signal, watermark = true, quality: qualityId = "standard", fps = 30, pro = false } = {},
+) {
   const steps = demo.steps || [];
   if (!steps.length) throw new Error(t("err.noStepsRecord"));
   const framed = { ...demo, exportWatermark: Boolean(watermark) };
@@ -717,16 +735,15 @@ export async function exportVideo(demo, { onProgress, canvas, signal, watermark 
 
   const images = await loadDemoImages(framed, onProgress);
   onProgress?.(t("export.prepNarration"));
-  const audioBuffer = await renderExportAudio(framed);
-  const W = 1920;
-  const H = 1080;
-
-  const codec = await canUseWebCodecsMp4(W, H);
+  const quality = resolveVideoQuality({ quality: qualityId, fps, pro });
+  const audioBuffer = await renderExportAudio(framed, quality.fps);
+  const codec = await canUseWebCodecsMp4(quality.width, quality.height, quality);
   const aac = await canEncodeAac(audioBuffer);
   if (codec && (!audioBuffer || aac)) {
     try {
       onProgress?.(t("export.encodeMp4"));
-      return await exportVideoWebCodecs(framed, { onProgress, canvas, signal, images, codec, audioBuffer });
+      const out = await exportVideoWebCodecs(framed, { onProgress, canvas, signal, images, codec, audioBuffer, quality });
+      return { ...out, width: quality.width, height: quality.height, fps: quality.fps };
     } catch (err) {
       if (err?.name === "AbortError") throw err;
       console.warn("WebCodecs MP4 falhou, tentando MediaRecorder", err);
@@ -734,7 +751,8 @@ export async function exportVideo(demo, { onProgress, canvas, signal, watermark 
     }
   }
 
-  return exportVideoMediaRecorder(framed, { onProgress, canvas, signal, images, audioBuffer });
+  const out = await exportVideoMediaRecorder(framed, { onProgress, canvas, signal, images, audioBuffer, quality });
+  return { ...out, width: quality.width, height: quality.height, fps: quality.fps };
 }
 
 function wrapText(ctx, text, maxWidth) {
@@ -977,8 +995,14 @@ function drawPopover(ctx, theme, step, index, total, hs, bounds) {
 }
 
 function renderFrame(ctx, scene, theme) {
-  const W = ctx.canvas.width;
-  const H = ctx.canvas.height;
+  // why: layout em 1920×1080 lógicos; a escala vetorial desenha texto e formas nítidos
+  // na resolução alvo (1440p/4K) e as capturas são amostradas da imagem original.
+  const scale = ctx.canvas.height / LOGICAL_HEIGHT;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  const W = ctx.canvas.width / scale;
+  const H = LOGICAL_HEIGHT;
   const accent = theme.accent || "#2A9D8F";
   const rgb = hexRgb(accent);
   const { step, index, total, img, cursorStart = 0, cursorEnd, clickEnd, holdEnd } = scene;
@@ -1143,7 +1167,7 @@ export function drawExportHeader(ctx, { showBrand = true, projectTitle = "", acc
     const title = String(projectTitle || "").trim();
     if (title) {
       ctx.fillStyle = "#fff";
-      const maxW = Math.max(80, ctx.canvas.width - 160);
+      const maxW = Math.max(80, ctx.canvas.width / (ctx.canvas.height / LOGICAL_HEIGHT || 1) - 160);
       const line = ctx.measureText(title).width > maxW ? `${title.slice(0, 42)}…` : title;
       ctx.fillText(line, 32, 38);
     }
