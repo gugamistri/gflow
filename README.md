@@ -20,7 +20,7 @@ GuiaFlow is an editor and player for click-through product tours built from scre
 - **Screenshot-based interactive demos** — highlight (hotspot), simulated click, and step text on each screen
 - **Chrome extension capture** — record your product flow in the browser and turn it into a tour
 - **Desktop app (Electron)** — built-in capture window, no extension needed
-- **Narration** — AI-generated step text and text-to-speech with your own key (BYOK)
+- **Narration (BYOK)** — the free, open-source editor supports BYOK (bring your own AI key) for step text and voiceover: step text via OpenRouter, OpenAI, or any OpenAI-compatible endpoint (custom base URL), and voiceover via Cartesia. Keys are stored only in your browser (IndexedDB) and requests go straight from your browser to the provider
 - **Scenes, themes, and fonts** — group steps, pick a ready theme or customize it
 - **Start and end steps** — lead-capture intro step and closing CTAs (including WhatsApp)
 - **Export** — single-file navigable HTML, MP4 video, or a 7-day temporary preview link
