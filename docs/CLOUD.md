@@ -1,113 +1,115 @@
 # GuiaFlow Pro
 
-Este arquivo marca a fronteira entre o editor aberto e o plano pago **GuiaFlow Pro**. O código do companheiro continua no repositório `guiaflow-cloud`. Este repositório não embute chave paga. A base HTTP só é chamada quando está configurada.
+**English** | [Português](CLOUD.pt-BR.md)
 
-O editor público está em [https://guiaflow.pro](https://guiaflow.pro). O host antigo `guiaflow-seven.vercel.app` redireciona para esse domínio, preservando caminho e query.
+This file marks the boundary between the open editor and the paid **GuiaFlow Pro** plan. The companion code lives in the `guiaflow-cloud` repository. This repository embeds no paid key. The HTTP base is only called when it is configured.
 
-**Operadores:** a base HTTP da nuvem não entra na interface. Fica em `window.__GUIAFLOW_CLOUD__` (`https://app.guiaflow.pro`). O apex `guiaflow.pro` continua a ser o editor gratuito. A cópia do produto fala em GuiaFlow e guiaflow.pro.
+The public editor is at [https://guiaflow.pro](https://guiaflow.pro). The old host `guiaflow-seven.vercel.app` redirects to that domain, preserving path and query.
 
-## Promessa
+**Operators:** the cloud HTTP base is not part of the UI. It lives in `window.__GUIAFLOW_CLOUD__` (`https://app.guiaflow.pro`). The apex `guiaflow.pro` remains the free editor. Product copy says GuiaFlow and guiaflow.pro.
 
-**O editor é gratuito para sempre e continua MIT.** Este repositório (`gflow`) permanece código aberto para o editor e o player. Não há dependência obrigatória de um repositório privado.
+## Promise
 
-**BYOK continua aqui.** Quem quiser IA ou voz traz a própria chave pelos módulos que já existem: `js/llm.js`, `js/cartesia.js` e os stores `js/llm-store.js` e `js/cartesia-store.js`. O Cloud não remove nem quebra esse caminho.
+**The editor is free forever and stays MIT.** This repository (`gflow`) remains open source for the editor and the player. There is no hard dependency on a private repository.
 
-**GuiaFlow Pro** é o plano pago. O código fica noutro repositório, fora deste MIT (o repositório chama-se `guiaflow-cloud`). Ele é opcional. Pode acrescentar:
+**BYOK stays here.** Anyone who wants AI or voice brings their own key through the existing modules: `js/llm.js`, `js/cartesia.js`, and the stores `js/llm-store.js` and `js/cartesia-store.js`. Cloud does not remove or break that path.
 
-- IA sem BYOK (hospedada)
-- TTS hospedado
-- compartilhamentos permanentes
-- marca (branding)
+**GuiaFlow Pro** is the paid plan. Its code lives in another repository, outside this MIT repo (named `guiaflow-cloud`). It is optional. It may add:
+
+- AI without BYOK (hosted)
+- hosted TTS
+- permanent shares
+- branding
 - analytics
 
-## O que fica aberto e o que o Cloud acrescenta
+## What stays open and what Cloud adds
 
-| | Neste repositório (MIT) | Companheiro privado (não faz parte deste repo) |
+| | In this repository (MIT) | Private companion (not part of this repo) |
 | --- | --- | --- |
-| Editor e player | Gratuitos para sempre | Não substitui o editor aberto |
-| IA | A sua chave (BYOK) | IA hospedada, sem a chave no browser |
-| TTS | A sua chave (BYOK) | Voz hospedada |
-| Compartilhar | Preview temporário (Vercel Blob), 7 dias | Link permanente (`POST /shares`) quando a URL base está configurada |
-| Marca | Temas do próprio tour | Branding da conta |
-| Analytics | Não | Uso do tour publicado |
+| Editor and player | Free forever | Does not replace the open editor |
+| AI | Your key (BYOK) | Hosted AI, no key in the browser |
+| TTS | Your key (BYOK) | Hosted voice |
+| Sharing | Temporary preview (Vercel Blob), 7 days | Permanent link (`POST /shares`) when the base URL is configured |
+| Branding | The tour's own themes | Account branding |
+| Analytics | No | Usage of the published tour |
 
-O preview de 7 dias em `publishShareLink` (`js/share.js`) não muda. O link permanente é um caminho à parte, só quando a URL base existe e a flag `permanentShare` está ligada.
+The 7-day preview in `publishShareLink` (`js/share.js`) does not change. The permanent link is a separate path, only when the base URL exists and the `permanentShare` flag is on.
 
 ## Hooks
 
-`js/cloudConfig.js` lê o URL base e, se ele existir, `cloudFetch` fala com essa base. Não há Stripe, `AUTH_SECRET` nem chave secreta neste repositório. O bearer da sessão fica só no `localStorage` do navegador (`guiaflow.cloud.session`).
+`js/cloudConfig.js` reads the base URL and, if present, `cloudFetch` talks to that base. There is no Stripe, `AUTH_SECRET`, or secret key in this repository. The session bearer lives only in the browser's `localStorage` (`guiaflow.cloud.session`).
 
-O URL base vem de um destes lugares (endereço, nunca chave):
+The base URL comes from one of these places (an address, never a key):
 
-1. `window.__GUIAFLOW_CLOUD__` — uma string `https://…` ou `{ baseUrl, flags? }`
+1. `window.__GUIAFLOW_CLOUD__` — a `https://…` string or `{ baseUrl, flags? }`
 2. `<meta name="guiaflow-cloud-base" content="https://…">`
 3. `localStorage["guiaflow.cloud.baseUrl"]`
 
-No editor publicado (`guiaflow.pro`) a página define `window.__GUIAFLOW_CLOUD__ = "https://app.guiaflow.pro"` quando ninguém definiu antes. O mesmo vale se o HTML ainda for servido em `guiaflow-seven.vercel.app`, antes do redirecionamento. Um global já definido — por exemplo o host anterior — fica como está. Meta e `localStorage["guiaflow.cloud.baseUrl"]` valem quando o global não está definido. Em `localhost` e no app desktop a página não injeta base: o preview no Blob continua a ser o único caminho.
+On the published editor (`guiaflow.pro`) the page sets `window.__GUIAFLOW_CLOUD__ = "https://app.guiaflow.pro"` when nothing set it before. The same applies if the HTML is still served on `guiaflow-seven.vercel.app`, before the redirect. A global already set — for example the previous host — stays as is. Meta and `localStorage["guiaflow.cloud.baseUrl"]` apply when the global is unset. On `localhost` and in the desktop app the page injects no base: the Blob preview remains the only path.
 
-Userinfo, query e hash são descartados. Um valor que não seja `http:` ou `https:` conta como ausente.
+Userinfo, query, and hash are discarded. A value that is not `http:` or `https:` counts as absent.
 
-Sem URL base:
+Without a base URL:
 
-- `isCloudEnabled()` devolve `false`
-- `getCloudFlags()` devolve as cinco flags em `false`
-- `callCloud` / `cloudFetch` devolvem `{ ok: false, stub: true, reason: "cloud-not-configured" }` e não chamam `fetch`
-- o menu Compartilhar mostra só o preview temporário
+- `isCloudEnabled()` returns `false`
+- `getCloudFlags()` returns all five flags as `false`
+- `callCloud` / `cloudFetch` return `{ ok: false, stub: true, reason: "cloud-not-configured" }` and do not call `fetch`
+- the Share menu shows only the temporary preview
 
-Com URL base, as flags passam a ler como disponíveis (`true`). Dá para desligar uma delas com `flags: { permanentShare: false }`. `cloudFetch` faz o pedido HTTP (Bearer se houver sessão). `callCloud` continua stub `{ ok: false, stub: true, reason: "not-implemented" }` para o que este repo não liga: IA hospedada, TTS, marca e analytics.
+With a base URL, the flags read as available (`true`). You can turn one off with `flags: { permanentShare: false }`. `cloudFetch` makes the HTTP request (Bearer if there is a session). `callCloud` remains a stub `{ ok: false, stub: true, reason: "not-implemented" }` for what this repo does not wire up: hosted AI, TTS, branding, and analytics.
 
 Flags: `hostedAi`, `tts`, `permanentShare`, `branding`, `analytics`.
 
-### Link permanente
+### Permanent link
 
-No menu **Compartilhar**, com a nuvem ligada:
+In the **Share** menu, with the cloud enabled:
 
-1. **Preview temporário** — o fluxo Blob de 7 dias, como antes. Não muda.
-2. **Link permanente** — **Compartilhar na nuvem**.
+1. **Temporary preview** — the 7-day Blob flow, as before. Unchanged.
+2. **Permanent link** — **Share to cloud**.
 
-Se `localStorage["guiaflow.cloud.session"]` já tem um access token que ainda vale (JWT com `exp` no futuro, ou token opaco sem `exp`), o painel mostra «Conectado como {email}» e o clique publica direto. Não pede email nem para colar um link.
+If `localStorage["guiaflow.cloud.session"]` already has a valid access token (JWT with `exp` in the future, or an opaque token without `exp`), the panel shows «Connected as {email}» and the click publishes directly. It does not ask for an email or for a pasted link.
 
-Sem sessão, o diálogo **Entrar** pede email e senha e chama `POST /auth/login` com `{ email, password }`. Se a resposta trouxer `accessToken`, a sessão fica gravada na hora. Se trouxer `code` ou um URL de regresso, vale o passo do callback abaixo. Email ou senha incorretos — inclusive conta sem senha — mostram um erro que aponta para o link.
+Without a session, the **Sign in** dialog asks for email and password and calls `POST /auth/login` with `{ email, password }`. If the response has `accessToken`, the session is stored immediately. If it has `code` or a return URL, the callback step below applies. Wrong email or password — including an account without a password — shows an error pointing to the link.
 
-**Entrar sem senha** chama `POST /auth/magic-link` com `{ email, redirect }`. `redirect` é `https://guiaflow.pro/auth/callback` no site publicado (noutra origem de desenvolvimento, a mesma origem com esse caminho). Depois do envio: «Enviamos um link para {email}.» O mesmo link cria a conta ou entra pela primeira vez.
+**Sign in without a password** calls `POST /auth/magic-link` with `{ email, redirect }`. `redirect` is `https://guiaflow.pro/auth/callback` on the published site (on another development origin, that same origin with this path). After sending: «We sent a link to {email}.» The same link creates the account or signs in for the first time.
 
-O browser, depois de confirmar o email ou de entrar com senha na nuvem, abre `https://guiaflow.pro/auth/callback?code=…`. O code é de uso único e dura cerca de 2 minutos. `auth/callback.html` faz `POST {base}/auth/callback` com `{ code }`, grava `accessToken` em `guiaflow.cloud.session` e volta à raiz do editor (`location.replace`). O code não fica na barra. Se a troca falhar, a raiz mostra o erro no painel. Com intenção de publicar ainda válida, a raiz continua o link permanente. Outra aba do mesmo navegador ouve `storage` e também pode publicar; só uma reclama a intenção.
+After confirming the email or signing in with a password on the cloud, the browser opens `https://guiaflow.pro/auth/callback?code=…`. The code is single-use and lasts about 2 minutes. `auth/callback.html` does `POST {base}/auth/callback` with `{ code }`, stores `accessToken` in `guiaflow.cloud.session`, and returns to the editor root (`location.replace`). The code does not stay in the address bar. If the exchange fails, the root shows the error in the panel. With a still-valid intent to publish, the root continues the permanent link. Another tab in the same browser listens to `storage` and can also publish; only one claims the intent.
 
-Noutro aparelho, «O link abriu noutro aparelho?» ainda aceita colar um link antigo. Esse atalho não é o caminho principal.
+On another device, «Did the link open on another device?» still accepts pasting an old link. That shortcut is not the main path.
 
-Com sessão, `POST /shares` envia `{ title, tour }` e mostra o `url` que a nuvem devolve, com botão de copiar. `share_limit` aparece como «Limite de links do plano Free» ou «Limite de links do plano Pro». `401` apaga a sessão e pede para entrar de novo. Falha de rede diz que não foi possível contactar a nuvem.
+With a session, `POST /shares` sends `{ title, tour }` and shows the `url` the cloud returns, with a copy button. `share_limit` appears as the Free or Pro plan link limit. `401` clears the session and asks to sign in again. A network failure says the cloud could not be reached.
 
-O JSON público não leva `writeToken` nem o bearer. Exportar HTML, vídeo ou JSON local não depende da nuvem.
+The public JSON carries neither `writeToken` nor the bearer. Exporting HTML, video, or local JSON does not depend on the cloud.
 
-`401` apaga a sessão e abre **Entrar**. `402` com `code: "subscription_required"` abre o diálogo de assinatura (Mensal ou Anual, sem preço no editor). `429` com `quota_exceeded` avisa que a cota do mês acabou. `503` diz que está indisponível no momento. O preview de 7 dias não passa por esse gate.
+`401` clears the session and opens **Sign in**. `402` with `code: "subscription_required"` opens the subscription dialog (Monthly or Annual, no price in the editor). `429` with `quota_exceeded` warns that the monthly quota is used up. `503` says it is unavailable right now. The 7-day preview does not go through this gate.
 
-### Assinatura
+### Subscription
 
-O editor não calcula preço e não guarda segredo de pagamento. Com sessão, o menu da conta lê `GET /billing/entitlement`. Plano `cloud` com assinatura ativa mostra **Pro** e **Gerenciar assinatura** (`POST /billing/portal` → `{ "portal": { "url" } }`). Plano livre mostra **Grátis** e **Assinar Pro**. Na interface o plano pago chama-se GuiaFlow Pro. O campo da API continua `plan: "cloud"`.
+The editor does not compute prices and does not store payment secrets. With a session, the account menu reads `GET /billing/entitlement`. Plan `cloud` with an active subscription shows **Pro** and **Manage subscription** (`POST /billing/portal` → `{ "portal": { "url" } }`). The free plan shows **Free** and **Subscribe to Pro**. In the UI the paid plan is called GuiaFlow Pro. The API field remains `plan: "cloud"`.
 
-`POST /billing/checkout` com `{ "interval": "monthly" | "annual" }` devolve `{ "checkout": { "url" } }`. O browser segue esse URL se for `http:` ou `https:`.
+`POST /billing/checkout` with `{ "interval": "monthly" | "annual" }` returns `{ "checkout": { "url" } }`. The browser follows that URL if it is `http:` or `https:`.
 
-Regresso em `https://guiaflow.pro`:
+Return on `https://guiaflow.pro`:
 
-- `/?billing=success&session_id={CHECKOUT_SESSION_ID}` — `GET /billing/entitlement?session_id=cs_…`. Se `active` for verdadeiro, o aviso diz que a assinatura está ativa. A query sai da barra.
-- `/?billing=cancel` — aviso neutro, sem chamar o checkout de novo.
-- `/?billing=portal` — só volta a ler o entitlement.
+- `/?billing=success&session_id={CHECKOUT_SESSION_ID}` — `GET /billing/entitlement?session_id=cs_…`. If `active` is true, the notice says the subscription is active. The query is removed from the address bar.
+- `/?billing=cancel` — neutral notice, without calling checkout again.
+- `/?billing=portal` — just reads the entitlement again.
 
-Se `/billing/entitlement` responder `404` ou `503`, a linha do plano some e o link permanente segue o comportamento anterior. O link temporário continua grátis.
+If `/billing/entitlement` responds `404` or `503`, the plan line disappears and the permanent link keeps the previous behavior. The temporary link stays free.
 
-Forma lida do entitlement (corpo direto ou em `entitlement` / `subscription`): `{ "plan": "free"|"cloud", "status": "active"|"trialing"|"past_due"|"canceled"|"none", "active": true|false, "interval": "monthly"|"annual"|null }`. `active: false` manda, mesmo que `plan` ainda diga `cloud`.
+Entitlement shape read (direct body or in `entitlement` / `subscription`): `{ "plan": "free"|"cloud", "status": "active"|"trialing"|"past_due"|"canceled"|"none", "active": true|false, "interval": "monthly"|"annual"|null }`. `active: false` wins, even if `plan` still says `cloud`.
 
-## Contrato para operadores (`guiaflow-cloud`)
+## Operator contract (`guiaflow-cloud`)
 
-Esta secção não é cópia de produto. O host abaixo é a base HTTP; a pessoa que usa o editor não o vê.
+This section is not product copy. The host below is the HTTP base; the person using the editor does not see it.
 
-`AUTH_BASE_URL` é a base dos pedidos do servidor (`https://app.guiaflow.pro`). O link do email volta ao editor em `https://guiaflow.pro/auth/callback`. Não abre essa base nem uma página que se apresente como «API».
+`AUTH_BASE_URL` is the base for server requests (`https://app.guiaflow.pro`). The email link returns to the editor at `https://guiaflow.pro/auth/callback`. It does not open that base nor a page presenting itself as an «API».
 
-Contrato alinhado ao PR `guiaflow-cloud` #5. Depois de confirmar o link mágico ou de entrar com senha, o browser abre:
+Contract aligned with `guiaflow-cloud` PR #5. After confirming the magic link or signing in with a password, the browser opens:
 
 `https://guiaflow.pro/auth/callback?code={code}`
 
-O code é de uso único e expira em cerca de 2 minutos. O editor não mostra o host da base HTTP.
+The code is single-use and expires in about 2 minutes. The editor does not show the HTTP base host.
 
 `POST /auth/magic-link`
 
@@ -115,13 +117,13 @@ O code é de uso único e expira em cerca de 2 minutos. O editor não mostra o h
 { "email": "pessoa@example.com", "redirect": "https://guiaflow.pro/auth/callback" }
 ```
 
-`POST /auth/login` (quem já tem senha, a partir do editor)
+`POST /auth/login` (for users who already have a password, from the editor)
 
 ```json
 { "email": "pessoa@example.com", "password": "…" }
 ```
 
-Resposta com sessão direta: `{ "accessToken": "…", "user": { "email": "…" } }`. Em alternativa, `{ "code": "…" }` ou `{ "redirect": "https://guiaflow.pro/auth/callback?code=…" }`. `401` é email ou senha incorretos.
+Response with a direct session: `{ "accessToken": "…", "user": { "email": "…" } }`. Alternatively, `{ "code": "…" }` or `{ "redirect": "https://guiaflow.pro/auth/callback?code=…" }`. `401` means wrong email or password.
 
 `POST /auth/callback`
 
@@ -129,22 +131,12 @@ Resposta com sessão direta: `{ "accessToken": "…", "user": { "email": "…" }
 { "code": "…" }
 ```
 
-Resposta: `{ "accessToken": "…", "user": { "email": "…" } }`. O editor grava só isso em `localStorage["guiaflow.cloud.session"]` e substitui o endereço por `https://guiaflow.pro/`.
+Response: `{ "accessToken": "…", "user": { "email": "…" } }`. The editor stores only that in `localStorage["guiaflow.cloud.session"]` and replaces the address with `https://guiaflow.pro/`.
 
-`redirect`, quando a nuvem o honrar, só pode ser a origem do editor mais `/auth/callback`. Allowlist (qualquer outra origem é open redirect — responder `400` e não redirecionar):
+`redirect`, when the cloud honors it, may only be the editor origin plus `/auth/callback`. Allowlist (any other origin is an open redirect — respond `400` and do not redirect):
 
 - `https://guiaflow.pro/auth/callback`
-- `https://guiaflow-seven.vercel.app/auth/callback` (legado; redireciona para o apex e preserva a query)
-- `http://localhost` e `http://127.0.0.1`, com qualquer porta, só em desenvolvimento
+- `https://guiaflow-seven.vercel.app/auth/callback` (legacy; redirects to the apex and preserves the query)
+- `http://localhost` and `http://127.0.0.1`, any port, development only
 
-Um email antigo que ainda aponte para `{AUTH_BASE_URL}/auth/verify?token=` continua a poder ser colado no atalho do editor. A interface não mostra esse endereço.
-
-## English
-
-**The editor stays free forever under MIT.** This repo (`gflow`) remains open source for the editor and the player. There is no hard dependency on a private companion.
-
-**BYOK stays in this OSS repo.** AI and TTS keep using your own keys through `js/llm.js`, `js/cartesia.js`, and their stores. Cloud must not remove or break that path.
-
-**GuiaFlow Pro** is the paid plan. The companion code stays outside this MIT repo (repository name `guiaflow-cloud`). It may add hosted AI without BYOK, hosted TTS, permanent shares, branding, and analytics. The editor copy says GuiaFlow Pro; entitlement `plan` stays `cloud`.
-
-With no Cloud base URL every flag is false and helpers do not touch the network. The canonical editor is `https://guiaflow.pro` (`guiaflow-seven.vercel.app` redirects there). The published editor sets `window.__GUIAFLOW_CLOUD__` to `https://app.guiaflow.pro` for operators; that host is not shown in the product UI. Apex `guiaflow.pro` stays the free editor. A global set earlier stays in place, including a previous host. Meta and `guiaflow.cloud.baseUrl` apply when the global is unset. Localhost and the desktop app stay Blob-only. A stored `guiaflow.cloud.session` skips sign-in and publishes immediately («Connected as …»). Otherwise the Entrar dialog posts `{ email, password }` to `/auth/login`. **Sign in without a password** posts `{ email, redirect }` to `/auth/magic-link`, with `redirect` ending in `/auth/callback`; the same link creates the account. After email confirm or password login, the browser lands on `/auth/callback?code=…`; the editor `POST`s that code to `{base}/auth/callback`, stores `accessToken`, and returns to `/`. `callCloud` stays a stub for hosted AI, TTS, branding, and analytics. The 7-day Vercel Blob preview on this app (`/v/:id`) is unchanged. A `402` `subscription_required` opens the upgrade dialog. Checkout, the billing portal, and `GET /billing/entitlement` are UI hooks only; a `404` on entitlement hides the plan line. Return URLs are `/?billing=success&session_id=cs_…`, `/?billing=cancel`, and `/?billing=portal`.
+An old email still pointing to `{AUTH_BASE_URL}/auth/verify?token=` can still be pasted into the editor shortcut. The UI does not show that address.

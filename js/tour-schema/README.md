@@ -1,13 +1,13 @@
 # @guiaflow/tour-schema
 
-Formato do tour do GuiaFlow em JS puro (sem DOM), usado pelo editor, pelo player e pela API pública (guiaflow-cloud).
+GuiaFlow's tour format in plain JS (no DOM), used by the editor, the player, and the public API (guiaflow-cloud).
 
-| Arquivo | O quê |
+| File | What |
 |---|---|
-| `geometry.js` | destaque (`hotspot`, % da imagem) e clique simulado preso ao destaque |
-| `fixedSteps.js`, `phoneCountries.js` | passo inicial (captura de lead) e final (CTAs, WhatsApp E.164) |
-| `scenes.js` | cenas (blocos de passos) |
-| `theme.js` | temas prontos e cópia de tema |
-| `agent.js` | entrada de agentes/API: coordenadas 0..1, erros legíveis por LLM, checagem antes de publicar |
+| `geometry.js` | highlight (`hotspot`, % of the image) and simulated click anchored to the highlight |
+| `fixedSteps.js`, `phoneCountries.js` | start step (lead capture) and end step (CTAs, WhatsApp E.164) |
+| `scenes.js` | scenes (groups of steps) |
+| `theme.js` | ready-made themes and theme copy |
+| `agent.js` | agent/API input: 0..1 coordinates, LLM-readable errors, pre-publish checks |
 
-A fonte é este diretório. O guiaflow-cloud guarda uma cópia em `packages/tour-schema/` (`npm run sync:tour-schema`); um teste lá confere que a cópia bate com o commit anotado em `SOURCE`.
+This directory is the source. guiaflow-cloud keeps a copy in `packages/tour-schema/` (`npm run sync:tour-schema`); a test there checks that the copy matches the commit recorded in `SOURCE`.

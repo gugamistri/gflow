@@ -1,58 +1,90 @@
 # GuiaFlow
 
+**English** | [Português](README.pt-BR.md)
+
 [![smithery badge](https://smithery.ai/badge/gmistrinelli/guiaflow)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![Editor do GuiaFlow](docs/editor.png)
+**Free, open-source interactive product demo & guided tour builder — alternative to Arcade, Supademo, Storylane.**
 
-![Tour de exemplo](docs/tour.gif)
+Try it at **[guiaflow.pro](https://guiaflow.pro)** · Editor: [guiaflow.pro/editor](https://guiaflow.pro/editor) · Integrations: [guiaflow.pro/integracoes](https://guiaflow.pro/integracoes)
 
-Editor e player de tours com capturas de tela, destaque, clique simulado e narração. Inclui uma extensão Chrome para gravar o produto e um app desktop (Electron) com captura embutida.
+![GuiaFlow editor](docs/editor.png)
 
-A interface está em português, espanhol e inglês. O idioma segue o do navegador; se não for um desses três, cai em inglês. No editor, o seletor fica na barra superior (PT, ES, EN). Na extensão, o mesmo seletor fica no popup e vale também para a barra de captura na página.
+![Example tour](docs/tour.gif)
 
-## Começar no navegador
+GuiaFlow is an editor and player for click-through product tours built from screenshots, with highlights, simulated clicks, and narration. It ships with a Chrome extension to capture your product and a desktop app (Electron) with built-in capture.
+
+## Features
+
+- **Screenshot-based interactive demos** — highlight (hotspot), simulated click, and step text on each screen
+- **Chrome extension capture** — record your product flow in the browser and turn it into a tour
+- **Desktop app (Electron)** — built-in capture window, no extension needed
+- **Narration** — AI-generated step text and text-to-speech with your own key (BYOK)
+- **Scenes, themes, and fonts** — group steps, pick a ready theme or customize it
+- **Start and end steps** — lead-capture intro step and closing CTAs (including WhatsApp)
+- **Export** — single-file navigable HTML, MP4 video, or a 7-day temporary preview link
+- **Multilingual UI** — Portuguese, Spanish, and English
+- **Works offline / locally** — no account required; MIT licensed
+
+## GuiaFlow Pro
+
+**GuiaFlow Pro** is the optional paid plan. The editor and player in this repo stay free and MIT forever.
+
+- **Permanent share links** for published tours
+- **Hosted AI text and TTS** — no API key needed in the browser
+- **Analytics** for published tours
+- **Lead capture**
+- **No watermark** on exported video
+- **MCP server** at `https://app.guiaflow.pro/mcp` — let AI agents create and publish tours
+
+See [guiaflow.pro](https://guiaflow.pro) for plans and [`docs/CLOUD.md`](docs/CLOUD.md) for how the open editor talks to the hosted service.
+
+## Getting started in the browser
 
 ```bash
 npm start
 ```
 
-Abre em `http://localhost:4173` (landing) e `http://localhost:4173/editor` (editor). O editor publicado é [https://guiaflow.pro/editor](https://guiaflow.pro/editor); a raiz [https://guiaflow.pro](https://guiaflow.pro) é a landing. Quem já tem projetos neste navegador, tem a extensão de captura ou chega com `?parâmetros`/`#token=` na raiz é levado para `/editor` com a query e o hash; `/?landing=1` sempre mostra a landing. O endereço antigo `https://guiaflow-seven.vercel.app` redireciona para lá, com o mesmo caminho e a mesma query. Na primeira visita a biblioteca recebe o projeto **Como usar o Guia**.
+Opens `http://localhost:4173` (landing) and `http://localhost:4173/editor` (editor). The published editor is [https://guiaflow.pro/editor](https://guiaflow.pro/editor); the root [https://guiaflow.pro](https://guiaflow.pro) is the landing page. Visitors who already have projects in this browser, have the capture extension, or arrive at the root with `?parameters`/`#token=` are sent to `/editor` with the query and hash preserved; `/?landing=1` always shows the landing page. The old address `https://guiaflow-seven.vercel.app` redirects there, keeping the path and query. On the first visit the library gets the **Como usar o Guia** (how to use) project.
 
-### Extensão de captura
+The interface is available in Portuguese, Spanish, and English. The language follows the browser; anything else falls back to English. In the editor, the selector is in the top bar (PT, ES, EN). In the extension, the same selector is in the popup and also applies to the on-page capture bar.
 
-Instale pela [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd). O manual está em [`ajuda.html`](ajuda.html).
+### Capture extension
 
-Para desenvolver a extensão localmente:
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd). The manual is in [`ajuda.html`](ajuda.html).
 
-1. `npm run pack:extension` (ou carregue a pasta `extension/`)
-2. Em `chrome://extensions`, ative o modo do desenvolvedor e carregue a pasta da extensão
-3. No popup, o campo Editor deve ser a mesma origem do site (`https://guiaflow.pro`, ou `http://localhost:4173` no desenvolvimento). Depois de atualizar a extensão, recarregue o card em `chrome://extensions`.
-4. No popup, escolha PT, ES ou EN se quiser um idioma diferente do navegador
-5. Inicie a captura na aba do produto, fotografe, marque o clique e crie o projeto
+To develop the extension locally:
 
-## App desktop
+1. `npm run pack:extension` (or load the `extension/` folder)
+2. In `chrome://extensions`, enable developer mode and load the extension folder
+3. In the popup, the Editor field must be the same origin as the site (`https://guiaflow.pro`, or `http://localhost:4173` in development). After updating the extension, reload its card in `chrome://extensions`.
+4. In the popup, pick PT, ES, or EN if you want a language different from the browser's
+5. Start capture on the product tab, take screenshots, mark the click, and create the project
+
+## Desktop app
 
 ```bash
 npm install
 npm run desktop
 ```
 
-Gera a pasta de distribuição local (sem assinatura):
+Build the local distribution folder (unsigned):
 
 ```bash
 npm run dist:desktop
 ```
 
-No desktop, use **Capturar** no editor: abre uma janela com a página do produto, fotografa e monta o projeto. No navegador continue com a extensão.
+On desktop, use **Capturar** (Capture) in the editor: it opens a window with the product page, takes screenshots, and builds the project. In the browser, keep using the extension.
 
-## Exportar
+## Export
 
-- **HTML navegável** — um arquivo único com o tour
-- **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
-- **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias (requer Blob na Vercel)
-- **Link permanente** — no mesmo menu, no app publicado. Com sessão, mostra «Conectado como …» e publica direto. Sem sessão, o email de confirmação volta para guiaflow.pro. A base HTTP da nuvem fica só em `window.__GUIAFLOW_CLOUD__` (ver [`docs/CLOUD.md`](docs/CLOUD.md)).
+- **Navigable HTML** — a single file with the tour
+- **MP4 video** — tour frames via WebCodecs; if the encoder is missing, falls back to `MediaRecorder` (may produce WebM)
+- **Temporary preview** — in the Share menu; publishes a short `/v/…` address just for viewing the tour, for 7 days (requires Blob on Vercel)
+- **Permanent link** — in the same menu, on the published app. With a session it shows "Connected as …" and publishes directly. Without a session, the confirmation email returns to guiaflow.pro. The cloud HTTP base lives only in `window.__GUIAFLOW_CLOUD__` (see [`docs/CLOUD.md`](docs/CLOUD.md)).
 
-## Testes
+## Tests
 
 ```bash
 node --test extension/lib/*.test.js scripts/*.test.js
@@ -60,16 +92,23 @@ node --test extension/lib/*.test.js scripts/*.test.js
 
 ## Cloud
 
-O editor e o player deste repositório continuam MIT e gratuitos. IA e narração com a sua própria chave continuam livres. GuiaFlow Pro é o plano pago opcional, noutro código. Sem URL base, nada é chamado. Com URL base, o editor publica o link permanente e oferece texto, áudio e vídeo sem marca para quem assina. Detalhes em [`docs/CLOUD.md`](docs/CLOUD.md).
+The editor and player in this repository remain MIT and free. AI and narration with your own key remain free. GuiaFlow Pro is the optional paid plan, in separate code. Without a base URL, nothing is called. With a base URL, the editor publishes permanent links and offers text, audio, and watermark-free video to subscribers. Details in [`docs/CLOUD.md`](docs/CLOUD.md).
 
-## Licença
+## Links
 
-MIT — ver [`LICENSE`](LICENSE).
+- Website: [https://guiaflow.pro](https://guiaflow.pro)
+- Integrations (MCP, API, embeds): [https://guiaflow.pro/integracoes](https://guiaflow.pro/integracoes)
+- MCP server: `https://app.guiaflow.pro/mcp` · [Smithery](https://smithery.ai/servers/gmistrinelli/guiaflow)
+- Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd)
 
-### Terceiros
+## License
+
+MIT — see [`LICENSE`](LICENSE).
+
+### Third parties
 
 - [driver.js](https://github.com/kamranahmedse/driver.js) 1.3.6 — MIT © Kamran Ahmed (`vendor/driver/`)
 - [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) — MIT (`vendor/mp4-muxer/`)
-- O build Electron inclui Chromium; o empacotador gera os avisos em `LICENSES.chromium.html` na pasta de saída
+- The Electron build includes Chromium; the packager generates the notices in `LICENSES.chromium.html` in the output folder
 
-Este repositório não empacota ffmpeg nem libx264.
+This repository does not bundle ffmpeg or libx264.
