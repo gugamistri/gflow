@@ -2,7 +2,7 @@
 
 [English](README.md) | **Português**
 
-[![smithery badge](https://smithery.ai/badge/gmistrinelli/guiaflow)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+[![smithery badge](https://img.shields.io/badge/Smithery-guiaflow-FF5601)](https://smithery.ai/servers/gmistrinelli/guiaflow)
 
 **Criador de demos interativas e tours guiados de produto, gratuito e open source — alternativa ao Arcade, Supademo e Storylane.**
 
