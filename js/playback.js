@@ -2,7 +2,13 @@
  * Temporizador e narração (TTS + áudio de fundo) do tour.
  */
 
-import { synthesizeCartesia, narrationLang } from "./cartesia.js";
+import {
+  synthesizeCartesia,
+  narrationLang,
+  narrationLanguage,
+  voiceForLanguage,
+  isVoiceId,
+} from "./cartesia.js";
 import { readCartesiaKey } from "./cartesia-store.js";
 
 export { CARTESIA_VOICES as NARRATION_VOICES, defaultVoiceURI } from "./cartesia.js";
@@ -20,6 +26,7 @@ export function defaultNarration() {
   return {
     enabled: true,
     voiceURI: "",
+    voices: {},
     rate: 1,
     background: null,
   };
@@ -36,6 +43,17 @@ export function ensurePlayback(demo) {
   return demo.playback;
 }
 
+/** Idioma base (pt/en/es) da narração do projeto. */
+export function narrationLanguageOf(demo) {
+  return narrationLanguage(demo?.narration?.voiceURI || "");
+}
+
+/** Voz Cartesia efetiva do projeto para o idioma da narração (escolhida ou padrão nativa). */
+export function narrationVoiceId(demo) {
+  const lang = narrationLanguageOf(demo);
+  return voiceForLanguage(lang, demo?.narration?.voices?.[lang]);
+}
+
 export function ensureNarration(demo) {
   if (!demo.narration || typeof demo.narration !== "object") {
     demo.narration = defaultNarration();
@@ -43,6 +61,10 @@ export function ensureNarration(demo) {
   const n = demo.narration;
   if (typeof n.enabled !== "boolean") n.enabled = true;
   if (typeof n.voiceURI !== "string") n.voiceURI = "";
+  const voices = n.voices && typeof n.voices === "object" && !Array.isArray(n.voices) ? n.voices : {};
+  n.voices = Object.fromEntries(
+    Object.entries(voices).filter(([lang, id]) => /^[a-z]{2}$/.test(lang) && isVoiceId(id))
+  );
   const rate = Number(n.rate);
   n.rate = Number.isFinite(rate) ? Math.min(1.4, Math.max(0.7, rate)) : 1;
   if (n.background && typeof n.background === "object") {
@@ -308,7 +330,7 @@ function speakWithBrowser(text, rate, token, lang = "pt-BR") {
  * why: no navegador a chave vem do banco local; no app desktop, do chaveiro.
  * @returns {Promise<boolean>} true quando algum trecho Cartesia tocou
  */
-async function speakWithCartesia(text, voiceURI, rate, token) {
+async function speakWithCartesia(text, voiceURI, rate, token, voiceId = "") {
   const bridge = typeof window !== "undefined" ? window.guiaDesktopApp?.cartesiaSpeak : null;
   let apiKey = "";
   if (!bridge) {
@@ -325,8 +347,8 @@ async function speakWithCartesia(text, voiceURI, rate, token) {
     for (const part of parts) {
       if (token !== speakToken) return true;
       const result = bridge
-        ? await bridge({ text: part, voiceURI, rate })
-        : await synthesizeCartesia({ apiKey, text: part, voiceURI, rate });
+        ? await bridge({ text: part, voiceURI, voiceId, rate })
+        : await synthesizeCartesia({ apiKey, text: part, voiceURI, voiceId, rate });
       if (token !== speakToken) return true;
       if (!result?.ok || !result.audioBase64) return played;
       const mime = result.mime || "audio/mpeg";
@@ -357,6 +379,7 @@ export function savedNarrationClips(step, demo) {
   if (!caption || audio.caption !== caption) return [];
   ensureNarration(demo);
   if ((audio.voiceURI || "") !== (demo.narration.voiceURI || "")) return [];
+  if (audio.voiceId && audio.voiceId !== narrationVoiceId(demo)) return [];
   const savedRate = Number(audio.rate);
   const rate = Number(demo.narration.rate);
   if (!Number.isFinite(savedRate) || Math.abs(savedRate - rate) > 0.001) return [];
@@ -401,7 +424,7 @@ export function restoreCaptionHome(captionEl, home) {
 /**
  * why: a API só entra aqui; a reprodução usa os clipes já salvos no passo.
  */
-export async function generateNarrationClips(text, { voiceURI, rate } = {}) {
+export async function generateNarrationClips(text, { voiceURI, voiceId, rate } = {}) {
   const trimmed = String(text || "").trim();
   if (!trimmed) throw new Error("Escreva uma legenda para gerar o áudio.");
   const bridge = typeof window !== "undefined" ? window.guiaDesktopApp?.cartesiaSpeak : null;
@@ -414,8 +437,8 @@ export async function generateNarrationClips(text, { voiceURI, rate } = {}) {
   const clips = [];
   for (const part of parts) {
     const result = bridge
-      ? await bridge({ text: part, voiceURI, rate })
-      : await synthesizeCartesia({ apiKey, text: part, voiceURI, rate });
+      ? await bridge({ text: part, voiceURI, voiceId, rate })
+      : await synthesizeCartesia({ apiKey, text: part, voiceURI, voiceId, rate });
     if (!result?.ok || !result.audioBase64) {
       throw new Error(result?.error || "A síntese falhou.");
     }
@@ -441,7 +464,7 @@ export function playNarrationClips(clips, rate = 1) {
  * Fala um texto com a voz/velocidade do projeto.
  * @returns {Promise<void>}
  */
-export function speakText(text, { voiceURI, rate } = {}) {
+export function speakText(text, { voiceURI, voiceId, rate } = {}) {
   stopSpeech();
   const token = speakToken;
   const trimmed = String(text || "").trim();
@@ -449,7 +472,7 @@ export function speakText(text, { voiceURI, rate } = {}) {
   const lang = narrationLang(voiceURI);
   const parts = splitForSpeech(trimmed);
   return (async () => {
-    const usedCartesia = await speakWithCartesia(trimmed, voiceURI, rate, token);
+    const usedCartesia = await speakWithCartesia(trimmed, voiceURI, rate, token, voiceId);
     if (usedCartesia || token !== speakToken) return;
     let played = false;
     try {

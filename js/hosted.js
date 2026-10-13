@@ -4,7 +4,7 @@
  *      Com chave própria o caminho BYOK não passa por aqui.
  *
  * Contrato: { prompt } → { ok, result, usage }
- *           { text, voice? } → { ok, audio: { contentType, base64 }, seconds, usage }
+ *           { text, voice?, language? } → { ok, audio: { contentType, base64 }, seconds, usage }
  */
 
 import { cloudFetch } from "./cloudConfig.js";
@@ -124,12 +124,14 @@ export async function completeHostedCopy(messages, env) {
   };
 }
 
-export async function synthesizeHostedSpeech(text, { voice } = {}, env) {
+export async function synthesizeHostedSpeech(text, { voice, language } = {}, env) {
   const trimmed = String(text || "").trim().slice(0, HOSTED_TTS_MAX);
   if (!trimmed) return { ok: false, error: "empty", message: "" };
   const body = { text: trimmed };
   const voiceId = String(voice || "").trim();
   if (voiceId) body.voice = voiceId;
+  const lang = String(language || "").trim();
+  if (lang) body.language = lang;
   const result = await cloudFetch(
     HOSTED_TTS_PATH,
     {
