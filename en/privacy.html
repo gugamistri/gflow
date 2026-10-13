@@ -49,14 +49,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/89/css/theme.css" />
-  <link rel="stylesheet" href="/a/89/css/app.css" />
-  <link rel="stylesheet" href="/a/89/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/90/css/theme.css" />
+  <link rel="stylesheet" href="/a/90/css/app.css" />
+  <link rel="stylesheet" href="/a/90/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/89/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/89/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/90/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/90/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacy</span>
     </div>
     <div class="topbar-appearance">
@@ -72,7 +72,7 @@
   <main class="page legal">
     <h1 data-i18n="privacy.h1">Privacy Policy</h1>
     <p class="lead" data-i18n="privacy.lead">Here we explain, in plain language, what data GuiaFlow processes, why, where it is kept, and how you control it.</p>
-    <p class="legal-updated" data-i18n="privacy.updated">Last updated: October 12, 2026</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Last updated: October 13, 2026</p>
     <section class="card" id="resumo">
       <h2 data-i18n="privacy.resumo.title">In short</h2>
       <ul>
@@ -201,6 +201,7 @@
         <li data-i18n="privacy.cookies.li5">The “Feedback” button opens a Tally form, which is loaded in the editor. If you answer it, the answers go to Tally.</li>
         <li data-i18n="privacy.cookies.li6">When you connect an AI app through OAuth, the authorization page uses a 1-hour session cookie, only for that screen.</li>
       </ul>
+      <p data-i18n="privacy.cookies.p2">GuiaFlow itself only uses cookies and browser storage that are strictly necessary for the service you request, so we do not show a cookie consent banner. The editor loads the Tally widget script from tally.so when it opens, so your browser connects to Tally (which receives your IP address); the form itself only loads when you click “Feedback”. In our checks, neither the script nor the form sets cookies; the script may save in the browser whether you have already opened or submitted the form.</p>
     </section>
     <section class="card" id="bases">
       <h2 data-i18n="privacy.bases.title">What we use it for and on what legal basis</h2>
@@ -227,9 +228,30 @@
       </ul>
       <p data-i18n="privacy.compartilhamento.p2">We may also provide data when the law or a court order requires it.</p>
     </section>
+    <section class="card" id="suboperadores">
+      <h2 data-i18n="privacy.subproc.title">Service providers (subprocessors)</h2>
+      <p data-i18n="privacy.subproc.p1">This table lists each provider, what it does, which data it receives, where it processes data and the safeguard used for transfers from the EEA, UK and Switzerland.</p>
+      <div class="legal-table-wrap">
+        <table class="legal-table">
+          <thead><tr data-i18n-html="privacy.subproc.th"><th scope="col">Provider and role</th><th scope="col">Data</th><th scope="col">Location</th><th scope="col">Transfer safeguard</th></tr></thead>
+          <tbody>
+          <tr data-i18n-html="privacy.subproc.r1"><td><strong>Hostinger</strong>: server for Pro accounts, permanent links and visit analytics</td><td>Account and subscription data, projects saved to the account, permanent links, visitor contacts (leads), visit analytics</td><td>Brazil (São Paulo)</td><td>European Commission adequacy decision for Brazil</td></tr>
+          <tr data-i18n-html="privacy.subproc.r2"><td><strong>DigitalOcean</strong>: storage of Pro project images and audio, database backups (14 days)</td><td>Project media; backup copies of the Pro database</td><td>United States</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r3"><td><strong>Vercel</strong>: site hosting, server functions and temporary links</td><td>Request data (such as IP address); content of tours published via temporary link</td><td>United States</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r4"><td><strong>Cloudflare</strong>: DNS, site delivery and security</td><td>Request data (such as IP address)</td><td>Global network</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r5"><td><strong>Stripe</strong>: payments (independent controller of card data)</td><td>Email, payment and billing data</td><td>United States and Ireland</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r6"><td><strong>Resend</strong>: email delivery</td><td>Email address and message content</td><td>United States</td><td>EU-U.S. Data Privacy Framework</td></tr>
+          <tr data-i18n-html="privacy.subproc.r7"><td><strong>OpenRouter</strong> and the chosen model provider: AI text (Pro hosted)</td><td>Step text and context; via the API/MCP, possibly the step screenshot</td><td>United States</td><td>Standard contractual clauses</td></tr>
+          <tr data-i18n-html="privacy.subproc.r8"><td><strong>Cartesia</strong>: narrated audio (Pro hosted)</td><td>Text to be narrated</td><td>United States</td><td>Standard contractual clauses</td></tr>
+          <tr data-i18n-html="privacy.subproc.r9"><td><strong>Tally</strong>: feedback form</td><td>Your answers and technical connection data</td><td>Belgium (EU)</td><td>No transfer outside the EEA</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
     <section class="card" id="transferencia">
       <h2 data-i18n="privacy.transferencia.title">International transfer</h2>
       <p data-i18n="privacy.transferencia.p1">Several of these providers are located outside Brazil, mainly in the United States. The transfer happens because it is necessary to provide the service you requested, and it is carried out with the contractual and security safeguards offered by these providers, in accordance with LGPD art. 33.</p>
+      <p data-i18n="privacy.transferencia.p2">For people in the European Economic Area: our main server is in Brazil, which the European Commission recognized as providing an adequate level of protection (Implementing Decision (EU) 2026/179 of January 26, 2026). For providers in the United States, we rely on the EU-U.S. Data Privacy Framework when the provider is certified under it (together with the UK Extension and the Swiss-U.S. framework, where applicable), and on the European Commission's standard contractual clauses otherwise. The EU decision on Brazil does not cover the UK or Switzerland.</p>
     </section>
     <section class="card" id="retencao">
       <h2 data-i18n="privacy.retencao.title">How long we keep it</h2>
@@ -260,9 +282,33 @@
       <p data-i18n-html="privacy.direitos.p2">To make a request, write to <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>, preferably from the account email, so we can confirm it is you. We reply within 15 days. You may also file a complaint with the Brazilian National Data Protection Authority (ANPD).</p>
       <p data-i18n="privacy.direitos.p3">Data that stays only in your browser is under your control: you can export or delete projects in the editor itself.</p>
     </section>
+    <section class="card" id="eee">
+      <h2 data-i18n="privacy.eee.title">Users in the EEA, UK and Switzerland</h2>
+      <p data-i18n-html="privacy.eee.p1">If you are in the European Economic Area, the United Kingdom or Switzerland, the GDPR (or the UK GDPR or the Swiss data protection law) may also apply to how we process your data. The controller is Gustavo Ariel Mistrinelli, an individual in Brazil, reachable at <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>. For visitor contacts and visit analytics in published tours, the tour author is the controller and GuiaFlow processes the data on the author's behalf.</p>
+      <p data-i18n="privacy.eee.p2">Legal bases (GDPR art. 6):</p>
+      <ul>
+        <li data-i18n-html="privacy.eee.li1"><strong>Contract</strong> (art. 6(1)(b)): account, subscription, projects saved to the account, temporary and permanent links, sign-in emails, and hosted AI and voice;</li>
+        <li data-i18n-html="privacy.eee.li2"><strong>Legal obligation</strong> (art. 6(1)(c)): payment and tax records;</li>
+        <li data-i18n-html="privacy.eee.li3"><strong>Legitimate interests</strong> (art. 6(1)(f)): service security, abuse prevention and rate limiting, and, on behalf of tour authors, cookieless visit analytics;</li>
+        <li data-i18n-html="privacy.eee.li4"><strong>Consent</strong> (art. 6(1)(a)): visitor contacts collected in tours and the feedback form. You can withdraw consent at any time.</li>
+      </ul>
+      <p data-i18n="privacy.eee.p3">Your rights:</p>
+      <ul>
+        <li data-i18n="privacy.eee.r1">access to your data;</li>
+        <li data-i18n="privacy.eee.r2">rectification of inaccurate or incomplete data;</li>
+        <li data-i18n="privacy.eee.r3">erasure;</li>
+        <li data-i18n="privacy.eee.r4">restriction of processing;</li>
+        <li data-i18n="privacy.eee.r5">data portability;</li>
+        <li data-i18n="privacy.eee.r6">objection to processing based on legitimate interests;</li>
+        <li data-i18n="privacy.eee.r7">withdrawal of consent, without affecting processing carried out before;</li>
+        <li data-i18n="privacy.eee.r8">a complaint to the data protection supervisory authority where you live, work or where the alleged infringement took place (in the UK, the ICO; in Switzerland, the FDPIC).</li>
+      </ul>
+      <p data-i18n-html="privacy.eee.p4">To exercise these rights, write to <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>. We respond within one month; that period may be extended by two further months for complex or numerous requests, in which case we will let you know within the first month.</p>
+    </section>
     <section class="card" id="seguranca">
       <h2 data-i18n="privacy.seguranca.title">Security</h2>
       <p data-i18n="privacy.seguranca.p1">We use HTTPS connections, passwords stored only as hashes, short-lived sign-in links, session tokens that expire, and restricted access to the server. No system is completely immune to failures; if an incident occurs that may cause significant risk or harm, we will notify those affected and the ANPD, as required by law.</p>
+      <p data-i18n="privacy.seguranca.p2">If a personal data breach affects people in the EEA, the UK or Switzerland, we notify the competent supervisory authority within 72 hours of becoming aware of it, when required, and inform the people affected without undue delay when there is a high risk to them. When we process data on behalf of a tour author, we notify the author without undue delay.</p>
     </section>
     <section class="card" id="menores">
       <h2 data-i18n="privacy.menores.title">Children and teenagers</h2>
@@ -287,8 +333,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/89/js/i18n.js";
-    import "./a/89/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/90/js/i18n.js";
+    import "./a/90/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

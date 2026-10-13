@@ -85,8 +85,8 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="preload" href="/a/89/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/a/89/css/landing.css" />
+  <link rel="preload" href="/a/90/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/a/90/css/landing.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -160,7 +160,7 @@
             "name": "Where does my data live?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "On the Free plan, projects are stored locally in your browser and are never sent to our servers. Published tours remain active for 7 days via temporary links, then are deleted. On Pro, projects, permanent links and leads live on the GuiaFlow server, tied to your account."
+              "text": "On the Free plan, projects are stored locally in your browser and are never sent to our servers unless you publish a temporary link. Published tours remain active for 7 days via temporary links, then are deleted. On Pro, projects, permanent links and leads live on the GuiaFlow server, tied to your account."
             }
           },
           {
@@ -168,7 +168,7 @@
             "name": "Does GuiaFlow comply with the LGPD (Brazil's data protection law)?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. We keep the minimum needed for the account and links, use no advertising trackers and never sell data. Lead capture asks the visitor for explicit consent. Details are in the Privacy Policy."
+              "text": "We follow the LGPD: we keep the minimum needed for the account and links, use no advertising trackers and never sell data. Lead capture asks the visitor for explicit consent. Details are in the Privacy Policy."
             }
           },
           {
@@ -194,6 +194,14 @@
               "@type": "Answer",
               "text": "No. The demo opens in the browser, on mobile or desktop, from the link or from your site. Only the person creating the demo needs the Chrome extension."
             }
+          },
+          {
+            "@type": "Question",
+            "name": "Is GuiaFlow GDPR-compliant?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "GuiaFlow is built to be privacy-friendly, but we don't claim any GDPR certification (there isn't an official one). On the Free plan, projects stay in your browser and aren't sent to us unless you publish a temporary link, which is deleted after 7 days. Tour analytics use no cookies and don't store IP addresses, and they respect Do Not Track and Global Privacy Control. Lead capture records the visitor's explicit consent. We're based in Brazil and operate under Brazil's LGPD. Some providers are in the United States (see our Privacy Policy for the full list). If you collect leads from people in the EU, you are the controller of that data; contact contato@guiaflow.pro with questions about using GuiaFlow under the GDPR."
+            }
           }
         ]
       }
@@ -206,7 +214,7 @@
   <header class="site-header" id="topo">
     <div class="wrap header-row">
       <a class="brand" href="/en?landing=1" aria-label="GuiaFlow">
-        <img src="/a/89/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
+        <img src="/a/90/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
       </a>
       <nav class="nav" aria-label="Sections" data-i18n-aria="lp.nav.aria">
         <a href="#como-funciona" data-i18n="lp.nav.how">How it works</a>
@@ -239,7 +247,7 @@
           <div class="mock">
             <div class="mock-bar"><span></span><span></span><span></span><i>app.leadpronto.ai</i></div>
             <div class="mock-shot">
-              <img src="/a/89/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
+              <img src="/a/90/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
               <span class="mock-target"></span>
               <span class="mock-hotspot"></span>
               <div class="mock-pop">
@@ -265,7 +273,7 @@
         </div>
         <div class="demo-frame" id="demo-frame">
           <div class="demo-placeholder" id="demo-placeholder">
-            <img src="/a/89/brand/symbol-simple.svg" alt="" width="40" height="40" />
+            <img src="/a/90/brand/symbol-simple.svg" alt="" width="40" height="40" />
             <p data-i18n="lp.demo.soon">The sample demo is coming soon. Meanwhile, create yours in minutes.</p>
             <a class="btn btn-primary" href="/editor" data-i18n="lp.hero.ctaPrimary">Create my free demo</a>
           </div>
@@ -466,11 +474,11 @@
         <div class="faq-list">
           <details>
             <summary data-i18n="lp.faq.q1">Where does my data live?</summary>
-            <p data-i18n="lp.faq.a1">On the Free plan, projects are stored locally in your browser and are never sent to our servers. Published tours remain active for 7 days via temporary links, then are deleted. On Pro, projects, permanent links and leads live on the GuiaFlow server, tied to your account.</p>
+            <p data-i18n="lp.faq.a1">On the Free plan, projects are stored locally in your browser and are never sent to our servers unless you publish a temporary link. Published tours remain active for 7 days via temporary links, then are deleted. On Pro, projects, permanent links and leads live on the GuiaFlow server, tied to your account.</p>
           </details>
           <details>
             <summary data-i18n="lp.faq.q2">Does GuiaFlow comply with the LGPD (Brazil's data protection law)?</summary>
-            <p data-i18n-html="lp.faq.a2">Yes. We keep the minimum needed for the account and links, use no advertising trackers and never sell data. Lead capture asks the visitor for explicit consent. Details are in the <a href="/en/privacy">Privacy Policy</a>.</p>
+            <p data-i18n-html="lp.faq.a2">We follow the LGPD: we keep the minimum needed for the account and links, use no advertising trackers and never sell data. Lead capture asks the visitor for explicit consent. Details are in the <a href="/en/privacy">Privacy Policy</a>.</p>
           </details>
           <details>
             <summary data-i18n="lp.faq.q3">Is GuiaFlow open source?</summary>
@@ -483,6 +491,10 @@
           <details>
             <summary data-i18n="lp.faq.q5">Does the person receiving the demo need to install anything?</summary>
             <p data-i18n="lp.faq.a5">No. The demo opens in the browser, on mobile or desktop, from the link or from your site. Only the person creating the demo needs the Chrome extension.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q6">Is GuiaFlow GDPR-compliant?</summary>
+            <p data-i18n-html="lp.faq.a6">GuiaFlow is built to be privacy-friendly, but we don't claim any GDPR certification (there isn't an official one). On the Free plan, projects stay in your browser and aren't sent to us unless you publish a temporary link, which is deleted after 7 days. Tour analytics use no cookies and don't store IP addresses, and they respect Do Not Track and Global Privacy Control. Lead capture records the visitor's explicit consent. We're based in Brazil and operate under Brazil's LGPD. Some providers are in the United States (see our <a href="/en/privacy">Privacy Policy</a> for the full list). If you collect leads from people in the EU, you are the controller of that data; contact contato@guiaflow.pro with questions about using GuiaFlow under the GDPR.</p>
           </details>
         </div>
       </div>
@@ -498,7 +510,7 @@
 
   <footer class="site-footer">
     <div class="wrap footer-row">
-      <img src="/a/89/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
+      <img src="/a/90/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
       <nav aria-label="Footer links" data-i18n-aria="lp.footer.aria">
         <a href="/editor" data-i18n="lp.footer.editor">Editor</a>
         <a href="/en/help" data-i18n="lp.footer.help">Help</a>
@@ -520,6 +532,6 @@
     </div>
     <p class="wrap copy">© 2026 GuiaFlow</p>
   </footer>
-  <script type="module" src="/a/89/js/landing.js"></script>
+  <script type="module" src="/a/90/js/landing.js"></script>
 </body>
 </html>
