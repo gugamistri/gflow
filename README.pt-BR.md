@@ -16,6 +16,8 @@ Editor e player de tours com capturas de tela, destaque, clique simulado e narra
 
 A interface está em português, espanhol e inglês. O idioma segue o do navegador; se não for um desses três, cai em inglês. No editor, o seletor fica na barra superior (PT, ES, EN). Na extensão, o mesmo seletor fica no popup e vale também para a barra de captura na página.
 
+**IA com a sua própria chave (BYOK).** O editor gratuito e open source aceita BYOK (traga sua própria chave de IA) para o texto dos passos e a narração: texto via OpenRouter, OpenAI ou qualquer endpoint compatível com OpenAI (URL base personalizada), e narração via Cartesia. As chaves ficam só no seu navegador (IndexedDB) e as chamadas vão direto do navegador ao provedor.
+
 ## GuiaFlow Pro
 
 **GuiaFlow Pro** é o plano pago opcional: links permanentes, texto e narração (TTS) com IA hospedada, analytics, captura de leads, vídeo sem marca d'água e servidor MCP em `https://app.guiaflow.pro/mcp`. Planos em [guiaflow.pro](https://guiaflow.pro).
