@@ -12,8 +12,8 @@ test("privacidade e termos usam o mesmo i18n da /ajuda", () => {
     assert.match(html, /localStorage\.getItem\("ns-locale"\)/, file);
     assert.match(html, /<select id="locale-select"[^>]*>/, file);
     for (const loc of SUPPORTED_LOCALES) assert.match(html, new RegExp(`<option value="${loc}">`), file);
-    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/89\/js\/i18n\.js"/, file);
-    assert.match(html, /import "\.\/a\/89\/js\/legal-i18n\.js"/, file);
+    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/90\/js\/i18n\.js"/, file);
+    assert.match(html, /import "\.\/a\/90\/js\/legal-i18n\.js"/, file);
     const keys = [...html.matchAll(/data-i18n(?:-html|-aria)?="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(keys.length > 40, file);
     for (const key of keys) {
@@ -34,11 +34,11 @@ test("textos legais existem nas três línguas, com os mesmos links e sem 'nuvem
       assert.deepEqual(tags(value), tags(legalCatalogs.pt[key]), `${loc} ${key}`);
     }
   }
-  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: October 12, 2026");
-  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 12 de octubre de 2026");
+  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: October 13, 2026");
+  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 13 de octubre de 2026");
   assert.equal(legalCatalogs.en["terms.updated"], "Last updated: October 11, 2026");
   assert.equal(legalCatalogs.es["terms.updated"], "Última actualización: 11 de octubre de 2026");
-  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 12 de outubro de 2026");
+  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 13 de outubro de 2026");
 });
 
 test("o aviso do Pro não diz mais que os termos estão só em português", () => {
