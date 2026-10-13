@@ -32,7 +32,13 @@ import {
   readPropsPanelOpen,
   writePropsPanelOpen,
 } from "./editorLayout.js";
-import { isPlausibleApiKey, defaultVoiceURI } from "./cartesia.js";
+import {
+  isPlausibleApiKey,
+  defaultVoiceURI,
+  narrationLanguage,
+  voicesForLanguage,
+  voiceForLanguage,
+} from "./cartesia.js";
 import { cartesiaKeyStatus, deleteCartesiaKey, putCartesiaKey } from "./cartesia-store.js";
 import {
   buildChatMessages,
@@ -58,6 +64,8 @@ import {
   CAPTION_PLAYBACK_RATES,
   DEFAULT_HOLD_SECONDS,
   NARRATION_VOICES,
+  narrationVoiceId,
+  narrationLanguageOf,
   ensureNarration,
   ensurePlayback,
   formatHoldClock,
@@ -299,6 +307,7 @@ export function createEditor(ctx) {
     propsPanel: document.getElementById("props-panel"),
     narrationEnabled: document.getElementById("narration-enabled"),
     narrationVoice: document.getElementById("narration-voice"),
+    narrationVoiceId: document.getElementById("narration-voice-id"),
     narrationRate: document.getElementById("narration-rate"),
     narrationRateLabel: document.getElementById("narration-rate-label"),
     playbackDefaultHold: document.getElementById("playback-default-hold"),
@@ -1184,6 +1193,7 @@ export function createEditor(ctx) {
       els.playbackDefaultHold.value = String(demo.playback.defaultHoldSeconds || DEFAULT_HOLD_SECONDS);
     }
     fillVoiceSelect(demo.narration.voiceURI);
+    fillVoiceIdSelect(demo);
     const bg = demo.narration.background;
     if (els.narrationBgName) {
       els.narrationBgName.textContent = bg?.name || t("narration.noFile");
@@ -1207,6 +1217,29 @@ export function createEditor(ctx) {
     } else {
       els.narrationVoice.value = defaultVoiceURI();
     }
+  }
+
+  /** why: o seletor de voz só mostra vozes nativas do idioma da narração. */
+  function fillVoiceIdSelect(demo) {
+    const select = els.narrationVoiceId;
+    if (!select) return;
+    const lang = narrationLanguage(els.narrationVoice?.value || demo.narration.voiceURI);
+    const chosen = voiceForLanguage(lang, demo.narration.voices?.[lang]);
+    select.innerHTML = "";
+    select.dataset.language = lang;
+    voicesForLanguage(lang).forEach((voice, i) => {
+      const opt = document.createElement("option");
+      opt.value = voice.id;
+      opt.textContent = i === 0 ? `${voice.name} · ${t("narration.voiceDefault")}` : voice.name;
+      select.appendChild(opt);
+    });
+    if (![...select.options].some((o) => o.value === chosen)) {
+      const opt = document.createElement("option");
+      opt.value = chosen;
+      opt.textContent = chosen.slice(0, 8);
+      select.appendChild(opt);
+    }
+    select.value = chosen;
   }
 
   function editingCanvas() {
@@ -2180,6 +2213,14 @@ export function createEditor(ctx) {
     ensureNarration(demo);
     demo.narration.enabled = els.narrationEnabled?.checked !== false;
     demo.narration.voiceURI = els.narrationVoice?.value || "";
+    const lang = narrationLanguage(demo.narration.voiceURI);
+    if (els.narrationVoiceId) {
+      if (els.narrationVoiceId.dataset.language === lang && els.narrationVoiceId.value) {
+        demo.narration.voices = { ...(demo.narration.voices || {}), [lang]: els.narrationVoiceId.value };
+      } else {
+        fillVoiceIdSelect(demo);
+      }
+    }
     const rate = Number(els.narrationRate?.value);
     demo.narration.rate = Number.isFinite(rate) ? Math.min(1.4, Math.max(0.7, rate)) : 1;
     if (els.narrationRateLabel) {
@@ -4006,11 +4047,13 @@ export function createEditor(ctx) {
           if (ownTts) {
             clips = await generateNarrationClips(text, {
               voiceURI: demo.narration.voiceURI,
+              voiceId: narrationVoiceId(demo),
               rate: demo.narration.rate,
             });
           } else {
             const hosted = await synthesizeHostedSpeech(text, {
-              voice: demo.narration.voiceURI,
+              voice: narrationVoiceId(demo),
+              language: narrationLanguageOf(demo),
             });
             if (!hosted.ok) {
               if (presentHostedFailure?.(hosted, "tts")) {
@@ -4029,6 +4072,8 @@ export function createEditor(ctx) {
             source: "tts",
             caption: text,
             voiceURI: demo.narration.voiceURI || "",
+            voiceId: narrationVoiceId(demo),
+            language: narrationLanguageOf(demo),
             rate: demo.narration.rate ?? 1,
             playbackRate,
             durationSeconds: durations.reduce((sum, n) => sum + n, 0),
@@ -4244,6 +4289,7 @@ export function createEditor(ctx) {
     [
       els.narrationEnabled,
       els.narrationVoice,
+      els.narrationVoiceId,
       els.narrationRate,
       els.playbackDefaultHold,
     ].forEach((el) => {
