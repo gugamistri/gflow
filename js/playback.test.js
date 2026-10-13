@@ -237,3 +237,20 @@ test("enterStep não reproduz áudio quando narration.enabled é false", async (
   assert.equal(captionEl.textContent, "Olá");
   assert.equal(captionEl.hidden, false);
 });
+
+test("voz da narração segue o idioma e invalida áudio gerado com outra voz", async () => {
+  const { narrationVoiceId, narrationLanguageOf } = await import("./playback.js");
+  const demo = { narration: { voiceURI: "en-US", voices: { pt: "c9611be8-aae9-4a93-bb1c-98dd6b7d52a4" }, rate: 1 } };
+  ensureNarration(demo);
+  assert.equal(narrationLanguageOf(demo), "en");
+  assert.equal(narrationVoiceId(demo), "a33f7a4c-100f-41cf-a1fd-5822e8fc253f");
+  demo.narration.voices.en = "79f8b5fb-2cc8-479a-80df-29f7a7cf1a3e";
+  assert.equal(narrationVoiceId(demo), "79f8b5fb-2cc8-479a-80df-29f7a7cf1a3e");
+  const step = {
+    caption: "Hi",
+    narrationAudio: { source: "tts", caption: "Hi", voiceURI: "en-US", voiceId: "a33f7a4c-100f-41cf-a1fd-5822e8fc253f", rate: 1, clips: ["data:audio/mpeg;base64,YQ=="] },
+  };
+  assert.deepEqual(savedNarrationClips(step, demo), []);
+  step.narrationAudio.voiceId = "79f8b5fb-2cc8-479a-80df-29f7a7cf1a3e";
+  assert.equal(savedNarrationClips(step, demo).length, 1);
+});

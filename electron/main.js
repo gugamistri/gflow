@@ -387,7 +387,12 @@ function registerIpc() {
     }
     const spoken = await synthesize({
       apiKey,
-      body: ttsRequest({ text, voiceURI: payload?.voiceURI, rate: payload?.rate }),
+      body: ttsRequest({
+        text,
+        voiceURI: payload?.voiceURI,
+        voiceId: payload?.voiceId,
+        rate: payload?.rate,
+      }),
       redact: redactSecret,
     });
     if (!spoken.ok) return { ok: false, error: spoken.error || "A síntese falhou." };

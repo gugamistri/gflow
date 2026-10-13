@@ -6,19 +6,56 @@ import { t, getLocale } from "./i18n.js";
 
 export const CARTESIA_VERSION = "2026-08-14";
 export const CARTESIA_MODEL = "sonic-3.6";
-/** Voz multilíngue Katie — o locale do pedido define o idioma/sotaque. */
+/** Voz antiga (Skylar, multilíngue americana): fallback quando o idioma não tem catálogo. */
 export const CARTESIA_VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4";
 
+/** Idioma da narração (locale da Sonic). O id é o voiceURI salvo no projeto (compatível). */
 export const CARTESIA_VOICES = [
-  { id: "pt-BR", labelKey: "cartesia.voice.pt-BR", locale: "pt-BR" },
-  { id: "pt-PT", labelKey: "cartesia.voice.pt-PT", locale: "pt-PT" },
-  { id: "es-ES", labelKey: "cartesia.voice.es-ES", locale: "es-ES" },
-  { id: "es-MX", labelKey: "cartesia.voice.es-MX", locale: "es-MX" },
-  { id: "en-US", labelKey: "cartesia.voice.en-US", locale: "en-US" },
-  { id: "en-GB", labelKey: "cartesia.voice.en-GB", locale: "en-GB" },
+  { id: "pt-BR", labelKey: "cartesia.voice.pt-BR", locale: "pt-BR", language: "pt" },
+  { id: "pt-PT", labelKey: "cartesia.voice.pt-PT", locale: "pt-PT", language: "pt" },
+  { id: "es-ES", labelKey: "cartesia.voice.es-ES", locale: "es-ES", language: "es" },
+  { id: "es-MX", labelKey: "cartesia.voice.es-MX", locale: "es-MX", language: "es" },
+  { id: "en-US", labelKey: "cartesia.voice.en-US", locale: "en-US", language: "en" },
+  { id: "en-GB", labelKey: "cartesia.voice.en-GB", locale: "en-GB", language: "en" },
 ];
 
+/**
+ * Vozes nativas por idioma (catálogo da Cartesia, /voices?language=…). O primeiro item é o padrão.
+ * why: uma voz multilíngue fala outro idioma com sotaque; cada idioma precisa de voz nativa.
+ */
+export const CARTESIA_VOICE_CATALOG = {
+  pt: [
+    { id: "c9611be8-aae9-4a93-bb1c-98dd6b7d52a4", name: "Isabella", gender: "f" },
+    { id: "6a360542-a117-4ed5-9e09-e8bf9b05eabb", name: "Tiago", gender: "m" },
+    { id: "cb2694c3-715f-4da9-99f3-1c974fff2928", name: "Eloá", gender: "f" },
+    { id: "616c64d7-f541-436b-9b8d-e79cfbe19ef9", name: "Felipe", gender: "m" },
+    { id: "d4b44b9a-82bc-4b65-b456-763fce4c52f9", name: "Beatriz", gender: "f" },
+    { id: "28a942b5-74f3-47bb-9b56-4c3f2562d3ba", name: "Gustavo", gender: "m" },
+  ],
+  en: [
+    { id: "a33f7a4c-100f-41cf-a1fd-5822e8fc253f", name: "Lauren", gender: "f" },
+    { id: "79f8b5fb-2cc8-479a-80df-29f7a7cf1a3e", name: "Theo", gender: "m" },
+    { id: "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4", name: "Skylar", gender: "f" },
+    { id: "0ee8beaa-db49-4024-940d-c7ea09b590b3", name: "Morgan", gender: "f" },
+    { id: "a5136bf9-224c-4d76-b823-52bd5efcffcc", name: "Jameson", gender: "m" },
+    { id: "62ae83ad-4f6a-430b-af41-a9bede9286ca", name: "Gemma (UK)", gender: "f" },
+  ],
+  es: [
+    { id: "3597a26f-80ef-4bd5-8101-9699bc764917", name: "Ximena", gender: "f" },
+    { id: "2fc4f1ec-bfd0-46f1-8e6d-d4279eaaf838", name: "Mateo", gender: "m" },
+    { id: "b4b8e2af-6139-466e-a93a-30c20d2e1fc5", name: "Fernanda", gender: "f" },
+    { id: "de38f545-c574-44e8-9b54-a7d6fec1c6b1", name: "Marta (ES)", gender: "f" },
+    { id: "b5aa8098-49ef-475d-89b0-c9262ecf33fd", name: "Luis (ES)", gender: "m" },
+    { id: "bef24f4f-adc9-4cef-acbf-cc1ceb98224b", name: "Santiago", gender: "m" },
+  ],
+};
+
+export const DEFAULT_VOICE_BY_LANGUAGE = Object.fromEntries(
+  Object.entries(CARTESIA_VOICE_CATALOG).map(([lang, list]) => [lang, list[0].id])
+);
+
 const API_KEY = /^sk_car_[A-Za-z0-9_-]{12,180}$/;
+const VOICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LOCALES = new Set(CARTESIA_VOICES.map((voice) => voice.locale));
 
 /** Voz padrão alinhada ao idioma da interface (pt / es / en). */
@@ -28,11 +65,54 @@ export function defaultVoiceURI(uiLocale = getLocale()) {
   return "pt-BR";
 }
 
-export function resolveNarration(voiceURI) {
+export function isVoiceId(value) {
+  return VOICE_ID.test(String(value || "").trim());
+}
+
+/** Idioma base (pt / en / es) do voiceURI/locale da narração. */
+export function narrationLanguage(voiceURI) {
+  const raw = String(voiceURI || "");
+  const match = CARTESIA_VOICES.find((voice) => voice.id === raw || voice.locale === raw);
+  if (match) return match.language;
+  const base = raw.slice(0, 2).toLowerCase();
+  return CARTESIA_VOICE_CATALOG[base] ? base : "pt";
+}
+
+export function voicesForLanguage(language) {
+  return CARTESIA_VOICE_CATALOG[language] || [];
+}
+
+/** Idioma ao qual uma voz do catálogo pertence (ou "" se não é do catálogo). */
+export function voiceLanguage(voiceId) {
+  const id = String(voiceId || "").trim();
+  for (const [lang, list] of Object.entries(CARTESIA_VOICE_CATALOG)) {
+    if (list.some((voice) => voice.id === id)) return lang;
+  }
+  return "";
+}
+
+/**
+ * Voz efetiva para o idioma: a escolhida (se for desse idioma) ou a padrão nativa.
+ * why: uma voz salva para pt não pode vazar para um tour em inglês.
+ */
+export function voiceForLanguage(language, chosen) {
+  const id = String(chosen || "").trim();
+  if (isVoiceId(id)) {
+    const owner = voiceLanguage(id);
+    if (!owner || owner === language) return id;
+  }
+  return DEFAULT_VOICE_BY_LANGUAGE[language] || CARTESIA_VOICE_ID;
+}
+
+export function resolveNarration(voiceURI, voiceId = "") {
   const id = String(voiceURI || "");
   const match = CARTESIA_VOICES.find((voice) => voice.id === id || voice.locale === id);
   const voice = match || CARTESIA_VOICES[0];
-  return { locale: voice.locale, voiceId: voice.voiceId || CARTESIA_VOICE_ID };
+  return {
+    locale: voice.locale,
+    language: voice.language,
+    voiceId: voiceForLanguage(voice.language, voiceId),
+  };
 }
 
 /** Locale BCP-47 para fallback (Google TTS / speechSynthesis). */
@@ -75,8 +155,8 @@ export function speechSpeed(rate) {
   return Math.min(1.5, Math.max(0.6, Math.round(speed * 20) / 20));
 }
 
-export function ttsRequest({ text, voiceURI, rate } = {}) {
-  const narration = resolveNarration(voiceURI);
+export function ttsRequest({ text, voiceURI, voiceId, rate } = {}) {
+  const narration = resolveNarration(voiceURI, voiceId);
   if (!LOCALES.has(narration.locale)) {
     throw new Error(t("cartesia.badLocale"));
   }
@@ -84,7 +164,8 @@ export function ttsRequest({ text, voiceURI, rate } = {}) {
     model_id: CARTESIA_MODEL,
     transcript: String(text || "").trim(),
     voice: { id: narration.voiceId },
-    locale: narration.locale,
+    // why: language define a pronúncia (a Cartesia não aceita language e locale juntos)
+    language: narration.language,
     // why: voz não precisa de 128 kbps; 64 kbps corta a narração pela metade e segue MP3 (toca no iOS)
     output_format: { container: "mp3", sample_rate: 44100, bit_rate: 64000 },
     generation_config: { speed: speechSpeed(rate) },
@@ -111,9 +192,9 @@ function clip(text) {
   return raw.length > 180 ? `${raw.slice(0, 179)}…` : raw;
 }
 
-export async function synthesizeCartesia({ apiKey, text, voiceURI, rate, fetchImpl = fetch } = {}) {
+export async function synthesizeCartesia({ apiKey, text, voiceURI, voiceId, rate, fetchImpl = fetch } = {}) {
   const key = String(apiKey || "");
-  const body = ttsRequest({ text, voiceURI, rate });
+  const body = ttsRequest({ text, voiceURI, voiceId, rate });
   if (!body.transcript) return { ok: false, error: t("cartesia.noText") };
   let response;
   try {
