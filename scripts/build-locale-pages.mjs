@@ -35,12 +35,10 @@ export const PAGES = [
     lastmod: "2026-10-12",
     meta: {
       en: {
-        description: "Turn screenshots of your product into an interactive, narrated demo in minutes. Send the link to a lead, put it on your site or in your pitch. Free in the browser.",
-        ogDescription: "Turn screenshots of your product into an interactive, narrated demo in minutes. Send the link to a lead, put it on your site or in your pitch.",
+        description: "Free interactive demo maker, open source (MIT): turn screenshots of your product into an interactive, narrated product tour in minutes. Free in the browser.",
       },
       es: {
-        description: "Convierte capturas de tu producto en un demo interactivo y narrado en minutos. Envía el enlace al lead, ponlo en tu sitio o en tu pitch. Gratis en el navegador.",
-        ogDescription: "Convierte capturas de tu producto en un demo interactivo y narrado en minutos. Envía el enlace al lead, ponlo en tu sitio o en tu pitch.",
+        description: "Crea gratis un demo interactivo de tu producto: tour interactivo y narrado a partir de capturas, gratis en el navegador y open source (código abierto, MIT).",
       },
     },
     heroOg: true,
@@ -222,6 +220,69 @@ function withPrices(html, loc) {
   return html;
 }
 
+const LD_TEXT = {
+  pt: { free: "Grátis", month: "GuiaFlow Pro (mensal)", year: "GuiaFlow Pro (anual)" },
+  en: { free: "Free", month: "GuiaFlow Pro (monthly)", year: "GuiaFlow Pro (yearly)" },
+  es: { free: "Gratis", month: "GuiaFlow Pro (mensual)", year: "GuiaFlow Pro (anual)" },
+};
+const plain = (v) => unesc(String(v).replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+
+/** Perguntas/respostas do FAQ que já estão no HTML (lp.faq.qN / lp.faq.aN). */
+export function faqFromHtml(html) {
+  const items = [];
+  for (let n = 1; n < 50; n += 1) {
+    const q = html.match(new RegExp(`<summary[^>]*data-i18n="lp\\.faq\\.q${n}"[^>]*>([\\s\\S]*?)</summary>`));
+    const a = html.match(new RegExp(`<p[^>]*data-i18n(?:-html)?="lp\\.faq\\.a${n}"[^>]*>([\\s\\S]*?)</p>`));
+    if (!q || !a) break;
+    items.push({ q: plain(q[1]), a: plain(a[1]) });
+  }
+  return items;
+}
+
+/** JSON-LD da landing: Organization, WebSite, SoftwareApplication (preços na moeda do idioma) e FAQPage. */
+function withLandingJsonLd(html, page, loc) {
+  const url = absUrl(localePath(page, loc));
+  const currency = paywallCurrency(loc);
+  const offer = paywallOffer(currency);
+  const cur = currency.toUpperCase();
+  const t = LD_TEXT[loc];
+  const desc = readMeta(html, "name", "description");
+  const org = { "@type": "Organization", "@id": `${ORIGIN}/#organization`, name: "GuiaFlow", url: `${ORIGIN}/`, logo: `${ORIGIN}/brand/app-icon-512.png`, email: "contato@guiaflow.pro", sameAs: ["https://github.com/gugamistri/gflow"] };
+  const site = { "@type": "WebSite", "@id": `${ORIGIN}/#website`, name: "GuiaFlow", url: `${ORIGIN}/`, inLanguage: ["pt-BR", "en", "es"], publisher: { "@id": `${ORIGIN}/#organization` } };
+  const app = {
+    "@type": "SoftwareApplication",
+    name: "GuiaFlow",
+    url,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web, Chrome",
+    description: desc,
+    inLanguage: HREFLANG[loc],
+    isAccessibleForFree: true,
+    license: "https://opensource.org/licenses/MIT",
+    publisher: { "@id": `${ORIGIN}/#organization` },
+    offers: [
+      { "@type": "Offer", name: t.free, price: "0", priceCurrency: cur },
+      { "@type": "Offer", name: t.month, price: String(offer.month), priceCurrency: cur },
+      { "@type": "Offer", name: t.year, price: String(offer.year), priceCurrency: cur },
+    ],
+  };
+  const graph = [org, site, app];
+  const faq = faqFromHtml(html);
+  if (faq.length) {
+    graph.push({
+      "@type": "FAQPage",
+      "@id": `${url}#faq`,
+      inLanguage: HREFLANG[loc],
+      mainEntity: faq.map(({ q, a }) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+    });
+  }
+  const json = JSON.stringify({ "@context": "https://schema.org", "@graph": graph }, null, 2).replace(/</g, "\\u003c").replace(/\n/g, "\n  ");
+  const block = `<script type="application/ld+json">\n  ${json}\n  </script>`;
+  const re = /<script type="application\/ld\+json">[\s\S]*?<\/script>/;
+  if (!re.test(html)) throw new Error(`${page.src}: sem JSON-LD`);
+  return html.replace(re, () => block);
+}
+
 /** Página PT → variante en/es. */
 export function renderLocale(srcHtml, page, loc) {
   let html = srcHtml;
@@ -251,11 +312,9 @@ export function renderLocale(srcHtml, page, loc) {
   let ogTitle = title;
   let ogAlt = IMG_ALT[loc];
   if (page.heroOg) {
+    // og/twitter:title = <title> (com "grátis"/"open source"); o alt continua descrevendo a imagem pelo H1
     const hero = String(lookup(loc, "lp.hero.title") || "").replace(/<[^>]+>/g, "").trim().replace(/\.$/, "");
-    if (hero) {
-      ogTitle = `${hero} — GuiaFlow`;
-      ogAlt = `GuiaFlow — ${hero}.`;
-    }
+    if (hero) ogAlt = `GuiaFlow — ${hero}.`;
   }
   html = replaceMeta(html, "property", "og:title", ogTitle);
   html = replaceMeta(html, "name", "twitter:title", ogTitle);
@@ -267,7 +326,8 @@ export function renderLocale(srcHtml, page, loc) {
   html = replaceMeta(html, "property", "og:url", absUrl(localePath(page, loc)));
   if (readMeta(html, "property", "og:locale") != null) html = replaceMeta(html, "property", "og:locale", OG_LOCALE[loc]);
   else html = html.replace(/(<meta property="og:site_name"[^>]*>)/, `$1\n  <meta property="og:locale" content="${OG_LOCALE[loc]}" />`);
-  html = html.replace(/("url":\s*")https:\/\/guiaflow\.pro[^"]*(")/, `$1${absUrl(localePath(page, loc))}$2`);
+  if (page.heroOg) html = withLandingJsonLd(html, page, loc);
+  else html = html.replace(/("url":\s*")https:\/\/guiaflow\.pro[^"]*(")/, `$1${absUrl(localePath(page, loc))}$2`);
 
   html = withHtmlAttrs(html, page, loc);
   html = withAlternates(html, page, loc);
@@ -280,6 +340,7 @@ export function renderPortuguese(srcHtml, page) {
   if (readMeta(html, "property", "og:locale") == null) {
     html = html.replace(/(<meta property="og:site_name"[^>]*>)/, `$1\n  <meta property="og:locale" content="pt_BR" />`);
   }
+  if (page.heroOg) html = withLandingJsonLd(html, page, "pt");
   return withAlternates(withHtmlAttrs(html, page, "pt"), page, "pt");
 }
 

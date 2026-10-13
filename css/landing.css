@@ -265,7 +265,8 @@ h3 {
     padding: 88px 0 104px;
   }
   .hero-grid {
-    grid-template-columns: 1.05fr 1fr;
+    /* why (CLS): minmax(0, …) fixa as colunas; sem isso a troca da fonte reflui o texto e desloca a .hero-art */
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
     gap: 56px;
   }
 }
