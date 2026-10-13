@@ -2,12 +2,12 @@
 
 **English** | [Português](README.pt-BR.md)
 
-[![smithery badge](https://smithery.ai/badge/gmistrinelli/guiaflow)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+[![smithery badge](https://img.shields.io/badge/Smithery-guiaflow-FF5601)](https://smithery.ai/servers/gmistrinelli/guiaflow)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Free, open-source interactive product demo & guided tour builder — alternative to Arcade, Supademo, Storylane.**
 
-Try it at **[guiaflow.pro](https://guiaflow.pro)** · Editor: [guiaflow.pro/editor](https://guiaflow.pro/editor) · Integrations: [guiaflow.pro/integracoes](https://guiaflow.pro/integracoes)
+Try it at **[guiaflow.pro](https://guiaflow.pro/en)** · Editor: [guiaflow.pro/editor](https://guiaflow.pro/editor) · Integrations: [guiaflow.pro/en/integrations](https://guiaflow.pro/en/integrations)
 
 ![GuiaFlow editor](docs/editor.png)
 
@@ -38,7 +38,7 @@ GuiaFlow is an editor and player for click-through product tours built from scre
 - **No watermark** on exported video
 - **MCP server** at `https://app.guiaflow.pro/mcp` — let AI agents create and publish tours
 
-See [guiaflow.pro](https://guiaflow.pro) for plans and [`docs/CLOUD.md`](docs/CLOUD.md) for how the open editor talks to the hosted service.
+See [guiaflow.pro](https://guiaflow.pro/en) for plans and [`docs/CLOUD.md`](docs/CLOUD.md) for how the open editor talks to the hosted service.
 
 ## Getting started in the browser
 
@@ -96,8 +96,8 @@ The editor and player in this repository remain MIT and free. AI and narration w
 
 ## Links
 
-- Website: [https://guiaflow.pro](https://guiaflow.pro)
-- Integrations (MCP, API, embeds): [https://guiaflow.pro/integracoes](https://guiaflow.pro/integracoes)
+- Website: [https://guiaflow.pro/en](https://guiaflow.pro/en)
+- Integrations (MCP, API, embeds): [https://guiaflow.pro/en/integrations](https://guiaflow.pro/en/integrations)
 - MCP server: `https://app.guiaflow.pro/mcp` · [Smithery](https://smithery.ai/servers/gmistrinelli/guiaflow)
 - Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd)
 
