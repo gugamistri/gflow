@@ -48,7 +48,7 @@ export function embedRatio(width, height) {
 }
 
 /** URL do player no modo incorporado: mantém a query existente e liga embed (e autoplay). */
-export function embedPlayerUrl(url, { autoplay = false } = {}) {
+export function embedPlayerUrl(url, { autoplay = false, lang = "" } = {}) {
   const raw = String(url || "").trim();
   if (!raw) return "";
   let parsed;
@@ -62,6 +62,9 @@ export function embedPlayerUrl(url, { autoplay = false } = {}) {
   parsed.searchParams.delete("autoplay");
   parsed.searchParams.set("embed", "1");
   if (autoplay) parsed.searchParams.set("autoplay", "1");
+  // why: idioma inicial do embed (PRD multi-idioma RF22); só tags BCP-47 simples
+  parsed.searchParams.delete("lang");
+  if (/^[a-z]{2,3}(-[A-Z]{2})?$/.test(String(lang || ""))) parsed.searchParams.set("lang", lang);
   parsed.hash = "";
   return parsed.toString();
 }
@@ -75,8 +78,8 @@ export function normalizeEmbedFlavor(flavor) {
  * Snippet responsivo: caixa com aspect-ratio + iframe absoluto.
  * min-height evita um tour minúsculo em colunas estreitas (celular).
  */
-export function buildEmbedSnippet({ url, title = "", ratio = DEFAULT_EMBED_RATIO, autoplay = false, flavor = "html", label = "Tour interativo" } = {}) {
-  const src = embedPlayerUrl(url, { autoplay });
+export function buildEmbedSnippet({ url, title = "", ratio = DEFAULT_EMBED_RATIO, autoplay = false, flavor = "html", label = "Tour interativo", lang = "" } = {}) {
+  const src = embedPlayerUrl(url, { autoplay, lang });
   if (!src) return "";
   // why: Notion/Medium não aceitam iframe colado; usam o link /p puro e descobrem o player via oEmbed
   if (isLinkEmbedFlavor(flavor)) {
