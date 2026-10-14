@@ -152,6 +152,7 @@ export function createLeadsDialog({ getSlug, toast }) {
       consent: t("leads.col.consent"),
       consentAt: t("leads.col.consentAt"),
       consentText: t("leads.col.consentText"),
+      lang: t("leads.col.lang"),
       yes: t("leads.yes"),
       no: t("leads.no"),
       source_start: t("leads.sourceStart"),

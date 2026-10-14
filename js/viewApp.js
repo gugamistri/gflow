@@ -356,7 +356,7 @@ function endCard() {
           consentText: step.contact.consentText,
           phoneCountry: leadPhoneCountry(),
           prefill: fixedState.lead || {},
-          onSubmit: (value) => postShare("contact", value),
+          onSubmit: (value) => postShare("contact", langState ? { ...value, lang: langState.text } : value),
           onCancel: () => showFixedCard(endCard()),
         })
       );
@@ -395,6 +395,7 @@ function startTracking(route) {
     source: trafficSource(document.referrer, location.search, location.origin),
     device: deviceKind({ coarse, width: window.innerWidth || 0 }),
     locale: shortLocale(document.documentElement.lang || nav.language),
+    langs: langState,
   });
   document.addEventListener("visibilitychange", () => t.visibility(document.visibilityState === "hidden"));
   window.addEventListener("pagehide", () => t.pagehide());
@@ -417,7 +418,8 @@ function showStartStep(next) {
   const card = renderStartCard(demo.startStep, {
     phoneCountry: leadPhoneCountry(),
     onSubmit: async (value) => {
-      const res = await postShare("leads", value);
+      // RF30: o servidor grava o consentimento no idioma que o visitante viu
+      const res = await postShare("leads", langState ? { ...value, lang: langState.text } : value);
       if (res.ok) {
         // why: o id do lead só existe com consentimento (obrigatório no envio) — o analytics pode usá-lo
         const lead = { leadId: String(res.data?.leadId || ""), name: value.name || "", email: value.email || "", phone: value.phone || "" };

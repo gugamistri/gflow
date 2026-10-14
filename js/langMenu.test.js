@@ -31,3 +31,11 @@ test("URL beats session beats browser; disabled lang ignored", () => {
   assert.deepEqual(resolvePlayerLangs(demo(), { search: "?lang=en&audio=none&cc=0" }), { text: "en", audio: "none", cc: false });
   assert.equal(resolvePlayerLangs(demo(), { search: "?lang=en&audio=pt" }).audio, "pt-BR");
 });
+
+test("no source audio: audio is off instead of another language (Q1)", () => {
+  const d = demo();
+  for (const s of d.steps) delete s.narrationAudio;
+  d.steps[1].i18n = { es: { narrationAudio: { clips: ["asset:9"] } } };
+  const st = resolvePlayerLangs(d, { languages: ["pt-BR"] });
+  assert.equal(st.audio === "es", false);
+});

@@ -134,12 +134,24 @@ export function defaultSender(endpoint) {
  * Tracker de uma carga de página. Recebe os ganchos do player (onStep/onComplete/onExit)
  * e os do passo final (CTA). `now` é monotônico (performance.now).
  */
+const LANG_RE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$/;
+/** { text, audio, cc } do menu de idiomas → campos do evento (nada se o tour não tem idiomas). */
+export function langFields(state) {
+  if (!state || typeof state !== "object") return {};
+  const out = {};
+  if (LANG_RE.test(String(state.text || ""))) out.textLang = state.text;
+  if (state.audio === "none" || LANG_RE.test(String(state.audio || ""))) out.audioLang = state.audio;
+  if (typeof state.cc === "boolean") out.cc = state.cc;
+  return out;
+}
+
 export function createViewTracker({
   send,
   embed = false,
   source = {},
   device = null,
   locale = null,
+  langs = null,
   now = () => (typeof performance !== "undefined" ? performance.now() : Date.now()),
   uuid = () => uuidV4(),
   setTimer = (fn, ms) => setInterval(fn, ms),
@@ -202,6 +214,7 @@ export function createViewTracker({
     utm_campaign: source.utm_campaign || null,
     device,
     locale,
+    ...langFields(langs),
   });
 
   return {
@@ -237,6 +250,12 @@ export function createViewTracker({
     ctaClick({ slot = "primary", type = "url" } = {}) {
       push({ name: "cta_click", slot, type });
       flush({ beacon: true });
+    },
+    /** Visitante trocou idioma de texto/áudio/legenda no menu 🌐 (RF28). */
+    langChange(next) {
+      const f = langFields(next);
+      if (!f.textLang && !f.audioLang) return;
+      push({ name: "lang_change", ...f });
     },
     /** Só chamar com o leadId de quem marcou o consentimento no passo inicial. */
     lead(leadId) {
