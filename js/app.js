@@ -9,6 +9,7 @@ import {
   resolveImageSrc,
   createStepId,
   clampStepClickPoints,
+  slugifyFilename,
 } from "./store.js";
 import {
   ensureMigrated,
@@ -61,7 +62,8 @@ import { isTypingTarget } from "./canvasEdit.js";
 import { createPlayer } from "./player.js";
 import { themeContrastIssues } from "./a11y.js";
 import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
-import { ensureNarration, ensurePlayback } from "./playback.js";
+import { buildVtt, exportLangs, htmlLangData, langFileName, videoDemoForLang } from "./exportLangs.js";
+import { ensureNarration, ensurePlayback, holdMs } from "./playback.js";
 import { createHistory } from "./history.js";
 import {
   publishShareLink,
@@ -2991,6 +2993,22 @@ function bindChrome() {
     if (exportPanel) exportPanel.open = false;
   }
 
+  // RF25: o seletor de idioma do vídeo só aparece em tours com idiomas-alvo habilitados
+  function paintExportLangs() {
+    const row = document.getElementById("export-lang-row");
+    const sel = document.getElementById("export-video-lang");
+    if (!row || !sel) return;
+    const langs = project ? exportLangs(project) : [];
+    row.hidden = !langs.length;
+    if (!langs.length) return;
+    const prev = sel.value;
+    sel.replaceChildren(...langs.map((l) => new Option(langLabel(l), l)), new Option(t("export.allLangs", { n: langs.length }), "all"));
+    sel.value = langs.includes(prev) || prev === "all" ? prev : langs[0];
+  }
+  exportPanel?.addEventListener("toggle", () => {
+    if (exportPanel.open) paintExportLangs();
+  });
+
   const overlayCard = overlay?.querySelector(".export-overlay-card");
   const overlayActions = document.getElementById("export-overlay-actions");
   const overlayRetry = document.getElementById("btn-export-retry");
@@ -3060,20 +3078,52 @@ function bindChrome() {
     toast(t("toast.jsonExported"));
   });
 
+  // RF27: legendas .vtt por idioma (tempo de cada passo como no player)
+  document.getElementById("btn-export-vtt")?.addEventListener("click", () => {
+    closeExportMenu();
+    if (!project?.steps?.length) return;
+    const langs = exportLangs(project);
+    const base = slugifyFilename(project.name, "demo");
+    let files = 0;
+    for (const lang of langs.length ? langs : [""]) {
+      const demo = lang ? videoDemoForLang(project, lang) : project;
+      ensurePlayback(demo);
+      let at = 0;
+      const cues = demo.steps.map((step) => {
+        const ms = holdMs(step, demo);
+        const cue = { text: step.caption || "", startMs: at, endMs: at + ms };
+        at += ms;
+        return cue;
+      });
+      if (!cues.some((c) => String(c.text).trim())) continue;
+      const blob = new Blob([buildVtt(cues)], { type: "text/vtt;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = langFileName(base, lang, "vtt");
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      files += 1;
+    }
+    toast(files ? t("toast.vttDownloaded", { n: files }) : t("toast.vttEmpty"));
+  });
+
   document.getElementById("btn-export-html").addEventListener("click", async () => {
     closeExportMenu();
     if (!project) return;
     project.theme = formToTheme(project.theme);
     showExportOverlay(t("export.overlayHtml"));
     try {
+      const langData = htmlLangData(project);
       const size = await exportStandaloneHtml(project, {
+        langData,
         onProgress: (msg) => {
           overlayStatus.textContent = msg;
         },
       });
       hideExportOverlay();
       const mb = (size / (1024 * 1024)).toFixed(1);
-      toast(t("toast.htmlDownloaded", { mb }));
+      // why: o HTML leva o áudio de todos os idiomas (RF26): avisa o tamanho
+      toast(langData ? t("toast.htmlDownloadedLangs", { mb, n: langData.langs.length }) : t("toast.htmlDownloaded", { mb }), langData ? 5200 : undefined);
     } catch (err) {
       console.error(err);
       hideExportOverlay();
@@ -3120,18 +3170,31 @@ function bindChrome() {
     exportAbort = new AbortController();
     showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
     overlayStatus.textContent = t("export.overlayVideoHint");
+    // RF25: idioma do vídeo (áudio + legenda queimada) e fila “Todos os idiomas”
+    const langs = exportLangs(project);
+    const pickedLang = langs.length ? document.getElementById("export-video-lang")?.value || langs[0] : "";
+    const queue = pickedLang === "all" ? langs : [pickedLang];
+    const cc = document.getElementById("export-video-cc")?.value !== "0";
+    const base = slugifyFilename(project.name, "demo");
     try {
-      const result = await exportVideo(project, {
-        watermark,
-        pro: !watermark,
-        quality: qualitySelect?.value || "standard",
-        fps: Number(fpsSelect?.value) || 30,
-        canvas: previewCanvas,
-        signal: exportAbort.signal,
-        onProgress: (msg) => {
-          overlayStatus.textContent = msg;
-        },
-      });
+      let result;
+      for (let i = 0; i < queue.length; i += 1) {
+        const lang = queue[i];
+        const demo = lang ? videoDemoForLang(project, lang, { cc }) : project;
+        const tag = queue.length > 1 ? `${lang} (${i + 1}/${queue.length}) · ` : "";
+        result = await exportVideo(demo, {
+          watermark,
+          pro: !watermark,
+          quality: qualitySelect?.value || "standard",
+          fps: Number(fpsSelect?.value) || 30,
+          canvas: previewCanvas,
+          signal: exportAbort.signal,
+          fileBase: lang ? `${base}.${lang}` : "",
+          onProgress: (msg) => {
+            overlayStatus.textContent = tag + msg;
+          },
+        });
+      }
       hideExportOverlay();
       if (result.ext === "webm") {
         toast(t("toast.webmDownloaded"));

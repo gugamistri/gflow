@@ -468,7 +468,6 @@ export function resolveContent(project, lang, { audioLang } = {}) {
   return out;
 }
 
-/** Duração para o temporizador: a do idioma ativo, nunca abaixo do timer do autor (Q4). */
 /** ~14 caracteres por segundo de fala (mesma conta do cloud, estimateSpeechSeconds). */
 export function estimateSpeechSecondsI18n(text) {
   const n = String(text ?? "").trim().length;
@@ -500,6 +499,7 @@ export function langAudioPlan(project, { langs = null, stepIds = null } = {}) {
   return out;
 }
 
+/** Duração para o temporizador: a do idioma ativo, nunca abaixo do timer do autor (Q4). */
 export function stepAudioSeconds(step, audioLang) {
   const a = (audioLang && step?.i18n?.[audioLang]?.narrationAudio) || step?.narrationAudio;
   return Number(a?.durationSeconds) || 0;
