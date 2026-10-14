@@ -162,7 +162,8 @@ import { createLeadsDialog } from "./leadsDialog.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
-import { langLabel, projectI18n } from "./tour-schema/i18n.js";
+import { createTranslationGrid } from "./translationGrid.js";
+import { langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -597,11 +598,36 @@ const translationsDialog = createTranslationsDialog({
   },
   toast,
   listProjects: () => listAllProjects(),
+  onOpenGrid: () => translationGrid.open(),
   onEditLangChange: () => {
     paintEditLang();
     editor.refresh();
   },
 });
+
+const translationGrid = createTranslationGrid({
+  getProject: () => project,
+  onChange: () => {
+    onChange();
+    editor.refresh();
+  },
+  toast,
+});
+
+/** Aviso ao publicar com traduções não revisadas (RF8, Q7): avisa, não bloqueia. */
+function confirmI18nPublish() {
+  const cfg = project ? projectI18n(project) : null;
+  if (!cfg?.langs.some((l) => l.enabled)) return true;
+  const status = translationStatus(project);
+  let n = 0;
+  let c = 0;
+  for (const l of cfg.langs) {
+    if (!l.enabled) continue;
+    n += (status[l.lang]?.auto || 0) + (status[l.lang]?.stale || 0);
+    c += status[l.lang]?.consentAuto || 0;
+  }
+  return !n || confirm(t("tg.publishWarn", { n, c }));
+}
 
 /** Seletor “Editando em:” do canvas (RF15); só aparece com idiomas-alvo. */
 function paintEditLang() {
@@ -3004,6 +3030,7 @@ function bindChrome() {
       toast(t("share.errGeneric"));
       return;
     }
+    if (!confirmI18nPublish()) return;
     project.theme = formToTheme(project.theme);
     showExportOverlay(update ? t("share.overlayUpdate") : t("share.overlay"));
     try {
@@ -3567,6 +3594,7 @@ function bindChrome() {
       showUpgradeDialog({ feature: "permanentShare" });
       return;
     }
+    if (!confirmI18nPublish()) return;
     project.theme = formToTheme(project.theme);
     showExportOverlay(t("share.cloud.overlay"), { cancelable: true });
     const abort = new AbortController();
