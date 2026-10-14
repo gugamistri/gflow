@@ -68,14 +68,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/93/css/theme.css" />
-  <link rel="stylesheet" href="/a/93/css/app.css" />
-  <link rel="stylesheet" href="/a/93/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/94/css/theme.css" />
+  <link rel="stylesheet" href="/a/94/css/app.css" />
+  <link rel="stylesheet" href="/a/94/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/93/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/93/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/94/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/94/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
@@ -169,6 +169,14 @@
         <li data-i18n-html="help.embedWf1">En el Designer, abre <strong>Add</strong> (+) y arrastra el elemento <strong>Code Embed</strong> a la página.</li>
         <li data-i18n-html="help.embedWf2">Pega el código de la pestaña <strong>Webflow</strong>, guarda y publica el sitio. El tour solo aparece en el sitio publicado, no en el Designer.</li>
       </ol>
+      <h3 data-i18n="help.embedNotionTitle">Notion</h3>
+      <ol>
+        <li data-i18n-html="help.embedNotion1">En el editor, abre <strong>Insertar en el sitio</strong>, elige la pestaña <strong>Notion</strong> y haz clic en <strong>Copiar enlace</strong>. Es el enlace permanente (<code>guiaflow.pro/p/…</code>).</li>
+        <li data-i18n-html="help.embedNotion2">Pega el enlace en la página de Notion y elige <strong>Crear inserción</strong> en el menú que aparece.</li>
+        <li data-i18n="help.embedNotion3">Para ajustar el tamaño, arrastra los bordes de la inserción.</li>
+      </ol>
+      <h3 data-i18n="help.embedMediumTitle">Medium</h3>
+      <p data-i18n-html="help.embedMedium1">Copia el enlace de la pestaña <strong>Medium</strong>, pégalo en una línea sola del texto y pulsa <strong>Enter</strong>. Medium convierte el enlace en el tour.</p>
       <p data-i18n-html="help.embedNotes">Volver a publicar el tour lo actualiza en todos los sitios donde está insertado. La opción <strong>Empezar automáticamente</strong> salta el botón ▶; el navegador puede retener el sonido hasta que el visitante interactúe. Si tu sitio usa <code>sandbox</code> en el iframe, incluye <code>allow-scripts</code> y <code>allow-same-origin</code>; si no, el tour no funciona.</p>
     </section>
 
@@ -193,7 +201,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/93/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/94/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

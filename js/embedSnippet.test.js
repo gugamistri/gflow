@@ -111,3 +111,9 @@ test("o editor tem o botão e o diálogo; a ajuda tem a seção #incorporar", ()
     assert.ok(help.includes(`"${key}"`), key);
   }
 });
+
+test("Notion e Medium recebem o link /p puro (oEmbed), sem embed/autoplay", () => {
+  for (const flavor of ["notion", "medium"]) {
+    assert.equal(buildEmbedSnippet({ url: "https://guiaflow.pro/p/abc?x=1", flavor, autoplay: true }), "https://guiaflow.pro/p/abc");
+  }
+});

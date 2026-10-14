@@ -80,7 +80,7 @@ import {
   shareRecordIsStale,
 } from "./shareLink.js";
 import { permanentShareEndpoint } from "./viewShare.js";
-import { buildEmbedSnippet, embedRatio, normalizeEmbedFlavor } from "./embedSnippet.js";
+import { buildEmbedSnippet, embedRatio, isLinkEmbedFlavor, normalizeEmbedFlavor } from "./embedSnippet.js";
 import {
   initLocale,
   applyI18n,
@@ -3105,8 +3105,20 @@ function bindChrome() {
       hint.dataset.i18n = key;
       hint.textContent = t(key);
     }
+    const linkMode = isLinkEmbedFlavor(embedFlavor);
+    const autoplayRow = document.getElementById("embed-autoplay-row");
+    if (autoplayRow) autoplayRow.hidden = linkMode;
+    const copyBtn = document.getElementById("btn-embed-copy");
+    if (copyBtn) {
+      const key = linkMode ? "embed.copyLink" : "embed.copy";
+      copyBtn.dataset.i18n = key;
+      copyBtn.textContent = t(key);
+    }
     const code = document.getElementById("embed-code");
-    if (code) code.value = published ? currentEmbedCode() : "";
+    if (code) {
+      code.value = published ? currentEmbedCode() : "";
+      code.rows = linkMode ? 2 : 7;
+    }
   }
 
   function openEmbedDialog() {
@@ -3168,7 +3180,7 @@ function bindChrome() {
     if (!code) return;
     try {
       await copyText(code);
-      toast(t("embed.copied"), 3200);
+      toast(t(isLinkEmbedFlavor(embedFlavor) ? "embed.linkCopied" : "embed.copied"), 3200);
     } catch (err) {
       console.error(err);
       const field = document.getElementById("embed-code");
