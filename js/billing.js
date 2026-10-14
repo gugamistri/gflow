@@ -225,6 +225,7 @@ export function exportShowsWatermark({ cloudEnabled = false, signedIn = false, s
 
 export function upgradeCopyKeys(feature) {
   if (feature === "hostedAi") return { title: "billing.hostedAiTitle", subtitle: "billing.hostedAiSubtitle" };
+  if (feature === "translate") return { title: "billing.translateTitle", subtitle: "billing.translateSubtitle" };
   if (feature === "tts") return { title: "billing.ttsTitle", subtitle: "billing.ttsSubtitle" };
   if (feature === "branding") return { title: "billing.brandTitle", subtitle: "billing.brandSubtitle" };
   if (feature === "videoQuality") return { title: "billing.qualityTitle", subtitle: "billing.qualitySubtitle" };

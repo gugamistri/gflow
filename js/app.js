@@ -163,7 +163,8 @@ import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
-import { langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
+import { MAX_TARGET_LANGS, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
+import { applyTranslations, batchItems, buildTranslateMessages, hostedTranslateRequest, parseTranslateResult } from "./tour-schema/translate.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -599,6 +600,7 @@ const translationsDialog = createTranslationsDialog({
   toast,
   listProjects: () => listAllProjects(),
   onOpenGrid: () => translationGrid.open(),
+  onTranslate: ({ render }) => runTranslate({ after: render }),
   onEditLangChange: () => {
     paintEditLang();
     editor.refresh();
@@ -606,6 +608,8 @@ const translationsDialog = createTranslationsDialog({
 });
 
 const translationGrid = createTranslationGrid({
+  onTranslate: ({ langs }) => runTranslate({ langs }),
+  onRetranslate: ({ lang, row }) => runTranslate({ langs: [lang], keys: row.fields.map((f) => f.key) }),
   getProject: () => project,
   onChange: () => {
     onChange();
@@ -613,6 +617,83 @@ const translationGrid = createTranslationGrid({
   },
   toast,
 });
+
+let translating = false;
+
+/**
+ * “Traduzir tudo” (RF6–RF10): Pro usa a IA hospedada (1 unidade por idioma); sem Pro, a chave
+ * do autor (BYOK); sem nenhum dos dois, a tela do Pro com feature "translate".
+ */
+async function runTranslate({ langs = null, keys = null, overwriteReviewed = false, after } = {}) {
+  if (!project || translating) return;
+  const cfg = projectI18n(project);
+  const targets = (langs?.length ? langs : cfg?.langs.map((l) => l.lang)) || [];
+  if (!targets.length) return;
+  const hosted = prefersHostedGeneration();
+  const byok = !hosted && editor.hasByokLlm?.();
+  if (!hosted && !byok) {
+    if ((await ensureHostedFeature("translate", () => runTranslate({ langs, keys, overwriteReviewed, after }))) !== "proceed") {
+      if (!isCloudEnabled()) toast(t("ml.needKey"), 4200);
+      return;
+    }
+  }
+  if (hosted && cfg.langs.length > MAX_TARGET_LANGS) {
+    toast(t("ml.maxLangs"), 4200);
+    return;
+  }
+  translating = true;
+  let fields = 0;
+  let rejected = 0;
+  let done = 0;
+  try {
+    for (const lang of targets) {
+      const req = hostedTranslateRequest(project, lang, { keys, overwriteReviewed });
+      if (!req.items.length) continue;
+      toast(t("ml.translating", { lang: langLabel(lang) }), 60000);
+      let translations = {};
+      let bad = [];
+      if (hosted || !byok) {
+        const res = await cloudFetch("/ai/translate", { method: "POST", body: JSON.stringify(req), timeoutMs: 120 * 1000 });
+        if (!res.ok) {
+          if (!presentHostedFailure(res, "translate")) toast(res.data?.message || t("billing.tryAgain"), 4200);
+          break;
+        }
+        rememberHostedUsage(res.data?.usage);
+        const parsed = parseTranslateResult(res.data?.translations || {}, req.items);
+        translations = parsed.translations;
+        bad = parsed.rejected;
+      } else {
+        for (const batch of batchItems(req.items)) {
+          const messages = buildTranslateMessages({ ...req, items: batch });
+          let parsed = null;
+          for (let attempt = 0; attempt < 2 && !parsed?.ok; attempt++) {
+            const res = await editor.byokLlmComplete(messages, { maxTokens: 4096 });
+            if (!res?.ok) break;
+            parsed = parseTranslateResult(res.content, batch);
+          }
+          if (!parsed?.ok) {
+            bad.push(...batch.map((i) => i.id));
+            continue;
+          }
+          Object.assign(translations, parsed.translations);
+          bad.push(...parsed.rejected);
+        }
+      }
+      fields += applyTranslations(project, lang, translations);
+      rejected += bad.length;
+      done++;
+    }
+  } finally {
+    translating = false;
+  }
+  if (fields) {
+    onChange();
+    editor.refresh();
+  }
+  translationGrid.render();
+  after?.();
+  toast(done ? t("ml.translated", { n: fields, k: done, r: rejected }) : t("ml.nothingToTranslate"), 4200);
+}
 
 /** Aviso ao publicar com traduções não revisadas (RF8, Q7): avisa, não bloqueia. */
 function confirmI18nPublish() {
