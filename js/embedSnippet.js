@@ -3,7 +3,13 @@
  * why: puro e testável; o diálogo "Incorporar no site" e, no futuro, o /oembed usam o mesmo HTML.
  */
 
-export const EMBED_FLAVORS = ["html", "wordpress", "webflow"];
+export const EMBED_FLAVORS = ["html", "wordpress", "webflow", "notion", "medium"];
+/** Plataformas que incorporam pelo link (oEmbed/Iframely), não por código HTML. */
+export const LINK_EMBED_FLAVORS = ["notion", "medium"];
+
+export function isLinkEmbedFlavor(flavor) {
+  return LINK_EMBED_FLAVORS.includes(normalizeEmbedFlavor(flavor));
+}
 export const DEFAULT_EMBED_RATIO = "16/9";
 
 function escapeAttr(value) {
@@ -72,6 +78,12 @@ export function normalizeEmbedFlavor(flavor) {
 export function buildEmbedSnippet({ url, title = "", ratio = DEFAULT_EMBED_RATIO, autoplay = false, flavor = "html", label = "Tour interativo" } = {}) {
   const src = embedPlayerUrl(url, { autoplay });
   if (!src) return "";
+  // why: Notion/Medium não aceitam iframe colado; usam o link /p puro e descobrem o player via oEmbed
+  if (isLinkEmbedFlavor(flavor)) {
+    const link = new URL(src);
+    link.search = "";
+    return link.toString();
+  }
   const safeRatio = /^\d+(\.\d+)?\/\d+(\.\d+)?$/.test(String(ratio || "")) ? String(ratio) : DEFAULT_EMBED_RATIO;
   const name = String(title || "").trim().slice(0, 200);
   const frameTitle = name ? `${label}: ${name}` : label;
