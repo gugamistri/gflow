@@ -152,3 +152,15 @@ test("o tracker não usa cookies nem storage", async () => {
   const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
   assert.equal(/document\.cookie|localStorage|sessionStorage|indexedDB/.test(code), false);
 });
+
+test("session_start carries text/audio/cc and lang_change is queued (RF28)", async () => {
+  const { langFields } = await import("./viewAnalytics.js");
+  assert.deepEqual(langFields(null), {});
+  assert.deepEqual(langFields({ text: "es", audio: "none", cc: false }), { textLang: "es", audioLang: "none", cc: false });
+  assert.deepEqual(langFields({ text: "<x>", audio: "", cc: "y" }), {});
+  const t = createViewTracker({ send: () => {}, langs: { text: "pt-BR", audio: "pt-BR", cc: true }, setTimer: () => 0, clearTimer: () => {} });
+  t.langChange({ text: "es", audio: "es", cc: true });
+  const names = t.queue.map((e) => e.name);
+  assert.equal(t.queue[0].textLang, "pt-BR");
+  assert.ok(names.includes("lang_change"));
+});

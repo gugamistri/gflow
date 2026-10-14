@@ -417,6 +417,7 @@ export function leadsToCsv(leads = [], headers = {}) {
     ["consent", headers.consent || "Consentimento"],
     ["consentAt", headers.consentAt || "Consentimento em"],
     ["consentText", headers.consentText || "Texto do consentimento"],
+    ["lang", headers.lang || "Idioma"],
   ];
   const rows = [cols.map(([, label]) => csvCell(label)).join(";")];
   for (const lead of leads) {
