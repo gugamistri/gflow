@@ -2561,6 +2561,7 @@ function bindChrome() {
     const onCompactChrome = () => {
       paintChrome();
       if (chromeView === "library") renderLibrary();
+      else if (chromeView === "editor") editor.refresh?.();
     };
     for (const query of [COMPACT_TOUCH_MQ, COMPACT_LANDSCAPE_MQ]) {
       const mq = window.matchMedia(query);
