@@ -165,6 +165,7 @@ import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
+import { createMobileBar } from "./mobileBar.js";
 import { MAX_TARGET_LANGS, langAudioPlan, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
 import { listHostedVoices } from "./hosted.js";
 import { listCartesiaVoices } from "./cartesia.js";
@@ -825,6 +826,18 @@ const player = createPlayer({
 
 let chromeView = "library";
 let presenting = false;
+let mobileBar = null;
+
+function getMobileBar() {
+  mobileBar ||= createMobileBar({
+    t,
+    onSettings: () => {
+      const prefs = document.getElementById("prefs-panel");
+      if (prefs && !prefs.hidden) prefs.open = true;
+    },
+  });
+  return mobileBar;
+}
 
 function paintChrome() {
   const view = chromeView;
@@ -889,6 +902,7 @@ function paintChrome() {
     }
   }
   paintAgentTag(view !== "library" && !presenting && !compact);
+  getMobileBar().paint({ compact, view, presenting });
   paintAccount();
 }
 
