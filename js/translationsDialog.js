@@ -3,7 +3,7 @@
  * Formato e edição manual são OSS; IA e TTS hospedados entram por hooks (`onTranslate`).
  */
 import { t } from "./i18n.js";
-import { CARTESIA_VOICE_CATALOG, narrationLanguage, voicesForLanguage } from "./cartesia.js";
+import { CARTESIA_CURATED_DEFAULTS, CARTESIA_VOICE_CATALOG, narrationLanguage, voicesForLanguage } from "./cartesia.js";
 import {
   CONTENT_LANGS,
   addLang,
@@ -28,7 +28,8 @@ export function languageChoices() {
 export function voiceOptions(tag, extra = {}) {
   const base = baseLang(tag);
   const list = extra[base] || voicesForLanguage(base) || [];
-  return list;
+  if (list.length) return list;
+  return CARTESIA_CURATED_DEFAULTS[base] ? [CARTESIA_CURATED_DEFAULTS[base]] : [];
 }
 
 function el(tag, attrs = {}, ...kids) {
@@ -167,7 +168,7 @@ export function createTranslationsDialog({
           return;
         }
         onChange();
-        if (!voices.length && loadVoices) {
+        if (!voicesForLanguage(baseLang(tag)).length && loadVoices) {
           dynamicVoices = { ...dynamicVoices, ...(await loadVoices(baseLang(tag)).catch(() => ({}))) };
           const item = project.i18n.langs.find((x) => x.lang === tag);
           const first = voiceOptions(tag, dynamicVoices)[0];

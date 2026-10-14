@@ -9,6 +9,7 @@ import { applyDocumentLang, createLangMenu, readStoredLangs, resolvePlayerLangs,
 import { baseLang, langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
+import { resolveShareMedia } from "./shareMedia.js";
 import {
   decideEscape,
   embedShowsCover,
@@ -101,7 +102,8 @@ async function loadPermanent(slug) {
   }
   shareFeatures = parsed.features;
   shareServerBranding = parsed.branding;
-  return parsed.tour;
+  // why: /p v2 — áudio dos idiomas-alvo por referência; o navegador só baixa o que tocar
+  return resolveShareMedia(parsed.tour, endpoint);
 }
 
 async function loadDemo(route) {

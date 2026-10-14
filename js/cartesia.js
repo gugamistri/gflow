@@ -12,6 +12,17 @@ export const CARTESIA_VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4";
 /** Idiomas da Sonic 3.6 (docs.cartesia.ai, 44 idiomas): narração por idioma do tour (PRD multi-idioma §5.4). */
 export const CARTESIA_LANGUAGES = Object.freeze(["en", "fr", "de", "es", "pt", "zh", "ja", "hi", "it", "ko", "nl", "pl", "ru", "sv", "tr", "tl", "bg", "ro", "ar", "cs", "el", "fi", "hr", "ms", "sk", "da", "ta", "uk", "hu", "no", "vi", "bn", "th", "he", "ka", "id", "te", "gu", "kn", "ml", "mr", "pa", "or", "ur"]);
 
+/** Vozes padrão curadas (Q9) para os demais idiomas do top 10; a lista completa vem de /voices. */
+export const CARTESIA_CURATED_DEFAULTS = Object.freeze({
+  fr: { id: "7c58f4a4-a72c-42fa-a503-41b9408820f3", name: "Inès" },
+  de: { id: "57a3a9e0-a91c-4c94-a2bb-e6cbab3ae649", name: "Clemens" },
+  it: { id: "00e9ec78-2002-41dd-8d19-6b1d3b17a461", name: "Elena" },
+  ja: { id: "cb21b4af-0e46-44f7-9128-51be7f898311", name: "Yuzuki" },
+  zh: { id: "6eb8965c-e295-47bd-a9e4-3eeebb3abcff", name: "Jing" },
+  ko: { id: "1a602be4-3b57-4bef-a270-dfa5efed0541", name: "Yeji" },
+  hi: { id: "4459a9a5-69d6-4680-b970-e13dc51845b6", name: "Siya" },
+});
+
 /** Idioma da narração (locale da Sonic). O id é o voiceURI salvo no projeto (compatível). */
 export const CARTESIA_VOICES = [
   { id: "pt-BR", labelKey: "cartesia.voice.pt-BR", locale: "pt-BR", language: "pt" },
