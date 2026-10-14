@@ -46,3 +46,17 @@ test("batches by size", () => {
   const items = Array.from({ length: 5 }, (_, i) => ({ id: String(i), text: "x".repeat(100), max: 280 }));
   assert.equal(batchItems(items, 250).length, 3);
 });
+
+test("parseTranslateResult: aceita o pedido ecoado ({ tour, items: [{ id, text }] }) e listas", () => {
+  const items = [{ id: "step:s1:title", text: "Olá", max: 80 }, { id: "project:project:name", text: "Tour", max: 120 }];
+  const echo = JSON.stringify({ tour: "Tour", items: [{ id: "step:s1:title", max: 80, text: "Hello" }, { id: "project:project:name", text: "Tour EN" }] });
+  const r = parseTranslateResult(echo, items);
+  assert.equal(r.translations["step:s1:title"], "Hello");
+  assert.equal(r.translations["project:project:name"], "Tour EN");
+  assert.deepEqual(r.rejected, []);
+  const list = parseTranslateResult({ translations: [{ id: "step:s1:title", translation: "Hi" }] }, items);
+  assert.equal(list.translations["step:s1:title"], "Hi");
+  assert.deepEqual(list.rejected, ["project:project:name"]);
+  const arr = parseTranslateResult([{ id: "step:s1:title", text: "Hey" }], items);
+  assert.equal(arr.translations["step:s1:title"], "Hey");
+});
