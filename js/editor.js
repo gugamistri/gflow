@@ -4658,13 +4658,22 @@ export function createEditor(ctx) {
   bindForm();
   bindLayoutChrome();
 
+  /** IA com a chave do autor (BYOK, OSS) para tradução; `null` sem chave configurada. */
+  async function byokLlmComplete(messages, { maxTokens = 4096 } = {}) {
+    const bridge = llmBridge();
+    if (bridge?.llmComplete) return bridge.llmComplete({ messages, maxTokens });
+    if (!llmConfigured) return null;
+    const settings = await readLlmSettings();
+    return chatCompletions({ apiKey: settings.apiKey, baseUrl: settings.baseUrl, model: settings.model, messages, maxTokens });
+  }
+
   /** Para o player de áudio do passo e qualquer fala do editor (troca de projeto, saída). */
   function stopAudio() {
     stopCaptionPlayer();
     stopSpeech();
   }
 
-  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges, setEditLang, getEditLang: () => activeEditLang() };
+  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges, setEditLang, getEditLang: () => activeEditLang(), byokLlmComplete, hasByokLlm: () => Boolean(llmBridge()?.llmComplete || llmConfigured) };
 }
 
 function getImageContentRect(img) {

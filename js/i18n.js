@@ -8,6 +8,12 @@ export const HTML_LANG = { pt: "pt-BR", es: "es", en: "en" };
 
 export const catalogs = {
   pt: {
+    "ml.translating": "Traduzindo para {lang}…",
+    "ml.translated": "{n} textos traduzidos em {k} idioma(s). {r} ficaram para revisão manual.",
+    "ml.nothingToTranslate": "Nada para traduzir: tudo já está traduzido.",
+    "ml.needKey": "Para traduzir com IA, configure sua chave em Narração e IA.",
+    "billing.translateTitle": "Traduza o tour em um clique com o Pro 👑",
+    "billing.translateSubtitle": "O GuiaFlow Pro traduz títulos, narração, passos fixos e formulário para até 3 idiomas por projeto. Você revisa antes de publicar.",
     "embed.lang": "Idioma inicial",
     "embed.langAuto": "Automático (idioma do navegador)",
     "player.langMenu": "Idioma e legendas",
@@ -1219,6 +1225,12 @@ export const catalogs = {
     "editor.durationAria": "Duração total do tour: {time}",
   },
   es: {
+    "ml.translating": "Traduciendo a {lang}…",
+    "ml.translated": "{n} textos traducidos en {k} idioma(s). {r} quedaron para revisión manual.",
+    "ml.nothingToTranslate": "Nada que traducir: todo está traducido.",
+    "ml.needKey": "Para traducir con IA, configura tu clave en Narración e IA.",
+    "billing.translateTitle": "Traduce el tour en un clic con Pro 👑",
+    "billing.translateSubtitle": "GuiaFlow Pro traduce títulos, narración, pasos fijos y formulario a hasta 3 idiomas por proyecto. Revisas antes de publicar.",
     "embed.lang": "Idioma inicial",
     "embed.langAuto": "Automático (idioma del navegador)",
     "player.langMenu": "Idioma y subtítulos",
@@ -2430,6 +2442,12 @@ export const catalogs = {
     "editor.durationAria": "Duración total del tour: {time}",
   },
   en: {
+    "ml.translating": "Translating to {lang}…",
+    "ml.translated": "{n} texts translated in {k} language(s). {r} left for manual review.",
+    "ml.nothingToTranslate": "Nothing to translate: everything is already translated.",
+    "ml.needKey": "To translate with AI, set your key in Narration & AI.",
+    "billing.translateTitle": "Translate your tour in one click with Pro 👑",
+    "billing.translateSubtitle": "GuiaFlow Pro translates titles, narration, fixed steps and form into up to 3 languages per project. You review before publishing.",
     "embed.lang": "Initial language",
     "embed.langAuto": "Automatic (browser language)",
     "player.langMenu": "Language and captions",
