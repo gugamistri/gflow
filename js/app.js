@@ -161,6 +161,8 @@ import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 import { createLeadsDialog } from "./leadsDialog.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
+import { createTranslationsDialog } from "./translationsDialog.js";
+import { langLabel, projectI18n } from "./tour-schema/i18n.js";
 
 let project = null;
 let captureGeneration = 0;
@@ -522,6 +524,7 @@ function paintProjectSize() {
 }
 
 const editor = createEditor({
+  onRefresh: () => paintEditLang(),
   onMediaAdded: (sources) => void optimizeIncomingMedia(new Set(sources)),
   getDemo,
   setDemo,
@@ -584,6 +587,54 @@ const analyticsDialog = createAnalyticsDialog({
   toast,
   onPaywall: () => openFeatureGate("analytics"),
 });
+
+// why: idiomas do tour (PRD multi-idioma): formato e edição manual são OSS
+const translationsDialog = createTranslationsDialog({
+  getProject: () => project,
+  onChange: () => {
+    onChange();
+    paintEditLang();
+  },
+  toast,
+  listProjects: () => listAllProjects(),
+  onEditLangChange: () => {
+    paintEditLang();
+    editor.refresh();
+  },
+});
+
+/** Seletor “Editando em:” do canvas (RF15); só aparece com idiomas-alvo. */
+function paintEditLang() {
+  const wrap = document.getElementById("edit-lang-wrap");
+  const select = document.getElementById("edit-lang");
+  if (!wrap || !select) return;
+  const cfg = project ? projectI18n(project) : null;
+  const langs = cfg && cfg.langs.length ? [cfg.defaultLang, ...cfg.langs.map((l) => l.lang)] : [];
+  wrap.hidden = !langs.length;
+  const current = editor.getEditLang?.() || cfg?.defaultLang || "";
+  const key = langs.join("|");
+  if (select.dataset.key !== key) {
+    select.replaceChildren(...langs.map((lang, i) => {
+      const opt = document.createElement("option");
+      opt.value = lang;
+      opt.textContent = i === 0 ? `${langLabel(lang)} · ${t("ml.sourceShort")}` : langLabel(lang);
+      return opt;
+    }));
+    select.dataset.key = key;
+  }
+  select.value = langs.includes(current) ? current : langs[0] || "";
+}
+
+function bindEditLang() {
+  document.getElementById("edit-lang")?.addEventListener("change", (e) => {
+    editor.setEditLang(e.target.value);
+  });
+  document.getElementById("btn-languages")?.addEventListener("click", () => {
+    document.getElementById("prefs-panel")?.removeAttribute("open");
+    translationsDialog.open();
+  });
+}
+bindEditLang();
 
 function openAnalytics() {
   if (!viewerIsPro()) {

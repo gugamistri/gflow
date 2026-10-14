@@ -628,6 +628,9 @@ export function projectToDemoPayload(project) {
   // why: link permanente sai sem marca por padrão; só o pedido de crédito vai no payload (hash estável)
   if (project.removeBranding === false) payload.removeBranding = false;
   Object.assign(payload, fixedStepsForPayload(project));
+  // why: conteúdo multi-idioma só entra quando existe (hash estável para projetos antigos)
+  if (project.i18n && typeof project.i18n === "object") payload.i18n = project.i18n;
+  if (project.i18nProject && typeof project.i18nProject === "object") payload.i18nProject = project.i18nProject;
   ensurePlayback(payload);
   ensureNarration(payload);
   return payload;
@@ -656,6 +659,8 @@ export function demoPayloadToProject(data, { name, id } = {}) {
   // why: passos fixos só existem no payload quando ligados; desligado = ausente
   if (data.startStep && typeof data.startStep === "object") project.startStep = normalizeStartStep(data.startStep);
   if (data.endStep && typeof data.endStep === "object") project.endStep = normalizeEndStep(data.endStep);
+  if (data.i18n && typeof data.i18n === "object") project.i18n = data.i18n;
+  if (data.i18nProject && typeof data.i18nProject === "object") project.i18nProject = data.i18nProject;
   ensurePlayback(project);
   ensureNarration(project);
   return project;
