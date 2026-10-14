@@ -6894,6 +6894,7 @@ dialog.embed-modal {
 
 .embed-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   padding: 3px;
   border-radius: 10px;
@@ -6935,6 +6936,10 @@ dialog.embed-modal {
   font-size: 0.75rem;
   line-height: 1.45;
   white-space: pre;
+}
+
+.studio-modal-body label.embed-autoplay[hidden] {
+  display: none;
 }
 
 .studio-modal-body label.embed-autoplay {
