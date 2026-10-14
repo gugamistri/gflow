@@ -361,9 +361,16 @@ async function speakWithCartesia(text, voiceURI, rate, token, voiceId = "") {
   return played;
 }
 
+/** data:audio ou a URL de mídia de um /p v2 (https…/api/shares/<slug>/media/<sha>, PRD multi-idioma §7.4). */
+export function isPlayableClipUrl(url) {
+  if (typeof url !== "string") return false;
+  if (url.startsWith("data:audio/")) return true;
+  return /^https:\/\/[^\s/]+\/api\/shares\/[a-z0-9-]+\/media\/[a-f0-9]{64}$/.test(url) || /^http:\/\/localhost(:\d+)?\/api\/shares\/[a-z0-9-]+\/media\/[a-f0-9]{64}$/.test(url);
+}
+
 function audioDataClips(audio) {
   if (!Array.isArray(audio?.clips)) return [];
-  return audio.clips.filter((url) => typeof url === "string" && url.startsWith("data:audio/"));
+  return audio.clips.filter(isPlayableClipUrl);
 }
 
 /**

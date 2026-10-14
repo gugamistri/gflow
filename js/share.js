@@ -14,6 +14,7 @@ import {
 } from "./shareSnapshot.js";
 import { permanentPublicUrl, permanentSlug, shouldRecreatePermanent } from "./shareLink.js";
 import { renderCover, tourRatio } from "./coverImage.js";
+import { externalizeLangAudio } from "./shareMedia.js";
 import {
   LEGACY_SHARE_MAX_BODY_BYTES,
   SHARE_MAX_BODY_BYTES,
@@ -335,6 +336,10 @@ export async function publishPermanentShare(
     buildCover = renderCover,
     measureRatio = tourRatio,
     compress = compressTourImages,
+    externalize = (snap) => externalizeLangAudio(snap, {
+      check: (hashes) => cloudFetch("/media/check", { method: "POST", body: JSON.stringify({ hashes }), signal }, env),
+      upload: (sha, bytes, mime) => cloudFetch(`/media/${encodeURIComponent(sha)}`, { method: "PUT", body: bytes, headers: { "Content-Type": mime }, timeoutMs: 180 * 1000, signal }, env),
+    }),
     maxBytes = SHARE_MAX_BODY_BYTES,
     snapshotTimeoutMs = 90 * 1000,
     coverTimeoutMs = 15 * 1000,
@@ -371,6 +376,12 @@ export async function publishPermanentShare(
   } catch (err) {
     if (err?.code === "aborted") throw stageFailure(err);
     console.warn("compress", err);
+  }
+  // why: /p v2 — áudio dos idiomas-alvo sobe uma vez e vai por referência (limite de 12 MB só para JSON e imagens)
+  try {
+    snapshot = (await step(externalize(snapshot), 0)).snapshot;
+  } catch (err) {
+    throw stageFailure(err);
   }
   onProgress?.(t("share.cover.progress"));
   let cover = "";
