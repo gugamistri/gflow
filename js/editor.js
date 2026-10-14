@@ -80,6 +80,7 @@ import {
 import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
 import { getLocale, t } from "./i18n.js";
+import { getTranslation, projectI18n, setTranslation } from "./tour-schema/i18n.js";
 import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
@@ -360,6 +361,32 @@ export function createEditor(ctx) {
   let filmMenuEl = null;
   /** Passo em que o usuário pediu para escrever a narração mesmo com o texto oculto. */
   let forceCaptionStepId = null;
+
+
+  /** Idioma em edição no canvas (PRD multi-idioma RF15); "" = origem. */
+  let editLang = "";
+  function activeEditLang() {
+    const cfg = projectI18n(getDemo());
+    if (!cfg || !editLang || editLang === cfg.defaultLang) return "";
+    return cfg.langs.some((l) => l.lang === editLang) ? editLang : "";
+  }
+  function sourceText(step, field) {
+    if (field === "title") return step.popover?.title || step.label || "";
+    if (field === "description") return step.popover?.description || "";
+    return step.caption || "";
+  }
+  function shownText(step, field) {
+    const lang = activeEditLang();
+    if (!lang) return sourceText(step, field);
+    return getTranslation(getDemo(), "step", step.id, field, lang);
+  }
+  function shownPlaceholder(step, field, fallback) {
+    return activeEditLang() ? sourceText(step, field) || fallback : fallback;
+  }
+  function setEditLang(lang) {
+    editLang = lang || "";
+    renderCanvas();
+  }
 
   const clickFx = createClickFxController({
     frame: els.canvasFrame,
@@ -1351,14 +1378,14 @@ export function createEditor(ctx) {
     pop.setAttribute("aria-label", dragHint);
     if (els.popoverGrip) els.popoverGrip.title = dragHint;
     pop.querySelector(".editor-popover-foot")?.setAttribute("title", dragHint);
-    paintInline(els.popoverTitle, step.popover?.title || step.label || "", {
+    paintInline(els.popoverTitle, shownText(step, "title"), {
       editing: true,
-      placeholder: t("canvas.titlePlaceholder"),
+      placeholder: shownPlaceholder(step, "title", t("canvas.titlePlaceholder")),
       label: t("canvas.editTitle"),
     });
-    paintInline(els.popoverBody, step.popover?.description || "", {
+    paintInline(els.popoverBody, shownText(step, "description"), {
       editing: true,
-      placeholder: t("canvas.descriptionPlaceholder"),
+      placeholder: shownPlaceholder(step, "description", t("canvas.descriptionPlaceholder")),
       label: t("canvas.editDescription"),
     });
     const total = Math.max(1, getDemo().steps.length || 1);
@@ -1444,6 +1471,16 @@ export function createEditor(ctx) {
     el.classList.toggle("is-empty", !value.trim());
     syncInlinePlaceholder(el, value, editing);
     if (kind === "caption") placeCaptionPlaceholder();
+    const lang = activeEditLang();
+    if (lang && (kind === "title" || kind === "description" || kind === "caption")) {
+      // why: no idioma-alvo o canvas grava a tradução (revisada), sem tocar na origem
+      if (getTranslation(getDemo(), "step", step.id, kind, lang) === value) return;
+      setTranslation(getDemo(), { kind: "step", id: step.id, field: kind, lang, text: value, status: "reviewed" });
+      mirrorInline(el, value);
+      if (kind !== "caption" && step.type !== "slide") placeEditorPopover();
+      onChange();
+      return;
+    }
     if (kind === "title") {
       const titleNow = step.popover?.title ?? "";
       if (titleNow === value && (step.label || "") === value && els.propTitle?.value === value) return;
@@ -1655,7 +1692,7 @@ export function createEditor(ctx) {
 
     if (els.canvasEmpty) els.canvasEmpty.hidden = true;
     els.canvasFrame.hidden = false;
-    setCanvasCaption(step.caption, { visible: step.showCaption !== false, editing });
+    setCanvasCaption(shownText(step, "caption"), { visible: step.showCaption !== false, editing });
 
     if (step.type === "slide") {
       syncAltChip(null);
@@ -1664,14 +1701,14 @@ export function createEditor(ctx) {
       if (els.canvasMissing) els.canvasMissing.hidden = true;
       els.canvasSlide.hidden = false;
       paintSceneKicker(els.slideKicker, step, editing && !isCompactTouch());
-      paintInline(els.slideTitle, step.popover?.title || step.label || "", {
+      paintInline(els.slideTitle, shownText(step, "title"), {
         editing,
-        placeholder: t("canvas.titlePlaceholder"),
+        placeholder: shownPlaceholder(step, "title", t("canvas.titlePlaceholder")),
         label: t("canvas.editTitle"),
       });
-      paintInline(els.slideBody, step.popover?.description || "", {
+      paintInline(els.slideBody, shownText(step, "description"), {
         editing,
-        placeholder: t("canvas.descriptionPlaceholder"),
+        placeholder: shownPlaceholder(step, "description", t("canvas.descriptionPlaceholder")),
         label: t("canvas.editDescription"),
       });
       applySlideLayout(els.canvasSlide, step);
@@ -1682,12 +1719,12 @@ export function createEditor(ctx) {
       return;
     }
 
-    paintInline(els.slideTitle, step.popover?.title || step.label || "", {
+    paintInline(els.slideTitle, shownText(step, "title"), {
       editing: false,
       placeholder: t("canvas.titlePlaceholder"),
       label: t("canvas.editTitle"),
     });
-    paintInline(els.slideBody, step.popover?.description || "", {
+    paintInline(els.slideBody, shownText(step, "description"), {
       editing: false,
       placeholder: t("canvas.descriptionPlaceholder"),
       label: t("canvas.editDescription"),
@@ -4611,6 +4648,7 @@ export function createEditor(ctx) {
     syncForm();
     renderCanvas();
     if (els.imageModal?.open) renderImageGrid();
+    ctx.onRefresh?.();
   }
 
   bindFilmstripDnD();
@@ -4626,7 +4664,7 @@ export function createEditor(ctx) {
     stopSpeech();
   }
 
-  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges };
+  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges, setEditLang, getEditLang: () => activeEditLang() };
 }
 
 function getImageContentRect(img) {

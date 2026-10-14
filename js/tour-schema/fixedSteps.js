@@ -35,6 +35,13 @@ function line(value, max) {
   return text(value, max).replace(/[\r\n]+/g, " ");
 }
 
+// why: traduções do passo fixo (PRD multi-idioma §7); i18n.js normaliza o conteúdo
+function keepI18n(raw) {
+  return raw.i18n && typeof raw.i18n === "object" && !Array.isArray(raw.i18n) && Object.keys(raw.i18n).length
+    ? { i18n: raw.i18n }
+    : {};
+}
+
 function bool(value, fallback) {
   return typeof value === "boolean" ? value : fallback;
 }
@@ -202,6 +209,7 @@ export function normalizeStartStep(raw) {
     allowSkip: bool(raw.allowSkip, true),
     submitLabel: line(raw.submitLabel, LIMITS.label),
     skipLabel: line(raw.skipLabel, LIMITS.label),
+    ...keepI18n(raw),
   };
 }
 
@@ -228,6 +236,7 @@ export function normalizeEndStep(raw) {
       consentText: text(contact.consentText, LIMITS.consent),
     },
     showReplay: bool(raw.showReplay, true),
+    ...keepI18n(raw),
   };
 }
 

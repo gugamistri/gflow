@@ -9179,3 +9179,18 @@ dialog.api-keys-modal {
 .theme-font-option { display: flex !important; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--ns-border, #d0d5dd); border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
 .theme-font-option:has(input:checked) { border-color: var(--ns-accent, #2563eb); box-shadow: inset 0 0 0 1px var(--ns-accent, #2563eb); }
 .theme-font-option .theme-font-sample { margin-left: auto; font-size: 1.05rem; font-weight: 700; }
+
+/* Idiomas do tour (PRD multi-idioma) */
+.edit-lang { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted, #8a8f98); margin-right: 6px; }
+.edit-lang select { font-size: 12px; padding: 4px 6px; max-width: 170px; }
+.ml-modal { width: min(720px, 96vw); }
+.ml-dialog { display: flex; flex-direction: column; gap: 12px; }
+.ml-list { display: flex; flex-direction: column; gap: 6px; }
+.ml-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border, rgba(127,127,127,.25)); border-radius: 10px; }
+.ml-row.ml-add, .ml-row.ml-source { border-style: dashed; }
+.ml-lang { font-weight: 600; min-width: 150px; }
+.ml-voice { min-width: 120px; }
+.ml-count { font-size: 12px; color: #16a34a; margin-left: auto; }
+.ml-count.is-pending { color: #d97706; }
+.ml-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ml-style label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }

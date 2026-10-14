@@ -220,6 +220,9 @@
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
+        <label class="edit-lang" id="edit-lang-wrap" hidden><span data-i18n="ml.editingIn">Editando em:</span>
+          <select id="edit-lang" aria-label="Idioma em edição" data-i18n-aria="ml.editingIn"></select>
+        </label>
         <details class="more-panel prefs-panel more-editor-pref" id="prefs-panel" hidden>
           <summary class="btn btn-ghost btn-icon" id="btn-prefs" aria-label="Preferências do projeto" title="Tema do tour, narração e IA" data-i18n-aria="prefs.aria" data-i18n-title="prefs.title">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
@@ -264,6 +267,10 @@
                 <div class="theme-fonts" id="theme-fonts" role="radiogroup" aria-labelledby="theme-font-label"></div>
               </div>
             </details>
+            <button type="button" class="more-item" id="btn-languages">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
+              <span data-i18n="ml.menu">Idiomas do tour</span>
+            </button>
             <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
               <summary>
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
