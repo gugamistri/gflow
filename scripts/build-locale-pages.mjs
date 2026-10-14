@@ -268,7 +268,7 @@ function withLandingJsonLd(html, page, loc) {
   const cur = currency.toUpperCase();
   const t = LD_TEXT[loc];
   const desc = readMeta(html, "name", "description");
-  const org = { "@type": "Organization", "@id": `${ORIGIN}/#organization`, name: "GuiaFlow", url: `${ORIGIN}/`, logo: `${ORIGIN}/brand/app-icon-512.png`, email: "contato@guiaflow.pro", sameAs: ["https://github.com/gugamistri/gflow"] };
+  const org = { "@type": "Organization", "@id": `${ORIGIN}/#organization`, name: "GuiaFlow", url: `${ORIGIN}/`, logo: `${ORIGIN}/brand/app-icon-512.png`, email: "contato@guiaflow.pro", sameAs: ["https://github.com/gugamistri/gflow", "https://www.producthunt.com/products/guiaflow"] };
   const site = { "@type": "WebSite", "@id": `${ORIGIN}/#website`, name: "GuiaFlow", url: `${ORIGIN}/`, inLanguage: ["pt-BR", "en", "es"], publisher: { "@id": `${ORIGIN}/#organization` } };
   const app = {
     "@type": "SoftwareApplication",
