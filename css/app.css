@@ -9194,3 +9194,29 @@ dialog.api-keys-modal {
 .ml-count.is-pending { color: #d97706; }
 .ml-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ml-style label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.tg-modal { width: min(1200px, 98vw); max-height: 94vh; }
+.tg-dialog { display: flex; flex-direction: column; gap: 10px; max-height: 90vh; }
+.tg-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tg-bar input[type="search"] { min-width: 160px; }
+.tg-scroll { overflow: auto; flex: 1; min-height: 200px; border: 1px solid var(--border, rgba(127,127,127,.25)); border-radius: 10px; }
+.tg-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+.tg-table th, .tg-table td { vertical-align: top; padding: 8px; border-bottom: 1px solid var(--border, rgba(127,127,127,.2)); text-align: left; min-width: 260px; }
+.tg-table thead th { position: sticky; top: 0; background: var(--panel, #fff); z-index: 1; }
+.tg-src { font-weight: 400; color: var(--muted, #555); }
+.tg-row-title { font-weight: 700; color: inherit; margin-bottom: 4px; }
+.tg-src-field { display: flex; flex-direction: column; margin-bottom: 6px; }
+.tg-field-label { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; opacity: .7; }
+.tg-field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.tg-field-head { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; opacity: .85; }
+.tg-input { width: 100%; font: inherit; }
+.tg-status { font-size: 11px; text-transform: none; letter-spacing: 0; padding: 1px 6px; border-radius: 999px; background: rgba(127,127,127,.18); }
+.tg-status.is-reviewed { background: rgba(22,163,74,.15); color: #15803d; }
+.tg-status.is-stale { background: rgba(217,119,6,.15); color: #b45309; }
+.tg-status.is-missing { background: rgba(220,38,38,.13); color: #b91c1c; }
+.tg-consent-warn { font-size: 12px; color: #b45309; }
+.tg-cell-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tg-audio { font-size: 11px; opacity: .8; }
+.tg-audio-missing, .tg-audio-stale { color: #b45309; }
+dialog.studio-modal.tg-modal { width: min(1200px, 98vw); max-width: 98vw; }
+dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
+.tg-dialog .studio-modal-body, .tg-dialog { width: 100%; max-width: none; }
