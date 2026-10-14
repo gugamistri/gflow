@@ -83,6 +83,22 @@ export function applyDocumentLang(lang) {
 }
 
 /**
+ * Novo estado após um clique no menu. why: o 1º grupo é Áudio — quem escolhe "English" ali espera ver o
+ * texto em inglês também; escolher o áudio leva o texto junto (se houver texto no idioma). Texto e legenda
+ * continuam independentes (áudio pt + texto en: escolha o áudio e depois o texto).
+ */
+export function applyLangChoice(state, group, value, textLangs = []) {
+  const s = { ...state };
+  if (group === "cc") s.cc = value === "on";
+  else s[group] = value;
+  if (group === "audio" && value !== "none") {
+    const text = matchLang(textLangs, value);
+    if (text) s.text = text;
+  }
+  return s;
+}
+
+/**
  * Botão 🌐 + menu (Áudio · Texto · Legenda), com radios `aria-checked` e teclado (RF20, #86).
  */
 export function createLangMenu({ demo, getState, onChange }) {
@@ -103,10 +119,7 @@ export function createLangMenu({ demo, getState, onChange }) {
     b.textContent = `${checked ? "✓ " : ""}${label}`;
     b.addEventListener("click", (e) => {
       e.stopPropagation();
-      const s = { ...getState() };
-      if (group === "cc") s.cc = value === "on";
-      else s[group] = value;
-      onChange(s);
+      onChange(applyLangChoice(getState(), group, value, langs));
       paint();
       btn?.focus();
       close();
