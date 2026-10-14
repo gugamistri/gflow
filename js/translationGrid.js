@@ -5,6 +5,7 @@
 import { t } from "./i18n.js";
 import {
   approveTranslation,
+  langAudioPlan,
   audioStatus,
   fieldStatus,
   getTranslation,
@@ -120,8 +121,11 @@ export function createTranslationGrid({ getProject, onChange, toast, onTranslate
       const c = totals[l] || {};
       pending += (c.missing || 0) + (c.auto || 0);
       stale += c.stale || 0;
-      audioN += (c.audioMissing || 0) + (c.audioStale || 0);
     }
+    // why: o botão mostra o que será cobrado (RF16): só itens com tradução da legenda
+    const audioPlan = langAudioPlan(project, { langs });
+    audioN = audioPlan.length;
+    const audioMin = Math.max(1, Math.round(audioPlan.reduce((a, x) => a + x.seconds, 0) / 60));
     const scroll = d.querySelector(".tg-scroll")?.scrollTop || 0;
     d.replaceChildren();
     const body = el("div", { class: "studio-modal-body tg-dialog" });
@@ -142,7 +146,7 @@ export function createTranslationGrid({ getProject, onChange, toast, onTranslate
     const pend = el("label", { class: "checkbox" }, el("input", { type: "checkbox", checked: onlyPending, onchange: (e) => { onlyPending = e.target.checked; render(); } }), el("span", { text: t("tg.onlyPending") }));
     const bar = el("div", { class: "tg-bar", role: "toolbar", "aria-label": t("tg.title") });
     if (onTranslate) bar.append(el("button", { type: "button", class: "btn btn-primary", id: "btn-tg-translate", onclick: () => onTranslate({ langs, render }) }, el("span", { text: t("ml.translateAll") }), el("span", { "aria-hidden": "true", text: " 👑" })));
-    if (onGenerateAudio) bar.append(el("button", { type: "button", class: "btn", id: "btn-tg-audio", disabled: !audioN, onclick: () => onGenerateAudio({ langs, render }) }, el("span", { text: t("tg.genAudio", { n: audioN }) }), el("span", { "aria-hidden": "true", text: " 👑" })));
+    if (onGenerateAudio) bar.append(el("button", { type: "button", class: "btn", id: "btn-tg-audio", disabled: !audioN, onclick: () => onGenerateAudio({ langs, render }) }, el("span", { text: t("tg.genAudio", { n: audioN, m: audioMin }) }), el("span", { "aria-hidden": "true", text: " 👑" })));
     bar.append(el("button", { type: "button", class: "btn", id: "btn-tg-approve", onclick: () => {
       let n = 0;
       for (const l of langs) n += approveTranslation(project, l);

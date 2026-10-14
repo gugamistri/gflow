@@ -80,7 +80,7 @@ import {
 import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
 import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
 import { getLocale, t } from "./i18n.js";
-import { getTranslation, projectI18n, setTranslation } from "./tour-schema/i18n.js";
+import { getTranslation, projectI18n, setTranslation, textHash } from "./tour-schema/i18n.js";
 import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
@@ -4046,6 +4046,80 @@ export function createEditor(ctx) {
     return text;
   }
 
+  /**
+   * Áudio por idioma (PRD multi-idioma RF16/RF17): gera `plan` (langAudioPlan) e grava em
+   * step.i18n[lang].narrationAudio com textHash. O piso do passo segue o idioma ativo no player (RF18).
+   */
+  async function generateLangAudio(plan) {
+    const demo = getDemo();
+    const items = Array.isArray(plan) ? plan : [];
+    if (!demo || !items.length) return { ok: 0, failed: 0 };
+    ensureNarration(demo);
+    const hostedFirst = prefersHostedGeneration?.() === true;
+    const ownTts = !hostedFirst && (await hasOwnTts());
+    if (!ownTts) {
+      const gate = await ensureHostedFeature?.("tts", () => generateLangAudio(plan));
+      if (gate !== "proceed") {
+        if (gate !== "blocked") toast(t("cartesia.noKey"));
+        return { ok: 0, failed: 0, gated: true };
+      }
+    }
+    setGenerateBusy("audio", true);
+    let ok = 0;
+    let failed = 0;
+    let gated = false;
+    let lastError = "";
+    try {
+      for (const it of items) {
+        const step = demo.steps.find((x) => x.id === it.stepId);
+        if (!step) continue;
+        const language = String(it.locale || it.lang).toLowerCase().split("-")[0];
+        try {
+          let clips;
+          let voiceId = it.voiceId || "";
+          if (ownTts) {
+            clips = await generateNarrationClips(it.text, { voiceURI: it.locale, voiceId, rate: demo.narration.rate, language });
+          } else {
+            const hosted = await synthesizeHostedSpeech(it.text, { voice: voiceId, language });
+            if (!hosted.ok) {
+              if (presentHostedFailure?.(hosted, "tts")) {
+                gated = true;
+                break;
+              }
+              throw new Error(hosted.message || t("toast.audioGenFail"));
+            }
+            clips = [hosted.clip];
+            voiceId = voiceId || String(hosted.data?.voice || "");
+            noteHostedUsage?.(hosted.data?.usage);
+          }
+          const durations = await measureClipDurations(clips);
+          step.i18n = step.i18n || {};
+          step.i18n[it.lang] = step.i18n[it.lang] || {};
+          step.i18n[it.lang].narrationAudio = {
+            source: "tts",
+            language,
+            voiceId,
+            rate: demo.narration.rate ?? 1,
+            playbackRate: normalizeCaptionPlaybackRate(step.narrationAudio?.playbackRate),
+            durationSeconds: durations.reduce((sum, n) => sum + n, 0),
+            clipDurations: durations,
+            clips,
+            textHash: textHash(it.text),
+          };
+          ok += 1;
+        } catch (err) {
+          failed += 1;
+          lastError = err?.message || t("toast.audioGenFail");
+        }
+      }
+    } finally {
+      setGenerateBusy("audio", false);
+    }
+    if (ok) onChange();
+    if (failed && !ok && lastError) toast(lastError);
+    return { ok, failed, gated };
+  }
+
   async function generateCaptionAudio(indices) {
     const demo = getDemo();
     ensureNarration(demo);
@@ -4673,7 +4747,7 @@ export function createEditor(ctx) {
     stopSpeech();
   }
 
-  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges, setEditLang, getEditLang: () => activeEditLang(), byokLlmComplete, hasByokLlm: () => Boolean(llmBridge()?.llmComplete || llmConfigured) };
+  return { refresh, revealSelected, selectStep, currentStep, pauseCaption, stopPreview, stopAudio, paintHostedBadges, setEditLang, getEditLang: () => activeEditLang(), generateLangAudio, byokLlmComplete, hasByokLlm: () => Boolean(llmBridge()?.llmComplete || llmConfigured) };
 }
 
 function getImageContentRect(img) {

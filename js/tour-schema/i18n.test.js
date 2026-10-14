@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   sha256Hex, textHash, normalizeLangTag, matchLang, ensureI18n, addLang, removeLang, translatableFields,
   setTranslation, fieldStatus, translationStatus, approveTranslation, resolveContent, normalizeI18n,
-  sameVars, i18nPublishWarnings, playerLangs, audioStatus, stepAudioSeconds, MAX_TARGET_LANGS, langLabel,
+  sameVars, i18nPublishWarnings, playerLangs, audioStatus, stepAudioSeconds, MAX_TARGET_LANGS, langLabel, langAudioPlan, textHash as th,
 } from "./i18n.js";
 
 const tour = () => ({
@@ -107,4 +107,20 @@ test("resolveContent with fallback and audio", () => {
 test("vars preserved (RF9)", () => {
   assert.ok(sameVars("Olá {nome}, veja https://x.com", "Hi {nome}, see https://x.com"));
   assert.ok(!sameVars("Olá {nome}", "Hi {name}"));
+});
+
+test("langAudioPlan: only missing/stale with a translated caption; same text+voice is reused", () => {
+  const p = tour();
+  addLang(p, "en", { voiceId: "a33f7a4c-100f-41cf-a1fd-5822e8fc253f" });
+  const s = p.steps.find((x) => String(x.caption || "").trim());
+  assert.ok(s, "fixture has a captioned step");
+  assert.equal(langAudioPlan(p).length, 0, "no translated caption → nothing to generate");
+  setTranslation(p, { id: s.id, field: "caption", lang: "en", text: "Click New." });
+  const plan = langAudioPlan(p);
+  assert.equal(plan.length, 1);
+  assert.equal(plan[0].seconds, 1);
+  s.i18n.en.narrationAudio = { clips: ["data:x"], textHash: th("Click New."), voiceId: "a33f7a4c-100f-41cf-a1fd-5822e8fc253f", durationSeconds: 1 };
+  assert.equal(langAudioPlan(p).length, 0, "cache hit");
+  setTranslation(p, { id: s.id, field: "caption", lang: "en", text: "Click New to start." });
+  assert.equal(langAudioPlan(p, { langs: ["en"], stepIds: [s.id] }).length, 1, "stale");
 });
