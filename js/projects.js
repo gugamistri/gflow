@@ -32,7 +32,7 @@ const INDEX_KEY = "demo-studio-index-v2";
 const LEGACY_KEYS = ["interactive-demo-v1"];
 const DEFAULT_JSON_URL = "data/demo.json";
 /** Bump when data/demo.json muda — reinstala o tour de exemplo sem apagar outros projetos. */
-const SEED_REVISION = 3;
+const SEED_REVISION = 4;
 export const STOCK_DEMO_NAME = "Como usar o Guia";
 
 /**
