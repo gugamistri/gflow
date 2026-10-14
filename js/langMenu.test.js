@@ -39,3 +39,12 @@ test("no source audio: audio is off instead of another language (Q1)", () => {
   const st = resolvePlayerLangs(d, { languages: ["pt-BR"] });
   assert.equal(st.audio === "es", false);
 });
+
+test("applyLangChoice: escolher o áudio leva o texto junto; texto e legenda ficam independentes", async () => {
+  const { applyLangChoice } = await import("./langMenu.js");
+  const langs = ["pt-BR", "en", "es"];
+  assert.deepEqual(applyLangChoice({ text: "es", audio: "es", cc: true }, "audio", "en", langs), { text: "en", audio: "en", cc: true });
+  assert.deepEqual(applyLangChoice({ text: "es", audio: "es", cc: true }, "audio", "none", langs), { text: "es", audio: "none", cc: true });
+  assert.deepEqual(applyLangChoice({ text: "en", audio: "en", cc: true }, "text", "pt-BR", langs), { text: "pt-BR", audio: "en", cc: true });
+  assert.deepEqual(applyLangChoice({ text: "en", audio: "en", cc: true }, "cc", "off", langs), { text: "en", audio: "en", cc: false });
+});
