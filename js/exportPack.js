@@ -20,6 +20,7 @@ import {
 import { t, getLocale, HTML_LANG, standaloneMessages } from "./i18n.js";
 import { timeStretchChannels } from "./timeStretch.js";
 import { LOGO_DARK_SVG } from "./brandLogo.js";
+import { htmlLangScript, wrapTextUnits } from "./exportLangs.js";
 
 const DRIVER_JS = "vendor/driver/driver.js.iife.js";
 const DRIVER_CSS = "vendor/driver/driver.css";
@@ -142,7 +143,7 @@ export async function embedImagesInDemo(demo, onProgress) {
   return next;
 }
 
-function standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance }) {
+function standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance, langJs = "" }) {
   const mode = appearance === "social" ? "social" : "documento";
   const themeColor = mode === "social" ? "#101010" : "#1A4D6D";
   return `<!DOCTYPE html>
@@ -209,7 +210,8 @@ ${css}
     </div>
   </main>
   <div class="toast" id="toast" hidden></div>
-  <script>window.INTERACTIVE_DEMO = ${demoJson};</script>
+  <script>window.INTERACTIVE_DEMO = ${demoJson};</script>${langJs ? `
+  <script>${langJs}</script>` : ""}
   <script>window.__GF_I18N = ${JSON.stringify(standaloneMessages())};</script>
   <script>${DRIVER_NOTICE}
 ${driverJs}</script>
@@ -219,7 +221,7 @@ ${driverJs}</script>
 `;
 }
 
-export async function exportStandaloneHtml(demo, { onProgress } = {}) {
+export async function exportStandaloneHtml(demo, { onProgress, langData = null } = {}) {
   onProgress?.(t("export.readStyles"));
   const [themeCss, appCss, driverCss, driverJs, playerJs] = await Promise.all([
     fetchText("css/theme.css"),
@@ -244,7 +246,8 @@ body.standalone .topbar-title { font-size: 0.78rem; }
 `;
   const fontCss = await embeddedThemeFontCss(embedded?.theme?.font);
   const css = [driverCss, themeCss, appCss, extra, fontCss].filter(Boolean).join("\n");
-  const html = standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance });
+  const langJs = langData ? htmlLangScript(langData) : "";
+  const html = standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance, langJs });
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   downloadBlob(blob, `${slugifyFilename(demo?.name, "demo")}.html`);
   return blob.size;
@@ -641,7 +644,7 @@ async function exportVideoWebCodecs(demo, { onProgress, canvas, signal, images, 
 
   const blob = new Blob([target.buffer], { type: "video/mp4" });
   if (!blob.size) throw new Error(t("err.emptyRecording"));
-  downloadBlob(blob, `${slugifyFilename(demo?.name, "demo")}.mp4`);
+  downloadBlob(blob, `${demo?.exportFileBase || slugifyFilename(demo?.name, "demo")}.mp4`);
   return { size: blob.size, ext: "mp4" };
 }
 
@@ -751,7 +754,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
   const ext = mime.includes("mp4") ? "mp4" : "webm";
   const blob = new Blob(chunks, { type: mime.split(";")[0] });
   if (!blob.size) throw new Error(t("err.emptyRecording"));
-  downloadBlob(blob, `${slugifyFilename(demo?.name, "demo")}.${ext}`);
+  downloadBlob(blob, `${demo?.exportFileBase || slugifyFilename(demo?.name, "demo")}.${ext}`);
   return { size: blob.size, ext };
 }
 
@@ -761,11 +764,13 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
  */
 export async function exportVideo(
   demo,
-  { onProgress, canvas, signal, watermark = true, quality: qualityId = "standard", fps = 30, pro = false } = {},
+  { onProgress, canvas, signal, watermark = true, quality: qualityId = "standard", fps = 30, pro = false, fileBase = "" } = {},
 ) {
   const steps = demo.steps || [];
   if (!steps.length) throw new Error(t("err.noStepsRecord"));
   const framed = { ...demo, exportWatermark: Boolean(watermark) };
+  // why: “Todos os idiomas” baixa um arquivo por idioma (tour-nome.pt-BR.mp4, RF25)
+  if (fileBase) framed.exportFileBase = fileBase;
   await prepareVideoFont(demo.theme);
 
   const images = await loadDemoImages(framed, onProgress);
@@ -791,23 +796,8 @@ export async function exportVideo(
 }
 
 function wrapText(ctx, text, maxWidth) {
-  const words = String(text || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .split(" ");
-  const lines = [];
-  let line = "";
-  for (const word of words) {
-    const test = line ? line + " " + word : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line);
-      line = word;
-    } else {
-      line = test;
-    }
-  }
-  if (line) lines.push(line);
-  return lines;
+  // why: zh/ja/ko não têm espaços; quebra por caractere (PRD multi-idioma §10)
+  return wrapTextUnits((line) => ctx.measureText(line).width, text, maxWidth);
 }
 
 function containRect(imgW, imgH, boxX, boxY, boxW, boxH) {
