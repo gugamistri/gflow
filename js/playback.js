@@ -424,7 +424,7 @@ export function restoreCaptionHome(captionEl, home) {
 /**
  * why: a API só entra aqui; a reprodução usa os clipes já salvos no passo.
  */
-export async function generateNarrationClips(text, { voiceURI, voiceId, rate } = {}) {
+export async function generateNarrationClips(text, { voiceURI, voiceId, rate, language } = {}) {
   const trimmed = String(text || "").trim();
   if (!trimmed) throw new Error("Escreva uma legenda para gerar o áudio.");
   const bridge = typeof window !== "undefined" ? window.guiaDesktopApp?.cartesiaSpeak : null;
@@ -437,8 +437,8 @@ export async function generateNarrationClips(text, { voiceURI, voiceId, rate } =
   const clips = [];
   for (const part of parts) {
     const result = bridge
-      ? await bridge({ text: part, voiceURI, voiceId, rate })
-      : await synthesizeCartesia({ apiKey, text: part, voiceURI, voiceId, rate });
+      ? await bridge({ text: part, voiceURI, voiceId, rate, language })
+      : await synthesizeCartesia({ apiKey, text: part, voiceURI, voiceId, rate, language });
     if (!result?.ok || !result.audioBase64) {
       throw new Error(result?.error || "A síntese falhou.");
     }

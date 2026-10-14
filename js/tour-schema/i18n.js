@@ -469,6 +469,37 @@ export function resolveContent(project, lang, { audioLang } = {}) {
 }
 
 /** Duração para o temporizador: a do idioma ativo, nunca abaixo do timer do autor (Q4). */
+/** ~14 caracteres por segundo de fala (mesma conta do cloud, estimateSpeechSeconds). */
+export function estimateSpeechSecondsI18n(text) {
+  const n = String(text ?? "").trim().length;
+  return n ? Math.max(1, Math.ceil(n / 14)) : 0;
+}
+
+/**
+ * RF16/RF17: áudios a gerar por idioma — só `faltando` ou `desatualizado` (mesmo texto + voz = reaproveita,
+ * sem cobrar). [{ stepId, lang, text, voiceId, locale, seconds }]
+ */
+export function langAudioPlan(project, { langs = null, stepIds = null } = {}) {
+  const cfg = projectI18n(project);
+  if (!cfg) return [];
+  const want = langs?.length ? new Set(langs) : null;
+  const only = stepIds?.length ? new Set(stepIds) : null;
+  const out = [];
+  for (const l of cfg.langs) {
+    if (want && !want.has(l.lang)) continue;
+    for (const step of project.steps || []) {
+      if (only && !only.has(step.id)) continue;
+      if (!String(step.caption || "").trim()) continue;
+      const st = audioStatus(step, l.lang, { voiceId: l.voiceId });
+      if (st !== "missing" && st !== "stale") continue;
+      const text = String(step.i18n?.[l.lang]?.caption || "").trim();
+      if (!text) continue;
+      out.push({ stepId: step.id, lang: l.lang, text, voiceId: l.voiceId || "", locale: l.locale || l.lang, seconds: estimateSpeechSecondsI18n(text) });
+    }
+  }
+  return out;
+}
+
 export function stepAudioSeconds(step, audioLang) {
   const a = (audioLang && step?.i18n?.[audioLang]?.narrationAudio) || step?.narrationAudio;
   return Number(a?.durationSeconds) || 0;

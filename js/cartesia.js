@@ -9,6 +9,9 @@ export const CARTESIA_MODEL = "sonic-3.6";
 /** Voz antiga (Skylar, multilíngue americana): fallback quando o idioma não tem catálogo. */
 export const CARTESIA_VOICE_ID = "db6b0ed5-d5d3-463d-ae85-518a07d3c2b4";
 
+/** Idiomas da Sonic 3.6 (docs.cartesia.ai, 44 idiomas): narração por idioma do tour (PRD multi-idioma §5.4). */
+export const CARTESIA_LANGUAGES = Object.freeze(["en", "fr", "de", "es", "pt", "zh", "ja", "hi", "it", "ko", "nl", "pl", "ru", "sv", "tr", "tl", "bg", "ro", "ar", "cs", "el", "fi", "hr", "ms", "sk", "da", "ta", "uk", "hu", "no", "vi", "bn", "th", "he", "ka", "id", "te", "gu", "kn", "ml", "mr", "pa", "or", "ur"]);
+
 /** Idioma da narração (locale da Sonic). O id é o voiceURI salvo no projeto (compatível). */
 export const CARTESIA_VOICES = [
   { id: "pt-BR", labelKey: "cartesia.voice.pt-BR", locale: "pt-BR", language: "pt" },
@@ -155,7 +158,20 @@ export function speechSpeed(rate) {
   return Math.min(1.5, Math.max(0.6, Math.round(speed * 20) / 20));
 }
 
-export function ttsRequest({ text, voiceURI, voiceId, rate } = {}) {
+export function ttsRequest({ text, voiceURI, voiceId, rate, language } = {}) {
+  const lang = String(language || "").trim().toLowerCase().split(/[-_]/)[0];
+  if (lang && CARTESIA_LANGUAGES.includes(lang) && !CARTESIA_VOICE_CATALOG[lang]) {
+    // why: idioma-alvo fora do catálogo curado (fr, de…): a voz vem do painel Idiomas
+    if (!isVoiceId(voiceId)) throw new Error(t("cartesia.needVoice"));
+    return {
+      model_id: CARTESIA_MODEL,
+      transcript: String(text || "").trim(),
+      voice: { id: String(voiceId).trim() },
+      language: lang,
+      output_format: { container: "mp3", sample_rate: 44100, bit_rate: 64000 },
+      generation_config: { speed: speechSpeed(rate) },
+    };
+  }
   const narration = resolveNarration(voiceURI, voiceId);
   if (!LOCALES.has(narration.locale)) {
     throw new Error(t("cartesia.badLocale"));
@@ -192,9 +208,14 @@ function clip(text) {
   return raw.length > 180 ? `${raw.slice(0, 179)}…` : raw;
 }
 
-export async function synthesizeCartesia({ apiKey, text, voiceURI, voiceId, rate, fetchImpl = fetch } = {}) {
+export async function synthesizeCartesia({ apiKey, text, voiceURI, voiceId, rate, language, fetchImpl = fetch } = {}) {
   const key = String(apiKey || "");
-  const body = ttsRequest({ text, voiceURI, voiceId, rate });
+  let body;
+  try {
+    body = ttsRequest({ text, voiceURI, voiceId, rate, language });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
   if (!body.transcript) return { ok: false, error: t("cartesia.noText") };
   let response;
   try {
@@ -225,4 +246,24 @@ export async function synthesizeCartesia({ apiKey, text, voiceURI, voiceId, rate
     return { ok: false, error: t("cartesia.badAudio") };
   }
   return { ok: true, audioBase64: toBase64(audio), mime: "audio/mpeg" };
+}
+
+/** Vozes da Cartesia para um idioma, com a chave do autor (BYOK). [{ id, name, gender }] */
+export async function listCartesiaVoices({ apiKey, language, fetchImpl = fetch } = {}) {
+  const lang = String(language || "").trim().toLowerCase().split(/[-_]/)[0];
+  if (!CARTESIA_LANGUAGES.includes(lang)) return [];
+  const url = `https://api.cartesia.ai/voices?language=${encodeURIComponent(lang)}&limit=100`;
+  const response = await fetchImpl(url, { headers: { Authorization: `Bearer ${String(apiKey || "")}`, "Cartesia-Version": CARTESIA_VERSION } });
+  if (!response.ok) return [];
+  const data = await response.json().catch(() => null);
+  return voicesFromCartesia(data, lang);
+}
+
+/** Normaliza a resposta de /voices (data[] ou array), só vozes do idioma. */
+export function voicesFromCartesia(data, lang) {
+  const list = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+  return list
+    .filter((v) => isVoiceId(v?.id) && String(v.language || "").toLowerCase().split(/[-_]/)[0] === lang)
+    .slice(0, 60)
+    .map((v) => ({ id: String(v.id).toLowerCase(), name: String(v.name || v.id).slice(0, 60), gender: /^f/i.test(v.gender || "") ? "f" : /^m/i.test(v.gender || "") ? "m" : "" }));
 }

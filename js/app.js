@@ -163,7 +163,10 @@ import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
-import { MAX_TARGET_LANGS, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
+import { MAX_TARGET_LANGS, langAudioPlan, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
+import { listHostedVoices } from "./hosted.js";
+import { listCartesiaVoices } from "./cartesia.js";
+import { readCartesiaKey } from "./cartesia-store.js";
 import { applyTranslations, batchItems, buildTranslateMessages, hostedTranslateRequest, parseTranslateResult } from "./tour-schema/translate.js";
 
 let project = null;
@@ -601,6 +604,7 @@ const translationsDialog = createTranslationsDialog({
   listProjects: () => listAllProjects(),
   onOpenGrid: () => translationGrid.open(),
   onTranslate: ({ render }) => runTranslate({ after: render }),
+  loadVoices: (lang) => loadLangVoices(lang),
   onEditLangChange: () => {
     paintEditLang();
     editor.refresh();
@@ -609,6 +613,7 @@ const translationsDialog = createTranslationsDialog({
 
 const translationGrid = createTranslationGrid({
   onTranslate: ({ langs }) => runTranslate({ langs }),
+  onGenerateAudio: ({ langs, stepIds, render }) => runLangAudio({ langs, stepIds, render }),
   onRetranslate: ({ lang, row }) => runTranslate({ langs: [lang], keys: row.fields.map((f) => f.key) }),
   getProject: () => project,
   onChange: () => {
@@ -617,6 +622,46 @@ const translationGrid = createTranslationGrid({
   },
   toast,
 });
+
+/** Vozes dinâmicas (Q9): Pro pelo cloud; sem Pro, com a chave Cartesia do autor. { [lang]: [...] } */
+async function loadLangVoices(lang) {
+  let voices = [];
+  if (prefersHostedGeneration()) voices = await listHostedVoices(lang).catch(() => []);
+  else {
+    const apiKey = await readCartesiaKey().catch(() => "");
+    if (apiKey) voices = await listCartesiaVoices({ apiKey, language: lang }).catch(() => []);
+  }
+  return voices.length ? { [lang]: voices } : {};
+}
+
+let generatingAudio = false;
+
+/** “Gerar áudios” por idioma (RF16): estimativa + saldo antes, só faltando/desatualizado (RF17). */
+async function runLangAudio({ langs = null, stepIds = null, render } = {}) {
+  if (!project || generatingAudio) return;
+  const plan = langAudioPlan(project, { langs, stepIds });
+  if (!plan.length) {
+    toast(t("tg.audioNone"), 4200);
+    return;
+  }
+  const seconds = plan.reduce((a, x) => a + x.seconds, 0);
+  const k = new Set(plan.map((x) => x.lang)).size;
+  let msg = t("tg.audioConfirm", { n: plan.length, k, m: Math.max(1, Math.round(seconds / 60)) });
+  if (prefersHostedGeneration() && hostedMeters.audioMinutes != null) {
+    msg += " " + t("tg.audioBalance", { left: Math.max(0, hostedMeters.audioLimit - hostedMeters.audioMinutes), limit: hostedMeters.audioLimit });
+  }
+  if (plan.length > 1 && !confirm(msg)) return;
+  generatingAudio = true;
+  try {
+    const r = await editor.generateLangAudio(plan);
+    if (r.gated) return;
+    if (r.ok && !r.failed) toast(t("tg.audioDone", { n: r.ok }));
+    else if (r.ok) toast(t("tg.audioPartial", { ok: r.ok, fail: r.failed }), 4200);
+  } finally {
+    generatingAudio = false;
+    render?.();
+  }
+}
 
 let translating = false;
 

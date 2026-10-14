@@ -32,6 +32,9 @@ test("parse validates vars and limits; apply marks auto", () => {
   const r = parseTranslateResult(raw, items);
   assert.ok(r.rejected.includes("step:s1:title"));
   assert.ok(r.rejected.includes("end:end:whatsapp.message"));
+  assert.equal(r.reasons["step:s1:title"], "vars");
+  assert.equal(r.reasons["end:end:whatsapp.message"], "missing");
+  assert.equal(parseTranslateResult("nope", items).reasons["step:s1:title"], "invalid_json");
   assert.equal(r.translations["step:s1:description"], "See https://x.com");
   assert.equal(applyTranslations(p, "en", r.translations), 3);
   const f = translatableFields(p).find((x) => x.key === "end:end:title");
