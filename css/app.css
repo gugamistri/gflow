@@ -9591,3 +9591,57 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
     border-radius: 16px;
   }
 }
+
+/* ───────── Mobile: no editor o balão sai de cima da captura, igual ao player compacto ─────────
+ * why: o balão flutuante cobria quase toda a imagem no celular. Em pé: captura em cima, balão embaixo.
+ * Deitado: captura à esquerda, balão ao lado. O player publicado (body.is-presenting) não muda. */
+@media (hover: none) and (pointer: coarse) and (max-width: 900px),
+  (hover: none) and (pointer: coarse) and (max-height: 500px) {
+  body.is-compact-touch .view-editor:not(.is-presenting) #canvas-frame:has(#canvas-image:not([hidden])):has(#editor-popover:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+  }
+  body.is-compact-touch .view-editor:not(.is-presenting) #canvas-frame:has(#editor-popover:not([hidden])) #canvas-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 44dvh;
+    object-fit: contain;
+    object-position: left top;
+  }
+  body.is-compact-touch .view-editor:not(.is-presenting) #canvas-frame #editor-popover:not([hidden]) {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+    width: 100%;
+    max-width: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+  body.is-compact-touch .view-editor:not(.is-presenting) #editor-popover .editor-popover-arrow { display: none; }
+}
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  /* Deitado: o quadro fica do tamanho da captura (o destaque usa as medidas do quadro) e o balão vai ao lado */
+  body.is-compact-touch .view-editor:not(.is-presenting) #canvas-frame:has(#canvas-image:not([hidden])):has(#editor-popover:not([hidden])) {
+    display: block;
+    position: relative;
+    width: auto;
+    margin-right: calc(min(300px, 40vw) + 8px);
+  }
+  body.is-compact-touch .view-editor:not(.is-presenting) #canvas-frame:has(#editor-popover:not([hidden])) #canvas-image {
+    width: auto;
+    max-width: 100%;
+    max-height: calc(100dvh - 52px - var(--mbar-h, 48px) - 24px);
+  }
+  body.is-compact-touch .view-editor:not(.is-presenting) #canvas-frame #editor-popover:not([hidden]) {
+    position: absolute;
+    left: calc(100% + 8px) !important;
+    top: 0 !important;
+    width: min(300px, 40vw);
+    max-height: calc(100dvh - 52px - var(--mbar-h, 48px) - 24px);
+    overflow: auto;
+  }
+}

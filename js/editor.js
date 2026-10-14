@@ -25,7 +25,7 @@ import {
   readInlineText,
   snapPopoverPlacement,
 } from "./canvasEdit.js";
-import { isCompactTouch } from "./compact.js";
+import { isCompactLandscape, isCompactTouch } from "./compact.js";
 import {
   isPropsPanelShortcut,
   planToolbarOverflow,
@@ -567,8 +567,12 @@ export function createEditor(ctx) {
     let lastScene = null;
     const filmPairs = [];
     const lastIndex = demo.steps.length - 1;
-    const upLabel = escapeAttr(t("filmstrip.moveUp"));
-    const downLabel = escapeAttr(t("filmstrip.moveDown"));
+    // why: no celular em pé a filmstrip é uma faixa horizontal; deitado (e no desktop) é coluna
+    const horizontalStrip = isCompactTouch() && !isCompactLandscape();
+    const upLabel = escapeAttr(t(horizontalStrip ? "filmstrip.moveLeft" : "filmstrip.moveUp"));
+    const downLabel = escapeAttr(t(horizontalStrip ? "filmstrip.moveRight" : "filmstrip.moveDown"));
+    const upGlyph = horizontalStrip ? "←" : "↑";
+    const downGlyph = horizontalStrip ? "→" : "↓";
     const removeLabel = escapeAttr(t("filmstrip.remove"));
 
     demo.steps.forEach((step, index) => {
@@ -617,8 +621,8 @@ export function createEditor(ctx) {
             <strong>${escapeHtml(stepListName(step))}</strong>
           </div>
           <div class="film-actions">
-            <button type="button" class="film-action-move" data-action="up" ${index === 0 ? "disabled" : ""} title="${upLabel}" aria-label="${upLabel}">↑</button>
-            <button type="button" class="film-action-move" data-action="down" ${index === lastIndex ? "disabled" : ""} title="${downLabel}" aria-label="${downLabel}">↓</button>
+            <button type="button" class="film-action-move" data-action="up" ${index === 0 ? "disabled" : ""} title="${upLabel}" aria-label="${upLabel}">${upGlyph}</button>
+            <button type="button" class="film-action-move" data-action="down" ${index === lastIndex ? "disabled" : ""} title="${downLabel}" aria-label="${downLabel}">${downGlyph}</button>
             <button type="button" class="film-action-close" data-action="delete" title="${removeLabel}" aria-label="${removeLabel}">×</button>
           </div>
         </div>`;
