@@ -4,7 +4,9 @@
 import { applyTheme, normalizeSteps, resolveImageSrc } from "./store.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createPlayer } from "./player.js";
-import { getLocale, initLocale, applyI18n, t } from "./i18n.js";
+import { getLocale, initLocale, applyI18n, setLocale, SUPPORTED_LOCALES, t } from "./i18n.js";
+import { applyDocumentLang, createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
+import { baseLang, langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
 import {
@@ -176,6 +178,10 @@ let player = null;
 /** Tracker do analytics; null quando não há rastreio (DNT/GPC, /v, preview). */
 let tracker = null;
 let demo = null;
+/** Tour como publicado (origem + blocos i18n); `demo` é a visão no idioma escolhido. */
+let sourceDemo = null;
+let langState = null;
+let langMenu = null;
 let touring = false;
 let replayTour = () => {};
 let shareFeatures = { leadCapture: false, contactForm: false };
@@ -588,6 +594,61 @@ window.addEventListener(
 );
 window.addEventListener("pointercancel", () => { pendingTouchExit = null; }, true);
 
+let onLangSwitch = () => {};
+
+/** Visão do tour para { text, audio, cc } (§4.1). */
+export function viewForLang(source, state) {
+  const view = resolveContent(source, state.text, { audioLang: state.audio });
+  if (!state.cc) view.steps = view.steps.map((s) => ({ ...s, showCaption: false }));
+  return view;
+}
+
+function langChromeLocale(lang) {
+  const base = baseLang(lang);
+  return SUPPORTED_LOCALES.includes(base) ? base : "en";
+}
+
+function applyLangState(next, { initial = false } = {}) {
+  const prev = langState;
+  langState = next;
+  demo = viewForLang(sourceDemo, next);
+  storeLangs(shareSlug || viewRoute()?.id || "v", next);
+  // why: botões e rótulos do player seguem o idioma do texto quando há catálogo (§4.1)
+  setLocale(langChromeLocale(next.text), { persist: false });
+  applyI18n(document);
+  applyDocumentLang(next.text);
+  if (!initial) applyShareTitle(demo.name || "");
+  langMenu?.paint();
+  const fallback = next.audio !== "none" && demo.audioFallback?.length;
+  if (fallback && (initial || prev?.audio !== next.audio)) {
+    toast(t("player.audioFallback", { lang: langLabel(next.audio), source: langLabel(sourceDemo.i18n.defaultLang) }));
+  }
+  if (!initial) {
+    tracker?.langChange?.(next);
+    onLangSwitch();
+  }
+}
+
+function setupLanguages(route) {
+  sourceDemo = demo;
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  const state = resolvePlayerLangs(sourceDemo, {
+    search: location.search,
+    stored: readStoredLangs(shareSlug || route?.id || "v"),
+    languages: nav.languages?.length ? nav.languages : [nav.language].filter(Boolean),
+  });
+  if (!state) return;
+  langMenu = createLangMenu({ demo: sourceDemo, getState: () => langState, onChange: (s) => applyLangState(s) });
+  applyLangState(state, { initial: true });
+}
+
+function mountLangMenu(tries = 30) {
+  if (!langMenu || langMenu.isMounted()) return;
+  const host = document.querySelector(".gf-player-controls");
+  if (host) langMenu.mount(host);
+  else if (tries > 0) requestAnimationFrame(() => mountLangMenu(tries - 1));
+}
+
 async function boot() {
   initLocale();
   applyI18n(document);
@@ -627,6 +688,7 @@ async function boot() {
   ensurePlayback(demo);
   ensureNarration(demo);
   applyTheme(demo.theme);
+  setupLanguages(route);
 
   applyBranding(shareBranding(route.kind, demo, shareServerBranding));
   applyShareTitle(demo.name || shareBoot?.name || "");
@@ -663,8 +725,14 @@ async function boot() {
   };
   document.getElementById("view-share-replay")?.addEventListener("click", () => replayTour());
 
+  onLangSwitch = () => {
+    // why: a troca no meio do tour mantém o passo e reinicia o áudio dele (RF21)
+    if (touring && player?.isRunning?.()) player.play({ from: selectedIndex, autoplay: true });
+  };
+
   const startTour = () => {
     showTouring();
+    mountLangMenu();
     requestAnimationFrame(() => {
       // why: tour publicado assiste sozinho; o 1º áudio retenta no gesto se o browser bloquear
       player.play({ from: initialIndex, autoplay: true });

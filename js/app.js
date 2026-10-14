@@ -3159,6 +3159,7 @@ function bindChrome() {
       autoplay: Boolean(document.getElementById("embed-autoplay")?.checked),
       flavor: embedFlavor,
       label: t("embed.frameLabel"),
+      lang: document.getElementById("embed-lang")?.value || "",
     });
   }
 
@@ -3186,6 +3187,7 @@ function bindChrome() {
     const linkMode = isLinkEmbedFlavor(embedFlavor);
     const autoplayRow = document.getElementById("embed-autoplay-row");
     if (autoplayRow) autoplayRow.hidden = linkMode;
+    paintEmbedLang(linkMode);
     const copyBtn = document.getElementById("btn-embed-copy");
     if (copyBtn) {
       const key = linkMode ? "embed.copyLink" : "embed.copy";
@@ -3197,6 +3199,27 @@ function bindChrome() {
       code.value = published ? currentEmbedCode() : "";
       code.rows = linkMode ? 2 : 7;
     }
+  }
+
+  /** “Idioma inicial” do embed — só com 2+ idiomas no player (RF22). */
+  function paintEmbedLang(linkMode) {
+    const row = document.getElementById("embed-lang-row");
+    const select = document.getElementById("embed-lang");
+    if (!row || !select) return;
+    const cfg = project ? projectI18n(project) : null;
+    const langs = cfg ? [cfg.defaultLang, ...cfg.langs.filter((l) => l.enabled).map((l) => l.lang)] : [];
+    row.hidden = linkMode || langs.length < 2;
+    const keep = select.value;
+    const auto = document.createElement("option");
+    auto.value = "";
+    auto.textContent = t("embed.langAuto");
+    select.replaceChildren(auto, ...langs.map((l) => {
+      const o = document.createElement("option");
+      o.value = l;
+      o.textContent = langLabel(l);
+      return o;
+    }));
+    select.value = langs.includes(keep) ? keep : "";
   }
 
   function openEmbedDialog() {
@@ -3253,6 +3276,7 @@ function bindChrome() {
     paintEmbedDialog();
   });
   document.getElementById("embed-code")?.addEventListener("focus", (e) => e.target.select());
+  document.getElementById("embed-lang")?.addEventListener("change", () => paintEmbedDialog());
   document.getElementById("btn-embed-copy")?.addEventListener("click", async () => {
     const code = currentEmbedCode();
     if (!code) return;

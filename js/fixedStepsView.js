@@ -329,14 +329,14 @@ export function renderStartCard(rawStep, opts = {}) {
   // why: campos lado a lado quando cabem — o gate precisa caber num embed de 420px sem rolagem
   const fieldsBox = el("div", "fixed-form-fields");
   const specs = {
-    name: { label: t("fixed.lead.name"), type: "text", autocomplete: "name", maxLength: 120 },
-    email: { label: t("fixed.lead.email"), type: "email", autocomplete: "email", inputmode: "email", maxLength: 254 },
+    name: { label: rawStep?.fieldLabels?.name || t("fixed.lead.name"), type: "text", autocomplete: "name", maxLength: 120 },
+    email: { label: rawStep?.fieldLabels?.email || t("fixed.lead.email"), type: "email", autocomplete: "email", inputmode: "email", maxLength: 254 },
   };
   for (const key of LEAD_FIELDS) {
     if (!step.fields[key].show) continue;
     const field =
       key === "phone"
-        ? phoneInputField({ key, label: t("fixed.lead.phone"), required: step.fields[key].required, defaultIso: opts.phoneCountry })
+        ? phoneInputField({ key, label: rawStep?.fieldLabels?.phone || t("fixed.lead.phone"), required: step.fields[key].required, defaultIso: opts.phoneCountry })
         : inputField({ key, required: step.fields[key].required, ...specs[key] });
     inputs[key] = field;
     fieldsBox.append(field.wrap);

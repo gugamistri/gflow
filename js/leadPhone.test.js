@@ -75,7 +75,7 @@ test("cartões usam o campo internacional (sem máscara só BR) e o tema do bal�
   const view = readFileSync(new URL("./fixedStepsView.js", import.meta.url), "utf8");
   assert.doesNotMatch(view, /formatBrPhone|attachPhoneMask/);
   assert.match(view, /createPhoneField\(/);
-  assert.match(view, /phoneInputField\(\{ key, label: t\("fixed\.lead\.phone"\)/);
+  assert.match(view, /phoneInputField\(\{ key, label: (rawStep\?\.fieldLabels\?\.phone \|\| )?t\("fixed\.lead\.phone"\)/);
   assert.match(view, /phoneInputField\(\{ key: "phone", label: t\("fixed\.lead\.phoneOptional"\)/);
   const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
   const cc = css.match(/\.fixed-card \.fixed-cc \{[^}]*\}/)?.[0] || "";

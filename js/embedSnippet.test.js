@@ -117,3 +117,9 @@ test("Notion e Medium recebem o link /p puro (oEmbed), sem embed/autoplay", () =
     assert.equal(buildEmbedSnippet({ url: "https://guiaflow.pro/p/abc?x=1", flavor, autoplay: true }), "https://guiaflow.pro/p/abc");
   }
 });
+
+test("embed URL carries an optional initial language (PRD multi-idioma RF22)", async () => {
+  const { embedPlayerUrl } = await import("./embedSnippet.js");
+  assert.equal(embedPlayerUrl("https://app.guiaflow.pro/p/x", { autoplay: true, lang: "en" }), "https://app.guiaflow.pro/p/x?embed=1&autoplay=1&lang=en");
+  assert.equal(embedPlayerUrl("https://app.guiaflow.pro/p/x?lang=es", { lang: "bad tag" }), "https://app.guiaflow.pro/p/x?embed=1");
+});
