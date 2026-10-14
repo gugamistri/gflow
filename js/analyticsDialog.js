@@ -1,5 +1,6 @@
 /**
  * Diálogo "Análise do tour" (Pro 👑): lê GET /shares/:slug/analytics e desenha
+import { langLabel } from "./tour-schema/i18n.js";
  * cartões, gráfico SVG (sem dependência), "Onde as pessoas param" e "De onde vieram".
  * why: contagem sem cookies e sem dados pessoais; os passos fixos (início/fim) não entram no drop-off.
  */
@@ -187,6 +188,40 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
     }
   }
 
+  /** RF29: views/conclusão por idioma do texto + combinações áudio×texto e trocas. */
+  function paintLangs(data) {
+    const wrap = $("analytics-langs-wrap");
+    const host = $("analytics-langs");
+    const note = $("analytics-langs-note");
+    if (!wrap || !host) return;
+    const langs = data.langs || {};
+    const list = langs.byText || [];
+    wrap.hidden = !list.length;
+    host.replaceChildren();
+    if (!list.length) return;
+    const total = Math.max(1, list.reduce((n, r) => n + r.views, 0));
+    for (const r of list.slice(0, 10)) {
+      const row = el("div", "analytics-source");
+      row.append(el("span", "analytics-source-name", langLabel(r.lang)));
+      const bar = el("span", "analytics-source-bar");
+      const fill = el("i", "");
+      fill.style.width = `${Math.round((r.views / total) * 100)}%`;
+      bar.append(fill);
+      const pct = Math.round((r.completionRate || 0) * 100);
+      row.append(bar, el("span", "analytics-num", `${formatCount(r.views, locale())} · ${t("analytics.langsCompletion", { pct })} · ${t("analytics.langsLeads", { n: r.leads || 0 })}`));
+      host.append(row);
+    }
+    const combos = (langs.matrix || [])
+      .filter((m) => m.audio !== m.text)
+      .slice(0, 4)
+      .map((m) => `${m.audio === "none" ? t("analytics.langsNoAudio") : langLabel(m.audio)} → ${langLabel(m.text)}: ${m.views}`);
+    const parts = [];
+    if (combos.length) parts.push(t("analytics.langsMixed", { list: combos.join(" · ") }));
+    if (langs.changed) parts.push(t("analytics.langsChanged", { n: langs.changed }));
+    if (langs.ccOff) parts.push(t("analytics.langsCcOff", { n: langs.ccOff }));
+    if (note) note.textContent = parts.join(" ");
+  }
+
   function paint(data) {
     const e = els();
     const tt = data.totals;
@@ -210,6 +245,7 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
     paintChart(data.series || []);
     paintSteps(data);
     paintSources(data);
+    paintLangs(data);
   }
 
   async function load() {

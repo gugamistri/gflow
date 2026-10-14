@@ -48,7 +48,8 @@ export function resolvePlayerLangs(demo, { search = "", stored = null, languages
   if (!text) for (const l of languages) if ((text = pickText(l))) break;
   text = text || source;
   let audio = pickAudio(params.audio) || (params.lang ? pickAudio(params.lang) : "") || pickAudio(stored?.audio);
-  if (!audio) audio = pickAudio(text) || (audios.includes(source) ? source : audios[0] || source);
+  // why: Q1 — sem áudio no idioma do texto cai para a origem; sem áudio na origem, fica sem áudio (não toca outro idioma)
+  if (!audio) audio = pickAudio(text) || (audios.includes(source) ? source : "none");
   const cc = params.cc ?? (typeof stored?.cc === "boolean" ? stored.cc : true);
   return { text, audio, cc };
 }
