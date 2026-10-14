@@ -69,10 +69,10 @@ export function buildTranslateMessages({ items, source, target, name = "", gloss
     `Translate every value from ${langLabel(source)} (${source}) to ${langLabel(target)} (${target}).`,
     toneLine,
     glossary.length ? `Never translate these terms; keep them exactly as written: ${glossary.join(", ")}.` : "",
-    "Keep placeholders like {nome}, {tour}, {link} exactly as they are. Keep URLs, e-mail addresses and phone numbers unchanged.",
+    "Keep placeholders in curly braces like {nome}, {tour}, {link} byte-for-byte as they are (never translate the word inside the braces). Keep URLs, e-mail addresses and phone numbers unchanged.",
     "Respect each item's max length in characters (\"max\"). Keep line breaks where they exist. Do not add quotes or explanations.",
     "Legal consent texts must stay faithful to the original meaning.",
-    'Answer ONLY with a JSON object mapping each id to its translation: {"<id>": "<translation>", ...}.',
+    'Answer ONLY with a JSON object mapping EVERY id (including the tour name) to its translation: {"<id>": "<translation>", ...}.',
   ].filter(Boolean).join("\n");
   const payload = { tour: String(name || "").slice(0, 120), items: items.map((i) => ({ id: i.id, max: i.max, text: i.text })) };
   return [
@@ -104,17 +104,24 @@ export function parseTranslateResult(raw, items) {
   const data = typeof raw === "object" && raw ? raw : extractJson(raw);
   const translations = {};
   const rejected = [];
-  if (!data || typeof data !== "object") return { ok: false, translations, rejected: items.map((i) => i.id) };
+  const reasons = {};
+  if (!data || typeof data !== "object") {
+    for (const i of items) reasons[i.id] = "invalid_json";
+    return { ok: false, translations, rejected: items.map((i) => i.id), reasons };
+  }
   const map = data.translations && typeof data.translations === "object" ? data.translations : data;
   for (const it of items) {
     const v = map[it.id];
-    if (typeof v !== "string" || !v.trim() || !sameVars(it.text, v)) {
+    // why: o motivo (sem o texto) explica a célula pendente na grade e no retorno da API
+    const why = v === undefined ? "missing" : typeof v !== "string" || !v.trim() ? "empty" : !sameVars(it.text, v) ? "vars" : "";
+    if (why) {
       rejected.push(it.id);
+      reasons[it.id] = why;
       continue;
     }
     translations[it.id] = v.trim().slice(0, it.max);
   }
-  return { ok: true, translations, rejected };
+  return { ok: true, translations, rejected, reasons };
 }
 
 function splitKey(key) {

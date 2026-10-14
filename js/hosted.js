@@ -145,3 +145,14 @@ export async function synthesizeHostedSpeech(text, { voice, language } = {}, env
   if (!clip) return { ok: false, error: "bad_response", message: t("billing.badAudio"), data: result.data };
   return { ok: true, clip, data: result.data };
 }
+
+/** Vozes da Cartesia por idioma via cloud (GET /tts/voices?language=, Pro, com cache no servidor). */
+export async function listHostedVoices(language, env) {
+  const lang = String(language || "").trim().toLowerCase();
+  if (!/^[a-z]{2,3}$/.test(lang)) return [];
+  const result = await cloudFetch(`/tts/voices?language=${lang}`, { method: "GET" }, env);
+  if (!result.ok || !Array.isArray(result.data?.voices)) return [];
+  return result.data.voices
+    .filter((v) => v && typeof v.id === "string")
+    .map((v) => ({ id: v.id, name: String(v.name || v.id).slice(0, 60), gender: v.gender || "" }));
+}
