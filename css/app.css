@@ -9268,3 +9268,143 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
 }
 /* why: o Driver desliga pointer-events em tudo durante o tour (.driver-active *) */
 .gf-lang-menu, .gf-lang-menu * { pointer-events: auto !important; }
+
+/* ───────── Mobile (toque compacto): cabeçalho de uma linha, painéis como folha inferior, alvos de 44px ─────────
+ * why: o topo quebrava em duas linhas e passava da largura da tela, o navegador reduzia o zoom e os diálogos ficavam cortados. */
+@media (hover: none) and (pointer: coarse) and (max-width: 900px),
+  (hover: none) and (pointer: coarse) and (max-height: 500px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+
+  body.is-compact-touch .topbar {
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-height: 52px;
+    padding: 4px 6px;
+    padding-top: calc(4px + env(safe-area-inset-top, 0px));
+    padding-left: calc(6px + env(safe-area-inset-left, 0px));
+    padding-right: calc(6px + env(safe-area-inset-right, 0px));
+  }
+  body.is-compact-touch .topbar-brand { flex: 1 1 auto; min-width: 0; gap: 4px; }
+  body.is-compact-touch .logo-brand .logo-full { display: none; }
+  body.is-compact-touch .logo-brand .logo-mark { display: block; width: 26px; height: 26px; }
+  body.is-compact-touch .topbar-nav { flex: 1 1 auto; min-width: 0; gap: 2px; }
+  body.is-compact-touch #file-panel,
+  body.is-compact-touch .topbar-agent-tag { display: none; }
+  body.is-compact-touch .topbar-project {
+    max-width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    font-size: 0.875rem;
+  }
+  body.is-compact-touch .topbar-tools { flex: none; gap: 4px; margin-left: 0; }
+  body.is-compact-touch .topbar-actions { gap: 4px; flex-wrap: nowrap; }
+  body.is-compact-touch .edit-lang { margin: 0; gap: 0; }
+  body.is-compact-touch .edit-lang > span { display: none; }
+  body.is-compact-touch .edit-lang select {
+    width: 64px;
+    max-width: 64px;
+    min-height: 44px;
+    font-size: 12px;
+    padding: 0 4px;
+    text-overflow: ellipsis;
+  }
+  body.is-compact-touch #btn-account-signin { display: none; }
+  body.is-compact-touch .compact-only:not([hidden]) { display: flex; }
+  body:not(.is-compact-touch) .compact-only { display: none !important; }
+  body.is-compact-touch .account-chip-toggle { min-width: 44px; min-height: 44px; }
+
+  /* Banner da extensão: no celular não dá para instalar; vira uma linha com "não mostrar" */
+  body.is-compact-touch .ext-banner {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px 4px 12px;
+    font-size: 12px;
+  }
+  body.is-compact-touch .ext-banner p { flex: 1 1 auto; }
+  body.is-compact-touch .ext-banner-actions a { display: none; }
+  body.is-compact-touch .ext-banner-actions .btn { min-height: 44px; font-size: 12px; }
+
+  /* Diálogos: folha inferior de largura total */
+  body.is-compact-touch dialog.studio-modal[open],
+  body.is-compact-touch dialog.image-modal[open] {
+    position: fixed;
+    inset: auto 0 0 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(92dvh, calc(100dvh - 8px - env(safe-area-inset-top, 0px))) !important;
+    border-radius: 16px 16px 0 0 !important;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+  body.is-compact-touch dialog.studio-modal[open]::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 8px auto 0;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--ns-ink) 30%, transparent);
+  }
+
+  /* Menus e painéis do topo: também como folha inferior */
+  body.is-compact-touch .topbar details[open] > .more-panel-body,
+  body.is-compact-touch .topbar details[open] > .export-panel-body,
+  body.is-compact-touch .topbar details[open] > .menu-panel-body,
+  body.is-compact-touch .topbar details[open] > .account-chip-menu {
+    position: fixed;
+    inset: auto 0 0 0;
+    top: auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    max-height: 85dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 16px 16px 0 0;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    z-index: 300;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.45);
+  }
+  body.is-compact-touch .more-flyout > .more-flyout-body { position: static; max-height: none; width: auto; }
+
+  /* Alvos de toque e fontes mínimas */
+  body.is-compact-touch .more-item,
+  body.is-compact-touch .more-flyout > summary,
+  body.is-compact-touch .more-section > summary,
+  body.is-compact-touch .settings-fold > summary,
+  body.is-compact-touch .export-option,
+  body.is-compact-touch dialog .btn,
+  body.is-compact-touch .btn-sm,
+  body.is-compact-touch select,
+  body.is-compact-touch .split-btn > *,
+  body.is-compact-touch .topbar details[open] summary,
+  body.is-compact-touch .topbar details[open] .btn { min-height: 44px; }
+  body.is-compact-touch .export-quality-row { flex-wrap: wrap; }
+  body.is-compact-touch dialog input[type="checkbox"] { width: 22px; height: 22px; }
+  body.is-compact-touch .export-quality-row select { flex: 1 1 140px; }
+  body.is-compact-touch .appearance-opt,
+  body.is-compact-touch .btn-icon,
+  body.is-compact-touch dialog .btn-icon { min-width: 44px; min-height: 44px; }
+  body.is-compact-touch .theme-swatch,
+  body.is-compact-touch .theme-preset { min-height: 44px; }
+  body.is-compact-touch input[type="text"],
+  body.is-compact-touch input[type="search"],
+  body.is-compact-touch input[type="email"],
+  body.is-compact-touch input[type="tel"],
+  body.is-compact-touch input[type="url"],
+  body.is-compact-touch input[type="number"],
+  body.is-compact-touch input[type="password"],
+  body.is-compact-touch input:not([type]),
+  body.is-compact-touch textarea,
+  body.is-compact-touch dialog select { font-size: 16px; min-height: 44px; }
+  body.is-compact-touch :is(.props-meta, .tg-field-label, .tg-field-head, .tg-status, .tg-audio, .theme-section-label, .pro-badge, .badge, .film-scene-label, .local-save, .more-legal, .file-size-tag, .ml-count) {
+    font-size: max(12px, 1em);
+  }
+}

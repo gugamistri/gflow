@@ -12,8 +12,8 @@ test("privacidade e termos usam o mesmo i18n da /ajuda", () => {
     assert.match(html, /localStorage\.getItem\("ns-locale"\)/, file);
     assert.match(html, /<select id="locale-select"[^>]*>/, file);
     for (const loc of SUPPORTED_LOCALES) assert.match(html, new RegExp(`<option value="${loc}">`), file);
-    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/105\/js\/i18n\.js"/, file);
-    assert.match(html, /import "\.\/a\/105\/js\/legal-i18n\.js"/, file);
+    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/106\/js\/i18n\.js"/, file);
+    assert.match(html, /import "\.\/a\/106\/js\/legal-i18n\.js"/, file);
     const keys = [...html.matchAll(/data-i18n(?:-html|-aria)?="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(keys.length > 40, file);
     for (const key of keys) {

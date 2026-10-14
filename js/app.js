@@ -849,11 +849,11 @@ function paintChrome() {
   if (helpView) helpView.hidden = true;
   actionsEditor.hidden = view === "library" || presenting;
   actionsLibrary.hidden = view !== "library";
-  if (navEditor) navEditor.hidden = view !== "editor" || presenting || compact;
+  if (navEditor) navEditor.hidden = view !== "editor" || presenting;
   const inEditor = view === "editor" && !presenting;
   if (moreEditorOnly) moreEditorOnly.hidden = !inEditor;
   document.querySelectorAll(".more-editor-pref").forEach((el) => {
-    const hidePrefs = !inEditor || compact;
+    const hidePrefs = !inEditor;
     el.hidden = hidePrefs;
     if (hidePrefs) el.open = false;
   });
@@ -884,7 +884,7 @@ function paintChrome() {
     title.hidden = true;
     title.textContent = "";
     if (projectLabel) {
-      projectLabel.hidden = compact;
+      projectLabel.hidden = false;
       projectLabel.textContent = project?.name || "";
     }
   }
@@ -1233,6 +1233,8 @@ function paintAccount() {
   const toggle = document.getElementById("account-chip-toggle");
   if (slot) slot.hidden = !enabled;
   if (signInBtn) signInBtn.hidden = !enabled || signedIn;
+  const menuSignIn = document.getElementById("btn-menu-account");
+  if (menuSignIn) menuSignIn.hidden = !enabled || signedIn;
   if (chip) {
     chip.hidden = !signedIn;
     if (!signedIn) chip.open = false;
@@ -3485,6 +3487,10 @@ function bindChrome() {
     clearCloudPublishIntent();
     await runCloudPublish();
     if (permanentSlug(project?.cloudShare)) openEmbedDialog();
+  });
+  document.getElementById("btn-menu-account")?.addEventListener("click", () => {
+    document.getElementById("more-panel").open = false;
+    document.getElementById("btn-account-signin")?.click();
   });
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
     showUpgradeDialog({ feature: "account" });
