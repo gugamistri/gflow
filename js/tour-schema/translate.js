@@ -99,6 +99,23 @@ function extractJson(raw) {
   }
 }
 
+/**
+ * Mapa id → texto. Aceita também o formato que alguns modelos devolvem ecoando o pedido:
+ * `{ tour, items: [{ id, text }] }`, `{ translations: [{ id, translation }] }` ou uma lista.
+ */
+function translationMap(data) {
+  const fromList = (list) => Object.fromEntries(
+    list
+      .filter((it) => it && typeof it === "object" && typeof it.id === "string")
+      .map((it) => [it.id, it.translation ?? it.text ?? it.value]),
+  );
+  if (Array.isArray(data)) return fromList(data);
+  if (Array.isArray(data.translations)) return fromList(data.translations);
+  if (data.translations && typeof data.translations === "object") return data.translations;
+  if (Array.isArray(data.items)) return { ...data, ...fromList(data.items) };
+  return data;
+}
+
 /** Valida a resposta (RF9): só ids pedidos, string não vazia, mesmas variáveis; corta no limite. */
 export function parseTranslateResult(raw, items) {
   const data = typeof raw === "object" && raw ? raw : extractJson(raw);
@@ -109,7 +126,7 @@ export function parseTranslateResult(raw, items) {
     for (const i of items) reasons[i.id] = "invalid_json";
     return { ok: false, translations, rejected: items.map((i) => i.id), reasons };
   }
-  const map = data.translations && typeof data.translations === "object" ? data.translations : data;
+  const map = translationMap(data);
   for (const it of items) {
     const v = map[it.id];
     // why: o motivo (sem o texto) explica a célula pendente na grade e no retorno da API
