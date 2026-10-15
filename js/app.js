@@ -1667,7 +1667,13 @@ async function consumeBillingReturn() {
     return;
   }
   if (found.kind === "welcome") {
-    if (getCloudAccount().signedIn) await refreshEntitlement(found.sessionId || "");
+    // why: a API não abre mais sessão na volta do pagamento; quem não está logado entra pelo link
+    //      enviado por e-mail, então não dá boas-vindas (ainda não é Pro neste navegador).
+    if (!getCloudAccount().signedIn) {
+      toast(t("billing.toastPaidCheckEmail"), 9000);
+      return;
+    }
+    await refreshEntitlement(found.sessionId || "");
     toast(t("billing.toastWelcome"), 5200);
     return;
   }

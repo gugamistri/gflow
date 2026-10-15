@@ -505,3 +505,15 @@ test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
     assert.equal(subscriptionConflictKey({ status: 500, error: "http_500" }), "");
   });
 });
+
+test("volta do pagamento sem sessão: aviso de e-mail em pt/es/en e o app não dá boas-vindas sem login", async () => {
+  const { catalogs } = await import("./i18n.js");
+  for (const loc of ["pt", "es", "en"]) {
+    assert.ok(catalogs[loc]["billing.toastPaidCheckEmail"].length > 40, loc);
+    assert.notEqual(catalogs[loc]["billing.toastPaidCheckEmail"], catalogs[loc]["billing.toastWelcome"]);
+  }
+  const src = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  assert.match(src, /if \(!getCloudAccount\(\)\.signedIn\) \{\s*toast\(t\("billing\.toastPaidCheckEmail"\)/);
+  // sem code o retorno continua sendo lido como "welcome" (a API não envia mais ?code= no pagamento)
+  assert.deepEqual(readBillingReturn("https://guiaflow.pro/editor?welcome=pro&plan=pro"), { kind: "welcome", sessionId: "", code: "" });
+});
