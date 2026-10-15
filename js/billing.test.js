@@ -509,7 +509,7 @@ test("cancelar e retomar a assinatura usam os caminhos novos", async () => {
 test("volta do pagamento sem sessão: aviso de e-mail em pt/es/en e o app não dá boas-vindas sem login", async () => {
   const { catalogs } = await import("./i18n.js");
   for (const loc of ["pt", "es", "en"]) {
-    assert.match(catalogs[loc]["billing.toastPaidCheckEmail"], /\S{20,}/, loc);
+    assert.ok(catalogs[loc]["billing.toastPaidCheckEmail"].length > 40, loc);
     assert.notEqual(catalogs[loc]["billing.toastPaidCheckEmail"], catalogs[loc]["billing.toastWelcome"]);
   }
   const src = readFileSync(new URL("./app.js", import.meta.url), "utf8");
