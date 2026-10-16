@@ -216,6 +216,22 @@ function withAlternates(html, page, loc) {
   return html.replace(re, block);
 }
 
+const LOCALE_NAMES = { pt: "Português", en: "English", es: "Español" };
+const LOCALE_SHORT = { pt: "PT", en: "EN", es: "ES" };
+const LOCALE_LABEL = { pt: "Idioma", en: "Language", es: "Idioma" };
+
+/** Seletor de idioma com <a href> reais (rastreáveis) no lugar do <select> que navegava por JS. */
+export function withLocaleLinks(html, page, loc) {
+  const re = /<label class="(?:locale|locale-select)">[\s\S]*?<\/label>|<nav class="locale-links"[\s\S]*?<\/nav>/;
+  if (!re.test(html)) return html;
+  const links = LOCALES.map((l) => {
+    const cur = l === loc ? ' aria-current="page"' : "";
+    return `<a href="${localePath(page, l)}" hreflang="${HREFLANG[l]}" lang="${HREFLANG[l]}" title="${LOCALE_NAMES[l]}"${cur}>${LOCALE_SHORT[l]}</a>`;
+  }).join("\n          ");
+  const nav = `<nav class="locale-links" id="locale-links" aria-label="${LOCALE_LABEL[loc]}">\n          ${links}\n        </nav>`;
+  return html.replace(re, () => nav);
+}
+
 function withHtmlAttrs(html, page, loc) {
   return html.replace(/<html\b[^>]*>/, (open) => {
     let tag = open.replace(/\s(data-page-locale|data-alt-(pt|en|es))="[^"]*"/g, "");
@@ -355,6 +371,7 @@ export function renderLocale(srcHtml, page, loc, read = defaultRead) {
   if (page.heroOg) html = withLandingJsonLd(html, page, loc);
   else html = html.replace(/("url":\s*")https:\/\/guiaflow\.pro[^"]*(")/, `$1${absUrl(localePath(page, loc))}$2`);
 
+  html = withLocaleLinks(html, page, loc);
   html = withHtmlAttrs(html, page, loc);
   html = withAlternates(html, page, loc);
   return html;
@@ -367,6 +384,7 @@ export function renderPortuguese(srcHtml, page) {
     html = html.replace(/(<meta property="og:site_name"[^>]*>)/, `$1\n  <meta property="og:locale" content="pt_BR" />`);
   }
   if (page.heroOg) html = withLandingJsonLd(html, page, "pt");
+  html = withLocaleLinks(html, page, "pt");
   return withAlternates(withHtmlAttrs(html, page, "pt"), page, "pt");
 }
 

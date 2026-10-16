@@ -19,6 +19,11 @@
           if (!/^(utm_[a-z0-9_]+|gclid|fbclid|msclkid|ref|landing)$/i.test(k)) go = true;
         });
         if (l.hash && l.hash.indexOf("=") !== -1) go = true;
+        // why: vindo de outra página pública do site (logo, seletor de idioma) = quer a landing; o link fica limpo (/)
+        if (!go) try {
+          var ref = document.referrer && new URL(document.referrer);
+          if (ref && ref.origin === l.origin && !/^\/(editor|view|p|v)(\/|$)/.test(ref.pathname)) { window.__gfLandingForced = true; return; }
+        } catch (e) {}
         if (!go && document.documentElement.getAttribute("data-guia-extension") === "1") go = true;
         if (!go) {
           var raw = localStorage.getItem("demo-studio-index-v2");
@@ -85,8 +90,8 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="preload" href="/a/113/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/a/113/css/landing.css" />
+  <link rel="preload" href="/a/114/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/a/114/css/landing.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -214,8 +219,8 @@
   <a class="skip" href="#conteudo" data-i18n="lp.skip">Skip to content</a>
   <header class="site-header" id="topo">
     <div class="wrap header-row">
-      <a class="brand" href="/en?landing=1" aria-label="GuiaFlow">
-        <img src="/a/113/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
+      <a class="brand" href="/en" aria-label="GuiaFlow">
+        <img src="/a/114/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
       </a>
       <nav class="nav" aria-label="Sections" data-i18n-aria="lp.nav.aria">
         <a href="#como-funciona" data-i18n="lp.nav.how">How it works</a>
@@ -249,7 +254,7 @@
           <div class="mock">
             <div class="mock-bar"><span></span><span></span><span></span><i>app.leadpronto.ai</i></div>
             <div class="mock-shot">
-              <img src="/a/113/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
+              <img src="/a/114/brand/hero-leadpronto.webp" width="1200" height="787" alt="" fetchpriority="high" decoding="async" />
               <span class="mock-target"></span>
               <span class="mock-hotspot"></span>
               <div class="mock-pop">
@@ -275,7 +280,7 @@
         </div>
         <div class="demo-frame" id="demo-frame">
           <div class="demo-placeholder" id="demo-placeholder">
-            <img src="/a/113/brand/symbol-simple.svg" alt="" width="40" height="40" />
+            <img src="/a/114/brand/symbol-simple.svg" alt="" width="40" height="40" />
             <p data-i18n="lp.demo.soon">The sample demo is coming soon. Meanwhile, create yours in minutes.</p>
             <a class="btn btn-primary" href="/editor" data-i18n="lp.hero.ctaPrimary">Create my free demo</a>
           </div>
@@ -512,7 +517,7 @@
 
   <footer class="site-footer">
     <div class="wrap footer-row">
-      <img src="/a/113/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
+      <img src="/a/114/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
       <nav aria-label="Footer links" data-i18n-aria="lp.footer.aria">
         <a href="/editor" data-i18n="lp.footer.editor">Editor</a>
         <a href="/en/help" data-i18n="lp.footer.help">Help</a>
@@ -523,17 +528,14 @@
         <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
         <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>
       </nav>
-      <label class="locale">
-        <span class="visually-hidden" data-i18n="lp.locale">Language</span>
-        <select id="locale-select" aria-label="Language" data-i18n-aria="lp.locale">
-          <option value="pt">Português</option>
-          <option value="es">Español</option>
-          <option value="en" selected>English</option>
-        </select>
-      </label>
+      <nav class="locale-links" id="locale-links" aria-label="Language">
+          <a href="/" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a>
+          <a href="/en" hreflang="en" lang="en" title="English" aria-current="page">EN</a>
+          <a href="/es" hreflang="es" lang="es" title="Español">ES</a>
+        </nav>
     </div>
     <p class="wrap copy">© 2026 GuiaFlow</p>
   </footer>
-  <script type="module" src="/a/113/js/landing.js"></script>
+  <script type="module" src="/a/114/js/landing.js"></script>
 </body>
 </html>

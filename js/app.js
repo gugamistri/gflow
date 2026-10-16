@@ -4228,6 +4228,11 @@ async function boot() {
   }
   bindExtensionBanner();
   bindReleaseNotes();
+  // why: o href fica limpo ("/", sem ?landing=1 para o Google seguir); o clique abre a landing forçada
+  document.getElementById("btn-about")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.open("/?landing=1", "_blank", "noopener");
+  });
   bindLocaleSelect(document.getElementById("locale-select"), () => {
     applyChromeAppearance();
     paintChrome();
