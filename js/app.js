@@ -848,15 +848,20 @@ function startPreviewLangs() {
       previewView = previewViewFor(next);
       storeLangs(`editor-${project.id || "p"}`, next);
       previewMenu?.paint();
-      if (player.isRunning?.()) player.play({ from: getSelectedIndex(), autoplay: previewAutoplay });
+      if (player.isRunning?.()) {
+        player.play({ from: getSelectedIndex(), autoplay: previewAutoplay });
+        mountPreviewMenu();
+      }
     },
   });
-  const mount = (tries = 30) => {
-    const host = document.querySelector(".gf-player-controls");
-    if (host) previewMenu?.mount(host);
-    else if (tries > 0) requestAnimationFrame(() => mount(tries - 1));
-  };
-  mount();
+  mountPreviewMenu();
+}
+
+function mountPreviewMenu(tries = 60) {
+  if (!previewMenu || previewMenu.isMounted()) return;
+  const host = document.querySelector(".gf-player-controls");
+  if (host) previewMenu.mount(host);
+  else if (tries > 0) requestAnimationFrame(() => mountPreviewMenu(tries - 1));
 }
 
 function stopPreviewLangs() {
@@ -975,7 +980,9 @@ function enterPresentation(opts = {}) {
   editor.pauseCaption?.();
   presenting = true;
   previewAutoplay = !!opts.autoplay;
-  startPreviewLangs();
+  if (previewMenu && previewLang) {
+    if (!previewMenu.isMounted()) mountPreviewMenu();
+  } else startPreviewLangs();
   document.body.classList.add("is-presenting");
   document.getElementById("view-editor")?.classList.add("is-presenting");
   document.getElementById("hotspot")?.classList.add("is-previewing");
