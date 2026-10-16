@@ -166,6 +166,8 @@ import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
 import { createMobileBar } from "./mobileBar.js";
+import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
+import { resolveContent } from "./tour-schema/i18n.js";
 import { MAX_TARGET_LANGS, langAudioPlan, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
 import { listHostedVoices } from "./hosted.js";
 import { listCartesiaVoices } from "./cartesia.js";
@@ -814,8 +816,59 @@ function openFixedStep(kind) {
   fixedStepsEditor.open(kind);
 }
 
+// why: a prévia do editor também troca áudio/texto/legenda quando o projeto tem mais de um idioma
+let previewLang = null;
+let previewView = null;
+let previewMenu = null;
+
+function previewViewFor(state) {
+  const view = resolveContent(project, state.text, { audioLang: state.audio });
+  if (!state.cc) view.steps = view.steps.map((s) => ({ ...s, showCaption: false }));
+  return view;
+}
+
+function startPreviewLangs() {
+  stopPreviewLangs();
+  if (!project) return;
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  const editLang = editor.getEditLang?.();
+  const state = resolvePlayerLangs(project, {
+    search: editLang ? `?lang=${encodeURIComponent(editLang)}` : "",
+    stored: readStoredLangs(`editor-${project.id || "p"}`),
+    languages: nav.languages?.length ? nav.languages : [nav.language].filter(Boolean),
+  });
+  if (!state) return;
+  previewLang = state;
+  previewView = previewViewFor(state);
+  previewMenu = createLangMenu({
+    demo: project,
+    getState: () => previewLang,
+    onChange: (next) => {
+      previewLang = next;
+      previewView = previewViewFor(next);
+      storeLangs(`editor-${project.id || "p"}`, next);
+      previewMenu?.paint();
+      if (player.isRunning?.()) player.play({ from: getSelectedIndex(), autoplay: previewAutoplay });
+    },
+  });
+  const mount = (tries = 30) => {
+    const host = document.querySelector(".gf-player-controls");
+    if (host) previewMenu?.mount(host);
+    else if (tries > 0) requestAnimationFrame(() => mount(tries - 1));
+  };
+  mount();
+}
+
+function stopPreviewLangs() {
+  previewMenu?.destroy?.();
+  previewMenu = null;
+  previewLang = null;
+  previewView = null;
+}
+let previewAutoplay = false;
+
 const player = createPlayer({
-  getDemo,
+  getDemo: () => previewView || project,
   getSelectedIndex,
   setSelectedIndex,
   toast,
@@ -921,6 +974,8 @@ function enterPresentation(opts = {}) {
   editor.stopPreview?.();
   editor.pauseCaption?.();
   presenting = true;
+  previewAutoplay = !!opts.autoplay;
+  startPreviewLangs();
   document.body.classList.add("is-presenting");
   document.getElementById("view-editor")?.classList.add("is-presenting");
   document.getElementById("hotspot")?.classList.add("is-previewing");
@@ -936,6 +991,7 @@ function exitPresentation() {
   }
   presenting = false;
   player.stop?.();
+  stopPreviewLangs();
   document.body.classList.remove("is-presenting");
   document.getElementById("view-editor")?.classList.remove("is-presenting");
   document.getElementById("hotspot")?.classList.remove("is-previewing");
