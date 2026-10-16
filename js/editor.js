@@ -4582,6 +4582,10 @@ export function createEditor(ctx) {
       if (!onPlayFrom || !getDemo()?.steps?.length) return;
       onPlayFrom(0, { autoplay: false });
     });
+    document.getElementById("btn-preview-auto")?.addEventListener("click", () => {
+      document.getElementById("preview-panel")?.removeAttribute("open");
+      watchFromSelected();
+    });
     document.getElementById("canvas-slide-play")?.addEventListener("click", (e) => {
       if (document.getElementById("view-editor")?.classList.contains("is-presenting")) return;
       e.stopPropagation();
