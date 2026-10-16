@@ -3841,7 +3841,23 @@ export function localizedPageUrl(locale) {
   return document.documentElement.getAttribute(`data-alt-${locale}`) || null;
 }
 
+/** Seletor de idioma com links reais: o clique também guarda a preferência (a navegação segue normal). */
+function bindLocaleLinks() {
+  if (typeof document === "undefined" || !document.addEventListener) return;
+  document.addEventListener("click", (e) => {
+    const a = e.target?.closest?.(".locale-links a[hreflang]");
+    const next = a && normalizeLocaleTag(a.getAttribute("lang") || a.getAttribute("hreflang"));
+    if (!next) return;
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
 export function initLocale() {
+  bindLocaleLinks();
   const fixed = pageLocale();
   if (fixed) return setLocale(fixed, { persist: false });
   return setLocale(detectLocale(), { persist: Boolean(readStoredLocale()) });
