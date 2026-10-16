@@ -68,9 +68,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/113/css/theme.css" />
-  <link rel="stylesheet" href="/a/113/css/app.css" />
-  <link rel="stylesheet" href="/a/113/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/114/css/theme.css" />
+  <link rel="stylesheet" href="/a/114/css/app.css" />
+  <link rel="stylesheet" href="/a/114/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .api-doc[hidden] { display: none; }
@@ -84,17 +84,15 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/113/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/113/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/114/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/114/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title">API · MCP</span>
     </div>
     <div class="topbar-appearance">
-      <label class="locale-select">
-        <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
-          <option value="pt">PT</option>
-          <option value="es" selected>ES</option>
-          <option value="en">EN</option>
-        </select>
-      </label>
+      <nav class="locale-links" id="locale-links" aria-label="Idioma">
+          <a href="/ajuda/api" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a>
+          <a href="/en/help/api" hreflang="en" lang="en" title="English">EN</a>
+          <a href="/es/ayuda/api" hreflang="es" lang="es" title="Español" aria-current="page">ES</a>
+        </nav>
     </div>
   </header>
 
@@ -201,7 +199,7 @@ curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/113/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/114/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

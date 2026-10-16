@@ -10,10 +10,10 @@ test("privacidade e termos usam o mesmo i18n da /ajuda", () => {
   for (const file of ["privacidade.html", "termos.html"]) {
     const html = read(file);
     assert.match(html, /localStorage\.getItem\("ns-locale"\)/, file);
-    assert.match(html, /<select id="locale-select"[^>]*>/, file);
-    for (const loc of SUPPORTED_LOCALES) assert.match(html, new RegExp(`<option value="${loc}">`), file);
-    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/113\/js\/i18n\.js"/, file);
-    assert.match(html, /import "\.\/a\/113\/js\/legal-i18n\.js"/, file);
+    assert.match(html, /<nav class="locale-links"[^>]*>/, file);
+    for (const loc of SUPPORTED_LOCALES) assert.match(html, new RegExp(`<a href="[^"]+" hreflang="[^"]*" lang="${loc === "pt" ? "pt-BR" : loc}"`), file);
+    assert.match(html, /import \{ initLocale, applyI18n, bindLocaleSelect \} from "\.\/a\/114\/js\/i18n\.js"/, file);
+    assert.match(html, /import "\.\/a\/114\/js\/legal-i18n\.js"/, file);
     const keys = [...html.matchAll(/data-i18n(?:-html|-aria)?="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(keys.length > 40, file);
     for (const key of keys) {

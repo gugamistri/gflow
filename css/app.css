@@ -337,6 +337,40 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
   appearance: none;
 }
 
+.topbar .locale-links {
+  display: flex;
+  gap: 4px;
+}
+
+.topbar .locale-links a {
+  display: inline-flex;
+  align-items: center;
+  height: calc(1.2em + 0.9em + 2px);
+  padding: 0 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  color: var(--ns-button-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.topbar .locale-links a:hover {
+  border-color: var(--ns-topbar-muted);
+}
+
+.topbar .locale-links a[aria-current="page"] {
+  background: var(--ns-button-text);
+  border-color: var(--ns-button-text);
+  color: var(--ns-topbar);
+}
+
+.topbar .locale-links a:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
 .locale-select select:hover {
   border-color: var(--ns-topbar-muted);
 }
