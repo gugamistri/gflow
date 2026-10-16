@@ -107,6 +107,7 @@ export function createLangMenu({ demo, getState, onChange }) {
   let btn = null;
   let menu = null;
   let open = false;
+  let outside = null;
 
   function item(group, value, label, checked) {
     const b = document.createElement("button");
@@ -195,11 +196,22 @@ export function createLangMenu({ demo, getState, onChange }) {
     for (const ev of ["pointerdown", "pointerup", "mousedown", "mouseup", "touchstart", "touchend"]) {
       menu.addEventListener(ev, (e) => e.stopPropagation(), { passive: true });
     }
-    document.addEventListener("click", (e) => { if (open && !menu.contains(e.target) && e.target !== btn) close(); });
+    outside = (e) => { if (open && !menu.contains(e.target) && e.target !== btn) close(); };
+    document.addEventListener("click", outside);
     host.prepend(btn);
     document.body.append(menu);
     paint();
   }
 
-  return { mount, paint, close, isMounted: () => Boolean(btn?.isConnected) };
+  function destroy() {
+    if (outside) document.removeEventListener("click", outside);
+    outside = null;
+    btn?.remove();
+    menu?.remove();
+    btn = null;
+    menu = null;
+    open = false;
+  }
+
+  return { mount, paint, close, destroy, isMounted: () => Boolean(btn?.isConnected) };
 }
