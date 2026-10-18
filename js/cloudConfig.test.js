@@ -227,7 +227,7 @@ test("override local com o host anterior da nuvem continua a valer", () => {
 test("o HTML publicado aponta app.guiaflow.pro e os assets em a/83", () => {
   for (const file of ["../index.html", "../editor.html", "../auth/callback.html"]) {
     const html = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(html, /__GUIAFLOW_CLOUD__ = "https:\/\/app\.guiaflow\.pro"/);
+    assert.match(html, /__GUIAFLOW_CLOUD__ = (?:"https:\/\/app\.guiaflow\.pro"|\{ baseUrl: "https:\/\/app\.guiaflow\.pro", flags: \{ collab: true \} \})/);
     assert.equal(html.includes("api.guiaflow.pro"), false);
   }
   for (const file of ["../index.html", "../editor.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
