@@ -42,6 +42,7 @@ function flagsOff() {
     permanentShare: false,
     branding: false,
     analytics: false,
+    collab: false,
   };
 }
 
@@ -52,6 +53,7 @@ function flagsOn() {
     permanentShare: true,
     branding: true,
     analytics: true,
+    collab: false, // colaboração só liga com flag explícita
   };
 }
 
@@ -230,7 +232,7 @@ test("o HTML publicado aponta app.guiaflow.pro e os assets em a/83", () => {
   }
   for (const file of ["../index.html", "../editor.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(text, /a\/115\//);
+    assert.match(text, /a\/116\//);
     assert.equal(text.includes("a/70/"), false);
     assert.equal(text.includes("a/69/"), false);
     assert.equal(text.includes("a/68/"), false);

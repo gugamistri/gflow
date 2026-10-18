@@ -6,6 +6,8 @@ export const LOCALE_STORAGE_KEY = "ns-locale";
 export const SUPPORTED_LOCALES = ["pt", "es", "en"];
 export const HTML_LANG = { pt: "pt-BR", es: "es", en: "en" };
 
+import { COLLAB_STRINGS } from "./collabI18n.js";
+
 export const catalogs = {
   pt: {
     "analytics.langsTitle": "Por idioma",
@@ -3761,6 +3763,8 @@ export const catalogs = {
     "editor.durationAria": "Total tour duration: {time}",
   },
 };
+
+for (const loc of Object.keys(COLLAB_STRINGS)) Object.assign(catalogs[loc], COLLAB_STRINGS[loc]);
 
 let currentLocale = "en";
 

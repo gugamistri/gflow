@@ -2413,6 +2413,7 @@ export function createEditor(ctx) {
     renderFilmstrip();
     syncForm();
     renderCanvas();
+    ctx.onSelectStep?.(i);
   }
 
   function reorderSteps(fromIndex, toIndex, scene) {
@@ -2559,6 +2560,20 @@ export function createEditor(ctx) {
     renderCanvas();
     onChange();
     toast(pasted.length > 1 ? t("toast.stepsPasted", { n: pasted.length }) : t("toast.stepPasted"));
+  }
+
+  /** Colaboração: avisa antes de apagar um passo que outra pessoa está editando. Sem a flag, chama direto. */
+  function guardedDelete() {
+    const check = ctx.confirmStepDelete;
+    if (!check) {
+      deleteStep();
+      return;
+    }
+    const demo = getDemo();
+    const ids = selectedSteps().map((i) => demo.steps[i]?.id).filter(Boolean);
+    Promise.all(ids.map((id) => check(id))).then((oks) => {
+      if (oks.every(Boolean)) deleteStep();
+    });
   }
 
   function deleteStep(opts = {}) {
@@ -3054,7 +3069,7 @@ export function createEditor(ctx) {
       return;
     }
     if (action === "delete") {
-      deleteStep();
+      guardedDelete();
       return;
     }
     if (action === "up") {
@@ -3400,7 +3415,7 @@ export function createEditor(ctx) {
             applySelection([index], index);
           }
           if (isCompactTouch() && !window.confirm(t("filmstrip.confirmRemove"))) return;
-          deleteStep();
+          guardedDelete();
         }
         return;
       }
@@ -4500,7 +4515,7 @@ export function createEditor(ctx) {
     document.getElementById("btn-delete-step")?.addEventListener("click", () => {
       closeFilmContextMenu();
       if (!currentStep()) return;
-      deleteStep();
+      guardedDelete();
     });
 
     window.addEventListener("keydown", (e) => {
@@ -4558,7 +4573,7 @@ export function createEditor(ctx) {
       if (!currentStep()) return;
       e.preventDefault();
       closeFilmContextMenu();
-      deleteStep();
+      guardedDelete();
     });
     document.getElementById("btn-empty-step")?.addEventListener("click", () => addStep(false));
     document.getElementById("btn-empty-slide")?.addEventListener("click", () => addStep(true));

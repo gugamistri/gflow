@@ -34,7 +34,9 @@ import {
   STOCK_DEMO_NAME,
   isUntouchedStockDemo,
 } from "./projects.js";
-import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks } from "./cloudSync.js";
+import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
+import { createCollabController, readCollabMap } from "./collabController.js";
+import { createCollabUi } from "./collabUi.js";
 import { formatBytes } from "./mediaBytes.js";
 import {
   applyMediaMap,
@@ -118,6 +120,7 @@ import {
   getCloudFlags,
   isCloudEnabled,
   readCloudSession,
+  writeCloudSession,
   cloudFetch,
   loginWithPassword,
   parseCloudAuthMessage,
@@ -355,6 +358,8 @@ function setSelectedIndex(i) {
   selectedIndex = Math.max(0, Math.min(i, max));
 }
 
+let collab = null; // colaboração (flag `collab`); null = editor como sempre
+let collabUndoState = { canUndo: false, canRedo: false };
 const history = createHistory();
 let historyLock = false;
 let settleTimer = null;
@@ -365,8 +370,10 @@ let saveChain = Promise.resolve();
 function updateHistoryButtons() {
   const undoBtn = document.getElementById("btn-undo");
   const redoBtn = document.getElementById("btn-redo");
-  if (undoBtn) undoBtn.disabled = !project || !history.canUndo();
-  if (redoBtn) redoBtn.disabled = !project || !history.canRedo();
+  // colaboração: o desfazer é por usuário (patches inversos), não por snapshot
+  const mine = collab?.isActive() ? collabUndoState : null;
+  if (undoBtn) undoBtn.disabled = !project || !(mine ? mine.canUndo : history.canUndo());
+  if (redoBtn) redoBtn.disabled = !project || !(mine ? mine.canRedo : history.canRedo());
 }
 
 function rememberProject(state) {
@@ -400,6 +407,13 @@ async function attachSavedHistory(state) {
 function onChange() {
   if (historyLock || !project) return;
   if (project.name === STOCK_DEMO_NAME && !project.stockEdited) project.stockEdited = true;
+  if (collab?.isActive()) {
+    // projeto colaborativo: ops vão para o servidor; history.js (snapshots) fica só no modo local
+    collab.onLocalChange();
+    updateHistoryButtons();
+    schedulePersist();
+    return;
+  }
   history.noteChange();
   updateHistoryButtons();
   schedulePersist();
@@ -444,6 +458,10 @@ function applyHistoryState(next) {
 
 function undoEdit() {
   if (!project) return;
+  if (collab?.isActive()) {
+    void collab.undo();
+    return;
+  }
   clearTimeout(settleTimer);
   settleTimer = null;
   const restored = history.undoChange(project);
@@ -456,6 +474,10 @@ function undoEdit() {
 
 function redoEdit() {
   if (!project) return;
+  if (collab?.isActive()) {
+    void collab.redo();
+    return;
+  }
   clearTimeout(settleTimer);
   settleTimer = null;
   history.settle(project);
@@ -559,6 +581,8 @@ const editor = createEditor({
   onSetCover: (index) => setCoverStep(index),
   viewerIsPro: () => viewerIsPro(),
   onOpenFixedStep: (kind) => openFixedStep(kind),
+  onSelectStep: () => collab?.onStepSelected(),
+  confirmStepDelete: collabFlagOn() ? (id) => (collab?.isActive() ? collab.confirmStepDelete(id) : Promise.resolve(true)) : undefined,
 });
 
 // why: passos fixos (Início/Fim) mudam o payload, então o link fica "Desatualizado" até republicar
@@ -1076,7 +1100,16 @@ async function reconcilePublishedBaseline(record) {
   if (rememberShareHash(record, next)) paintShareMenu();
 }
 
+function paintCollabShare() {
+  const btn = document.getElementById("btn-share-collab");
+  if (!btn) return;
+  const entry = project && collabFlagOn() ? readCollabMap(localStorage)[project.id] : null;
+  const allowed = Boolean(project && collabFlagOn() && getCloudAccount().signedIn && (!entry || entry.role === "owner" || !entry.guest));
+  btn.hidden = !allowed;
+}
+
 function paintShareMenu() {
+  paintCollabShare();
   const pro = viewerIsPro();
   const record = activeShareRecord();
   if (record && pro && permanentSlug(record)) {
@@ -1202,6 +1235,8 @@ const cloudSync = createCloudSync({
   },
   // why: o tour de exemplo vem com o editor; só sobe depois que o usuário edita (vira dele)
   skipProject: (p) => isUntouchedStockDemo(p),
+  // projeto colaborativo: o servidor é a verdade (ops); sem PATCH completo nem pull (vale também com a flag desligada)
+  isCollab: (id) => Boolean(readCollabMap(localStorage)[id]),
   isProjectBusy: (id) => Boolean(project && project.id === id && (saveDirty || saveTimer)),
   conflictName: (name) => t("sync.conflictCopy", { name }),
   onStatus: (next) => {
@@ -1212,6 +1247,144 @@ const cloudSync = createCloudSync({
 });
 
 onLocalProjectChange((event) => cloudSync.notifyLocalChange(event));
+
+/* ---------- colaboração (atrás da flag `collab`, desligada por padrão) ---------- */
+
+function collabFlagOn() {
+  try {
+    return isCloudEnabled() && Boolean(getCloudFlags().collab);
+  } catch {
+    return false;
+  }
+}
+
+function ensureCollab() {
+  if (collab || !collabFlagOn()) return collab;
+  const ui = createCollabUi({ t, getStepIdAt: (i) => project?.steps?.[i]?.id || null, isCompact: () => isCompactTouch() });
+  collab = createCollabController({
+    t,
+    ui,
+    request: (path, init) => cloudFetch(path, init),
+    getProject: () => project,
+    getSelectedIndex,
+    setSelectedIndex,
+    refresh: () => {
+      const label = document.getElementById("topbar-project");
+      if (label && project) label.textContent = project.name || "";
+      syncThemeUi();
+      editor.refresh();
+    },
+    persistLocal: () => {
+      if (project) void putProject(project, { silent: true, keepUpdatedAt: true }).catch((err) => console.error(err));
+    },
+    confirmDialog: (message) => Promise.resolve(window.confirm(message)),
+    fetchMedia: async (path) => {
+      const base = getCloudBaseUrl();
+      const token = readCloudSession()?.accessToken || "";
+      if (!base || !token) return "";
+      const res = await fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${token}` }, credentials: "omit" });
+      if (!res.ok) return "";
+      const mime = (res.headers.get("content-type") || "application/octet-stream").split(";")[0];
+      return bytesToDataUrl(new Uint8Array(await res.arrayBuffer()), mime);
+    },
+    uploadMedia: (remoteId, sha, bytes, mime) =>
+      cloudFetch(`/projects/${encodeURIComponent(remoteId)}/media/${encodeURIComponent(sha)}`, {
+        method: "PUT",
+        body: bytes,
+        headers: { "Content-Type": mime },
+        timeoutMs: 180 * 1000,
+      }),
+    getAccountEmail: () => getCloudAccount().email || (getCloudAccount().signedIn ? "conta" : ""),
+    openUpgrade: () => showUpgradeDialog({ message: t("collab.paywall.body") }),
+    openProjectLocal: (id) => openProject(id),
+    hasLocal: async (id) => Boolean(await getProject(id)),
+    createLocalProject: async (payload) => {
+      const record = syncPayloadToProject(payload, { id: createProjectId(), name: payload.name });
+      normalizeSteps(record.steps);
+      await putProject(record, { silent: true });
+      return record;
+    },
+    flushAutosave: () => {
+      saveDirty = true;
+      return flushAutosave();
+    },
+    syncNow: () => (cloudSync.isEnabled() ? cloudSync.syncNow() : Promise.resolve()),
+    remoteIdFor: (id) => cloudSync.getMeta()?.remote?.[id]?.id || null,
+    saveLocalCopy: async (p) => {
+      if (!p) return;
+      const copy = { ...structuredClone(p), id: createProjectId(), name: `${p.name || ""} (cópia)` };
+      delete copy.collab;
+      await putProject(copy, { silent: true });
+    },
+    closeToLibrary: () => void closeProject(),
+    setSession: (session) => {
+      writeCloudSession(session);
+      reconcileSync();
+    },
+    onUndoState: (state) => {
+      collabUndoState = state || { canUndo: false, canRedo: false };
+      updateHistoryButtons();
+    },
+    onJoinDismiss: () => clearJoinHash(),
+  });
+  const propsBody = document.getElementById("props-body");
+  propsBody?.addEventListener("focusin", (e) => collab?.onFieldFocus(e.target?.id));
+  propsBody?.addEventListener("focusout", (e) => collab?.onFieldBlur(e.target?.id));
+  propsBody?.addEventListener("input", (e) => collab?.onFieldInput(e.target?.id));
+  window.addEventListener("pagehide", () => collab?.onPageHide());
+  document.getElementById("btn-share-collab")?.addEventListener("click", () => {
+    document.querySelector(".export-panel")?.removeAttribute("open");
+    void collab?.enableForCurrent();
+  });
+  return collab;
+}
+
+function clearJoinHash() {
+  if (/^#\/join\//.test(location.hash)) replaceHashClean();
+}
+function replaceHashClean() {
+  window.history.replaceState(null, "", `${location.pathname}${location.search}`);
+}
+
+/** Abre ou solta a sessão colaborativa conforme o projeto aberto. */
+async function syncCollabForProject(id) {
+  if (!collabFlagOn()) return;
+  const c = ensureCollab();
+  if (c?.mapEntry(id)) await c.attach(id);
+  else await c?.detach();
+}
+
+/** `#/join/<token>`: o token sai da URL na hora (não fica no histórico) e a tela de convite pede o aceite. */
+function handleJoinHash() {
+  const m = /^#\/join\/([A-Za-z0-9_-]{10,200})$/.exec(location.hash || "");
+  if (!m) return;
+  replaceHashClean();
+  if (!ensureCollab()) return;
+  collab.showJoin(m[1]);
+}
+
+let sharedFetchedAt = 0;
+let sharedCache = [];
+function renderSharedList() {
+  const section = document.getElementById("library-shared");
+  const guest = Boolean(collab?.guestAccount());
+  document.body.classList.toggle("collab-guest-account", guest);
+  if (!section || !collabFlagOn() || !getCloudAccount().signedIn || !ensureCollab()) {
+    if (section) section.hidden = true;
+    return;
+  }
+  const paint = () => {
+    const ui = createCollabUi({ t });
+    ui.renderShared(section, sharedCache, { onOpen: (item) => void collab.openShared({ projectId: item.projectId, name: item.name, role: item.role, owner: item.owner }) });
+  };
+  paint();
+  if (Date.now() - sharedFetchedAt < 10_000) return;
+  sharedFetchedAt = Date.now();
+  void collab.listShared().then((items) => {
+    sharedCache = items;
+    if (chromeView === "library") paint();
+  });
+}
 
 async function handleRemoteProjectChange({ type, id }) {
   if (project && project.id === id) {
@@ -2344,6 +2517,7 @@ function bindOptimizeModal() {
 }
 
 function renderLibrary() {
+  renderSharedList();
   const index = readIndex();
   const grid = document.getElementById("library-grid");
   const empty = document.getElementById("library-empty");
@@ -2489,6 +2663,7 @@ async function openProject(id, { autoPreview = false } = {}) {
     syncThemeUi();
 
     openEditor();
+    await syncCollabForProject(id);
     if (isCompactTouch()) {
       if (autoPreview && loaded.steps.length) toast(t("toast.editOnTouch"), 4200);
       else toast(t("toast.opened", { name: loaded.name }));
@@ -2518,6 +2693,7 @@ async function closeProject() {
     saveDirty = true;
     await flushAutosave();
   }
+  await collab?.detach();
   presenting = false;
   document.body.classList.remove("is-presenting");
   document.getElementById("view-editor")?.classList.remove("is-presenting");
@@ -4214,6 +4390,8 @@ function bindReleaseNotes() {
 }
 
 async function boot() {
+  // link de convite: sem tour automático por cima da tela de convite
+  const joinPending = /^#\/join\//.test(location.hash || "");
   initLocale();
   applyI18n(document);
   let authCallback = { ok: false, consumed: false };
@@ -4258,6 +4436,7 @@ async function boot() {
   applyChromeAppearance();
   bindChrome();
   bindCaptureInbox();
+  ensureCollab();
 
   const index = readIndex();
   const bootGeneration = captureGeneration;
@@ -4267,7 +4446,7 @@ async function boot() {
       if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
         /* a captura já abriu o projeto enquanto este carregava */
       } else if (loaded) {
-        await openProject(loaded.id, { autoPreview: seeded && (loaded.steps || []).length > 0 });
+        await openProject(loaded.id, { autoPreview: seeded && !joinPending && (loaded.steps || []).length > 0 });
         return;
       } else {
         await setActiveProjectId(null);
@@ -4279,7 +4458,7 @@ async function boot() {
     if (seeded) {
       const first = (readIndex().projects || [])[0];
       if (first?.id && !bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
-        await openProject(first.id, { autoPreview: true });
+        await openProject(first.id, { autoPreview: !joinPending });
         return;
       }
     }
@@ -4289,6 +4468,8 @@ async function boot() {
     if (authCallback.consumed) applyCloudAuthHref(authCallback.href);
     clearBootGate();
     signalGuiaReady();
+    handleJoinHash();
+    window.addEventListener("hashchange", handleJoinHash);
     showStashedAuthError();
     if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
     else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });
