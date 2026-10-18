@@ -5,6 +5,7 @@
  */
 import { collectAssetRefs, dehydrate, hydrate } from "./cloudSync.js";
 import { createCollabClient } from "./collabClient.js";
+import { createCommentsUi } from "./commentsUi.js";
 import { applyField, FIELD_INPUT_IDS, fieldLabelKey, inputIdForKey, keyForInputId, normalizePositions, parseKey, readField, snapshotProject, stepIdOf, stepKey, TEXT_FIELDS } from "./collabModel.js";
 import { createLockManager } from "./collabLocks.js";
 import { peopleFrom } from "./collabPresence.js";
@@ -41,6 +42,7 @@ export function createCollabController(deps) {
   } = deps;
 
   let ctx = null; // sessão colaborativa do projeto aberto
+  let pendingCommentThread = null; // link do e-mail: abre o painel quando o projeto anexar
   const assetCache = new Map(); // dehydrate
   const mediaCache = new Map(); // sha → data URL
   const uploaded = new Set();
@@ -135,6 +137,7 @@ export function createCollabController(deps) {
     persistLocal();
     refresh();
     ui.paintFilmstrip();
+    ctx?.comments?.repaint();
     updateFieldMarks();
     updateLockUi();
   }
@@ -149,6 +152,7 @@ export function createCollabController(deps) {
     ctx.perms = uiPermissions(role, { guest: ctx.guest, readOnly: ctx.ownerLapsed });
     if (!ctx.perms.canEdit) ctx.queue.freeze();
     applyPerms();
+    ctx.comments?.refresh({ quiet: true });
   }
   function paintStatus() {
     ui.setStatus({ online: ctx.online, pending: ctx.queue.pendingCount(), syncing: ctx.sending });
@@ -488,6 +492,7 @@ export function createCollabController(deps) {
       ctx.undo.seal();
     }
     ctx.lastStep = sid;
+    ctx.comments?.onStepSelected();
     updateLockUi();
     updateFieldMarks();
     pushPresence();
@@ -604,12 +609,25 @@ export function createCollabController(deps) {
         onEffectiveRole: (x) => { if (x?.downgraded) ui.toast({ text: t("collab.editorLimit") }); },
         onOnline: (on) => { c.online = on; paintStatus(); if (on) scheduleFlush(200); },
         onReadOnly: () => { c.ownerLapsed = true; setRole(c.role); },
+        onCseq: (n) => c.comments?.onCseq(n),
         onAccessLost: () => void onAccessLost(),
       },
     });
     c.locks = createLockManager({ selfId: "", acquire: (id) => c.client.acquireLock(id), release: (id) => c.client.releaseLock(id), onChange: () => updateLockUi() });
     ui.stackButton()?.addEventListener("click", () => void openMembers());
+    // comentários do Team: só dentro da sessão colaborativa (flag `collab`); o cseq chega no mesmo polling
+    c.comments = createCommentsUi({
+      t, request, projectId: remoteId, getProject, getSelectedIndex, setSelectedIndex,
+      getSelfId: () => c.selfId, getMembers: () => c.members || [], refreshMembers: () => refreshMembers(),
+      announce: (x) => ui.announce(x), toast: (o) => ui.toast(o), confirm: confirmDialog,
+    });
     c.client.start();
+    c.comments.start();
+    if (pendingCommentThread && pendingCommentThread.projectId === remoteId) {
+      const th = pendingCommentThread.threadId;
+      pendingCommentThread = null;
+      setTimeout(() => c.comments?.openPanel({ threadId: th }), 400);
+    }
     applyPerms();
     ui.setStatus({ online: true, pending: 0 });
     paintUndo();
@@ -622,6 +640,7 @@ export function createCollabController(deps) {
     clearTimeout(c.flushTimer);
     try { await flush(); } catch { /* ignore */ }
     c.client.stop();
+    c.comments?.destroy();
     try { await c.locks.releaseAll(); } catch { /* ignore */ }
     c.locks.destroy();
     void c.client.leavePresence();
@@ -814,6 +833,16 @@ export function createCollabController(deps) {
     undo: () => runUndo("undo"), redo: () => runUndo("redo"),
     enableForCurrent, openMembers, showJoin, openShared, listShared, confirmStepDelete, paywall,
     guestAccount: () => Object.values(readCollabMap(storage)).some((e) => e.guest),
+    openComments: (opts) => ctx?.comments?.openPanel(opts),
+    /** Link do e-mail (#/comments/<projeto>/<conversa>): abre o projeto e o painel. Devolve false se o projeto não é meu/compartilhado. */
+    async openCommentLink({ projectId, threadId }) {
+      const localId = findLocalByRemote(projectId);
+      if (!localId) return false;
+      if (ctx?.remoteId === projectId) { ctx.comments?.openPanel({ threadId }); return true; }
+      pendingCommentThread = { projectId, threadId };
+      await openProjectLocal(localId);
+      return true;
+    },
     isActive: () => Boolean(ctx), isCollabLocalId, mapEntry, flush,
     perms: () => ctx?.perms || uiPermissions(null),
     // testes
