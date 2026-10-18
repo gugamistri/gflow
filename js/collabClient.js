@@ -82,6 +82,7 @@ export function createCollabClient({
         lastRole = data.role;
         h("onRole", data.role);
       }
+      if (data.cseq != null) h("onCseq", data.cseq);
       // presença e locks antes das mudanças: o toast sabe se quem editou ainda está com o passo travado
       h("onPresence", data.presence || []);
       h("onLocks", data.locks || []);
