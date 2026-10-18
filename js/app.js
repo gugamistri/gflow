@@ -35,6 +35,7 @@ import {
   isUntouchedStockDemo,
 } from "./projects.js";
 import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
+import { parseCommentLink } from "./comments.js";
 import { createCollabController, readCollabMap } from "./collabController.js";
 import { createCollabUi } from "./collabUi.js";
 import { formatBytes } from "./mediaBytes.js";
@@ -1358,6 +1359,13 @@ async function syncCollabForProject(id) {
 
 /** `#/join/<token>`: o token sai da URL na hora (não fica no histórico) e a tela de convite pede o aceite. */
 function handleJoinHash() {
+  const link = parseCommentLink(location.hash);
+  if (link) {
+    // link do e-mail de comentários: abre o projeto e o painel (precisa estar no mapa colaborativo deste navegador)
+    replaceHashClean();
+    if (ensureCollab()) void collab.openCommentLink(link);
+    return;
+  }
   const m = /^#\/join\/([A-Za-z0-9_-]{10,200})$/.exec(location.hash || "");
   if (!m) return;
   replaceHashClean();
