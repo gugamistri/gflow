@@ -41,6 +41,9 @@ export function emptyCloudFlags() {
     permanentShare: false,
     branding: false,
     analytics: false,
+    // colaboração: NUNCA liga sozinha com a URL base (diferente das outras); precisa de flags.collab === true
+    // na configuração injetada ou do opt-in local de QA (localStorage guiaflow.collab = "1")
+    collab: false,
   };
 }
 
@@ -127,9 +130,18 @@ function isInjected(env) {
   return INJECTED_KEYS.some((key) => Object.prototype.hasOwnProperty.call(env, key));
 }
 
-function applyFlags(enabled, overrides) {
+function readCollabOptIn() {
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem("guiaflow.collab") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function applyFlags(enabled, overrides, collabOptIn = false) {
   const flags = emptyCloudFlags();
   if (!enabled) return flags;
+  flags.collab = (overrides && overrides.collab === true) || collabOptIn === true;
   // why: com URL base as flags leem como disponíveis, mas nenhuma chamada sai da máquina
   for (const key of CLOUD_FLAG_KEYS) {
     const value = overrides ? overrides[key] : undefined;
@@ -199,7 +211,7 @@ export function resolveCloudConfig(env) {
   return {
     baseUrl: enabled ? baseUrl : "",
     enabled,
-    flags: applyFlags(enabled, flagSource),
+    flags: applyFlags(enabled, flagSource, injected ? input.collabOptIn === true : readCollabOptIn()),
   };
 }
 

@@ -191,6 +191,8 @@ export function createCloudSync(deps) {
     onRemoteChange = () => {},
     isProjectBusy = () => false,
     skipProject = () => false,
+    // colaboração ativa: o servidor é a verdade (ops); o PATCH completo e o pull ficam de fora
+    isCollab = () => false,
     conflictName = (name) => `${name} (outra versão)`,
     debounceMs = 2500,
     pollMs = 60 * 1000,
@@ -283,7 +285,7 @@ export function createCloudSync(deps) {
 
   async function pushProject(localId) {
     const project = await store.getProject(localId);
-    if (!project) {
+    if (!project || isCollab(localId)) {
       delete meta.dirty[localId];
       return;
     }
@@ -373,6 +375,7 @@ export function createCloudSync(deps) {
         continue;
       }
       const link = localId ? meta.remote[localId] : null;
+      if (localId && isCollab(localId)) continue;
       if (link && link.rev === item.revision) continue;
       if (localId && (meta.dirty[localId] || isProjectBusy(localId))) continue;
       const full = await request(`/projects/${encodeURIComponent(item.id)}`, { method: "GET" });
