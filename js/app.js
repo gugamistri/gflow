@@ -1350,6 +1350,7 @@ function replaceHashClean() {
 async function syncCollabForProject(id) {
   if (!collabFlagOn()) return;
   const c = ensureCollab();
+  if (!c?.mapEntry(id) && project?.id === id) c?.adoptOwned(project);
   if (c?.mapEntry(id)) await c.attach(id);
   else await c?.detach();
 }
