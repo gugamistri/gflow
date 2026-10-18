@@ -9679,3 +9679,15 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
     overflow: auto;
   }
 }
+
+/* Team: escolha de plano no diálogo de assinatura */
+.upgrade-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 0; margin: 0 0 12px; padding: 0; }
+.upgrade-tiers[hidden], .upgrade-extra-guests[hidden] { display: none; }
+.upgrade-tier { position: relative; display: grid; gap: 4px; padding: 12px; border: 1px solid var(--border, #cfd8dc); border-radius: 10px; cursor: pointer; }
+.upgrade-tier input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.upgrade-tier:has(input:checked) { border-color: var(--accent, #1a4d6d); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #1a4d6d) 30%, transparent); }
+.upgrade-tier:has(input:focus-visible) { outline: 2px solid var(--accent, #1a4d6d); outline-offset: 2px; }
+.upgrade-tier .pro-badge-crown { width: 14px; height: 14px; vertical-align: -2px; }
+.upgrade-extra-guests { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
+.upgrade-extra-guests input { width: 72px; }
+@media (max-width: 520px) { .upgrade-tiers { grid-template-columns: 1fr; } }
