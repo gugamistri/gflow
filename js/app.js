@@ -1186,6 +1186,7 @@ let billingEntitlement = emptyEntitlement();
 let billingTicket = 0;
 let upgradeCustomMessage = "";
 let upgradeFeature = "";
+let upgradeTierPreset = "";
 let upgradeEmail = "";
 let upgradeEmailNote = false;
 let upgradeHandoffToLogin = false;
@@ -1295,7 +1296,7 @@ function ensureCollab() {
         timeoutMs: 180 * 1000,
       }),
     getAccountEmail: () => getCloudAccount().email || (getCloudAccount().signedIn ? "conta" : ""),
-    openUpgrade: () => showUpgradeDialog({ message: t("collab.paywall.body") }),
+    openUpgrade: () => showUpgradeDialog({ message: t("collab.paywall.body"), tier: "team" }),
     openProjectLocal: (id) => openProject(id),
     hasLocal: async (id) => Boolean(await getProject(id)),
     createLocalProject: async (payload) => {
@@ -1602,7 +1603,28 @@ function paintUpgradeCopy() {
   }
   const locale = getLocale();
   const currency = paywallCurrency(locale);
-  const offer = paywallOffer(currency);
+  // why: o seletor Pro/Team só aparece com a flag de colaboração ligada; sem ela o diálogo é o de sempre
+  const tiersOn = collabFlagOn();
+  const tiersBox = document.getElementById("upgrade-tiers");
+  if (tiersBox) tiersBox.hidden = !tiersOn;
+  const tier = tiersOn && document.querySelector('#upgrade-form input[name="billing-tier"]:checked')?.value === "team" ? "team" : "pro";
+  const offer = paywallOffer(currency, tier);
+  const team = tier === "team";
+  const extraBox = document.getElementById("upgrade-extra-guests");
+  if (extraBox) extraBox.hidden = !team;
+  const extraNote = document.getElementById("upgrade-extra-note");
+  if (extraNote) extraNote.textContent = team ? t("billing.team.extraNote", { price: formatPaywallAmount(offer.seat.month, currency, locale) }) : "";
+  const crown = document.getElementById("paywall-hero-crown");
+  if (crown) crown.hidden = team;
+  const badgeText = document.getElementById("paywall-hero-badge-text");
+  if (badgeText) {
+    badgeText.dataset.i18n = team ? "billing.teamBadge" : "billing.badge";
+    badgeText.textContent = t(team ? "billing.teamBadge" : "billing.badge");
+  }
+  const heading = document.getElementById("upgrade-dialog-title");
+  if (heading && team) heading.textContent = t("billing.teamTitle");
+  const lead = document.getElementById("upgrade-message");
+  if (lead && team && !upgradeCustomMessage) lead.textContent = t("billing.teamLead");
   const monthPrice = document.getElementById("paywall-month-price");
   if (monthPrice) monthPrice.textContent = t("billing.monthEquiv", { price: formatPaywallAmount(offer.month, currency, locale) });
   const monthNote = document.getElementById("paywall-month-note");
@@ -1621,7 +1643,9 @@ function paintUpgradeCopy() {
   const annual = document.querySelector('#upgrade-form input[name="billing-interval"]:checked')?.value === "year";
   const subscribe = document.getElementById("btn-upgrade-subscribe");
   if (subscribe) {
-    const key = annual ? "billing.subscribeAnnual" : "billing.subscribeMonthly";
+    const key = team
+      ? (annual ? "billing.subscribeTeamAnnual" : "billing.subscribeTeamMonthly")
+      : (annual ? "billing.subscribeAnnual" : "billing.subscribeMonthly");
     subscribe.dataset.i18n = key;
     subscribe.textContent = t(key);
   }
@@ -1791,14 +1815,19 @@ function setUpgradeStatus(message, tone = "") {
   status.classList.toggle("is-ok", tone === "ok");
 }
 
-function showUpgradeDialog({ message = "", feature = "", email = "", emailNote = false } = {}) {
+function showUpgradeDialog({ message = "", feature = "", email = "", emailNote = false, tier = "" } = {}) {
   if (!isCloudEnabled()) return;
   upgradeFeature = feature || "";
+  upgradeTierPreset = tier === "team" ? "team" : "";
   upgradeCustomMessage = String(message || "").trim();
   upgradeEmail = String(email || "").trim();
   upgradeEmailNote = Boolean(emailNote && upgradeEmail);
   const dialog = document.getElementById("modal-upgrade");
   if (!dialog) return;
+  if (upgradeTierPreset) {
+    const radio = document.querySelector('#upgrade-form input[name="billing-tier"][value="team"]');
+    if (radio) radio.checked = true;
+  }
   paintUpgradeCopy();
   setUpgradeStatus("");
   const button = document.getElementById("btn-upgrade-subscribe");
@@ -2111,6 +2140,8 @@ async function openBillingPortal() {
 
 async function submitUpgrade(interval) {
   const button = document.getElementById("btn-upgrade-subscribe");
+  const wantsTeam = collabFlagOn() && document.querySelector('#upgrade-form input[name="billing-tier"]:checked')?.value === "team";
+  const extraGuests = wantsTeam ? Number(document.getElementById("upgrade-extra-input")?.value || 0) : 0;
   if (button) button.disabled = true;
   setUpgradeStatus("");
   try {
@@ -2119,6 +2150,7 @@ async function submitUpgrade(interval) {
       currency: paywallCurrency(getLocale()),
       email: upgradeEmail || getCloudAccount().email || "",
       source: upgradeFeature || "account",
+      ...(wantsTeam ? { tier: "team", extraGuests } : {}),
     });
     if (result?.status === 400 && (result.error === "invalid_interval" || result.error === "invalid_currency")) {
       setUpgradeStatus(
@@ -3855,7 +3887,7 @@ function bindChrome() {
     });
   });
   document.getElementById("upgrade-form")?.addEventListener("change", (event) => {
-    if (event.target?.name === "billing-interval") paintUpgradeCopy();
+    if (event.target?.name === "billing-interval" || event.target?.name === "billing-tier") paintUpgradeCopy();
   });
   document.getElementById("upgrade-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
