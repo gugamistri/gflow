@@ -714,6 +714,14 @@ export function createCollabController(deps) {
     await attach(p.id);
     await openMembers();
   }
+  /** Dono abrindo em outro aparelho um projeto que já é colaborativo (marca `collab.v` vem da nuvem). */
+  function adoptOwned(p) {
+    if (!p || mapEntry(p.id) || !(Number(p.collab?.v) >= 1)) return false;
+    const remoteId = remoteIdFor(p.id);
+    if (!remoteId) return false;
+    remember(p.id, { remoteId, role: "owner", guest: false, ownerName: "", name: p.name });
+    return true;
+  }
   function paywall() {
     ui.showMessage({
       title: t("collab.paywall.title"), text: t("collab.paywall.body"),
@@ -802,7 +810,7 @@ export function createCollabController(deps) {
   }
 
   return {
-    attach, detach, onLocalChange, onFieldBlur, onFieldFocus, onFieldInput, onStepSelected, onPageHide,
+    attach, detach, adoptOwned, onLocalChange, onFieldBlur, onFieldFocus, onFieldInput, onStepSelected, onPageHide,
     undo: () => runUndo("undo"), redo: () => runUndo("redo"),
     enableForCurrent, openMembers, showJoin, openShared, listShared, confirmStepDelete, paywall,
     guestAccount: () => Object.values(readCollabMap(storage)).some((e) => e.guest),
