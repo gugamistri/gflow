@@ -10,6 +10,27 @@ export const PAYWALL_PRICES = {
   brl: { month: 36, year: 359 },
 };
 
+/** Team (convidados e pool de IA/áudio do time) e o convidado extra, que é `quantity` na assinatura. */
+export const PAYWALL_TEAM_PRICES = {
+  usd: { month: 19, year: 190 },
+  brl: { month: 99, year: 990 },
+};
+export const PAYWALL_SEAT_PRICES = {
+  usd: { month: 3, year: 30 },
+  brl: { month: 15, year: 150 },
+};
+export const MAX_EXTRA_GUESTS = 20;
+
+export function normalizeTier(value) {
+  return String(value || "").trim().toLowerCase() === "team" ? "team" : "pro";
+}
+
+export function normalizeExtraGuests(value) {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(n, MAX_EXTRA_GUESTS);
+}
+
 const FEATURE_ALIASES = {
   account: "account",
   storage: "account",
@@ -45,14 +66,16 @@ export function paywallCurrency(locale) {
   return String(locale || "").toLowerCase() === "pt" ? "brl" : "usd";
 }
 
-export function paywallOffer(currency) {
+export function paywallOffer(currency, tier = "pro") {
   const code = currency === "brl" ? "brl" : "usd";
-  const prices = PAYWALL_PRICES[code];
+  const prices = (normalizeTier(tier) === "team" ? PAYWALL_TEAM_PRICES : PAYWALL_PRICES)[code];
   const fullYear = prices.month * 12;
   const saved = fullYear - prices.year;
   const freeMonths = Math.round(12 - prices.year / prices.month);
   return {
     currency: code,
+    tier: normalizeTier(tier),
+    seat: PAYWALL_SEAT_PRICES[code],
     month: prices.month,
     year: prices.year,
     monthEquiv: prices.year / 12,
@@ -96,11 +119,17 @@ export function checkoutApiInterval(value) {
   return "";
 }
 
-export function buildCheckoutBody({ interval, currency, email, source } = {}) {
+export function buildCheckoutBody({ interval, currency, email, source, tier, extraGuests } = {}) {
   const apiInterval = checkoutApiInterval(interval);
   const code = currency === "brl" ? "brl" : currency === "usd" ? "usd" : "";
   if (!apiInterval || !code) return null;
   const body = { interval: apiInterval, currency: code };
+  // why: Pro continua com o pedido de sempre; Team manda tier e, se houver, os convidados extras
+  if (normalizeTier(tier) === "team") {
+    body.tier = "team";
+    const extra = normalizeExtraGuests(extraGuests);
+    if (extra > 0) body.extraGuests = extra;
+  }
   const mail = String(email || "").trim();
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) body.email = mail;
   const src = normalizePaywallFeature(source) || String(source || "").trim();

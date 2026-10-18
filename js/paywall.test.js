@@ -202,3 +202,34 @@ test("leads e formulário de contato abrem o paywall do link permanente", async 
   assert.equal(normalizePaywallFeature("leads"), "permanentShare");
   assert.equal(normalizePaywallFeature("contactForm"), "permanentShare");
 });
+
+test("Team: preços, convidado extra e corpo do checkout (Pro não muda)", async () => {
+  const { PAYWALL_TEAM_PRICES, PAYWALL_SEAT_PRICES, normalizeExtraGuests, normalizeTier } = await import("./paywall.js");
+  assert.deepEqual(PAYWALL_TEAM_PRICES, { usd: { month: 19, year: 190 }, brl: { month: 99, year: 990 } });
+  assert.deepEqual(PAYWALL_SEAT_PRICES, { usd: { month: 3, year: 30 }, brl: { month: 15, year: 150 } });
+  const team = paywallOffer("usd", "team");
+  assert.equal(team.tier, "team");
+  assert.equal(team.month, 19);
+  assert.equal(team.freeMonths, 2);
+  assert.equal(paywallOffer("brl", "team").seat.month, 15);
+  assert.equal(paywallOffer("usd").month, 7);
+  assert.equal(normalizeTier("TEAM"), "team");
+  assert.equal(normalizeTier("x"), "pro");
+  assert.equal(normalizeExtraGuests("3"), 3);
+  assert.equal(normalizeExtraGuests("99"), 20);
+  assert.equal(normalizeExtraGuests("-1"), 0);
+  assert.deepEqual(buildCheckoutBody({ interval: "month", currency: "usd" }), { interval: "month", currency: "usd" });
+  assert.deepEqual(buildCheckoutBody({ interval: "year", currency: "brl", tier: "team", extraGuests: 2 }), { interval: "year", currency: "brl", tier: "team", extraGuests: 2 });
+  assert.deepEqual(buildCheckoutBody({ interval: "month", currency: "usd", tier: "team", extraGuests: 0 }), { interval: "month", currency: "usd", tier: "team" });
+  assert.equal("tier" in buildCheckoutBody({ interval: "month", currency: "usd", tier: "pro", extraGuests: 4 }), false);
+});
+
+test("diálogo de assinatura: seletor Pro/Team em pt/en/es, coroa só no Pro", () => {
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  assert.match(html, /name="billing-tier" value="team"/);
+  assert.match(html, /id="paywall-hero-crown"/);
+  const i18n = readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
+  for (const key of ["billing.teamTitle", "billing.subscribeTeamMonthly", "billing.subscribeTeamAnnual", "billing.tier.team", "billing.team.extraNote"]) {
+    assert.equal(i18n.split(`"${key}"`).length - 1, 3, key);
+  }
+});
