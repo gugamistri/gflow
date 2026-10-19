@@ -95,10 +95,13 @@ test("textos do embed e do guia existem em pt, es e en, sem 'nuvem'", () => {
     }
   }
   assert.match(catalogs.pt["billing.embedTitle"], /GuiaFlow\u00a0Pro/);
-  assert.equal(catalogs.pt["embed.button"], "Incorporar no site");
+  assert.equal(catalogs.pt["embed.button"], "No site");
+  assert.equal(catalogs.pt["share.tab.embed"], "No site");
+  assert.equal(catalogs.en["share.tab.embed"], "Add to site");
+  assert.equal(catalogs.es["share.tab.embed"], "En tu página");
 });
 
-test("o editor tem a aba Incorporar; a ajuda tem a seção #incorporar", () => {
+test("o editor tem a aba No site (embed); a ajuda tem a seção #incorporar", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   assert.match(html, /id="btn-share-embed"[^>]*hidden/);
   assert.match(html, /id="embed-pro-badge"/);

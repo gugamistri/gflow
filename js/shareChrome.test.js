@@ -35,7 +35,7 @@ test("o ponto de desatualizado fica na borda do botão, não por cima do ícone"
   assert.match(app, /summary\.share-menu[\s\S]*overflow:\s*visible/);
 });
 
-test("Compartilhar em abas: Link, Incorporar e Baixar, com ids e ARIA de abas", () => {
+test("Compartilhar em abas: Link, No site e Baixar, com ids e ARIA de abas", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const card = html.slice(html.indexOf('id="share-card"'), html.indexOf("</details>", html.indexOf('id="share-card"')));
   assert.match(card, /role="tablist"/);
