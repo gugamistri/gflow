@@ -6,7 +6,7 @@
  * `onChange()` em ~60 pontos. O controlador tira um snapshot a cada mudança e a fila de ops
  * compara com o último estado confirmado. Assim nenhum ponto de edição precisa saber de colaboração.
  *
- * Chaves: `p:name|theme|playback|narration|coverStepId` e `s:<stepId>:<campo>`; campos de passo:
+ * Chaves: `p:name|theme|playback|narration|coverStepId|sceneLabels` e `s:<stepId>:<campo>`; campos de passo:
  * title text label caption alt scene type layout side align simulateClick onNext showCaption
  * zoomHighlight holdSeconds pos hl img audio i18n.<lang>.<campo> new del.
  * Imagens e áudio ficam locais como data URL aqui; a camada de rede troca por `asset:<sha>`.
@@ -119,6 +119,8 @@ export function snapshotProject(project) {
   if (typeof project.name === "string") map.set("p:name", project.name);
   for (const f of PROJECT_OBJECTS) if (isObj(project[f])) map.set(`p:${f}`, clone(project[f]));
   if (typeof project.coverStepId === "string") map.set("p:coverStepId", project.coverStepId);
+  // nomes das cenas ({ "1": "Bem-vindo" }): sem isto o rename ficava só no navegador de quem editou
+  if (isObj(project.sceneLabels)) map.set("p:sceneLabels", clone(project.sceneLabels));
   for (const step of project.steps || []) {
     if (!step?.id) continue;
     map.set(stepKey(step.id, "new"), newStepValue(project, step)); // marca "existe"
@@ -187,7 +189,7 @@ export function readField(project, key) {
   if (!k || !project) return undefined;
   if (k.kind === "project") {
     if (k.field === "name") return project.name;
-    if (PROJECT_OBJECTS.includes(k.field) || k.field === "coverStepId") return project[k.field];
+    if (PROJECT_OBJECTS.includes(k.field) || k.field === "coverStepId" || k.field === "sceneLabels") return project[k.field];
     return undefined;
   }
   const step = (project.steps || []).find((s) => s?.id === k.stepId);
@@ -213,7 +215,7 @@ export function applyField(project, key, value) {
     else if (k.field === "coverStepId") {
       if (value == null) delete project.coverStepId;
       else project.coverStepId = value;
-    } else if (PROJECT_OBJECTS.includes(k.field)) project[k.field] = clone(value);
+    } else if (PROJECT_OBJECTS.includes(k.field) || k.field === "sceneLabels") project[k.field] = isObj(value) ? clone(value) : {};
     else return false;
     return true;
   }
@@ -308,7 +310,7 @@ export const keyForInputId = (stepId, inputId) => {
 export function fieldLabelKey(key) {
   const k = parseKey(key);
   if (!k) return "collab.field.other";
-  if (k.kind === "project") return k.field === "name" ? "collab.field.projectName" : "collab.field.other";
+  if (k.kind === "project") return k.field === "name" ? "collab.field.projectName" : k.field === "sceneLabels" ? "collab.field.sceneName" : "collab.field.other";
   if (k.field === "new") return "collab.field.stepNew";
   if (k.field === "del") return "collab.field.stepDel";
   if (TEXT_FIELDS[k.field]) return `collab.field.${k.field}`;

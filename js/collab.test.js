@@ -67,6 +67,25 @@ test("applyField espelha o servidor: texto, pos reordena, del/restaurar com tomb
   assert.deepEqual(p.steps.find((s) => s.id === "step-a").hotspot, { x: 1, y: 2, w: 3, h: 4 });
 });
 
+test("nome da cena é campo colaborativo: snapshot, diff, readField, applyField e fila", () => {
+  const p = { ...proj(), sceneLabels: { 1: "Welcome" } };
+  const before = snapshotProject(p);
+  assert.deepEqual(before.get("p:sceneLabels"), { 1: "Welcome" });
+  const q = queueFor(p, memStorage());
+  p.sceneLabels["1"] = "Bem-vindo";
+  const after = snapshotProject(p);
+  assert.deepEqual(diffSnapshots(before, after), [{ key: "p:sceneLabels", value: { 1: "Bem-vindo" } }]);
+  q.observe(after);
+  assert.deepEqual(q.takeBatch(), [{ key: "p:sceneLabels", baseRev: 0, value: { 1: "Bem-vindo" } }]);
+  assert.deepEqual(readField(p, "p:sceneLabels"), { 1: "Bem-vindo" });
+  // o dono, com a cópia antiga, recebe a op do convidado
+  const owner = { ...proj(), sceneLabels: { 1: "Welcome" } };
+  assert.equal(applyField(owner, "p:sceneLabels", { 1: "Bem-vindo", 2: "Fim" }), true);
+  assert.deepEqual(owner.sceneLabels, { 1: "Bem-vindo", 2: "Fim" });
+  assert.equal(applyField(owner, "p:sceneLabels", null), true);
+  assert.deepEqual(owner.sceneLabels, {});
+});
+
 test("campos do inspetor mapeiam para chaves e de volta", () => {
   assert.equal(inputIdForKey("s:step-a:text"), "prop-description");
   assert.equal(keyForInputId("step-a", "prop-title"), "s:step-a:title");
