@@ -6,6 +6,7 @@ import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createPlayer } from "./player.js";
 import { getLocale, initLocale, applyI18n, setLocale, SUPPORTED_LOCALES, t } from "./i18n.js";
 import { applyDocumentLang, createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
+import { setCaptions } from "./playerControls.js";
 import { baseLang, langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
@@ -602,9 +603,8 @@ let onLangSwitch = () => {};
 
 /** Visão do tour para { text, audio, cc } (§4.1). */
 export function viewForLang(source, state) {
-  const view = resolveContent(source, state.text, { audioLang: state.audio });
-  if (!state.cc) view.steps = view.steps.map((s) => ({ ...s, showCaption: false }));
-  return view;
+  // why: a legenda (cc) liga/desliga por CSS no botão CC, sem reconstruir a visão nem reiniciar o passo
+  return resolveContent(source, state.text, { audioLang: state.audio });
 }
 
 function langChromeLocale(lang) {
@@ -615,6 +615,14 @@ function langChromeLocale(lang) {
 function applyLangState(next, { initial = false } = {}) {
   const prev = langState;
   langState = next;
+  setCaptions(next.cc);
+  const ccOnly = !initial && prev && prev.text === next.text && prev.audio === next.audio;
+  if (ccOnly) {
+    storeLangs(shareSlug || viewRoute()?.id || "v", next);
+    langMenu?.paint();
+    tracker?.langChange?.(next);
+    return;
+  }
   demo = viewForLang(sourceDemo, next);
   storeLangs(shareSlug || viewRoute()?.id || "v", next);
   // why: botões e rótulos do player seguem o idioma do texto quando há catálogo (§4.1)
@@ -731,7 +739,7 @@ async function boot() {
 
   onLangSwitch = () => {
     // why: a troca no meio do tour mantém o passo e reinicia o áudio dele (RF21)
-    if (touring && player?.isRunning?.()) player.play({ from: selectedIndex, autoplay: true });
+    if (touring && player?.isRunning?.()) player.play({ from: selectedIndex, autoplay: player.isAutoplay?.() ?? true });
   };
 
   const startTour = () => {

@@ -8953,8 +8953,16 @@ dialog.api-keys-modal {
   /* why: acima do véu do Driver (que sobe no celular) — senão o toque cai no véu e fecha a prévia */
   z-index: 2147483000;
   pointer-events: auto;
+  /* barra única estilo YouTube: um só fundo escuro translúcido funciona sobre qualquer imagem (claro/escuro) */
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 14px;
+  background: rgba(10, 22, 30, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
 .gf-player-controls[hidden],
@@ -8963,48 +8971,119 @@ dialog.api-keys-modal {
 }
 
 .gf-player-ctl {
+  position: relative;
   display: inline-grid;
   place-items: center;
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  border-radius: 999px;
-  background: rgba(17, 17, 17, 0.78);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   touch-action: manipulation;
 }
 
 .gf-player-ctl svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   fill: currentColor;
 }
 
-.gf-player-ctl[aria-pressed="true"] {
+.gf-player-ctl:hover,
+.gf-player-ctl.is-open {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.gf-player-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* CC ativo: sublinhado na cor de destaque (como o vermelho do YouTube) */
+.gf-cc-btn[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: 7px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ns-accent, #2a9d8f);
+}
+
+.gf-cc-btn[aria-pressed="false"] svg {
+  opacity: 0.8;
+}
+
+/* toggle de reprodução automática */
+.gf-switch {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.15s ease;
+}
+
+.gf-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   background: #ffffff;
-  color: #111111;
-  border-color: #111111;
+  color: #10242f;
+  transform: translateY(-50%);
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-.gf-player-ctl:hover {
-  background: rgba(17, 17, 17, 0.92);
+.gf-switch-knob svg {
+  width: 14px;
+  height: 14px;
 }
 
-.gf-player-ctl[aria-pressed="true"]:hover {
-  background: #f1f1f1;
+.gf-autoplay-btn {
+  width: 52px;
+}
+
+.gf-autoplay-btn[aria-pressed="true"] .gf-switch {
+  background: color-mix(in srgb, var(--ns-accent, #2a9d8f) 85%, #ffffff);
+}
+
+.gf-autoplay-btn[aria-pressed="true"] .gf-switch-knob {
+  left: 16px;
+  color: var(--ns-accent-dark, #1f6b62);
+}
+
+/* legenda desligada pelo botão CC (só com o player na tela) */
+body.gf-cc-off.gf-player-on #canvas-caption {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-switch,
+  .gf-switch-knob {
+    transition: none;
+  }
 }
 
 /* no toque o aviso "Toque fora para sair" ocupa o topo: abre espaço para os controles à direita */
 @media (hover: none) and (pointer: coarse) {
   body.is-presenting .present-hint {
-    right: calc(116px + env(safe-area-inset-right, 0px));
+    top: calc(max(12px, env(safe-area-inset-top, 0px)) + 56px);
   }
 }
 
 /* why: 2.4.7 — foco sempre visível nos controles do player (halo duplo funciona em fundo claro e escuro) */
-.gf-player-ctl:focus-visible,
 .driver-popover.demo-popover button:focus-visible,
 .driver-popover.demo-popover a:focus-visible,
 .slide-card button:focus-visible,
@@ -9284,24 +9363,6 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
   .ml-count { margin-left: 0; }
 }
 
-/* Player multi-idioma: 🌐 Áudio · Texto · Legenda (PRD multi-idioma RF20) */
-.gf-player-ctl.gf-lang-btn { width: auto; min-width: 44px; padding: 0 12px; font: 600 13px/1 system-ui, sans-serif; letter-spacing: .02em; }
-.gf-lang-menu { position: fixed; top: calc(max(12px, env(safe-area-inset-top, 0px)) + 52px); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 2147483001; min-width: 220px; max-height: 70vh; overflow: auto; padding: 8px; border-radius: 14px; background: rgba(17,17,17,.94); color: #fff; box-shadow: 0 12px 32px rgba(0,0,0,.35); font: 14px/1.3 system-ui, sans-serif; }
-.gf-lang-menu[hidden] { display: none !important; }
-.gf-lang-group + .gf-lang-group { border-top: 1px solid rgba(255,255,255,.15); margin-top: 6px; padding-top: 6px; }
-.gf-lang-head { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; padding: 4px 8px; }
-.gf-lang-item { display: block; width: 100%; min-height: 36px; text-align: left; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
-.gf-lang-item[aria-checked="true"] { font-weight: 700; }
-.gf-lang-item:hover, .gf-lang-item:focus-visible { background: rgba(255,255,255,.14); outline: 2px solid #fff; outline-offset: -2px; }
-@media (pointer: coarse) {
-  .gf-lang-menu { left: 8px; right: 8px; top: auto; bottom: max(8px, env(safe-area-inset-bottom, 0px)); max-height: 75vh; }
-  .gf-lang-item { min-height: 44px; }
-}
-@media (hover: hover), (pointer: fine) {
-  body:not(.view-share) .gf-lang-menu { top: 104px; }
-}
-/* why: o Driver desliga pointer-events em tudo durante o tour (.driver-active *) */
-.gf-lang-menu, .gf-lang-menu * { pointer-events: auto !important; }
 
 /* ───────── Mobile (toque compacto): cabeçalho de uma linha, painéis como folha inferior, alvos de 44px ─────────
  * why: o topo quebrava em duas linhas e passava da largura da tela, o navegador reduzia o zoom e os diálogos ficavam cortados. */
@@ -9827,8 +9888,6 @@ body.is-compact-touch .lang-picker-btn, body.is-compact-touch .lang-picker-opt {
 .embed-lang-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .embed-lang-row[hidden] { display: none; }
 .edit-lang .lang-picker-btn { min-height: 30px; padding: 0 6px; }
-.gf-lang-btn .gf-flag { margin-right: 6px; }
-.gf-lang-item .gf-flag { margin-right: 8px; }
 /* Menu de idioma das páginas de ajuda/legais (topo): bandeira + ▾, lista com bandeira e nome */
 .topbar .locale-menu { position: relative; }
 .topbar .locale-menu > summary { list-style: none; }
@@ -9846,3 +9905,128 @@ body.is-compact-touch .lang-picker-btn, body.is-compact-touch .lang-picker-opt {
 /* Assinante Pro/Team (ou convidado em sessão do Team): sem coroas nem selos Pro; o diálogo de upgrade mantém os dele */
 body.gf-subscriber .pro-badge:not(#modal-upgrade .pro-badge),
 body.gf-subscriber .pro-crown { display: none !important; }
+
+/* ---- Player: foco dos controles e menu ⚙ estilo YouTube ---- */
+.gf-player-ctl:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: -2px !important;
+  box-shadow: 0 0 0 4px var(--ns-accent, #2a9d8f) !important;
+}
+
+.gf-settings-menu {
+  position: fixed;
+  z-index: 2147483001;
+  min-width: 300px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 6px 0;
+  border-radius: 12px;
+  background: rgba(10, 22, 30, 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font: 14px/1.3 var(--ns-font, system-ui, sans-serif);
+}
+
+.gf-settings-menu,
+.gf-settings-menu * {
+  pointer-events: auto !important;
+}
+
+.gf-settings-menu[hidden] {
+  display: none !important;
+}
+
+.gf-set-list {
+  display: grid;
+}
+
+.gf-set-item,
+.gf-set-back {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gf-set-back {
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  margin-bottom: 4px;
+}
+
+.gf-set-item:hover,
+.gf-set-back:hover,
+.gf-set-item:focus-visible,
+.gf-set-back:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+.gf-set-item:focus-visible,
+.gf-set-back:focus-visible {
+  box-shadow: inset 3px 0 0 var(--ns-accent, #2a9d8f);
+}
+
+.gf-set-label {
+  flex: 1 1 auto;
+  margin-right: 12px;
+}
+
+.gf-set-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
+}
+
+.gf-set-chev {
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.gf-set-check {
+  width: 16px;
+  color: var(--ns-accent, #2a9d8f);
+  font-weight: 700;
+  filter: brightness(1.25);
+}
+
+.gf-set-radio[aria-checked="true"] .gf-set-label {
+  font-weight: 700;
+}
+
+.gf-settings-menu .gf-flag,
+.gf-flag-space {
+  flex: none;
+  width: 20px;
+  height: 14px;
+}
+
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+  .gf-settings-menu {
+    top: auto !important;
+    left: 8px;
+    right: 8px !important;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    max-width: none;
+    max-height: 75vh;
+  }
+
+  .gf-set-item,
+  .gf-set-back {
+    min-height: 48px;
+  }
+}
