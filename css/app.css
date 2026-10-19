@@ -9689,9 +9689,9 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .paywall-hero-top .btn-icon { position: absolute; top: 8px; right: 10px; min-width: 44px; min-height: 44px; }
 .paywall-hero h3 { font-size: 1.3rem; padding-right: 48px; }
 .paywall-lead { font-size: 0.85rem; line-height: 1.35; }
-.upgrade-tiers, .upgrade-intervals, .upgrade-extra-guests, .paywall-benefits { margin-inline: 18px; }
+.upgrade-tiers, .upgrade-intervals, .paywall-benefits { margin-inline: 18px; }
 .upgrade-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; margin-block: 0; padding: 0; min-inline-size: 0; }
-.upgrade-tiers[hidden], .upgrade-extra-guests[hidden] { display: none; }
+.upgrade-tiers[hidden] { display: none; }
 .upgrade-tier { position: relative; display: grid; gap: 1px; align-content: center; min-height: 48px; padding: 8px 12px; border: 2px solid var(--ns-border); border-radius: 12px; background: var(--ns-input-bg); color: var(--ns-ink); cursor: pointer; }
 .upgrade-tier input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
 .upgrade-tier:has(input:checked) { border-color: var(--ns-accent); background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel)); }
@@ -9700,9 +9700,6 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .upgrade-tier .pro-badge-crown { width: 14px; height: 14px; vertical-align: -2px; }
 .upgrade-interval { min-height: 72px; padding: 10px 12px; }
 .paywall-price { font-size: 1.25rem; }
-.upgrade-extra-guests { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-block: 0; }
-.upgrade-extra-guests label { font-size: 0.85rem; font-weight: 650; }
-.upgrade-extra-guests input { width: 72px; min-height: 44px; }
 .paywall-benefits { grid-template-columns: 1fr 1fr; gap: 0 12px; margin-block: 0; }
 .paywall-benefits li { padding: 4px 2px; font-size: 0.85rem; line-height: 1.3; }
 .upgrade-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: stretch; }
@@ -9715,8 +9712,7 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
   .upgrade-scroll { gap: 10px; }
   .paywall-hero { padding: 10px 14px 8px; }
   .paywall-hero h3 { font-size: 1.15rem; }
-  .upgrade-tiers, .upgrade-intervals, .upgrade-extra-guests, .paywall-benefits { margin-inline: 14px; }
-  .upgrade-tiers { gap: 6px; }
+  .upgrade-tiers, .upgrade-intervals,   .upgrade-tiers { gap: 6px; }
   .upgrade-tier { padding: 6px 10px; min-height: 48px; }
   .upgrade-intervals { grid-template-columns: 1fr 1fr; gap: 6px; }
   .upgrade-interval { min-height: 64px; padding: 8px; }
@@ -9728,3 +9724,11 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
   .paywall-legal { font-size: 0.7rem; }
 }
 @media (max-width: 380px) { .upgrade-tiers { grid-template-columns: 1fr; } .paywall-benefits { grid-template-columns: 1fr; } }
+
+.subscription-seats { display: grid; gap: 6px; margin: 12px 0; padding: 12px; border: 1px solid var(--ns-border); border-radius: 12px; background: var(--ns-input-bg); }
+.subscription-seats[hidden] { display: none; }
+.subscription-seats p { margin: 0; }
+.subscription-seats-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.subscription-seats-row label { font-size: 0.85rem; font-weight: 650; }
+.subscription-seats-row input { width: 72px; min-height: 44px; }
+.subscription-seats-row .btn { min-height: 44px; }
