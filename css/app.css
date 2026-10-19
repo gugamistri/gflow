@@ -5991,16 +5991,42 @@ body.standalone .caption-bar,
   outline-color: color-mix(in srgb, var(--ns-accent) 60%, transparent);
 }
 
+/* why: o slide usa o tema do tour, não o do app; com --ns-input-bg o campo ficava preto no modo escuro,
+   e o width:100% de .inline-edit jogava o campo para a linha de baixo de "CENA 1 ·" */
 .slide-kicker .inline-edit {
+  display: inline-block;
+  box-sizing: border-box;
+  width: auto;
+  field-sizing: content;
+  min-width: 12ch;
+  max-width: 32ch;
+  vertical-align: baseline;
+  margin: 0;
   font: inherit;
+  line-height: inherit;
   letter-spacing: inherit;
   text-transform: none;
-  color: var(--ns-ink);
-  background: var(--ns-input-bg);
-  border: 1px solid var(--ns-accent);
+  color-scheme: var(--demo-color-scheme, light);
+  color: var(--demo-field-ink, #18181b);
+  -webkit-text-fill-color: var(--demo-field-ink, #18181b);
+  caret-color: var(--demo-accent, var(--ns-accent));
+  background: var(--demo-field-bg, #ffffff);
+  border: 1px solid var(--demo-field-border, #8a8a94);
   border-radius: 4px;
-  padding: 1px 6px;
-  min-width: 140px;
+  padding: 0 6px;
+  outline: none;
+}
+
+.slide-kicker .inline-edit:focus,
+.slide-kicker .inline-edit:focus-visible {
+  border-color: var(--demo-form-focus, var(--ns-accent));
+  outline: 2px solid color-mix(in srgb, var(--demo-form-focus, var(--ns-accent)) 65%, transparent);
+  outline-offset: 1px;
+}
+
+.slide-kicker.is-renamable:has(.inline-edit) {
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 /* Barra fixa do passo, acima do canvas */
