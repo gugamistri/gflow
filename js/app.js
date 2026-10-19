@@ -174,6 +174,7 @@ import { createTranslationGrid } from "./translationGrid.js";
 import { createMobileBar } from "./mobileBar.js";
 import { enhanceLangSelect } from "./langPicker.js";
 import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
+import { setCaptions } from "./playerControls.js";
 import { resolveContent } from "./tour-schema/i18n.js";
 import { MAX_TARGET_LANGS, langAudioPlan, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
 import { listHostedVoices } from "./hosted.js";
@@ -860,10 +861,9 @@ let previewLang = null;
 let previewView = null;
 let previewMenu = null;
 
+/** why: a legenda (cc) liga/desliga por CSS (botão CC); a visão só muda com texto e áudio. */
 function previewViewFor(state) {
-  const view = resolveContent(project, state.text, { audioLang: state.audio });
-  if (!state.cc) view.steps = view.steps.map((s) => ({ ...s, showCaption: false }));
-  return view;
+  return resolveContent(project, state.text, { audioLang: state.audio });
 }
 
 function startPreviewLangs() {
@@ -883,16 +883,21 @@ function startPreviewLangs() {
     demo: project,
     getState: () => previewLang,
     onChange: (next) => {
+      const prev = previewLang;
       previewLang = next;
-      previewView = previewViewFor(next);
       storeLangs(`editor-${project.id || "p"}`, next);
+      setCaptions(next.cc);
       previewMenu?.paint();
+      // why: só texto/áudio reiniciam o passo; legenda liga/desliga na hora
+      if (prev && prev.text === next.text && prev.audio === next.audio) return;
+      previewView = previewViewFor(next);
       if (player.isRunning?.()) {
-        player.play({ from: getSelectedIndex(), autoplay: previewAutoplay });
+        player.play({ from: getSelectedIndex(), autoplay: player.isAutoplay?.() ?? previewAutoplay });
         mountPreviewMenu();
       }
     },
   });
+  setCaptions(state.cc);
   mountPreviewMenu();
 }
 

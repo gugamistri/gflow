@@ -5,6 +5,7 @@
  */
 import { t } from "./i18n.js";
 import { flagSvg } from "./flags.js";
+import { GEAR_ICON, captionsOn, onCaptionsChange, setCaptions } from "./playerControls.js";
 import { baseLang, langLabel, matchLang, normalizeLangTag, playerLangs, projectI18n } from "./tour-schema/i18n.js";
 
 export const LANG_SESSION_PREFIX = "guiaflow.lang.";
@@ -100,7 +101,8 @@ export function applyLangChoice(state, group, value, textLangs = []) {
 }
 
 /**
- * Botão 🌐 + menu (Áudio · Texto · Legenda), com radios `aria-checked` e teclado (RF20, #86).
+ * Engrenagem ⚙ + menu de configurações estilo YouTube (RF20, #86): Legendas · Áudio · Texto, com o valor atual à
+ * direita e › para o submenu de idiomas (bandeiras SVG). O botão CC da barra liga/desliga a legenda com um clique.
  */
 export function createLangMenu({ demo, getState, onChange }) {
   const langs = playerLangs(demo);
@@ -108,108 +110,217 @@ export function createLangMenu({ demo, getState, onChange }) {
   let btn = null;
   let menu = null;
   let open = false;
+  let view = "main";
   let outside = null;
+  let offCc = null;
+  let onResize = null;
 
-  function item(group, value, label, checked, flag = "") {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "gf-lang-item";
-    b.setAttribute("role", "menuitemradio");
-    b.setAttribute("aria-checked", checked ? "true" : "false");
-    b.dataset.group = group;
-    b.dataset.value = value;
-    b.textContent = `${checked ? "✓ " : ""}`;
-    if (flag) b.insertAdjacentHTML("beforeend", flagSvg(flag));
-    b.append(label);
-    b.addEventListener("click", (e) => {
-      e.stopPropagation();
-      onChange(applyLangChoice(getState(), group, value, langs));
-      paint();
-      btn?.focus();
-      close();
-    });
-    return b;
+  const groups = () => {
+    const s = getState();
+    const ccValue = s.cc && captionsOn() ? s.text : "off";
+    return [
+      {
+        id: "cc",
+        title: t("player.captions"),
+        value: ccValue,
+        valueLabel: ccValue === "off" ? t("player.ccOff") : langLabel(ccValue),
+        options: [{ value: "off", label: t("player.ccOff") }, ...langs.map((l) => ({ value: l, label: langLabel(l), flag: l }))],
+      },
+      {
+        id: "audio",
+        title: t("player.langAudio"),
+        value: s.audio,
+        valueLabel: s.audio === "none" ? t("player.langNoAudio") : langLabel(s.audio),
+        options: [
+          ...audios.map((a) => ({ value: a.lang, label: `${langLabel(a.lang)}${a.partial ? ` ${t("player.langPartial")}` : ""}`, flag: a.lang })),
+          { value: "none", label: t("player.langNoAudio") },
+        ],
+      },
+      {
+        id: "text",
+        title: t("player.langText"),
+        value: s.text,
+        valueLabel: langLabel(s.text),
+        options: langs.map((l) => ({ value: l, label: langLabel(l), flag: l })),
+      },
+    ];
+  };
+
+  function choose(group, value) {
+    const cur = getState();
+    let next;
+    if (group === "cc") next = value === "off" ? { ...cur, cc: false } : { ...cur, cc: true, text: value };
+    else next = applyLangChoice(cur, group, value, langs);
+    onChange(next);
+    setCaptions(next.cc);
+    view = "main";
+    close();
+    btn?.focus();
   }
 
-  function section(title, children) {
-    const g = document.createElement("div");
-    g.className = "gf-lang-group";
-    g.setAttribute("role", "group");
-    g.setAttribute("aria-label", title);
-    const h = document.createElement("div");
-    h.className = "gf-lang-head";
-    h.textContent = title;
-    g.append(h, ...children);
-    return g;
+  function el(tag, cls, attrs = {}) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    return n;
+  }
+
+  function renderMain() {
+    const list = el("div", "gf-set-list", { role: "none" });
+    for (const g of groups()) {
+      const b = el("button", "gf-set-item", { type: "button", role: "menuitem", "aria-haspopup": "menu", "data-group": g.id });
+      const flag = g.value && g.value !== "off" && g.value !== "none" ? flagSvg(g.value) : "";
+      b.innerHTML = `<span class="gf-set-label"></span><span class="gf-set-value">${flag}<span class="gf-set-value-text"></span></span><span class="gf-set-chev" aria-hidden="true">›</span>`;
+      b.querySelector(".gf-set-label").textContent = g.title;
+      b.querySelector(".gf-set-value-text").textContent = g.valueLabel;
+      b.setAttribute("aria-label", `${g.title}: ${g.valueLabel}`);
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        view = g.id;
+        paint();
+        focusFirst();
+      });
+      list.append(b);
+    }
+    return list;
+  }
+
+  function renderSub(g) {
+    const wrap = el("div", "gf-set-list", { role: "none" });
+    const back = el("button", "gf-set-back", { type: "button", role: "menuitem", "data-back": "1" });
+    back.innerHTML = `<span class="gf-set-chev" aria-hidden="true">‹</span><span></span>`;
+    back.lastChild.textContent = g.title;
+    back.setAttribute("aria-label", `${t("player.back")}: ${g.title}`);
+    back.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const from = view;
+      view = "main";
+      paint();
+      menu.querySelector(`[data-group="${from}"]`)?.focus();
+    });
+    wrap.append(back);
+    for (const o of g.options) {
+      const checked = o.value === g.value;
+      const b = el("button", "gf-set-item gf-set-radio", { type: "button", role: "menuitemradio", "aria-checked": checked ? "true" : "false", "data-group": g.id, "data-value": o.value });
+      b.innerHTML = `<span class="gf-set-check" aria-hidden="true">${checked ? "✓" : ""}</span>${o.flag ? flagSvg(o.flag) : '<span class="gf-flag-space" aria-hidden="true"></span>'}<span class="gf-set-label"></span>`;
+      b.querySelector(".gf-set-label").textContent = o.label;
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        choose(g.id, o.value);
+      });
+      wrap.append(b);
+    }
+    return wrap;
   }
 
   function paint() {
     if (!btn) return;
-    const s = getState();
-    // bandeira em SVG (Windows não desenha emoji de bandeira) + código curto
-    btn.innerHTML = `${flagSvg(s.text)}${shortTag(s.text)}`;
-    btn.setAttribute("aria-label", t("player.langMenu"));
-    btn.title = t("player.langMenu");
+    btn.innerHTML = GEAR_ICON;
+    btn.setAttribute("aria-label", t("player.settings"));
+    btn.title = t("player.settings");
     btn.setAttribute("aria-expanded", open ? "true" : "false");
     if (!menu) return;
-    menu.replaceChildren(
-      section(t("player.langAudio"), [
-        ...audios.map((a) => item("audio", a.lang, `${langLabel(a.lang)}${a.partial ? ` ${t("player.langPartial")}` : ""}`, s.audio === a.lang, a.lang)),
-        item("audio", "none", t("player.langNoAudio"), s.audio === "none"),
-      ]),
-      section(t("player.langText"), langs.map((l) => item("text", l, langLabel(l), s.text === l, l))),
-      section(t("player.langCc"), [item("cc", "on", t("player.ccOn"), s.cc), item("cc", "off", t("player.ccOff"), !s.cc)]),
-    );
+    menu.setAttribute("aria-label", t("player.settings"));
+    const g = groups().find((x) => x.id === view);
+    menu.replaceChildren(g ? renderSub(g) : renderMain());
+  }
+
+  function items() {
+    return [...menu.querySelectorAll("button")];
+  }
+
+  function focusFirst() {
+    (menu.querySelector('[aria-checked="true"]') || items()[view === "main" ? 0 : 1] || items()[0])?.focus();
+  }
+
+  function place() {
+    if (!menu || !btn) return;
+    const r = btn.getBoundingClientRect();
+    menu.style.top = `${Math.round(r.bottom + 8)}px`;
+    menu.style.right = `${Math.max(8, Math.round(window.innerWidth - r.right))}px`;
   }
 
   function close() {
     open = false;
+    view = "main";
     if (menu) menu.hidden = true;
     btn?.setAttribute("aria-expanded", "false");
+    btn?.classList.remove("is-open");
   }
 
   function toggle() {
     open = !open;
+    view = "main";
     paint();
     menu.hidden = !open;
-    if (open) menu.querySelector('[aria-checked="true"]')?.focus();
+    btn.classList.toggle("is-open", open);
+    if (open) {
+      place();
+      items()[0]?.focus();
+    }
   }
 
   function mount(host) {
     if (btn?.isConnected) return;
     btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "gf-player-ctl gf-lang-btn";
+    btn.className = "gf-player-ctl gf-settings-btn";
     btn.setAttribute("aria-haspopup", "menu");
-    btn.dataset.ctl = "lang";
+    btn.dataset.ctl = "settings";
     menu = document.createElement("div");
-    menu.className = "gf-lang-menu";
+    menu.className = "gf-settings-menu";
     menu.setAttribute("role", "menu");
+    menu.id = `gf-settings-${Math.random().toString(36).slice(2, 8)}`;
+    btn.setAttribute("aria-controls", menu.id);
     menu.hidden = true;
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       toggle();
     });
     menu.addEventListener("keydown", (e) => {
-      const items = [...menu.querySelectorAll(".gf-lang-item")];
-      const i = items.indexOf(document.activeElement);
-      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); btn.focus(); }
-      else if (e.key === "ArrowDown") { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+      const list = items();
+      const i = list.indexOf(document.activeElement);
+      const cur = document.activeElement;
+      if (e.key === "Escape" || (e.key === "ArrowLeft" && view !== "main")) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (view !== "main") menu.querySelector("[data-back]")?.click();
+        else { close(); btn.focus(); }
+      } else if (e.key === "ArrowDown") { e.preventDefault(); list[(i + 1) % list.length]?.focus(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); list[(i - 1 + list.length) % list.length]?.focus(); }
+      else if (e.key === "Home") { e.preventDefault(); list[0]?.focus(); }
+      else if (e.key === "End") { e.preventDefault(); list[list.length - 1]?.focus(); }
+      else if (e.key === "ArrowRight" && view === "main" && cur?.dataset.group) { e.preventDefault(); cur.click(); }
+      else if (e.key === "Tab") { close(); }
+    });
+    menu.addEventListener("focusout", (e) => {
+      if (open && e.relatedTarget && !menu.contains(e.relatedTarget) && e.relatedTarget !== btn) close();
     });
     for (const ev of ["pointerdown", "pointerup", "mousedown", "mouseup", "touchstart", "touchend"]) {
       menu.addEventListener(ev, (e) => e.stopPropagation(), { passive: true });
     }
-    outside = (e) => { if (open && !menu.contains(e.target) && e.target !== btn) close(); };
+    outside = (e) => { if (open && !menu.contains(e.target) && !btn.contains(e.target)) close(); };
     document.addEventListener("click", outside);
-    host.prepend(btn);
+    onResize = () => { if (open) place(); };
+    window.addEventListener("resize", onResize);
+    // why: o botão CC da barra muda a legenda; o estado do idioma (sessão/analytics) acompanha sem reiniciar o passo
+    offCc = onCaptionsChange((on) => {
+      const s = getState();
+      if (s && s.cc !== on) onChange({ ...s, cc: on });
+      paint();
+    });
+    host.append(btn);
     document.body.append(menu);
     paint();
   }
 
   function destroy() {
     if (outside) document.removeEventListener("click", outside);
+    if (onResize) window.removeEventListener("resize", onResize);
+    offCc?.();
     outside = null;
+    onResize = null;
+    offCc = null;
     btn?.remove();
     menu?.remove();
     btn = null;
