@@ -71,11 +71,11 @@ body.collab-readonly #btn-capture { display: none !important; }
 .collab-invite-form { margin-top: 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
 .collab-invite-form h4, .collab-invite-form label, .collab-invite-status { grid-column: 1 / -1; margin: 0; }
 .collab-invite-form input, .collab-invite-form select { min-height: 40px; }
-.collab-invite-status[data-kind="error"] { color: #9b1c1c; }
-.collab-invite-status[data-kind="ok"] { color: #14532d; }
+.collab-invite-status[data-kind="error"] { color: var(--ns-danger, #dc2626); font-weight: 600; }
+.collab-invite-status[data-kind="ok"] { color: var(--ns-success-ink, #14532d); font-weight: 600; }
 .collab-conflict-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .collab-conflict-text-box { margin: 4px 0 0; padding: 10px; border-radius: 8px; background: var(--ns-surface, #f4f4f5); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow: auto; }
-.collab-join-msg[data-kind="error"] { color: #9b1c1c; font-weight: 600; }
+.collab-join-msg[data-kind="error"] { color: var(--ns-danger, #dc2626); font-weight: 600; }
 .collab-shared-title { font-size: 14px; margin: 16px 0 8px; }
 .collab-shared-item { appearance: none; width: 100%; text-align: start; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--ns-border, rgba(127, 127, 127, .35)); background: var(--ns-panel, #fff); color: inherit; cursor: pointer; min-height: 44px; }
 .collab-shared-item:hover { border-color: var(--ns-accent, #2a9d8f); }

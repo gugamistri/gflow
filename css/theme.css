@@ -21,6 +21,10 @@
   --ns-ink: #1a1a1a;
   --ns-muted: #71717a;
   --ns-danger: #dc2626;
+  /* texto de sucesso e links (WCAG AA ≥ 4.5:1 no painel claro e escuro) */
+  --ns-success: #15803d;
+  --ns-success-ink: #14532d;
+  --ns-link: var(--ns-accent-dark);
   --ns-font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ns-font-display: Georgia, "Times New Roman", serif;
   --ns-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
@@ -68,6 +72,9 @@
   --ns-ink: #f5f5f5;
   --ns-muted: #a1a1aa;
   --ns-danger: #f87171;
+  --ns-success: #4ade80;
+  --ns-success-ink: #86efac;
+  --ns-link: #7fe3d5;
   --ns-font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ns-font-display: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ns-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
