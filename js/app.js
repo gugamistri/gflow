@@ -144,6 +144,8 @@ import {
   hostedQuotaCopy,
   hostedUsageMeters,
   resumeSubscription,
+  setTeamSeats,
+  teamSeatsErrorKey,
   shouldShowByokSettings,
   readBillingReturn,
   shouldShowProBadge,
@@ -1618,10 +1620,6 @@ function paintUpgradeCopy() {
   const tier = tiersOn && document.querySelector('#upgrade-form input[name="billing-tier"]:checked')?.value === "team" ? "team" : "pro";
   const offer = paywallOffer(currency, tier);
   const team = tier === "team";
-  const extraBox = document.getElementById("upgrade-extra-guests");
-  if (extraBox) extraBox.hidden = !team;
-  const extraNote = document.getElementById("upgrade-extra-note");
-  if (extraNote) extraNote.textContent = team ? t("billing.team.extraNote", { price: formatPaywallAmount(offer.seat.month, currency, locale) }) : "";
   const crown = document.getElementById("paywall-hero-crown");
   if (crown) crown.hidden = team;
   const badgeText = document.getElementById("paywall-hero-badge-text");
@@ -2041,6 +2039,7 @@ function paintSubscription() {
   if (upsell) upsell.hidden = screen?.kind !== "none";
   const portal = document.getElementById("btn-subscription-portal");
   if (portal) portal.hidden = !screen?.showPortal;
+  paintSubscriptionSeats(screen);
   const confirmCopy = document.getElementById("subscription-confirm-copy");
   if (confirmCopy) {
     confirmCopy.textContent = screen?.whenDate
@@ -2049,6 +2048,66 @@ function paintSubscription() {
   }
   const confirmBtn = document.getElementById("btn-subscription-confirm");
   if (confirmBtn) confirmBtn.disabled = subscriptionBusy;
+}
+
+function paintSubscriptionSeats(screen) {
+  const box = document.getElementById("subscription-seats");
+  if (!box) return;
+  const on = Boolean(screen?.team) && collabFlagOn();
+  box.hidden = !on;
+  if (!on) return;
+  const extra = screen.extraGuests || 0;
+  const locale = getLocale();
+  const currency = screen.currency || paywallCurrency(locale);
+  const seat = paywallOffer(currency, "team").seat;
+  const yearly = subscriptionRecord?.interval === "year";
+  const summary = document.getElementById("subscription-seats-summary");
+  if (summary) summary.textContent = t("billing.seats.summary", { total: 5 + extra, extra });
+  const input = document.getElementById("subscription-seats-input");
+  if (input && document.activeElement !== input && !seatsDirty) input.value = String(extra);
+  const note = document.getElementById("subscription-seats-note");
+  if (note) note.textContent = t(yearly ? "billing.seats.noteYear" : "billing.seats.noteMonth", { price: formatPaywallAmount(yearly ? seat.year : seat.month, currency, locale) });
+  const btn = document.getElementById("btn-subscription-seats");
+  if (btn) btn.disabled = subscriptionBusy;
+}
+
+let seatsDirty = false;
+
+async function applyTeamSeats() {
+  if (subscriptionBusy) return;
+  const input = document.getElementById("subscription-seats-input");
+  const want = Number(input?.value);
+  if (!Number.isInteger(want) || want < 0 || want > 20) {
+    toast(t("billing.seats.invalid"));
+    return;
+  }
+  subscriptionBusy = true;
+  paintSubscription();
+  const result = await setTeamSeats(want);
+  subscriptionBusy = false;
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    closeSubscriptionDialog();
+    await endCloudSession();
+    resetBillingView();
+    paintCloudShare();
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+    return;
+  }
+  if (!result?.ok) {
+    toast(t(teamSeatsErrorKey(result)));
+    paintSubscription();
+    return;
+  }
+  seatsDirty = false;
+  if (result.subscription) {
+    subscriptionRecord = result.subscription;
+    paintSubscription();
+  } else {
+    await loadSubscription();
+  }
+  toast(t("billing.seats.done"));
+  void refreshEntitlement();
 }
 
 function closeSubscriptionDialog() {
@@ -2149,7 +2208,6 @@ async function openBillingPortal() {
 async function submitUpgrade(interval) {
   const button = document.getElementById("btn-upgrade-subscribe");
   const wantsTeam = collabFlagOn() && document.querySelector('#upgrade-form input[name="billing-tier"]:checked')?.value === "team";
-  const extraGuests = wantsTeam ? Number(document.getElementById("upgrade-extra-input")?.value || 0) : 0;
   if (button) button.disabled = true;
   setUpgradeStatus("");
   try {
@@ -2158,7 +2216,7 @@ async function submitUpgrade(interval) {
       currency: paywallCurrency(getLocale()),
       email: upgradeEmail || getCloudAccount().email || "",
       source: upgradeFeature || "account",
-      ...(wantsTeam ? { tier: "team", extraGuests } : {}),
+      ...(wantsTeam ? { tier: "team" } : {}),
     });
     if (result?.status === 400 && (result.error === "invalid_interval" || result.error === "invalid_currency")) {
       setUpgradeStatus(
@@ -3830,6 +3888,11 @@ function bindChrome() {
   });
   document.getElementById("btn-subscription-resume")?.addEventListener("click", () => {
     void changeSubscription("resume");
+  });
+  document.getElementById("subscription-seats-input")?.addEventListener("input", () => { seatsDirty = true; });
+  document.getElementById("subscription-seats")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    void applyTeamSeats();
   });
   document.getElementById("btn-subscription-portal")?.addEventListener("click", () => {
     void openBillingPortal();
