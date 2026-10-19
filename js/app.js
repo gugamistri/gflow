@@ -951,6 +951,9 @@ function paintChrome() {
   if (navEditor) navEditor.hidden = view !== "editor" || presenting;
   const inEditor = view === "editor" && !presenting;
   if (moreEditorOnly) moreEditorOnly.hidden = !inEditor;
+  // why: com o menu da Conta (nuvem ligada) o ☰ sai do editor desktop; Projetos agora está no menu do tour
+  const morePanel = document.getElementById("more-panel");
+  if (morePanel) morePanel.hidden = Boolean(inEditor && !compact && isCloudEnabled());
   document.querySelectorAll(".more-editor-pref").forEach((el) => {
     const hidePrefs = !inEditor;
     el.hidden = hidePrefs;
@@ -1495,6 +1498,22 @@ function accountInitial(email) {
   return ch ? ch.toUpperCase() : "?";
 }
 
+/** Ajuda + Modo/Idioma moram no menu da Conta quando ele existe; senão ficam no ☰. */
+function placeHelpGroups(inAccount) {
+  const slot = document.getElementById("account-help-slot");
+  const body = document.getElementById("more-panel-body");
+  const help = document.getElementById("help-group");
+  const prefs = document.querySelector(".more-group-prefs");
+  if (!slot || !body || !help || !prefs) return;
+  if (inAccount) {
+    if (help.parentElement !== slot) slot.append(help, prefs);
+  } else if (help.parentElement === slot) {
+    const actions = body.querySelector(".more-group-actions");
+    actions?.append(help);
+    body.append(prefs);
+  }
+}
+
 function paintAccount() {
   const enabled = isCloudEnabled();
   const account = enabled ? getCloudAccount() : { signedIn: false, email: "" };
@@ -1511,8 +1530,14 @@ function paintAccount() {
   const menuSignIn = document.getElementById("btn-menu-account");
   if (menuSignIn) menuSignIn.hidden = !enabled || signedIn;
   if (chip) {
-    chip.hidden = !signedIn;
-    if (!signedIn) chip.open = false;
+    // Conta + Ajuda: um só menu (logado ou não); com a nuvem desligada o ☰ continua dono de Ajuda/Tema/Idioma
+    chip.hidden = !enabled;
+    chip.classList.toggle("is-anon", !signedIn);
+    const block = document.getElementById("account-signed-in");
+    if (block) block.hidden = !signedIn;
+    const signout = document.getElementById("btn-account-signout");
+    if (signout) signout.hidden = !signedIn;
+    placeHelpGroups(enabled);
   }
   if (emailEl) emailEl.textContent = label;
   if (avatar) avatar.textContent = signedIn ? accountInitial(account.email) : "";
@@ -2846,6 +2871,10 @@ function escapeAttr(str) {
 }
 
 function bindChrome() {
+  document.getElementById("btn-file-projects")?.addEventListener("click", () => {
+    document.getElementById("file-panel")?.removeAttribute("open");
+    closeProject();
+  });
   document.getElementById("btn-menu-projects")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
     if (more) more.open = false;
@@ -2882,9 +2911,21 @@ function bindChrome() {
     document.getElementById("import-file")?.click();
   });
   document.getElementById("btn-file-rename")?.addEventListener("click", () => {
-    const label = document.getElementById("topbar-project");
-    if (!project || !label) return;
-    label.click();
+    const host = document.getElementById("topbar-project");
+    if (!project || !host) return;
+    beginInlineEdit(host, {
+      value: project.name,
+      onSave: async (name) => {
+        project.name = name;
+        host.textContent = name;
+        onChange();
+        toast(t("toast.renamed"));
+      },
+    });
+  });
+  // why: o nome do tour fica dentro do botão do menu; editar não pode abrir/fechar o menu
+  document.getElementById("btn-file-menu")?.addEventListener("click", (e) => {
+    if (e.target.closest("input")) e.preventDefault();
   });
   document.getElementById("btn-file-delete")?.addEventListener("click", () => {
     if (!project?.id) return;
@@ -3103,25 +3144,6 @@ function bindChrome() {
     else if (mq.addListener) mq.addListener(onScheme);
   }
 
-  document.getElementById("topbar-project")?.addEventListener("click", (e) => {
-    if (!project || e.target.closest("input")) return;
-    const host = e.currentTarget;
-    beginInlineEdit(host, {
-      value: project.name,
-      onSave: async (name) => {
-        project.name = name;
-        host.textContent = name;
-        onChange();
-        toast(t("toast.renamed"));
-      },
-    });
-  });
-  document.getElementById("topbar-project")?.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    if (!project || e.target.closest("input")) return;
-    e.preventDefault();
-    e.currentTarget.click();
-  });
 
   // Fecha painéis Tema / Narração / Exportar / Mais ao clicar fora
   const menuPanel = document.getElementById("more-panel");

@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/125/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/125/css/theme.css" />
-  <link rel="stylesheet" href="a/125/css/app.css" />
-  <link rel="stylesheet" href="a/125/css/collab.css" />
-  <link rel="stylesheet" href="a/125/css/comments.css" />
+  <link rel="stylesheet" href="a/126/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/126/css/theme.css" />
+  <link rel="stylesheet" href="a/126/css/app.css" />
+  <link rel="stylesheet" href="a/126/css/collab.css" />
+  <link rel="stylesheet" href="a/126/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -102,7 +102,7 @@
           </div>
           <hr class="more-divider" id="more-file-divider" />
           <div class="more-group more-group-actions">
-            <button type="button" class="more-item compact-only" id="btn-menu-account" hidden>
+            <button type="button" class="more-item" id="btn-menu-account" hidden>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-user"></use></svg>
               <span data-i18n="account.subscribeOrSignIn">Assinar / Entrar</span>
             </button>
@@ -112,6 +112,7 @@
                 <span data-i18n="topbar.projects">Projetos</span>
               </button>
             </div>
+            <div class="more-help" id="help-group">
             <button type="button" class="more-item" id="btn-shortcuts">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-keyboard"></use></svg>
               <span data-i18n="shortcuts.title">Atalhos</span>
@@ -133,6 +134,7 @@
               <span aria-hidden="true">·</span>
               <a href="/termos" target="_blank" rel="noopener" data-i18n="legal.terms">Termos</a>
             </p>
+            </div>
           </div>
           <hr class="more-divider" />
           <div class="more-group more-group-prefs">
@@ -162,24 +164,20 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/125/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/125/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/126/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/126/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
-        <span
-          class="topbar-project"
-          id="topbar-project"
-          hidden
-          title="Clique para renomear"
-          data-i18n-title="library.renameTitle"
-          role="button"
-          tabindex="0"
-        ></span>
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
-          <summary class="menu-summary file-menu" id="btn-file-menu" aria-haspopup="menu" title="Novo, abrir, importar e backup" data-i18n-title="file.menuTitle">
-            <span data-i18n="file.menu">Arquivo</span>
+          <summary class="menu-summary file-menu" id="btn-file-menu" aria-haspopup="menu" title="Menu do tour: novo, abrir, renomear, backup" data-i18n-title="tourMenu.title">
+            <span class="topbar-project" id="topbar-project"></span>
             <svg class="btn-ico menu-caret" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
           </summary>
-          <div class="menu-panel-body" role="menu" aria-label="Arquivo" data-i18n-aria="file.menu">
+          <div class="menu-panel-body" role="menu" aria-label="Menu do tour" data-i18n-aria="tourMenu.aria">
+            <button type="button" class="more-item" role="menuitem" id="btn-file-projects">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+              <span data-i18n="topbar.projects">Projetos</span>
+            </button>
+            <hr class="more-divider" />
             <button type="button" class="more-item" role="menuitem" id="btn-file-new">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
               <span data-i18n="file.new">Novo projeto…</span>
@@ -226,9 +224,6 @@
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <label class="edit-lang" id="edit-lang-wrap" hidden><span data-i18n="ml.editingIn">Editando em:</span>
-          <select id="edit-lang" aria-label="Idioma em edição" data-i18n-aria="ml.editingIn"></select>
-        </label>
         <details class="more-panel prefs-panel more-editor-pref" id="prefs-panel" hidden>
           <summary class="btn btn-ghost btn-icon" id="btn-prefs" aria-label="Preferências do projeto" title="Tema do tour, narração e IA" data-i18n-aria="prefs.aria" data-i18n-title="prefs.title">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
@@ -617,14 +612,18 @@
         <details class="account-chip" id="account-chip" hidden>
           <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
             <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
+            <svg class="btn-ico account-anon-ico" aria-hidden="true"><use href="#i-user"></use></svg>
           </summary>
           <div class="account-chip-menu">
+            <div class="account-signed-in" id="account-signed-in">
             <p class="account-chip-email" id="account-chip-email"></p>
             <p class="account-chip-plan" id="account-chip-plan" hidden></p>
             <p class="account-chip-usage" id="account-chip-usage" hidden></p>
             <button type="button" class="account-chip-action" id="btn-account-billing" hidden></button>
             <button type="button" class="account-chip-action" id="btn-account-api-keys" data-i18n="apiKeys.menu">Chaves de API</button>
             <button type="button" class="account-chip-action" id="btn-account-admin" hidden data-i18n="account.admin">Administração</button>
+            </div>
+            <div class="account-help-slot" id="account-help-slot"></div>
             <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
           </div>
         </details>
@@ -639,7 +638,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/125/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/125/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/126/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/126/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -777,6 +776,10 @@
           <button type="button" class="btn btn-sm btn-icon" id="btn-redo" title="Refazer (⌘⇧Z)" aria-label="Refazer" data-i18n-title="toolbar.redoTitle" data-i18n-aria="topbar.redo" disabled>
             <svg class="btn-ico" aria-hidden="true"><use href="#i-redo"></use></svg>
           </button>
+          <label class="edit-lang" id="edit-lang-wrap" hidden><span data-i18n="ml.editingIn">Editando em:</span>
+            <select id="edit-lang" aria-label="Idioma em edição" data-i18n-aria="ml.editingIn"></select>
+        </label>
+
         </div>
         <span class="toolbar-pos" id="toolbar-pos" aria-live="polite"></span>
       </div>
@@ -1114,7 +1117,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/125/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/126/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2058,8 +2061,8 @@
     </symbol>
   </svg>
 
-  <script src="a/125/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/125/js/app.js"></script>
+  <script src="a/126/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/126/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
