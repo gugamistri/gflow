@@ -218,7 +218,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
       banner.hidden = !readOnlyText;
       banner.textContent = readOnlyText || "";
     }
-    for (const sel of ["#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-share-analytics", "#btn-share-leads", "#btn-share-embed", "#btn-account-billing"]) {
+    for (const sel of ["#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-results", "#btn-share-embed", "#btn-account-billing"]) {
       document.querySelectorAll(sel).forEach((n) => {
         if (!perms.canPublish && !sel.includes("billing")) n.toggleAttribute("data-collab-hidden", true);
         else if (!perms.seeBilling && sel.includes("billing")) n.toggleAttribute("data-collab-hidden", true);

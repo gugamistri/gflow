@@ -65,3 +65,12 @@ test("aba Equipe: botões, painel e host presentes; ativar/gerenciar preservam i
   const pane = html.slice(html.indexOf('id="pane-share-link"'), html.indexOf('id="pane-share-team"'));
   assert.ok(!pane.includes('id="btn-share-collab"'), "ativar colaboração saiu da aba Link");
 });
+
+test("Resultados: botão fixo no cabeçalho e abas Análise/Contatos nos dois diálogos; saiu da aba Link", () => {
+  const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  assert.match(h, /id="btn-results"[^>]*aria-label="Resultados"/);
+  assert.ok(h.indexOf('id="btn-results"') < h.indexOf('class="export-panel"'), "Resultados vem antes de Compartilhar");
+  assert.equal((h.match(/data-results-tab="analytics"/g) || []).length, 2);
+  assert.equal((h.match(/data-results-tab="leads"/g) || []).length, 2);
+  assert.ok(!h.includes('id="btn-share-analytics"') && !h.includes('id="btn-share-leads"'));
+});

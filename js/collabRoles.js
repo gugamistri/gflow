@@ -49,6 +49,6 @@ export function readOnlyReason(role, { readOnly = false } = {}) {
 
 /** Seletores do editor que o convidado/leitor não deve ver ou usar. */
 export const GUEST_HIDDEN_SELECTORS = Object.freeze([
-  "#btn-new-project", "#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-share-analytics", "#btn-share-leads",
+  "#btn-new-project", "#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-results",
   "#billing-menu", "[data-billing]",
 ]);
