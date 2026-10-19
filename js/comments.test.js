@@ -136,3 +136,25 @@ test("UI: os textos do usuário nunca passam por innerHTML e o CSS está ligado 
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   assert.match(html, /css\/comments\.css/);
 });
+
+
+test("UI: ações são botões-ícone com aria-label/title (sem texto Editar/Apagar no botão)", () => {
+  const ui = readFileSync(new URL("./commentsUi.js", import.meta.url), "utf8");
+  assert.match(ui, /function iconBtn/);
+  assert.match(ui, /createElementNS\(SVG_NS/);
+  assert.match(ui, /comment-icon-btn/);
+  assert.match(ui, /"aria-label": label/);
+  assert.match(ui, /title: label/);
+  assert.match(ui, /icon: "edit"/);
+  assert.match(ui, /icon: "trash"/);
+  assert.match(ui, /icon: "reply"/);
+  assert.match(ui, /\? "check"/);
+  assert.match(ui, /sendIcon/);
+  assert.match(ui, /icon: "goto"/);
+  assert.equal(/el\("button"[^)]*t\("comments\.edit"\)\)/.test(ui), false);
+  assert.equal(/el\("button"[^)]*t\("comments\.delete"\)\)/.test(ui), false);
+  const css = readFileSync(new URL("../css/comments.css", import.meta.url), "utf8");
+  assert.match(css, /\.comment-icon-btn/);
+  assert.match(css, /min-height: 44px/);
+  assert.match(css, /@media \(hover: hover\)/);
+});
