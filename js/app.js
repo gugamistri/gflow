@@ -1175,8 +1175,13 @@ function paintShareMenu() {
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
   const brandToggle = document.getElementById("share-brand-toggle");
   if (brandToggle) brandToggle.hidden = !(pro && cloudShareEnabled());
+  // uma só configuração (project.removeBranding) para o link e o vídeo
   const brandBox = document.getElementById("share-remove-brand");
   if (brandBox) brandBox.checked = project?.removeBranding !== false;
+  const exportBrand = document.getElementById("export-remove-brand");
+  if (exportBrand) exportBrand.checked = project?.removeBranding !== false;
+  const exportBrandToggle = document.getElementById("export-brand-toggle");
+  if (exportBrandToggle) exportBrandToggle.hidden = !pro;
   paintAccount();
 }
 
@@ -3527,7 +3532,7 @@ function bindChrome() {
     }
   });
 
-  document.getElementById("share-remove-brand")?.addEventListener("change", (e) => {
+  for (const id of ["share-remove-brand", "export-remove-brand"]) document.getElementById(id)?.addEventListener("change", (e) => {
     if (!project || !viewerIsPro()) return;
     if (e.target.checked) delete project.removeBranding;
     else project.removeBranding = false;
@@ -3562,7 +3567,9 @@ function bindChrome() {
     if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
       await refreshEntitlement();
     }
-    const watermark = exportShowsWatermark(billingSnapshot());
+    const billingWatermark = exportShowsWatermark(billingSnapshot());
+    // Pro que desligou "Remover marca" mantém o crédito também no vídeo (mesma configuração do link)
+    const watermark = billingWatermark || project.removeBranding === false;
     exportAbort = new AbortController();
     showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
     overlayStatus.textContent = t("export.overlayVideoHint");
@@ -3580,7 +3587,7 @@ function bindChrome() {
         const tag = queue.length > 1 ? `${lang} (${i + 1}/${queue.length}) · ` : "";
         result = await exportVideo(demo, {
           watermark,
-          pro: !watermark,
+          pro: !billingWatermark,
           quality: qualitySelect?.value || "standard",
           fps: Number(fpsSelect?.value) || 30,
           canvas: previewCanvas,
