@@ -56,3 +56,12 @@ test("Compartilhar em abas: Link, Incorporar e Baixar, com ids e ARIA de abas", 
   assert.ok(inPane("pane-share-export", "btn-export-video"));
   assert.ok(inPane("pane-share-export", "export-video-quality"));
 });
+
+test("aba Equipe: botões, painel e host presentes; ativar/gerenciar preservam ids", () => {
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  assert.match(html, /data-share-tab="team"[^>]*aria-controls="pane-share-team"/);
+  assert.match(html, /role="tabpanel" id="pane-share-team"/);
+  for (const id of ["share-team-host", "share-team-off", "btn-share-collab", "btn-team-seats"]) assert.ok(html.includes(`id="${id}"`), id);
+  const pane = html.slice(html.indexOf('id="pane-share-link"'), html.indexOf('id="pane-share-team"'));
+  assert.ok(!pane.includes('id="btn-share-collab"'), "ativar colaboração saiu da aba Link");
+});
