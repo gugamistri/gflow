@@ -1385,6 +1385,7 @@ function ensureCollab() {
     onJoinDismiss: () => clearJoinHash(),
     onOpenTeam: () => openTeamTab(),
     onTeamChange: () => paintCollabShare(),
+    onSessionChange: () => paintLocalSave(),
   });
   const propsBody = document.getElementById("props-body");
   propsBody?.addEventListener("focusin", (e) => collab?.onFieldFocus(e.target?.id));
@@ -1686,6 +1687,7 @@ function paintLocalSave() {
     active: Boolean(billingEntitlement.active),
     billingReady: !signedIn || billingView.status === "ready" || billingView.status === "hidden",
     dismissed: localSaveDismissed(),
+    collab: Boolean(collab?.isActive?.()) && chromeView !== "library",
   });
   for (const id of ["local-save-library", "local-save-editor"]) {
     const el = document.getElementById(id);

@@ -194,8 +194,10 @@ export function stripBillingReturn(href) {
 }
 
 /** Some para quem assina e enquanto o plano ainda não chegou. */
-export function shouldShowLocalSave({ signedIn = false, active = false, billingReady = true, dismissed = false } = {}) {
+export function shouldShowLocalSave({ signedIn = false, active = false, billingReady = true, dismissed = false, collab = false } = {}) {
   if (dismissed) return false;
+  // why: em projeto colaborativo cada edição vai para a nuvem do dono (ops); convidado sem plano próprio não é "só neste navegador"
+  if (collab) return false;
   if (signedIn && active) return false;
   if (signedIn && !billingReady) return false;
   return true;
