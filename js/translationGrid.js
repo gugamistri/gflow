@@ -145,8 +145,8 @@ export function createTranslationGrid({ getProject, onChange, toast, onTranslate
     search.addEventListener("input", () => { query = search.value; renderSoon(); });
     const pend = el("label", { class: "checkbox" }, el("input", { type: "checkbox", checked: onlyPending, onchange: (e) => { onlyPending = e.target.checked; render(); } }), el("span", { text: t("tg.onlyPending") }));
     const bar = el("div", { class: "tg-bar", role: "toolbar", "aria-label": t("tg.title") });
-    if (onTranslate) bar.append(el("button", { type: "button", class: "btn btn-primary", id: "btn-tg-translate", onclick: () => onTranslate({ langs, render }) }, el("span", { text: t("ml.translateAll") }), el("span", { "aria-hidden": "true", text: " 👑" })));
-    if (onGenerateAudio) bar.append(el("button", { type: "button", class: "btn", id: "btn-tg-audio", disabled: !audioN, onclick: () => onGenerateAudio({ langs, render }) }, el("span", { text: t("tg.genAudio", { n: audioN, m: audioMin }) }), el("span", { "aria-hidden": "true", text: " 👑" })));
+    if (onTranslate) bar.append(el("button", { type: "button", class: "btn btn-primary", id: "btn-tg-translate", onclick: () => onTranslate({ langs, render }) }, el("span", { text: t("ml.translateAll") }), el("span", { class: "pro-crown", "aria-hidden": "true", text: " 👑" })));
+    if (onGenerateAudio) bar.append(el("button", { type: "button", class: "btn", id: "btn-tg-audio", disabled: !audioN, onclick: () => onGenerateAudio({ langs, render }) }, el("span", { text: t("tg.genAudio", { n: audioN, m: audioMin }) }), el("span", { class: "pro-crown", "aria-hidden": "true", text: " 👑" })));
     bar.append(el("button", { type: "button", class: "btn", id: "btn-tg-approve", onclick: () => {
       let n = 0;
       for (const l of langs) n += approveTranslation(project, l);

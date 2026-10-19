@@ -4,6 +4,7 @@
  * Ordem: ?lang/?audio/?cc → sessionStorage → navigator.languages → idioma de origem.
  */
 import { t } from "./i18n.js";
+import { flagSvg } from "./flags.js";
 import { baseLang, langLabel, matchLang, normalizeLangTag, playerLangs, projectI18n } from "./tour-schema/i18n.js";
 
 export const LANG_SESSION_PREFIX = "guiaflow.lang.";
@@ -109,7 +110,7 @@ export function createLangMenu({ demo, getState, onChange }) {
   let open = false;
   let outside = null;
 
-  function item(group, value, label, checked) {
+  function item(group, value, label, checked, flag = "") {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "gf-lang-item";
@@ -117,7 +118,9 @@ export function createLangMenu({ demo, getState, onChange }) {
     b.setAttribute("aria-checked", checked ? "true" : "false");
     b.dataset.group = group;
     b.dataset.value = value;
-    b.textContent = `${checked ? "✓ " : ""}${label}`;
+    b.textContent = `${checked ? "✓ " : ""}`;
+    if (flag) b.insertAdjacentHTML("beforeend", flagSvg(flag));
+    b.append(label);
     b.addEventListener("click", (e) => {
       e.stopPropagation();
       onChange(applyLangChoice(getState(), group, value, langs));
@@ -143,17 +146,18 @@ export function createLangMenu({ demo, getState, onChange }) {
   function paint() {
     if (!btn) return;
     const s = getState();
-    btn.textContent = `🌐 ${shortTag(s.text)}`;
+    // bandeira em SVG (Windows não desenha emoji de bandeira) + código curto
+    btn.innerHTML = `${flagSvg(s.text)}${shortTag(s.text)}`;
     btn.setAttribute("aria-label", t("player.langMenu"));
     btn.title = t("player.langMenu");
     btn.setAttribute("aria-expanded", open ? "true" : "false");
     if (!menu) return;
     menu.replaceChildren(
       section(t("player.langAudio"), [
-        ...audios.map((a) => item("audio", a.lang, `${langLabel(a.lang)}${a.partial ? ` ${t("player.langPartial")}` : ""}`, s.audio === a.lang)),
+        ...audios.map((a) => item("audio", a.lang, `${langLabel(a.lang)}${a.partial ? ` ${t("player.langPartial")}` : ""}`, s.audio === a.lang, a.lang)),
         item("audio", "none", t("player.langNoAudio"), s.audio === "none"),
       ]),
-      section(t("player.langText"), langs.map((l) => item("text", l, langLabel(l), s.text === l))),
+      section(t("player.langText"), langs.map((l) => item("text", l, langLabel(l), s.text === l, l))),
       section(t("player.langCc"), [item("cc", "on", t("player.ccOn"), s.cc), item("cc", "off", t("player.ccOff"), !s.cc)]),
     );
   }
