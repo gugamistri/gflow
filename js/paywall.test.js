@@ -229,7 +229,7 @@ test("diálogo de assinatura: seletor Pro/Team em pt/en/es, coroa só no Pro", (
   assert.match(html, /name="billing-tier" value="team"/);
   assert.match(html, /id="paywall-hero-crown"/);
   const i18n = readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
-  for (const key of ["billing.teamTitle", "billing.subscribeTeamMonthly", "billing.subscribeTeamAnnual", "billing.tier.team", "billing.team.extraNote"]) {
+  for (const key of ["billing.teamTitle", "billing.subscribeTeamMonthly", "billing.subscribeTeamAnnual", "billing.tier.team"]) {
     assert.equal(i18n.split(`"${key}"`).length - 1, 3, key);
   }
 });
@@ -245,4 +245,36 @@ test("diálogo de assinatura: plano e preços antes da lista, e 'Já é assinant
   const footer = dialog.slice(at('class="upgrade-footer"'));
   assert.match(footer, /class="upgrade-actions"[\s\S]*id="btn-upgrade-subscribe"[\s\S]*class="btn paywall-login" id="btn-upgrade-login"/);
   assert.equal(dialog.slice(0, at('class="upgrade-footer"')).includes("btn-upgrade-login"), false);
+});
+
+test("diálogo de assinatura não tem mais o campo de convidados extras; o checkout Team omite extraGuests", async () => {
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="modal-upgrade"');
+  const dialog = html.slice(start, html.indexOf("</dialog>", start));
+  assert.equal(/upgrade-extra/.test(dialog), false);
+  const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  assert.equal(/upgrade-extra-input/.test(app), false);
+  const { buildCheckoutBody } = await import("./paywall.js");
+  const body = buildCheckoutBody({ interval: "monthly", currency: "brl", tier: "team" });
+  assert.equal(body.tier, "team");
+  assert.equal("extraGuests" in body, false);
+  // suporte do corpo continua para quem chamar com número
+  assert.equal(buildCheckoutBody({ interval: "monthly", currency: "brl", tier: "team", extraGuests: 2 }).extraGuests, 2);
+});
+
+test("assinatura Team: tela mostra convidados extras e setTeamSeats valida o pedido", async () => {
+  const { subscriptionScreen, setTeamSeats, teamSeatsErrorKey, parseSubscription } = await import("./billing.js");
+  const team = { plan: "pro", tier: "team", status: "active", interval: "month", currency: "brl", amount: 99, extraGuests: 3, canCancel: true };
+  const screen = subscriptionScreen(team, "pt");
+  assert.equal(screen.team, true);
+  assert.equal(screen.extraGuests, 3);
+  assert.equal(subscriptionScreen({ ...team, tier: "pro" }, "pt").team, false);
+  assert.equal(subscriptionScreen({ ...team, cancelAtPeriodEnd: true }, "pt").team, false);
+  assert.equal(parseSubscription({ ...team, extraGuests: 99 }).extraGuests, 20);
+  assert.equal((await setTeamSeats(21)).ok, false);
+  assert.equal((await setTeamSeats(-1)).error, "invalid_extra_guests");
+  assert.equal(teamSeatsErrorKey({ error: "seats_in_use" }), "billing.seats.inUse");
+  assert.equal(teamSeatsErrorKey({ error: "stripe_error" }), "billing.seats.fail");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  assert.match(html, /id="subscription-seats"[\s\S]*id="subscription-seats-input"[\s\S]*id="btn-subscription-seats"/);
 });

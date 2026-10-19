@@ -12,6 +12,7 @@ export const BILLING_PORTAL_PATH = "/billing/portal";
 export const BILLING_SUBSCRIPTION_PATH = "/billing/subscription";
 export const BILLING_CANCEL_PATH = "/billing/cancel";
 export const BILLING_RESUME_PATH = "/billing/resume";
+export const BILLING_TEAM_SEATS_PATH = "/billing/team/seats";
 export const BILLING_ENTITLEMENT_PATH = "/billing/entitlement";
 export const AUTH_ME_PATH = "/auth/me";
 export const AUTH_HANDOFF_PATH = "/auth/handoff";
@@ -390,6 +391,8 @@ export function parseSubscription(data) {
     compUntil: isoOrEmpty(nested.compUntil),
     canCancel: nested.canCancel === true,
     canResume: nested.canResume === true,
+    tier: nested.tier === "team" ? "team" : nested.tier === "pro" ? "pro" : "",
+    extraGuests: Number.isInteger(Number(nested.extraGuests)) && Number(nested.extraGuests) > 0 ? Math.min(Number(nested.extraGuests), 20) : 0,
   };
 }
 
@@ -404,6 +407,9 @@ const EMPTY_SUBSCRIPTION_SCREEN = {
   canCancel: false,
   canResume: false,
   showPortal: false,
+  team: false,
+  extraGuests: 0,
+  currency: "",
 };
 
 /** O que a tela mostra. Cortesia não cancela; quem não assina vê o convite do Pro. */
@@ -445,6 +451,9 @@ export function subscriptionScreen(data, locale = "pt") {
     canCancel: sub.canCancel,
     canResume: sub.canResume,
     showPortal: true,
+    team: sub.tier === "team" && !scheduled && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due"),
+    extraGuests: sub.extraGuests,
+    currency,
   };
 }
 
@@ -460,6 +469,24 @@ export function fetchSubscription(env) {
 
 export function cancelSubscription(env) {
   return subscriptionResult(BILLING_CANCEL_PATH, "POST", env);
+}
+
+/** Define os convidados extras (quantidade total) de uma assinatura Team. O servidor valida e cobra proporcional. */
+export async function setTeamSeats(extraGuests, env) {
+  const n = Number(extraGuests);
+  if (!Number.isInteger(n) || n < 0 || n > 20) return { ok: false, error: "invalid_extra_guests", subscription: null };
+  const result = await cloudFetch(BILLING_TEAM_SEATS_PATH, { method: "POST", body: JSON.stringify({ extraGuests: n }) }, env);
+  if (!result.ok) return { ...result, subscription: null };
+  const data = result.data && typeof result.data === "object" ? result.data : {};
+  return { ok: true, status: result.status, unchanged: data.unchanged === true, subscription: data.unchanged === true ? null : parseSubscription(data) };
+}
+
+/** Chave de texto para o erro ao mudar convidados extras. */
+export function teamSeatsErrorKey(result) {
+  if (result?.error === "seats_in_use") return "billing.seats.inUse";
+  if (result?.error === "invalid_extra_guests") return "billing.seats.invalid";
+  if (result?.error === "network") return "share.cloud.network";
+  return "billing.seats.fail";
 }
 
 export function resumeSubscription(env) {
