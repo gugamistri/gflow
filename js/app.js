@@ -1162,12 +1162,13 @@ function paintShareMenu() {
   if (embedBtn) embedBtn.hidden = !cloudShareEnabled();
   const embedBadge = document.getElementById("embed-pro-badge");
   if (embedBadge) embedBadge.hidden = pro;
-  const analyticsBtn = document.getElementById("btn-share-analytics");
-  if (analyticsBtn) analyticsBtn.hidden = !cloudShareEnabled() || (pro && !permanentSlug(record));
-  const analyticsBadge = document.getElementById("analytics-pro-badge");
-  if (analyticsBadge) analyticsBadge.hidden = pro;
-  const leadsBtn = document.getElementById("btn-share-leads");
-  if (leadsBtn) leadsBtn.hidden = !(pro && cloudShareEnabled() && permanentSlug(record));
+  const resultsBtn = document.getElementById("btn-results");
+  const showAnalytics = cloudShareEnabled() && !(pro && !permanentSlug(record));
+  if (resultsBtn) resultsBtn.hidden = !showAnalytics;
+  const resultsBadge = document.getElementById("results-pro-badge");
+  if (resultsBadge) resultsBadge.hidden = pro;
+  const leadsAvailable = Boolean(pro && cloudShareEnabled() && permanentSlug(record));
+  for (const tab of document.querySelectorAll("[data-results-tab=\"leads\"]")) tab.hidden = !leadsAvailable;
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
   const brandToggle = document.getElementById("share-brand-toggle");
   if (brandToggle) brandToggle.hidden = !(pro && cloudShareEnabled());
@@ -3849,8 +3850,23 @@ function bindChrome() {
   });
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
-  document.getElementById("btn-share-leads")?.addEventListener("click", () => leadsDialog.open());
-  document.getElementById("btn-share-analytics")?.addEventListener("click", () => openAnalytics());
+  document.getElementById("btn-results")?.addEventListener("click", () => openAnalytics());
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest?.("[data-results-tab]");
+    if (!tab || tab.getAttribute("aria-selected") === "true") return;
+    const from = document.getElementById(tab.dataset.resultsTab === "leads" ? "modal-analytics" : "modal-leads");
+    const to = document.getElementById(tab.dataset.resultsTab === "leads" ? "modal-leads" : "modal-analytics");
+    if (tab.dataset.resultsTab === "leads") leadsDialog.open();
+    else openAnalytics();
+    // só fecha o atual se o outro realmente abriu (sem link permanente ele recusa)
+    if (to?.open && from?.open) from.close();
+  });
+  document.addEventListener("keydown", (e) => {
+    const tab = e.target.closest?.("[data-results-tab]");
+    if (!tab || (e.key !== "ArrowRight" && e.key !== "ArrowLeft")) return;
+    const other = [...tab.parentElement.querySelectorAll("[data-results-tab]")].find((x) => x !== tab && !x.hidden);
+    if (other) { e.preventDefault(); other.click(); }
+  });
   embedModal?.querySelector(".embed-tabs")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.(".embed-tab");
     if (!tab) return;
