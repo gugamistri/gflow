@@ -361,6 +361,7 @@ function setSelectedIndex(i) {
   selectedIndex = Math.max(0, Math.min(i, max));
 }
 
+let openTeamTab = () => {};
 let collab = null; // colaboração (flag `collab`); null = editor como sempre
 let collabUndoState = { canUndo: false, canRedo: false };
 const history = createHistory();
@@ -1104,11 +1105,17 @@ async function reconcilePublishedBaseline(record) {
 }
 
 function paintCollabShare() {
-  const btn = document.getElementById("btn-share-collab");
-  if (!btn) return;
+  const tab = document.getElementById("tab-share-team");
+  if (!tab) return;
   const entry = project && collabFlagOn() ? readCollabMap(localStorage)[project.id] : null;
-  const allowed = Boolean(project && collabFlagOn() && getCloudAccount().signedIn && (!entry || entry.role === "owner" || !entry.guest));
-  btn.hidden = !allowed;
+  const signed = Boolean(project && collabFlagOn() && getCloudAccount().signedIn);
+  tab.hidden = !signed;
+  if (!signed && tab.getAttribute("aria-selected") === "true") selectShareTab("link");
+  const off = document.getElementById("share-team-off");
+  const owner = !entry || entry.role === "owner" || !entry.guest;
+  if (off) off.hidden = Boolean(entry) || !owner;
+  const seats = document.getElementById("btn-team-seats");
+  if (seats) seats.hidden = !(owner && signed);
 }
 
 function paintShareMenu() {
@@ -1330,6 +1337,8 @@ function ensureCollab() {
       updateHistoryButtons();
     },
     onJoinDismiss: () => clearJoinHash(),
+    onOpenTeam: () => openTeamTab(),
+    onTeamChange: () => paintCollabShare(),
   });
   const propsBody = document.getElementById("props-body");
   propsBody?.addEventListener("focusin", (e) => collab?.onFieldFocus(e.target?.id));
@@ -1337,8 +1346,11 @@ function ensureCollab() {
   propsBody?.addEventListener("input", (e) => collab?.onFieldInput(e.target?.id));
   window.addEventListener("pagehide", () => collab?.onPageHide());
   document.getElementById("btn-share-collab")?.addEventListener("click", () => {
-    document.querySelector(".export-panel")?.removeAttribute("open");
     void collab?.enableForCurrent();
+  });
+  document.getElementById("btn-team-seats")?.addEventListener("click", () => {
+    document.querySelector(".export-panel")?.removeAttribute("open");
+    void openSubscriptionDialog();
   });
   return collab;
 }
@@ -3807,11 +3819,16 @@ function bindChrome() {
     }
     if (focus && target) target.focus();
   }
+  function pickShareTab(name) {
+    if (name === "embed") { openEmbedDialog(); return; }
+    selectShareTab(name);
+    if (name === "team") void ensureCollab()?.openMembers?.();
+  }
+  openTeamTab = () => pickShareTab("team");
   document.getElementById("share-card")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.("[data-share-tab]");
     if (!tab) return;
-    if (tab.dataset.shareTab === "embed") openEmbedDialog();
-    else selectShareTab(tab.dataset.shareTab);
+    pickShareTab(tab.dataset.shareTab);
   });
   document.querySelector("#share-card .share-tablist")?.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
@@ -3824,8 +3841,7 @@ function bindChrome() {
     else next = tabs.length - 1;
     e.preventDefault();
     const name = tabs[next].dataset.shareTab;
-    if (name === "embed") openEmbedDialog();
-    else selectShareTab(name);
+    pickShareTab(name);
     tabs[next].focus();
   });
   exportPanel?.addEventListener("toggle", () => {
