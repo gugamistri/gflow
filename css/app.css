@@ -9745,3 +9745,11 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .share-pane[hidden] { display: none; }
 .share-pane .embed-code { max-width: 100%; }
 .share-pane .embed-tabs { flex-wrap: wrap; }
+.share-team-off { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+.share-team-lead { margin: 0; color: var(--ns-muted); }
+.share-team-off[hidden], .share-team-seats[hidden] { display: none; }
+.share-team-host { padding: 12px 16px 4px; max-height: 300px; overflow: auto; }
+.share-team-host .collab-invite-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.share-team-host h3 { font-size: 14px; margin: 0 0 8px; }
+.share-team-seats { margin: 4px 16px 12px; }
+.export-panel-body .share-team-seats { width: auto; display: inline-flex; margin: 4px 16px 12px; background: transparent; color: var(--ns-accent, #1d5fa8); border: 1px solid var(--ns-border); text-align: left; }
