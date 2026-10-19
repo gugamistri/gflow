@@ -2303,6 +2303,9 @@ export function createEditor(ctx) {
         setSceneLabel(demo, n, next);
         onChange();
       }
+      // why: paintSceneKicker não repinta enquanto houver input.inline-edit; sem tirar o campo aqui
+      // ele ficava no slide após blur/Enter/Esc até recarregar a página
+      host.textContent = save && next ? next : current;
       renderFilmstrip();
       syncForm();
       renderCanvas();
