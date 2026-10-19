@@ -9769,3 +9769,14 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .account-help-slot .more-item { width: 100%; }
 .account-help-slot .more-group-prefs { padding: 6px 0 0; }
 .account-chip-menu .account-signed-in[hidden], .account-chip-menu [hidden] { display: none; }
+/* PR6: folha inferior do Compartilhar no celular (largura total, alvos de 44px, sem cortar atrás da barra) */
+body.is-compact-touch .topbar details[open] > .export-panel-body.share-card {
+  width: 100%; left: 0; right: 0; max-height: 85dvh; padding: 0 0 calc(64px + env(safe-area-inset-bottom, 0px));
+}
+body.is-compact-touch .share-tablist { padding: 0 8px; }
+body.is-compact-touch .share-tab { min-height: 48px; }
+body.is-compact-touch .share-pane { padding: 8px 12px; }
+body.is-compact-touch .results-btn { min-width: 44px; min-height: 44px; }
+body.is-compact-touch .topbar details[open] > .account-chip-menu,
+body.is-compact-touch .topbar details[open] > .more-panel-body,
+body.is-compact-touch .topbar details[open] > .menu-panel-body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
