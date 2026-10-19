@@ -86,3 +86,26 @@ test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado
   assert.ok(h.includes('id="btn-file-projects"'));
   assert.ok(h.includes('id="account-help-slot"') && h.includes('id="help-group"'));
 });
+
+test("Sem marca unificado: um só project.removeBranding para link e vídeo; abas com alvos de 44px no celular", () => {
+  const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const js = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+  assert.ok(h.includes('id="share-remove-brand"') && h.includes('id="export-remove-brand"'));
+  assert.match(js, /for \(const id of \["share-remove-brand", "export-remove-brand"\]\)/);
+  assert.match(js, /const watermark = billingWatermark \|\| project\.removeBranding === false/);
+  assert.match(js, /pro: !billingWatermark/);
+  assert.match(css, /is-compact-touch \.share-tab \{ min-height: 48px/);
+  for (const role of ["tablist", "tab", "tabpanel"]) assert.ok(h.includes(`role="${role}"`));
+});
+
+test("⚙ e Preview ficam na barra de botões, depois de desfazer/refazer e Editando em; celular os devolve ao cabeçalho", () => {
+  const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const js = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const end = h.indexOf('id="toolbar-tools-end"');
+  assert.ok(end > h.indexOf('id="btn-redo"') && end > h.indexOf('id="edit-lang-wrap"'));
+  assert.ok(h.indexOf('id="prefs-panel"') > end && h.indexOf('id="preview-split"') > end);
+  assert.ok(h.indexOf('id="preview-split"') < h.indexOf('id="toolbar-pos"'));
+  assert.match(js, /function placeToolbarTools\(compact\)/);
+  assert.match(js, /results\.before\(prefs, preview\)/);
+});
