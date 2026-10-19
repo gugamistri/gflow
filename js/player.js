@@ -58,6 +58,13 @@ export function createPlayer(ctx) {
       setAudioMuted(muted);
       if (say) announce(t(muted ? "player.mutedNote" : "player.unmutedNote"));
     },
+    // why: toggle estilo YouTube — liga/desliga o avanço sozinho sem sair do passo atual
+    onAutoplayChange: (on, { announce: say } = {}) => {
+      autoplayEnabled = on;
+      if (on) armAutoplay();
+      else clearAutoplay();
+      if (say) announce(t(on ? "player.autoplayOnNote" : "player.autoplayOffNote"));
+    },
   });
   setAudioMuted(controls.isMuted());
 
@@ -445,7 +452,10 @@ export function createPlayer(ctx) {
 
     running = true;
     lifecycle.start();
-    controls.show({ pausable: autoplayEnabled });
+    controls.show({
+      autoplay: autoplayEnabled,
+      captions: steps.some((st) => String(st.caption || "").trim()),
+    });
     setAudioMuted(controls.isMuted());
     pendingExitReason = "";
     setPresentHint(presentStopHintKey());
@@ -740,6 +750,7 @@ export function createPlayer(ctx) {
       if (shortcut) {
         e.preventDefault();
         if (shortcut === "pause") controls.togglePause();
+        else if (shortcut === "cc") controls.toggleCaptions();
         else controls.toggleMute();
         return;
       }
@@ -875,5 +886,7 @@ export function createPlayer(ctx) {
     exit: (reason) => requestExit(reason),
     highlightContains,
     isRunning: () => running,
+    /** Estado do toggle de reprodução automática (mantido ao trocar de idioma no meio do tour). */
+    isAutoplay: () => autoplayEnabled,
   };
 }
