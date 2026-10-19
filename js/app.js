@@ -925,6 +925,20 @@ function getMobileBar() {
   return mobileBar;
 }
 
+/** ⚙ e Preview ficam na barra de botões (desktop); no celular a barra some, então voltam ao cabeçalho. */
+function placeToolbarTools(compact) {
+  const tools = document.getElementById("toolbar-tools-end");
+  const results = document.getElementById("btn-results");
+  const prefs = document.getElementById("prefs-panel");
+  const preview = document.getElementById("preview-split");
+  if (!tools || !results || !prefs || !preview) return;
+  if (compact) {
+    if (prefs.parentElement !== results.parentElement) results.before(prefs, preview);
+  } else if (prefs.parentElement !== tools) {
+    tools.append(prefs, preview);
+  }
+}
+
 function paintChrome() {
   const view = chromeView;
   const libraryView = document.getElementById("view-library");
@@ -942,6 +956,7 @@ function paintChrome() {
   const compact = isCompactTouch();
 
   document.body.classList.toggle("is-compact-touch", compact);
+  placeToolbarTools(compact);
 
   libraryView.hidden = view !== "library";
   editorView.hidden = view !== "editor";
@@ -1175,8 +1190,13 @@ function paintShareMenu() {
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
   const brandToggle = document.getElementById("share-brand-toggle");
   if (brandToggle) brandToggle.hidden = !(pro && cloudShareEnabled());
+  // uma só configuração (project.removeBranding) para o link e o vídeo
   const brandBox = document.getElementById("share-remove-brand");
   if (brandBox) brandBox.checked = project?.removeBranding !== false;
+  const exportBrand = document.getElementById("export-remove-brand");
+  if (exportBrand) exportBrand.checked = project?.removeBranding !== false;
+  const exportBrandToggle = document.getElementById("export-brand-toggle");
+  if (exportBrandToggle) exportBrandToggle.hidden = !pro;
   paintAccount();
 }
 
@@ -3527,7 +3547,7 @@ function bindChrome() {
     }
   });
 
-  document.getElementById("share-remove-brand")?.addEventListener("change", (e) => {
+  for (const id of ["share-remove-brand", "export-remove-brand"]) document.getElementById(id)?.addEventListener("change", (e) => {
     if (!project || !viewerIsPro()) return;
     if (e.target.checked) delete project.removeBranding;
     else project.removeBranding = false;
@@ -3562,7 +3582,9 @@ function bindChrome() {
     if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
       await refreshEntitlement();
     }
-    const watermark = exportShowsWatermark(billingSnapshot());
+    const billingWatermark = exportShowsWatermark(billingSnapshot());
+    // Pro que desligou "Remover marca" mantém o crédito também no vídeo (mesma configuração do link)
+    const watermark = billingWatermark || project.removeBranding === false;
     exportAbort = new AbortController();
     showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
     overlayStatus.textContent = t("export.overlayVideoHint");
@@ -3580,7 +3602,7 @@ function bindChrome() {
         const tag = queue.length > 1 ? `${lang} (${i + 1}/${queue.length}) · ` : "";
         result = await exportVideo(demo, {
           watermark,
-          pro: !watermark,
+          pro: !billingWatermark,
           quality: qualitySelect?.value || "standard",
           fps: Number(fpsSelect?.value) || 30,
           canvas: previewCanvas,
