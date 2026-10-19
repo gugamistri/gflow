@@ -238,6 +238,10 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     } else if (syncing || pending) {
       text = pending ? t("collab.status.pending", { n: pending }) : t("collab.status.syncing");
       kind = "syncing";
+    } else {
+      // tudo confirmado pelo servidor: salvo na nuvem do projeto (vale para convidado sem plano próprio)
+      text = t("collab.status.saved");
+      kind = "saved";
     }
     statusEl.hidden = !text;
     statusEl.textContent = text;
