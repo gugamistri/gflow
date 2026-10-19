@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/119/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/119/css/theme.css" />
-  <link rel="stylesheet" href="a/119/css/app.css" />
-  <link rel="stylesheet" href="a/119/css/collab.css" />
-  <link rel="stylesheet" href="a/119/css/comments.css" />
+  <link rel="stylesheet" href="a/120/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/120/css/theme.css" />
+  <link rel="stylesheet" href="a/120/css/app.css" />
+  <link rel="stylesheet" href="a/120/css/collab.css" />
+  <link rel="stylesheet" href="a/120/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -162,7 +162,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/119/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/119/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/120/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/120/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -601,7 +601,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/119/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/119/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/120/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/120/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1076,7 +1076,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/119/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/120/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1160,50 +1160,19 @@
         <p id="upgrade-message" class="paywall-lead"></p>
         <p id="upgrade-email-note" class="paywall-email-note" hidden></p>
       </div>
-      <ul class="paywall-benefits" id="paywall-benefits">
-        <li data-feature="account">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitAccount">Projetos salvos na sua conta, seguros mesmo se limpar o navegador</span>
-        </li>
-        <li data-feature="permanentShare">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitShare">Links permanentes</span>
-        </li>
-        <li data-feature="analytics">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitAnalytics">Análise de quem assistiu: visualizações, conclusão e onde as pessoas param</span>
-        </li>
-        <li data-feature="hostedAi">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitAi">Textos com IA</span>
-        </li>
-        <li data-feature="tts">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitTts">Áudio narrado</span>
-        </li>
-        <li data-feature="branding">
-          <span class="paywall-check" aria-hidden="true"></span>
-          <span data-i18n="billing.benefitBrand">Exportar vídeo sem a marca GuiaFlow</span>
-        </li>
-      </ul>
       <fieldset class="upgrade-tiers" id="upgrade-tiers" hidden>
         <legend class="visually-hidden" data-i18n="billing.tier.aria">Plano</legend>
         <label class="upgrade-tier">
           <input type="radio" name="billing-tier" value="pro" checked />
           <span class="paywall-interval-name"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg> <span data-i18n="billing.tier.pro">Pro</span></span>
-          <span class="paywall-cadence" data-i18n="billing.tier.proDesc">Para você: links permanentes, IA e áudio narrado</span>
+          <span class="paywall-cadence" data-i18n="billing.tier.proDesc">Para você</span>
         </label>
         <label class="upgrade-tier">
           <input type="radio" name="billing-tier" value="team" />
           <span class="paywall-interval-name" data-i18n="billing.tier.team">Team</span>
-          <span class="paywall-cadence" data-i18n="billing.tier.teamDesc">Tudo do Pro, mais edição em equipe com até 5 convidados</span>
+          <span class="paywall-cadence" data-i18n="billing.tier.teamDesc">Tudo do Pro + equipe de até 5</span>
         </label>
       </fieldset>
-      <div class="upgrade-extra-guests" id="upgrade-extra-guests" hidden>
-        <label for="upgrade-extra-input" data-i18n="billing.team.extraLabel">Convidados extras</label>
-        <input type="number" id="upgrade-extra-input" min="0" max="20" step="1" value="0" inputmode="numeric" />
-        <span class="paywall-cadence" id="upgrade-extra-note"></span>
-      </div>
       <fieldset class="upgrade-intervals">
         <legend class="visually-hidden" data-i18n="billing.intervalAria">Periodicidade</legend>
         <label class="upgrade-interval">
@@ -1220,12 +1189,45 @@
           <span class="paywall-cadence" id="paywall-year-note"></span>
         </label>
       </fieldset>
+      <div class="upgrade-extra-guests" id="upgrade-extra-guests" hidden>
+        <label for="upgrade-extra-input" data-i18n="billing.team.extraLabel">Convidados extras</label>
+        <input type="number" id="upgrade-extra-input" min="0" max="20" step="1" value="0" inputmode="numeric" />
+        <span class="paywall-cadence" id="upgrade-extra-note"></span>
+      </div>
+      <ul class="paywall-benefits" id="paywall-benefits" aria-label="Incluído" data-i18n-aria="billing.includedAria">
+        <li data-feature="account">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitAccount">Projetos salvos na conta</span>
+        </li>
+        <li data-feature="permanentShare">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitShare">Links permanentes</span>
+        </li>
+        <li data-feature="analytics">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitAnalytics">Análise de quem assistiu</span>
+        </li>
+        <li data-feature="hostedAi">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitAi">Textos com IA</span>
+        </li>
+        <li data-feature="tts">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitTts">Áudio narrado</span>
+        </li>
+        <li data-feature="branding">
+          <span class="paywall-check" aria-hidden="true"></span>
+          <span data-i18n="billing.benefitBrand">Vídeo sem a marca GuiaFlow</span>
+        </li>
+      </ul>
       <p id="upgrade-status" class="cloud-login-status" role="status"></p>
       </div>
       <div class="upgrade-footer">
-      <button type="submit" class="btn btn-primary paywall-cta" id="btn-upgrade-subscribe" data-i18n="billing.subscribeMonthly">Assinar Pro mensal</button>
+      <div class="upgrade-actions">
+        <button type="submit" class="btn btn-primary paywall-cta" id="btn-upgrade-subscribe" data-i18n="billing.subscribeMonthly">Assinar Pro mensal</button>
+        <button type="button" class="btn paywall-login" id="btn-upgrade-login" data-i18n="billing.already">Já é assinante? Entrar</button>
+      </div>
       <p class="paywall-pay-note" id="paywall-pay-note" hidden></p>
-      <button type="button" class="paywall-login" id="btn-upgrade-login" data-i18n="billing.already">Já é assinante? Entrar</button>
       <p class="paywall-legal" data-i18n-html="billing.legal">Ao assinar, você concorda com os <a href="/termos" target="_blank" rel="noopener">Termos</a> e a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
       </div>
     </form>
@@ -2044,8 +2046,8 @@
     </symbol>
   </svg>
 
-  <script src="a/119/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/119/js/app.js"></script>
+  <script src="a/120/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/120/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

@@ -233,3 +233,16 @@ test("diálogo de assinatura: seletor Pro/Team em pt/en/es, coroa só no Pro", (
     assert.equal(i18n.split(`"${key}"`).length - 1, 3, key);
   }
 });
+
+test("diálogo de assinatura: plano e preços antes da lista, e 'Já é assinante' é botão ao lado do CTA", () => {
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const start = html.indexOf('id="modal-upgrade"');
+  const dialog = html.slice(start, html.indexOf("</dialog>", start));
+  const at = (s) => dialog.indexOf(s);
+  assert.ok(at('id="upgrade-tiers"') > 0);
+  assert.ok(at('id="upgrade-tiers"') < at('class="upgrade-intervals"'));
+  assert.ok(at('class="upgrade-intervals"') < at('id="paywall-benefits"'));
+  const footer = dialog.slice(at('class="upgrade-footer"'));
+  assert.match(footer, /class="upgrade-actions"[\s\S]*id="btn-upgrade-subscribe"[\s\S]*class="btn paywall-login" id="btn-upgrade-login"/);
+  assert.equal(dialog.slice(0, at('class="upgrade-footer"')).includes("btn-upgrade-login"), false);
+});
