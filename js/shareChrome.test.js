@@ -74,3 +74,15 @@ test("Resultados: botão fixo no cabeçalho e abas Análise/Contatos nos dois di
   assert.equal((h.match(/data-results-tab="leads"/g) || []).length, 2);
   assert.ok(!h.includes('id="btn-share-analytics"') && !h.includes('id="btn-share-leads"'));
 });
+
+test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado do refazer, Ajuda/Modo/Idioma no menu da Conta", () => {
+  const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const summary = h.slice(h.indexOf('id="btn-file-menu"'), h.indexOf("</summary>", h.indexOf('id="btn-file-menu"')));
+  assert.ok(summary.includes('id="topbar-project"'));
+  assert.ok(!h.includes('data-i18n="file.menu">Arquivo'));
+  assert.ok(h.indexOf('id="btn-redo"') < h.indexOf('id="edit-lang-wrap"'), "Editando em depois de refazer");
+  assert.ok(h.indexOf('id="edit-lang-wrap"') < h.indexOf('id="toolbar-pos"'), "dentro da barra de botões");
+  assert.ok(!h.slice(0, h.indexOf('id="topbar-actions-editor"') + 400).includes('id="edit-lang-wrap"'));
+  assert.ok(h.includes('id="btn-file-projects"'));
+  assert.ok(h.includes('id="account-help-slot"') && h.includes('id="help-group"'));
+});
