@@ -9408,7 +9408,28 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
   body.is-compact-touch #btn-account-signin { display: none; }
   body.is-compact-touch .compact-only:not([hidden]) { display: flex; }
   body:not(.is-compact-touch) .compact-only { display: none !important; }
-  body.is-compact-touch .account-chip-toggle { min-width: 44px; min-height: 44px; }
+  /* ⚙ do cabeçalho = "Ajustes" da barra inferior (mesmo #prefs-panel): no celular fica só o Ajustes.
+     Resultados sai do cabeçalho e fica no menu ☰ (#btn-menu-results). */
+  body.is-compact-touch #btn-prefs,
+  body.is-compact-touch #btn-results { display: none !important; }
+  body.is-compact-touch .logo-brand { flex: none; }
+  /* conta: mesmo botão 44px dos demais (deslogado com ícone, logado com avatar), centrado na linha */
+  body.is-compact-touch .account-slot,
+  body.is-compact-touch .account-chip { display: flex; align-items: center; }
+  body.is-compact-touch .account-chip[hidden] { display: none; }
+  body.is-compact-touch .account-chip-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+    color: var(--ns-button-text);
+  }
+  body.is-compact-touch .account-chip-toggle .account-avatar { width: 30px; height: 30px; border-radius: 7px; }
 
   /* Banner da extensão: no celular não dá para instalar; vira uma linha com "não mostrar" */
   body.is-compact-touch .ext-banner {
@@ -10030,3 +10051,7 @@ body.gf-subscriber .pro-crown { display: none !important; }
     min-height: 48px;
   }
 }
+
+/* Resultados no menu ☰ só no celular (no desktop o botão continua no cabeçalho) */
+#btn-menu-results[hidden],
+body:not(.is-compact-touch) #btn-menu-results { display: none !important; }

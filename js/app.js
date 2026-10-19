@@ -1202,6 +1202,11 @@ function paintShareMenu() {
   if (resultsBtn) resultsBtn.hidden = !showAnalytics;
   const resultsBadge = document.getElementById("results-pro-badge");
   if (resultsBadge) resultsBadge.hidden = pro;
+  // no celular o Resultados sai do cabeçalho e fica no menu ☰ (Análise e Contatos no mesmo diálogo)
+  const menuResults = document.getElementById("btn-menu-results");
+  if (menuResults) menuResults.hidden = !showAnalytics;
+  const menuResultsBadge = document.getElementById("menu-results-pro-badge");
+  if (menuResultsBadge) menuResultsBadge.hidden = pro;
   const leadsAvailable = Boolean(pro && cloudShareEnabled() && permanentSlug(record));
   for (const tab of document.querySelectorAll("[data-results-tab=\"leads\"]")) tab.hidden = !leadsAvailable;
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
@@ -2928,6 +2933,11 @@ function bindChrome() {
   document.getElementById("btn-file-projects")?.addEventListener("click", () => {
     document.getElementById("file-panel")?.removeAttribute("open");
     closeProject();
+  });
+  document.getElementById("btn-menu-results")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    openAnalytics();
   });
   document.getElementById("btn-menu-projects")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
