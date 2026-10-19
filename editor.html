@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/124/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/124/css/theme.css" />
-  <link rel="stylesheet" href="a/124/css/app.css" />
-  <link rel="stylesheet" href="a/124/css/collab.css" />
-  <link rel="stylesheet" href="a/124/css/comments.css" />
+  <link rel="stylesheet" href="a/125/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/125/css/theme.css" />
+  <link rel="stylesheet" href="a/125/css/app.css" />
+  <link rel="stylesheet" href="a/125/css/collab.css" />
+  <link rel="stylesheet" href="a/125/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -162,7 +162,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/124/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/124/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/125/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/125/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -425,6 +425,14 @@
             </div>
           </details>
         </div>
+        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
+          <span data-i18n="results.button">Resultados</span>
+          <span class="pro-badge" id="results-pro-badge" hidden>
+            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+            <span data-i18n="billing.badge">Pro</span>
+          </span>
+        </button>
         <details class="export-panel">
           <summary class="share-menu" aria-label="Compartilhar" title="Link, HTML e vídeo" data-i18n-aria="topbar.share" data-i18n-title="share.menuTitle">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
@@ -500,20 +508,6 @@
                 <small data-i18n="share.removeBrandHint">Sem o logo no link permanente. Republique para aplicar.</small>
               </span>
             </label>
-            <button type="button" class="export-option" id="btn-share-analytics" hidden>
-              <strong>
-                <span data-i18n="analytics.button">📊 Análise</span>
-                <span class="pro-badge" id="analytics-pro-badge" hidden>
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </strong>
-              <span data-i18n="analytics.buttonDesc">Visitas e onde as pessoas param.</span>
-            </button>
-            <button type="button" class="export-option" id="btn-share-leads" hidden>
-              <strong><span data-i18n="leads.open">Ver contatos recebidos</span></strong>
-              <span data-i18n="leads.buttonDesc">Lista e CSV.</span>
-            </button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-embed" aria-labelledby="btn-share-embed" hidden>
         <div class="embed-needs-publish" id="embed-needs-publish" hidden>
@@ -645,7 +639,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/124/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/124/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/125/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/125/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1120,7 +1114,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/124/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/125/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1336,6 +1330,10 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
+      <div class="share-tablist results-tablist" role="tablist" aria-label="Resultados" data-i18n-aria="results.button">
+        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="analytics" aria-selected="false" tabindex="-1" data-i18n="results.tab.analytics">Análise</button>
+        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="leads" aria-selected="true" data-i18n="results.tab.leads">Contatos</button>
+      </div>
       <p class="leads-meta" id="leads-meta"></p>
       <p class="leads-status" id="leads-status" role="status"></p>
       <div class="leads-list" id="leads-list" role="list"></div>
@@ -1429,6 +1427,10 @@
         <button type="button" class="btn btn-icon" id="btn-analytics-close" aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
+      </div>
+      <div class="share-tablist results-tablist" role="tablist" aria-label="Resultados" data-i18n-aria="results.button">
+        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="analytics" aria-selected="true" data-i18n="results.tab.analytics">Análise</button>
+        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="leads" aria-selected="false" tabindex="-1" data-i18n="results.tab.leads">Contatos</button>
       </div>
       <div class="analytics-toolbar">
         <p class="analytics-tour" id="analytics-tour"></p>
@@ -1876,6 +1878,7 @@
     <symbol id="i-export" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>
     </symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>
     </symbol>
@@ -2055,8 +2058,8 @@
     </symbol>
   </svg>
 
-  <script src="a/124/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/124/js/app.js"></script>
+  <script src="a/125/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/125/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

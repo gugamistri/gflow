@@ -9753,3 +9753,7 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .share-team-host h3 { font-size: 14px; margin: 0 0 8px; }
 .share-team-seats { margin: 4px 16px 12px; }
 .export-panel-body .share-team-seats { width: auto; display: inline-flex; margin: 4px 16px 12px; background: transparent; color: var(--ns-accent, #1d5fa8); border: 1px solid var(--ns-border); text-align: left; }
+.results-btn { display: inline-flex; align-items: center; gap: 6px; }
+.results-tablist { position: static; padding: 0; margin: 0 0 12px; }
+.results-tablist .results-tab { flex: 0 1 auto; padding: 0 16px; }
+@media (max-width: 760px) { .results-btn span:not(.pro-badge):not(.pro-badge *) { display: none; } }

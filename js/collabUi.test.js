@@ -73,7 +73,7 @@ function fakeDom(ids) {
 }
 
 test("UI por papel: leitor/comentarista ficam somente leitura (inspetor inerte, faixa); editor edita; convidado perde publicar/cobrança/criar", () => {
-  const ids = ["props-body", "btn-share-publish", "btn-share-revoke", "btn-share-republish", "btn-share-analytics", "btn-share-leads", "btn-share-embed", "btn-account-billing", "btn-new-project"];
+  const ids = ["props-body", "btn-share-publish", "btn-share-revoke", "btn-share-republish", "btn-results", "btn-share-embed", "btn-account-billing", "btn-new-project"];
   const { nodes, classes } = fakeDom(ids);
   const ui = createCollabUi({ t: (k) => k });
   const banner = { hidden: true, textContent: "" };
