@@ -3656,7 +3656,7 @@ function bindChrome() {
 
   // Incorporar no site (só link permanente, Pro)
   const EMBED_AUTOPLAY_KEY = "guiaflow.embed.autoplay";
-  const embedModal = document.getElementById("modal-embed");
+  const embedModal = document.getElementById("pane-share-embed");
   let embedFlavor = "html";
   let embedRatioValue = "";
   let embedRatioFor = "";
@@ -3773,9 +3773,9 @@ function bindChrome() {
   }
 
   function openEmbedDialog() {
-    closeExportMenu();
     if (!project || !cloudShareEnabled()) return;
     if (!viewerIsPro()) {
+      closeExportMenu();
       if (isPastDue()) {
         openFeatureGate("embed");
         return;
@@ -3787,19 +3787,54 @@ function bindChrome() {
     const autoplay = document.getElementById("embed-autoplay");
     if (autoplay) autoplay.checked = readEmbedAutoplay();
     paintEmbedDialog();
-    if (!embedModal.open) embedModal.showModal();
+    selectShareTab("embed");
     void measureEmbedRatio().then(() => {
-      if (embedModal.open) paintEmbedDialog();
+      if (!embedModal.hidden) paintEmbedDialog();
     });
   }
+
+  /** Abas do Compartilhar (Link / Incorporar / Baixar). */
+  function selectShareTab(name, { focus = false } = {}) {
+    if (exportPanel && !exportPanel.open) exportPanel.open = true;
+    const tabs = [...document.querySelectorAll("#share-card [data-share-tab]")];
+    const target = tabs.find((tab) => tab.dataset.shareTab === name && !tab.hidden) || tabs[0];
+    for (const tab of tabs) {
+      const on = tab === target;
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+      const pane = document.getElementById(tab.getAttribute("aria-controls"));
+      if (pane) pane.hidden = !on;
+    }
+    if (focus && target) target.focus();
+  }
+  document.getElementById("share-card")?.addEventListener("click", (e) => {
+    const tab = e.target.closest?.("[data-share-tab]");
+    if (!tab) return;
+    if (tab.dataset.shareTab === "embed") openEmbedDialog();
+    else selectShareTab(tab.dataset.shareTab);
+  });
+  document.querySelector("#share-card .share-tablist")?.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
+    const tabs = [...document.querySelectorAll("#share-card [data-share-tab]")].filter((tab) => !tab.hidden);
+    const i = tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true");
+    let next = i;
+    if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (i + tabs.length - 1) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else next = tabs.length - 1;
+    e.preventDefault();
+    const name = tabs[next].dataset.shareTab;
+    if (name === "embed") openEmbedDialog();
+    else selectShareTab(name);
+    tabs[next].focus();
+  });
+  exportPanel?.addEventListener("toggle", () => {
+    if (exportPanel.open) selectShareTab("link");
+  });
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
   document.getElementById("btn-share-leads")?.addEventListener("click", () => leadsDialog.open());
   document.getElementById("btn-share-analytics")?.addEventListener("click", () => openAnalytics());
-  document.getElementById("btn-embed-close")?.addEventListener("click", () => embedModal?.close());
-  embedModal?.addEventListener("click", (e) => {
-    if (e.target === e.currentTarget) embedModal.close();
-  });
   embedModal?.querySelector(".embed-tabs")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.(".embed-tab");
     if (!tab) return;
@@ -3842,7 +3877,6 @@ function bindChrome() {
     }
   });
   document.getElementById("btn-embed-publish")?.addEventListener("click", async () => {
-    embedModal?.close();
     clearCloudPublishIntent();
     await runCloudPublish();
     if (permanentSlug(project?.cloudShare)) openEmbedDialog();

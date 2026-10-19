@@ -34,3 +34,25 @@ test("o ponto de desatualizado fica na borda do botão, não por cima do ícone"
   assert.match(block, /box-shadow:\s*0 0 0 2px var\(--ns-topbar\)/);
   assert.match(app, /summary\.share-menu[\s\S]*overflow:\s*visible/);
 });
+
+test("Compartilhar em abas: Link, Incorporar e Baixar, com ids e ARIA de abas", () => {
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const card = html.slice(html.indexOf('id="share-card"'), html.indexOf("</details>", html.indexOf('id="share-card"')));
+  assert.match(card, /role="tablist"/);
+  for (const [tab, pane] of [["tab-share-link", "pane-share-link"], ["btn-share-embed", "pane-share-embed"], ["tab-share-export", "pane-share-export"]]) {
+    assert.match(card, new RegExp(`id="${tab}"[^>]*role="tab"|role="tab"[^>]*id="${tab}"`));
+    assert.match(card, new RegExp(`role="tabpanel" id="${pane}"`));
+    assert.match(card, new RegExp(`aria-controls="${pane}"`));
+  }
+  const inPane = (pane, id) => {
+    const start = card.indexOf(`id="${pane}"`);
+    const rest = card.slice(start + 1);
+    const next = rest.search(/id="pane-share-/);
+    const chunk = next < 0 ? rest : rest.slice(0, next);
+    return chunk.includes(`id="${id}"`);
+  };
+  assert.ok(inPane("pane-share-link", "btn-share-publish"));
+  assert.ok(inPane("pane-share-embed", "embed-code"));
+  assert.ok(inPane("pane-share-export", "btn-export-video"));
+  assert.ok(inPane("pane-share-export", "export-video-quality"));
+});

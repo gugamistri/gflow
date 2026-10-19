@@ -9732,3 +9732,16 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .subscription-seats-row label { font-size: 0.85rem; font-weight: 650; }
 .subscription-seats-row input { width: 72px; min-height: 44px; }
 .subscription-seats-row .btn { min-height: 44px; }
+
+/* Compartilhar em abas (Link / Incorporar / Baixar) */
+.export-panel-body.share-card { width: min(420px, 94vw); min-width: 0; padding: 0; gap: 0; max-height: min(78vh, 640px); }
+.share-tablist { display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; }
+.share-tab { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: inherit; font-weight: 650; cursor: pointer; }
+.share-tab[hidden] { display: none; }
+.share-tab[aria-selected="true"] { color: var(--ns-ink); border-bottom-color: var(--ns-accent); }
+.share-tab:hover { color: var(--ns-ink); }
+.share-tab:focus-visible { outline: 2px solid color-mix(in srgb, var(--ns-accent) 55%, transparent); outline-offset: -2px; border-radius: 6px; }
+.share-pane { display: grid; gap: 4px; padding: 8px; align-content: start; }
+.share-pane[hidden] { display: none; }
+.share-pane .embed-code { max-width: 100%; }
+.share-pane .embed-tabs { flex-wrap: wrap; }
