@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/121/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/121/css/theme.css" />
-  <link rel="stylesheet" href="a/121/css/app.css" />
-  <link rel="stylesheet" href="a/121/css/collab.css" />
-  <link rel="stylesheet" href="a/121/css/comments.css" />
+  <link rel="stylesheet" href="a/122/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/122/css/theme.css" />
+  <link rel="stylesheet" href="a/122/css/app.css" />
+  <link rel="stylesheet" href="a/122/css/collab.css" />
+  <link rel="stylesheet" href="a/122/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -162,7 +162,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/121/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/121/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/122/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/122/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -432,14 +432,14 @@
             <span class="share-stale-dot" id="share-stale-dot" hidden></span>
           </summary>
           <div class="export-panel-body">
-            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Este link fica no ar por 7 dias a partir da publicação. Atualizar o tour não prolonga o prazo.</p>
+            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
             <button type="button" class="export-option" id="btn-share-collab" hidden>
               <strong data-i18n="collab.enable.title">Compartilhar para edição</strong>
-              <span data-i18n="collab.share.desc">Convide pessoas para editar este tour com você.</span>
+              <span data-i18n="collab.share.desc">Convide pessoas para editar.</span>
             </button>
             <button type="button" class="export-option" id="btn-share-publish">
               <strong data-i18n="share.linkTitle">Link</strong>
-              <span id="share-publish-desc" data-i18n="share.linkDesc">Endereço só para ver o tour, por 7 dias.</span>
+              <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
             </button>
             <div class="share-link-actions" id="share-link-actions" hidden>
               <div class="share-link-meta">
@@ -458,7 +458,7 @@
                 <div class="share-cover-text">
                   <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
                   <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
-                  <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa fica pública junto com o link. Confira se não há dados sensíveis na tela.</small>
+                  <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
                 </div>
               </div>
               <div class="share-link-extra" id="share-link-extra" hidden>
@@ -484,7 +484,7 @@
                   <span data-i18n="billing.badge">Pro</span>
                 </span>
               </strong>
-              <span data-i18n="embed.buttonDesc">Código para colar na sua página. Ajusta ao tamanho da tela.</span>
+              <span data-i18n="embed.buttonDesc">Código para colar no site.</span>
             </button>
             <button type="button" class="export-option" id="btn-share-analytics" hidden>
               <strong>
@@ -494,11 +494,11 @@
                   <span data-i18n="billing.badge">Pro</span>
                 </span>
               </strong>
-              <span data-i18n="analytics.buttonDesc">Visualizações, conclusão e onde as pessoas param.</span>
+              <span data-i18n="analytics.buttonDesc">Visitas e onde as pessoas param.</span>
             </button>
             <button type="button" class="export-option" id="btn-share-leads" hidden>
               <strong><span data-i18n="leads.open">Ver contatos recebidos</span></strong>
-              <span data-i18n="leads.buttonDesc">Contatos do passo inicial e do formulário do passo final, com exportação CSV.</span>
+              <span data-i18n="leads.buttonDesc">Lista e CSV.</span>
             </button>
             <label class="share-brand-toggle" id="share-brand-toggle" hidden>
               <input type="checkbox" id="share-remove-brand" checked />
@@ -510,20 +510,20 @@
                     <span data-i18n="billing.badge">Pro</span>
                   </span>
                 </strong>
-                <small data-i18n="share.removeBrandHint">O link permanente sai sem o logo do GuiaFlow. Desmarque para mostrar um pequeno “Feito com GuiaFlow” (republique para aplicar).</small>
+                <small data-i18n="share.removeBrandHint">Sem o logo no link permanente. Republique para aplicar.</small>
               </span>
             </label>
             <button type="button" class="export-option" id="btn-export-vtt">
               <strong data-i18n="export.vttTitle">Legendas (.vtt)</strong>
-              <span data-i18n="export.vttDesc">Um arquivo de legenda por idioma, com o tempo de cada passo.</span>
+              <span data-i18n="export.vttDesc">Um arquivo por idioma.</span>
             </button>
             <button type="button" class="export-option" id="btn-export-html">
               <strong data-i18n="export.htmlTitle">HTML navegável</strong>
-              <span data-i18n="export.htmlDesc">Tour em um arquivo para percorrer os passos ou assistir no navegador.</span>
+              <span data-i18n="export.htmlDesc">Tour num arquivo só.</span>
             </button>
             <button type="button" class="export-option" id="btn-export-video">
               <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
-              <span data-i18n="export.videoDesc">MP4 para enviar no Slack, e-mail ou WhatsApp.</span>
+              <span data-i18n="export.videoDesc">Slack, e-mail, WhatsApp.</span>
             </button>
             <div class="export-quality" id="export-quality">
               <div class="export-quality-head">
@@ -552,7 +552,7 @@
                   <option value="0" data-i18n="export.ccOff">Sem legenda</option>
                 </select>
               </div>
-              <small id="export-quality-hint" data-i18n="export.qualityHintFree">Padrão: 1080p, 30 fps, 8 Mbps. Com o GuiaFlow Pro: até 4K, 60 fps e bitrate alto, ideal para o YouTube.</small>
+              <small id="export-quality-hint" data-i18n="export.qualityHintFree">Pro: até 4K e 60 fps.</small>
             </div>
             <button type="button" class="export-option" id="btn-export-unbrand" hidden>
               <strong>
@@ -562,7 +562,7 @@
                   <span data-i18n="billing.badge">Pro</span>
                 </span>
               </strong>
-              <span data-i18n="export.removeMarkDesc">O vídeo mostra o logo GuiaFlow. O Pro exporta sem a marca.</span>
+              <span data-i18n="export.removeMarkDesc">O Pro exporta sem o logo.</span>
             </button>
           </div>
         </details>
@@ -601,7 +601,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/121/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/121/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/122/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/122/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1076,7 +1076,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/121/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/122/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1237,7 +1237,7 @@
         </button>
       </div>
       <div class="embed-needs-publish" id="embed-needs-publish" hidden>
-        <p class="embed-lead" data-i18n="embed.needsPublish">Para incorporar, publique primeiro o link permanente. Ele não expira e atualiza em todos os sites quando você republicar.</p>
+        <p class="embed-lead" data-i18n="embed.needsPublish">Publique o link permanente para incorporar. Ele não expira.</p>
         <div class="studio-modal-actions">
           <button type="button" class="btn btn-primary" id="btn-embed-publish" data-i18n="embed.publish">Publicar link permanente</button>
         </div>
@@ -1255,7 +1255,7 @@
         <textarea class="embed-code" id="embed-code" readonly rows="7" spellcheck="false" aria-label="Código para incorporar" data-i18n-aria="embed.codeAria"></textarea>
         <label class="embed-autoplay" id="embed-autoplay-row">
           <input type="checkbox" id="embed-autoplay" />
-          <span data-i18n="embed.autoplay">Começar automaticamente (o navegador pode segurar o som até o visitante interagir)</span>
+          <span data-i18n="embed.autoplay">Iniciar sozinho (o navegador pode silenciar)</span>
         </label>
         <label class="embed-autoplay" id="embed-lang-row" hidden>
           <span data-i18n="embed.lang">Idioma inicial</span>
@@ -1336,7 +1336,7 @@
       <p class="leads-meta" id="leads-meta"></p>
       <p class="leads-status" id="leads-status" role="status"></p>
       <div class="leads-list" id="leads-list" role="list"></div>
-      <p class="fixed-hint" data-i18n="leads.controllerNote">Você é o controlador destes dados (LGPD): use-os só para a finalidade informada ao visitante e exclua um contato quando o titular pedir.</p>
+      <p class="fixed-hint" data-i18n="leads.controllerNote">Você controla estes dados (LGPD). Use só para a finalidade informada e exclua quando o titular pedir.</p>
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
         <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
@@ -1455,7 +1455,7 @@
           <p class="analytics-note" id="analytics-langs-note"></p>
         </div>
       </div>
-      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Contagem sem cookies e sem dados pessoais. Visitantes com “Não rastrear” ou GPC ativado não entram nos números. Visitantes únicos são aproximados.</p>
+      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Sem cookies nem dados pessoais. “Não rastrear” não conta; únicos são aproximados.</p>
       <div class="studio-modal-actions analytics-actions">
         <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
       </div>
@@ -2052,8 +2052,8 @@
     </symbol>
   </svg>
 
-  <script src="a/121/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/121/js/app.js"></script>
+  <script src="a/122/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/122/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
