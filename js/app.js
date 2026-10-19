@@ -1391,6 +1391,16 @@ function ensureCollab() {
   propsBody?.addEventListener("focusin", (e) => collab?.onFieldFocus(e.target?.id));
   propsBody?.addEventListener("focusout", (e) => collab?.onFieldBlur(e.target?.id));
   propsBody?.addEventListener("input", (e) => collab?.onFieldInput(e.target?.id));
+  const canvasStage = document.getElementById("canvas-stage");
+  canvasStage?.addEventListener("focusin", (e) => {
+    if (e.target?.dataset?.inline) collab?.onFieldFocus(e.target.id);
+  });
+  canvasStage?.addEventListener("focusout", (e) => {
+    if (e.target?.dataset?.inline) collab?.onFieldBlur(e.target.id);
+  });
+  canvasStage?.addEventListener("input", (e) => {
+    if (e.target?.dataset?.inline) collab?.onFieldInput(e.target.id);
+  });
   window.addEventListener("pagehide", () => collab?.onPageHide());
   document.getElementById("btn-share-collab")?.addEventListener("click", () => {
     void collab?.enableForCurrent();

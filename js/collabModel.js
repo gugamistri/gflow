@@ -297,9 +297,59 @@ export const FIELD_INPUT_IDS = Object.freeze({
   caption: "prop-caption",
   alt: "prop-alt",
 });
+
+/** `data-inline` do palco → campo colaborativo. A descrição do balão é o campo `text`. */
+export const INLINE_TO_FIELD = Object.freeze({
+  title: "title",
+  description: "text",
+  caption: "caption",
+});
+
+/** Onde o texto aparece na tela (balão e slide). Um dos dois fica oculto conforme o tipo do passo. */
+export const CANVAS_FIELD_IDS = Object.freeze({
+  title: ["canvas-popover-title", "canvas-slide-title"],
+  text: ["canvas-popover-body", "canvas-slide-body"],
+  caption: ["canvas-caption"],
+});
+
+/** Controles que não são texto, mas piscam quando o valor remoto chega. */
+export const EXTRA_FLASH_IDS = Object.freeze({
+  simulateClick: "prop-simulate-click",
+  zoomHighlight: "prop-zoom-highlight",
+  holdSeconds: "prop-hold",
+  side: "prop-side",
+  align: "prop-align",
+  showCaption: "prop-show-caption",
+  type: "prop-type",
+  img: "prop-image",
+});
+
+/** Campo que o foco representa: inspetor (`prop-*`) ou texto do palco (`data-inline`). */
+export function fieldForDomTarget(el) {
+  if (!el) return null;
+  const byId = Object.entries(FIELD_INPUT_IDS).find(([, id]) => id === el.id)?.[0];
+  if (byId) return byId;
+  return INLINE_TO_FIELD[el.dataset?.inline] || null;
+}
+
+/** Tradução (`i18n.pt.title`) aponta para o mesmo texto visível. */
+export function visualField(field) {
+  const m = /^i18n\.[^.]+\.(title|description|caption|label|alt)$/.exec(field || "");
+  if (!m) return field || null;
+  if (m[1] === "description") return "text";
+  if (m[1] === "label") return "title";
+  return m[1];
+}
+
+export function canvasIdsForField(field) {
+  return CANVAS_FIELD_IDS[visualField(field)] || [];
+}
+
 export const inputIdForKey = (key) => {
   const k = parseKey(key);
-  return k?.kind === "step" ? FIELD_INPUT_IDS[k.field] || null : null;
+  if (k?.kind !== "step") return null;
+  const field = visualField(k.field);
+  return FIELD_INPUT_IDS[field] || EXTRA_FLASH_IDS[field] || null;
 };
 export const keyForInputId = (stepId, inputId) => {
   const field = Object.entries(FIELD_INPUT_IDS).find(([, id]) => id === inputId)?.[0];
