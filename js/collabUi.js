@@ -326,10 +326,11 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
   }
 
   /** Membros e convites (dono convida; todos veem quem está; não-dono sai). */
-  function openMembers({ members = [], invites = [], you, perms, onInvite, onRole, onRemove, onLeave, onRevoke, canRoleEdit = false }) {
+  function openMembers({ members = [], invites = [], you, perms, onInvite, onRole, onRemove, onLeave, onRevoke, canRoleEdit = false, host = null }) {
     document.getElementById("collab-members-dialog")?.remove();
-    const dlg = el("dialog", { class: "studio-modal collab-dialog collab-members-dialog", id: "collab-members-dialog", "aria-labelledby": "collab-members-title" });
-    const close = () => { try { dlg.close(); } catch { /* ignore */ } dlg.remove(); };
+    const dlg = host || el("dialog", { class: "studio-modal collab-dialog collab-members-dialog", id: "collab-members-dialog", "aria-labelledby": "collab-members-title" });
+    if (host) host.replaceChildren();
+    const close = host ? () => {} : () => { try { dlg.close(); } catch { /* ignore */ } dlg.remove(); };
     const list = el("ul", { class: "collab-members-list" });
     for (const m of members) {
       const p = { color: m.color, initials: m.initials, idle: false, name: m.name };
@@ -375,8 +376,9 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     }
     const foot = el("div", { class: "collab-dialog-actions" });
     if (!perms.canManageMembers && you) foot.append(el("button", { type: "button", class: "btn", onclick: () => { close(); onLeave(); } }, t("collab.members.leave")));
-    foot.append(el("button", { type: "button", class: "btn btn-primary", onclick: close }, t("collab.members.close")));
-    dlg.append(foot);
+    if (!host) foot.append(el("button", { type: "button", class: "btn btn-primary", onclick: close }, t("collab.members.close")));
+    if (foot.childNodes.length) dlg.append(foot);
+    if (host) return close;
     dlg.addEventListener("close", () => dlg.remove());
     document.body.append(dlg);
     dlg.showModal();

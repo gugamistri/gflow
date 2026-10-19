@@ -614,7 +614,7 @@ export function createCollabController(deps) {
       },
     });
     c.locks = createLockManager({ selfId: "", acquire: (id) => c.client.acquireLock(id), release: (id) => c.client.releaseLock(id), onChange: () => updateLockUi() });
-    ui.stackButton()?.addEventListener("click", () => void openMembers());
+    ui.stackButton()?.addEventListener("click", () => { if (teamHost() && deps.onOpenTeam) deps.onOpenTeam(); else void openMembers(); });
     // comentários do Team: só dentro da sessão colaborativa (flag `collab`); o cseq chega no mesmo polling
     c.comments = createCommentsUi({
       t, request, projectId: remoteId, getProject, getSelectedIndex, setSelectedIndex,
@@ -731,6 +731,7 @@ export function createCollabController(deps) {
     }
     remember(p.id, { remoteId, role: "owner", guest: false, ownerName: "", name: p.name });
     await attach(p.id);
+    deps.onTeamChange?.();
     await openMembers();
   }
   /** Dono abrindo em outro aparelho um projeto que já é colaborativo (marca `collab.v` vem da nuvem). */
@@ -748,6 +749,8 @@ export function createCollabController(deps) {
     });
   }
 
+  /** Aba Equipe do Compartilhar: lista/convites dentro do painel (sem diálogo). */
+  function teamHost() { return typeof document !== "undefined" ? document.getElementById("share-team-host") : null; }
   async function openMembers() {
     if (!ctx) return;
     const c = ctx;
@@ -756,6 +759,7 @@ export function createCollabController(deps) {
     const members = (c.members || []).map((m) => ({ ...m, ...(() => { const pr = c.people.find((x) => x.userId === m.userId); return { color: pr?.color || "#1d5fa8", initials: pr?.initials || (m.name || "?").slice(0, 1).toUpperCase() }; })() }));
     const reopen = () => setTimeout(() => void openMembers(), 0);
     ui.openMembers({
+      host: teamHost(),
       members, invites: inv?.ok ? inv.data.invites || [] : [], you: data?.you || { userId: c.selfId }, perms: c.perms, canRoleEdit: c.perms.canManageMembers,
       onInvite: async ({ email, role }) => {
         if (!/^\S+@\S+\.\S+$/.test(email)) return { ok: false, message: t("collab.invite.errEmail") };
