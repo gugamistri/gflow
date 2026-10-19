@@ -9757,3 +9757,15 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .results-tablist { position: static; padding: 0; margin: 0 0 12px; }
 .results-tablist .results-tab { flex: 0 1 auto; padding: 0 16px; }
 @media (max-width: 760px) { .results-btn span:not(.pro-badge):not(.pro-badge *) { display: none; } }
+/* PR5: nome do tour = botão do menu do projeto */
+.file-menu .topbar-project { cursor: pointer; max-width: 260px; padding: 0 4px; border: 0; background: transparent; }
+.file-menu .topbar-project[data-editing="1"] { cursor: text; }
+.topbar-project:hover { border-color: transparent; background: transparent; }
+.toolbar .edit-lang, #btn-redo ~ .edit-lang { margin-left: 8px; margin-right: 0; }
+.account-anon-ico { display: none; width: 20px; height: 20px; }
+.account-chip.is-anon .account-avatar { display: none; }
+.account-chip.is-anon .account-anon-ico { display: inline-block; }
+.account-help-slot { border-top: 1px solid var(--ns-border); margin-top: 6px; padding-top: 6px; }
+.account-help-slot .more-item { width: 100%; }
+.account-help-slot .more-group-prefs { padding: 6px 0 0; }
+.account-chip-menu .account-signed-in[hidden], .account-chip-menu [hidden] { display: none; }
