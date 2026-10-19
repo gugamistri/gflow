@@ -9681,13 +9681,50 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
 }
 
 /* Team: escolha de plano no diálogo de assinatura */
-.upgrade-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 0; margin: 0 0 12px; padding: 0; }
+/* diálogo de assinatura compacto: plano e preços no topo, lista curta, CTA + "Já sou assinante" sempre visíveis */
+dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; }
+.upgrade-scroll { gap: 12px; }
+.paywall-hero { position: relative; gap: 4px; padding: 14px 18px 12px; }
+.paywall-hero-top { justify-content: flex-start; }
+.paywall-hero-top .btn-icon { position: absolute; top: 8px; right: 10px; min-width: 44px; min-height: 44px; }
+.paywall-hero h3 { font-size: 1.3rem; padding-right: 48px; }
+.paywall-lead { font-size: 0.85rem; line-height: 1.35; }
+.upgrade-tiers, .upgrade-intervals, .upgrade-extra-guests, .paywall-benefits { margin-inline: 18px; }
+.upgrade-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; margin-block: 0; padding: 0; min-inline-size: 0; }
 .upgrade-tiers[hidden], .upgrade-extra-guests[hidden] { display: none; }
-.upgrade-tier { position: relative; display: grid; gap: 4px; padding: 12px; border: 1px solid var(--border, #cfd8dc); border-radius: 10px; cursor: pointer; }
-.upgrade-tier input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
-.upgrade-tier:has(input:checked) { border-color: var(--accent, #1a4d6d); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #1a4d6d) 30%, transparent); }
-.upgrade-tier:has(input:focus-visible) { outline: 2px solid var(--accent, #1a4d6d); outline-offset: 2px; }
+.upgrade-tier { position: relative; display: grid; gap: 1px; align-content: center; min-height: 48px; padding: 8px 12px; border: 2px solid var(--ns-border); border-radius: 12px; background: var(--ns-input-bg); color: var(--ns-ink); cursor: pointer; }
+.upgrade-tier input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.upgrade-tier:has(input:checked) { border-color: var(--ns-accent); background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel)); }
+.upgrade-tier:has(input:focus-visible) { outline: 2px solid color-mix(in srgb, var(--ns-accent) 45%, transparent); outline-offset: 3px; }
+.upgrade-tier .paywall-interval-name { display: inline-flex; align-items: center; gap: 5px; font-size: 0.92rem; color: var(--ns-ink); }
 .upgrade-tier .pro-badge-crown { width: 14px; height: 14px; vertical-align: -2px; }
-.upgrade-extra-guests { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
-.upgrade-extra-guests input { width: 72px; }
-@media (max-width: 520px) { .upgrade-tiers { grid-template-columns: 1fr; } }
+.upgrade-interval { min-height: 72px; padding: 10px 12px; }
+.paywall-price { font-size: 1.25rem; }
+.upgrade-extra-guests { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-block: 0; }
+.upgrade-extra-guests label { font-size: 0.85rem; font-weight: 650; }
+.upgrade-extra-guests input { width: 72px; min-height: 44px; }
+.paywall-benefits { grid-template-columns: 1fr 1fr; gap: 0 12px; margin-block: 0; }
+.paywall-benefits li { padding: 4px 2px; font-size: 0.85rem; line-height: 1.3; }
+.upgrade-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: stretch; }
+.upgrade-actions .paywall-cta { width: 100%; min-height: 46px; }
+.upgrade-actions .paywall-login { justify-self: stretch; min-height: 46px; margin: 0; padding: 0 16px; border: 1px solid var(--ns-border); border-radius: 10px; background: var(--ns-input-bg); color: var(--ns-ink); font: inherit; font-size: 0.9rem; font-weight: 650; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.upgrade-actions .paywall-login:hover, .upgrade-actions .paywall-login:focus-visible { border-color: var(--ns-accent); color: var(--ns-ink); }
+.upgrade-footer { gap: 6px; padding: 10px 18px 12px; }
+@media (max-width: 720px) {
+  dialog.upgrade-modal { width: calc(100vw - 16px); }
+  .upgrade-scroll { gap: 10px; }
+  .paywall-hero { padding: 10px 14px 8px; }
+  .paywall-hero h3 { font-size: 1.15rem; }
+  .upgrade-tiers, .upgrade-intervals, .upgrade-extra-guests, .paywall-benefits { margin-inline: 14px; }
+  .upgrade-tiers { gap: 6px; }
+  .upgrade-tier { padding: 6px 10px; min-height: 48px; }
+  .upgrade-intervals { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .upgrade-interval { min-height: 64px; padding: 8px; }
+  .paywall-price { font-size: 1rem; }
+  .paywall-benefits li { padding: 3px 2px; font-size: 0.8rem; }
+  .upgrade-actions { grid-template-columns: 1fr; gap: 6px; }
+  .upgrade-footer { padding: 8px 14px 10px; }
+  .upgrade-actions .paywall-login { min-height: 44px; }
+  .paywall-legal { font-size: 0.7rem; }
+}
+@media (max-width: 380px) { .upgrade-tiers { grid-template-columns: 1fr; } .paywall-benefits { grid-template-columns: 1fr; } }
