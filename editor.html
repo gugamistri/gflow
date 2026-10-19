@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/127/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/127/css/theme.css" />
-  <link rel="stylesheet" href="a/127/css/app.css" />
-  <link rel="stylesheet" href="a/127/css/collab.css" />
-  <link rel="stylesheet" href="a/127/css/comments.css" />
+  <link rel="stylesheet" href="a/128/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/128/css/theme.css" />
+  <link rel="stylesheet" href="a/128/css/app.css" />
+  <link rel="stylesheet" href="a/128/css/collab.css" />
+  <link rel="stylesheet" href="a/128/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -164,7 +164,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/127/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/127/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/128/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/128/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -224,202 +224,6 @@
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <details class="more-panel prefs-panel more-editor-pref" id="prefs-panel" hidden>
-          <summary class="btn btn-ghost btn-icon" id="btn-prefs" aria-label="Preferências do projeto" title="Tema do tour, narração e IA" data-i18n-aria="prefs.aria" data-i18n-title="prefs.title">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
-          </summary>
-          <div class="more-panel-body prefs-panel-body">
-            <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
-              <summary>
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
-                <span data-i18n="prefs.theme">Tema do tour</span>
-              </summary>
-              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
-                <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
-                <div class="theme-presets" id="theme-presets"></div>
-                <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
-                <div class="theme-customs" id="theme-customs"></div>
-                <div class="theme-custom-actions">
-                  <button type="button" class="btn btn-sm" id="btn-save-theme">
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                    <span data-i18n="theme.save">Salvar tema</span>
-                  </button>
-                  <button type="button" class="btn btn-sm" id="btn-dup-theme">
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                    <span data-i18n="theme.duplicate">Duplicar selecionado</span>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
-                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                    <span data-i18n="theme.delete">Excluir tema</span>
-                  </button>
-                </div>
-                <hr class="theme-divider" />
-                <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
-                <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
-                <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
-                <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
-                <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
-                <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
-                <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
-                <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
-                <p class="theme-contrast-warn" id="theme-contrast-warn" role="status" hidden></p>
-                <hr class="theme-divider" />
-                <p class="theme-section-label" id="theme-font-label" data-i18n="theme.font">Fonte</p>
-                <div class="theme-fonts" id="theme-fonts" role="radiogroup" aria-labelledby="theme-font-label"></div>
-              </div>
-            </details>
-            <button type="button" class="more-item" id="btn-languages">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
-              <span data-i18n="ml.menu">Idiomas do tour</span>
-            </button>
-            <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
-              <summary>
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
-                <span data-i18n="prefs.narration">Narração e IA</span>
-              </summary>
-              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
-                <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
-                <label class="checkbox">
-                  <input type="checkbox" id="narration-enabled" checked />
-                  <span data-i18n="narration.speakCaption">Falar no avanço automático</span>
-                </label>
-                <label><span data-i18n="narration.language">Idioma da narração</span>
-                  <select id="narration-voice"></select>
-                </label>
-                <label><span data-i18n="narration.voice">Voz</span>
-                  <select id="narration-voice-id"></select>
-                </label>
-                <label><span data-i18n="narration.rate">Velocidade</span>
-                  <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
-                  <span id="narration-rate-label">1.0×</span>
-                </label>
-                <label><span data-i18n="narration.defaultHold">Pausa padrão (s)</span>
-                  <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
-                </label>
-                <details class="settings-fold" id="settings-tts">
-                  <summary data-i18n="narration.cartesiaKey">Cartesia</summary>
-                  <div class="settings-fold-body">
-                    <p class="props-meta" id="cartesia-status" data-i18n="cartesia.noKey">Nenhuma chave salva.</p>
-                    <div class="settings-key-row">
-                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
-                        <input
-                          type="text"
-                          id="cartesia-key"
-                          class="settings-secret"
-                          name="guiaflow-cartesia-api-key"
-                          autocomplete="off"
-                          autocorrect="off"
-                          autocapitalize="off"
-                          spellcheck="false"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-form-type="other"
-                          placeholder="sk_car_…"
-                          aria-label="Chave da API"
-                          data-i18n-aria="narration.apiKey"
-                        />
-                      </form>
-                      <div class="settings-actions">
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                        </button>
-                        <a class="btn btn-sm btn-icon" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-                <details class="settings-fold" id="settings-llm">
-                  <summary data-i18n="llm.section">Inteligência</summary>
-                  <div class="settings-fold-body">
-                    <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">Modelo com visão · só neste navegador</p>
-                    <label><span data-i18n="llm.provider">Provedor</span>
-                      <select id="llm-provider">
-                        <option value="openrouter" selected>OpenRouter</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
-                      </select>
-                    </label>
-                    <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
-                      <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
-                    </label>
-                    <label><span data-i18n="llm.model">Modelo</span>
-                      <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
-                      <datalist id="llm-model-list"></datalist>
-                    </label>
-                    <div class="settings-key-row">
-                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
-                        <input
-                          type="text"
-                          id="llm-key"
-                          class="settings-secret"
-                          name="guiaflow-llm-api-key"
-                          autocomplete="off"
-                          autocorrect="off"
-                          autocapitalize="off"
-                          spellcheck="false"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-form-type="other"
-                          placeholder="sk-…"
-                          aria-label="Chave da API"
-                          data-i18n-aria="narration.apiKey"
-                        />
-                      </form>
-                      <div class="settings-actions">
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-list-models" title="Listar modelos" aria-label="Listar modelos" data-i18n-title="llm.listModels" data-i18n-aria="llm.listModels">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-list"></use></svg>
-                        </button>
-                        <a class="btn btn-sm btn-icon" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </details>
-          </div>
-        </details>
-        <div class="split-btn preview-split" id="preview-split" role="group" aria-label="Preview" data-i18n-aria="toolbar.preview">
-          <button type="button" class="btn split-main" id="btn-play-from" title="Preview a partir deste passo (P)" aria-label="Preview" data-i18n-title="preview.fromHereTitle" data-i18n-aria="toolbar.preview">
-            <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
-            <span class="split-label" data-i18n="toolbar.preview">Preview</span>
-          </button>
-          <details class="menu-panel preview-panel" id="preview-panel">
-            <summary class="split-caret" aria-label="Mais opções de preview" title="Mais opções de preview" data-i18n-aria="toolbar.previewMore" data-i18n-title="toolbar.previewMore" aria-haspopup="menu">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
-            </summary>
-            <div class="menu-panel-body" role="menu">
-              <button type="button" class="more-item" role="menuitem" id="btn-preview-here">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
-                <span data-i18n="preview.fromHere">A partir deste passo</span>
-                <kbd class="menu-kbd">P</kbd>
-              </button>
-              <button type="button" class="more-item" role="menuitem" id="btn-preview-start">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
-                <span data-i18n="preview.fromStart">Desde o início</span>
-              </button>
-              <button type="button" class="more-item" role="menuitem" id="btn-preview-auto" aria-keyshortcuts="Shift+P">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
-                <span data-i18n="toolbar.autoPreview">Preview automático</span>
-                <kbd class="menu-kbd" data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
-              </button>
-            </div>
-          </details>
-        </div>
         <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
           <span data-i18n="results.button">Resultados</span>
@@ -645,7 +449,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/127/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/127/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/128/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/128/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -786,6 +590,204 @@
           <label class="edit-lang" id="edit-lang-wrap" hidden><span data-i18n="ml.editingIn">Editando em:</span>
             <select id="edit-lang" aria-label="Idioma em edição" data-i18n-aria="ml.editingIn"></select>
         </label>
+          <span class="toolbar-tools-end" id="toolbar-tools-end">
+        <details class="more-panel prefs-panel more-editor-pref" id="prefs-panel" hidden>
+          <summary class="btn btn-ghost btn-icon" id="btn-prefs" aria-label="Preferências do projeto" title="Tema do tour, narração e IA" data-i18n-aria="prefs.aria" data-i18n-title="prefs.title">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+          </summary>
+          <div class="more-panel-body prefs-panel-body">
+            <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
+              <summary>
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
+                <span data-i18n="prefs.theme">Tema do tour</span>
+              </summary>
+              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
+                <p class="theme-section-label" data-i18n="theme.presets">Presets</p>
+                <div class="theme-presets" id="theme-presets"></div>
+                <p class="theme-section-label" data-i18n="theme.mine">Meus temas</p>
+                <div class="theme-customs" id="theme-customs"></div>
+                <div class="theme-custom-actions">
+                  <button type="button" class="btn btn-sm" id="btn-save-theme">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                    <span data-i18n="theme.save">Salvar tema</span>
+                  </button>
+                  <button type="button" class="btn btn-sm" id="btn-dup-theme">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                    <span data-i18n="theme.duplicate">Duplicar selecionado</span>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger" id="btn-del-theme" hidden>
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                    <span data-i18n="theme.delete">Excluir tema</span>
+                  </button>
+                </div>
+                <hr class="theme-divider" />
+                <p class="theme-section-label" data-i18n="theme.colors">Cores</p>
+                <label><span data-i18n="theme.accent">Accent</span> <input type="color" id="theme-accent" data-theme-key="accent" /></label>
+                <label><span data-i18n="theme.overlay">Overlay</span> <input type="color" id="theme-overlay" data-theme-key="overlay" /></label>
+                <label><span data-i18n="theme.popoverBg">Popover BG</span> <input type="color" id="theme-popoverBg" data-theme-key="popoverBg" /></label>
+                <label><span data-i18n="theme.titleColor">Título</span> <input type="color" id="theme-title" data-theme-key="title" /></label>
+                <label><span data-i18n="theme.textColor">Texto</span> <input type="color" id="theme-text" data-theme-key="text" /></label>
+                <label><span data-i18n="theme.buttonColor">Botão</span> <input type="color" id="theme-button" data-theme-key="button" /></label>
+                <label><span data-i18n="theme.hotspot">Hotspot</span> <input type="color" id="theme-hotspot" data-theme-key="hotspot" /></label>
+                <p class="theme-contrast-warn" id="theme-contrast-warn" role="status" hidden></p>
+                <hr class="theme-divider" />
+                <p class="theme-section-label" id="theme-font-label" data-i18n="theme.font">Fonte</p>
+                <div class="theme-fonts" id="theme-fonts" role="radiogroup" aria-labelledby="theme-font-label"></div>
+              </div>
+            </details>
+            <button type="button" class="more-item" id="btn-languages">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
+              <span data-i18n="ml.menu">Idiomas do tour</span>
+            </button>
+            <details class="more-section more-flyout theme-panel more-editor-pref" id="narration-panel" hidden>
+              <summary>
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+                <span data-i18n="prefs.narration">Narração e IA</span>
+              </summary>
+              <div class="more-flyout-body more-section-body theme-panel-body theme-panel-wide">
+                <p class="theme-section-label" data-i18n="topbar.narration">Narração</p>
+                <label class="checkbox">
+                  <input type="checkbox" id="narration-enabled" checked />
+                  <span data-i18n="narration.speakCaption">Falar no avanço automático</span>
+                </label>
+                <label><span data-i18n="narration.language">Idioma da narração</span>
+                  <select id="narration-voice"></select>
+                </label>
+                <label><span data-i18n="narration.voice">Voz</span>
+                  <select id="narration-voice-id"></select>
+                </label>
+                <label><span data-i18n="narration.rate">Velocidade</span>
+                  <input type="range" id="narration-rate" min="0.7" max="1.4" step="0.05" value="1" />
+                  <span id="narration-rate-label">1.0×</span>
+                </label>
+                <label><span data-i18n="narration.defaultHold">Pausa padrão (s)</span>
+                  <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
+                </label>
+                <details class="settings-fold" id="settings-tts">
+                  <summary data-i18n="narration.cartesiaKey">Cartesia</summary>
+                  <div class="settings-fold-body">
+                    <p class="props-meta" id="cartesia-status" data-i18n="cartesia.noKey">Nenhuma chave salva.</p>
+                    <div class="settings-key-row">
+                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
+                        <input
+                          type="text"
+                          id="cartesia-key"
+                          class="settings-secret"
+                          name="guiaflow-cartesia-api-key"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          placeholder="sk_car_…"
+                          aria-label="Chave da API"
+                          data-i18n-aria="narration.apiKey"
+                        />
+                      </form>
+                      <div class="settings-actions">
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                        <a class="btn btn-sm btn-icon" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <details class="settings-fold" id="settings-llm">
+                  <summary data-i18n="llm.section">Inteligência</summary>
+                  <div class="settings-fold-body">
+                    <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">Modelo com visão · só neste navegador</p>
+                    <label><span data-i18n="llm.provider">Provedor</span>
+                      <select id="llm-provider">
+                        <option value="openrouter" selected>OpenRouter</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
+                      </select>
+                    </label>
+                    <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
+                      <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
+                    </label>
+                    <label><span data-i18n="llm.model">Modelo</span>
+                      <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
+                      <datalist id="llm-model-list"></datalist>
+                    </label>
+                    <div class="settings-key-row">
+                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
+                        <input
+                          type="text"
+                          id="llm-key"
+                          class="settings-secret"
+                          name="guiaflow-llm-api-key"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          placeholder="sk-…"
+                          aria-label="Chave da API"
+                          data-i18n-aria="narration.apiKey"
+                        />
+                      </form>
+                      <div class="settings-actions">
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-list-models" title="Listar modelos" aria-label="Listar modelos" data-i18n-title="llm.listModels" data-i18n-aria="llm.listModels">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-list"></use></svg>
+                        </button>
+                        <a class="btn btn-sm btn-icon" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </details>
+          </div>
+        </details>
+        <div class="split-btn preview-split" id="preview-split" role="group" aria-label="Preview" data-i18n-aria="toolbar.preview">
+          <button type="button" class="btn split-main" id="btn-play-from" title="Preview a partir deste passo (P)" aria-label="Preview" data-i18n-title="preview.fromHereTitle" data-i18n-aria="toolbar.preview">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+            <span class="split-label" data-i18n="toolbar.preview">Preview</span>
+          </button>
+          <details class="menu-panel preview-panel" id="preview-panel">
+            <summary class="split-caret" aria-label="Mais opções de preview" title="Mais opções de preview" data-i18n-aria="toolbar.previewMore" data-i18n-title="toolbar.previewMore" aria-haspopup="menu">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
+            </summary>
+            <div class="menu-panel-body" role="menu">
+              <button type="button" class="more-item" role="menuitem" id="btn-preview-here">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+                <span data-i18n="preview.fromHere">A partir deste passo</span>
+                <kbd class="menu-kbd">P</kbd>
+              </button>
+              <button type="button" class="more-item" role="menuitem" id="btn-preview-start">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-restart"></use></svg>
+                <span data-i18n="preview.fromStart">Desde o início</span>
+              </button>
+              <button type="button" class="more-item" role="menuitem" id="btn-preview-auto" aria-keyshortcuts="Shift+P">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+                <span data-i18n="toolbar.autoPreview">Preview automático</span>
+                <kbd class="menu-kbd" data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
+              </button>
+            </div>
+          </details>
+        </div>
+          </span>
 
         </div>
         <span class="toolbar-pos" id="toolbar-pos" aria-live="polite"></span>
@@ -1124,7 +1126,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/127/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/128/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2068,8 +2070,8 @@
     </symbol>
   </svg>
 
-  <script src="a/127/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/127/js/app.js"></script>
+  <script src="a/128/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/128/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

@@ -925,6 +925,20 @@ function getMobileBar() {
   return mobileBar;
 }
 
+/** ⚙ e Preview ficam na barra de botões (desktop); no celular a barra some, então voltam ao cabeçalho. */
+function placeToolbarTools(compact) {
+  const tools = document.getElementById("toolbar-tools-end");
+  const results = document.getElementById("btn-results");
+  const prefs = document.getElementById("prefs-panel");
+  const preview = document.getElementById("preview-split");
+  if (!tools || !results || !prefs || !preview) return;
+  if (compact) {
+    if (prefs.parentElement !== results.parentElement) results.before(prefs, preview);
+  } else if (prefs.parentElement !== tools) {
+    tools.append(prefs, preview);
+  }
+}
+
 function paintChrome() {
   const view = chromeView;
   const libraryView = document.getElementById("view-library");
@@ -942,6 +956,7 @@ function paintChrome() {
   const compact = isCompactTouch();
 
   document.body.classList.toggle("is-compact-touch", compact);
+  placeToolbarTools(compact);
 
   libraryView.hidden = view !== "library";
   editorView.hidden = view !== "editor";

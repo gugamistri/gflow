@@ -9780,3 +9780,18 @@ body.is-compact-touch .results-btn { min-width: 44px; min-height: 44px; }
 body.is-compact-touch .topbar details[open] > .account-chip-menu,
 body.is-compact-touch .topbar details[open] > .more-panel-body,
 body.is-compact-touch .topbar details[open] > .menu-panel-body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+/* PR7: ⚙ e Preview na barra de botões, ao lado de desfazer/refazer e Editando em */
+.toolbar-tools-end { display: inline-flex; align-items: center; gap: 8px; margin-left: 8px; }
+.canvas-toolbar { flex-wrap: wrap; overflow: visible; height: auto; min-height: var(--editor-bar-h); padding-block: 6px; row-gap: 6px; }
+.canvas-toolbar .toolbar-pos { display: none; }
+.canvas-toolbar .toolbar-tools-end .split-main,
+.canvas-toolbar .toolbar-tools-end .split-caret { background: var(--ns-input-bg); color: var(--ns-ink); border-color: var(--ns-border); }
+.canvas-toolbar .toolbar-tools-end .split-main:hover,
+.canvas-toolbar .toolbar-tools-end .split-caret:hover,
+.canvas-toolbar .toolbar-tools-end .preview-panel[open] > .split-caret { background: color-mix(in srgb, var(--ns-accent) 12%, var(--ns-input-bg)); }
+.canvas-toolbar .toolbar-tools-end #btn-prefs { color: var(--ns-ink); }
+.canvas-toolbar .toolbar-tools-end #btn-prefs:hover { background: color-mix(in srgb, var(--ns-accent) 12%, transparent); }
+.canvas-toolbar .toolbar-tools-end .prefs-panel > .more-panel-body,
+.canvas-toolbar .toolbar-tools-end .preview-panel > .menu-panel-body { left: 0; right: auto; }
+.canvas-toolbar .toolbar-tools-end #btn-prefs { background: var(--ns-input-bg); border: 1px solid var(--ns-border); min-height: 32px; width: 32px; padding: 0; }
+.canvas-toolbar .toolbar-tools-end .split-main { height: 32px; }

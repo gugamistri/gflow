@@ -99,14 +99,16 @@ test("+ Passo, + Slide e + Cena são só ícone, com tooltip e aria-label", () =
   }
   assert.equal(toolbar.includes("btn-watch-from"), false);
   assert.equal(toolbar.includes("btn-add-images"), false);
-  assert.equal(/Este passo/i.test(toolbar), false);
+  assert.equal(/>\s*Este passo\s*</i.test(toolbar), false);
 });
 
 test("o header não tem mais o ícone de relógio do Preview automático", () => {
   const header = block("<header", "</header>");
   assert.equal(header.includes("btn-watch-from"), false);
-  assert.match(header, /id="btn-play-from"/);
-  assert.match(header, /id="preview-panel"/);
+  // Preview e ⚙ moraram no cabeçalho; agora ficam na barra de botões (toolbar-tools-end)
+  assert.equal(header.includes("btn-play-from"), false);
+  assert.match(html, /id="btn-play-from"/);
+  assert.match(html, /id="preview-panel"/);
   assert.match(header, /class="share-label" data-i18n="topbar.share">Compartilhar</);
   assert.match(header, /id="file-panel"/);
   for (const id of ["btn-file-new", "btn-file-open", "btn-file-import", "btn-export-json", "btn-file-rename", "btn-capture-desktop", "btn-file-delete"]) {
