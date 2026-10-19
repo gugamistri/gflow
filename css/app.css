@@ -9795,3 +9795,54 @@ body.is-compact-touch .topbar details[open] > .menu-panel-body { padding-bottom:
 .canvas-toolbar .toolbar-tools-end .preview-panel > .menu-panel-body { left: 0; right: auto; }
 .canvas-toolbar .toolbar-tools-end #btn-prefs { background: var(--ns-input-bg); border: 1px solid var(--ns-border); min-height: 32px; width: 32px; padding: 0; }
 .canvas-toolbar .toolbar-tools-end .split-main { height: 32px; }
+
+/* Seletor de idioma com bandeira (langPicker.js) — tokens do GuiaFlow, claro/escuro */
+.gf-flag { display: inline-block; flex: none; width: 20px; height: 14px; border-radius: 3px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ns-ink) 18%, transparent); vertical-align: middle; overflow: hidden; }
+.gf-flag-globe { box-shadow: none; width: 18px; height: 18px; border-radius: 0; }
+.gf-flag-code { display: inline-flex; align-items: center; justify-content: center; font: 700 9px/1 var(--ns-font); letter-spacing: .02em; color: var(--ns-ink); background: var(--ns-surface); }
+.lang-picker-native { position: absolute !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; clip-path: inset(50%) !important; }
+.lang-picker { position: relative; display: inline-flex; vertical-align: middle; }
+.lang-picker-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 8px; border: 1px solid var(--ns-border); border-radius: 8px; background: var(--ns-input-bg); color: var(--ns-ink); font: 600 13px/1 var(--ns-font); cursor: pointer; }
+.lang-picker-btn:hover:not(:disabled) { background: var(--ns-hover); }
+.lang-picker-btn:focus-visible { outline: 2px solid color-mix(in srgb, var(--ns-accent) 60%, transparent); outline-offset: 2px; }
+.lang-picker-btn:disabled { opacity: .5; cursor: default; }
+.lang-picker.is-open .lang-picker-btn { border-color: var(--ns-accent); }
+.lang-picker-caret { width: 14px; height: 14px; color: var(--ns-muted); transition: transform .15s ease; }
+.lang-picker.is-open .lang-picker-caret { transform: rotate(180deg); }
+.lang-picker-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.lang-picker-list { position: absolute; top: calc(100% + 6px); left: 0; z-index: 400; min-width: 180px; max-height: min(320px, 60vh); overflow: auto; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--ns-border); border-radius: 12px; background: var(--ns-panel); color: var(--ns-ink); box-shadow: 0 12px 32px rgba(0, 0, 0, .18); }
+.lang-picker[data-align="end"] .lang-picker-list { left: auto; right: 0; }
+.lang-picker-list[hidden] { display: none; }
+.lang-picker-list:focus { outline: none; }
+.lang-picker-list:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ns-accent) 55%, transparent), 0 12px 32px rgba(0, 0, 0, .18); }
+.lang-picker-opt { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px; border-radius: 8px; font: 500 14px/1.2 var(--ns-font); cursor: pointer; white-space: nowrap; }
+.lang-picker-opt.is-active { background: var(--ns-hover); }
+.lang-picker-opt[aria-selected="true"] { font-weight: 700; }
+.lang-picker-opt-name { flex: 1 1 auto; }
+.lang-picker-check { width: 16px; height: 16px; color: var(--ns-accent); }
+body.is-compact-touch .lang-picker-btn, body.is-compact-touch .lang-picker-opt { min-height: 44px; }
+@media (prefers-reduced-motion: reduce) { .lang-picker-caret { transition: none; } }
+.more-locale.locale-select { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.more-locale .more-pref-label { font-size: 0.8125rem; }
+.embed-lang-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.embed-lang-row[hidden] { display: none; }
+.edit-lang .lang-picker-btn { min-height: 30px; padding: 0 6px; }
+.gf-lang-btn .gf-flag { margin-right: 6px; }
+.gf-lang-item .gf-flag { margin-right: 8px; }
+/* Menu de idioma das páginas de ajuda/legais (topo): bandeira + ▾, lista com bandeira e nome */
+.topbar .locale-menu { position: relative; }
+.topbar .locale-menu > summary { list-style: none; }
+.topbar .locale-menu > summary::-webkit-details-marker { display: none; }
+.topbar .locale-menu-btn { display: inline-flex; align-items: center; gap: 6px; height: calc(1.2em + 0.9em + 2px); padding: 0 8px; border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar)); color: var(--ns-button-text); cursor: pointer; }
+.topbar .locale-menu-btn:hover { border-color: var(--ns-topbar-muted); }
+.topbar .locale-menu-btn:focus-visible { outline: 2px solid var(--ns-accent); outline-offset: 2px; }
+.topbar .locale-menu-caret { width: 14px; height: 14px; transition: transform .15s ease; }
+.topbar .locale-menu[open] .locale-menu-caret { transform: rotate(180deg); }
+.topbar .locale-menu .locale-links { position: absolute; right: 0; top: calc(100% + 6px); z-index: 400; flex-direction: column; gap: 2px; min-width: 170px; padding: 6px; border: 1px solid var(--ns-border); border-radius: 12px; background: var(--ns-panel); box-shadow: 0 12px 32px rgba(0,0,0,.18); }
+.topbar .locale-menu .locale-links a { height: auto; min-height: 36px; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ns-ink); font-size: 0.875rem; font-weight: 500; }
+.topbar .locale-menu .locale-links a:hover { background: var(--ns-hover); }
+.topbar .locale-menu .locale-links a[aria-current="page"] { background: transparent; color: var(--ns-ink); font-weight: 700; }
+.topbar .locale-menu .locale-links a[aria-current="page"]::after { content: "✓"; margin-left: auto; color: var(--ns-accent); }
+/* Assinante Pro/Team (ou convidado em sessão do Team): sem coroas nem selos Pro; o diálogo de upgrade mantém os dele */
+body.gf-subscriber .pro-badge:not(#modal-upgrade .pro-badge),
+body.gf-subscriber .pro-crown { display: none !important; }

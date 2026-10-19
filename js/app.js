@@ -172,6 +172,7 @@ import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
 import { createMobileBar } from "./mobileBar.js";
+import { enhanceLangSelect } from "./langPicker.js";
 import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
 import { resolveContent } from "./tour-schema/i18n.js";
 import { MAX_TARGET_LANGS, langAudioPlan, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
@@ -821,6 +822,16 @@ function bindEditLang() {
 }
 bindEditLang();
 
+/** Seletores de idioma com bandeira (mesmo componente em todo o editor). */
+function enhanceLangSelects() {
+  const txt = (id) => () => document.getElementById(id)?.textContent || "";
+  enhanceLangSelect(document.getElementById("edit-lang"), { label: () => t("ml.editingIn") });
+  enhanceLangSelect(document.getElementById("locale-select"), { label: () => t("locale.label"), showName: true, align: "end" });
+  enhanceLangSelect(document.getElementById("export-video-lang"), { label: () => t("export.langLabel"), showName: true });
+  enhanceLangSelect(document.getElementById("embed-lang"), { label: txt("embed-lang-label"), showName: true });
+}
+enhanceLangSelects();
+
 function openAnalytics() {
   if (!viewerIsPro()) {
     openFeatureGate("analytics");
@@ -1123,6 +1134,7 @@ async function reconcilePublishedBaseline(record) {
 }
 
 function paintCollabShare() {
+  paintProBadges();
   const tab = document.getElementById("tab-share-team");
   if (!tab) return;
   const entry = project && collabFlagOn() ? readCollabMap(localStorage)[project.id] : null;
@@ -1534,6 +1546,22 @@ function placeHelpGroups(inAccount) {
   }
 }
 
+/**
+ * Selos Pro (coroa) só para quem não assina: deslogado ou sem Pro/Team. Assinante Pro/Team, ou convidado numa
+ * sessão colaborativa do Team (onde o recurso já vem liberado pelo dono), não vê coroa nem "(Pro)" nas opções.
+ * O diálogo de upgrade (#modal-upgrade) continua com os selos: ali eles descrevem o plano oferecido.
+ */
+function paintProBadges() {
+  const subscriber = Boolean(viewerIsPro() || collab?.isActive?.());
+  document.body.classList.toggle("gf-subscriber", subscriber);
+  for (const opt of document.querySelectorAll("option[data-i18n]")) {
+    const key = opt.dataset.i18n;
+    const text = t(key);
+    if (!/\(Pro\)/.test(text)) continue;
+    opt.textContent = subscriber ? text.replace(/\s*\(Pro\)/, "") : text;
+  }
+}
+
 function paintAccount() {
   const enabled = isCloudEnabled();
   const account = enabled ? getCloudAccount() : { signedIn: false, email: "" };
@@ -1589,6 +1617,7 @@ function paintAccount() {
     }
   }
   editor.paintHostedBadges?.();
+  paintProBadges();
   paintExportMark();
   paintLocalSave();
   paintByokSettings();

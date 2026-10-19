@@ -68,22 +68,25 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/128/css/theme.css" />
-  <link rel="stylesheet" href="/a/128/css/app.css" />
-  <link rel="stylesheet" href="/a/128/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/129/css/theme.css" />
+  <link rel="stylesheet" href="/a/129/css/app.css" />
+  <link rel="stylesheet" href="/a/129/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/128/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/128/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/129/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/129/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
-      <nav class="locale-links" id="locale-links" aria-label="Idioma">
-          <a href="/ajuda" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a>
-          <a href="/en/help" hreflang="en" lang="en" title="English">EN</a>
-          <a href="/es/ayuda" hreflang="es" lang="es" title="Español" aria-current="page">ES</a>
-        </nav>
+      <details class="locale-menu">
+          <summary class="locale-menu-btn" aria-label="Idioma: Español" title="Idioma: Español"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="ES"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg><svg class="locale-menu-caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <nav class="locale-links" id="locale-links" aria-label="Idioma">
+            <a href="/ajuda" hreflang="pt-BR" lang="pt-BR"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="BR"><rect width="30" height="20" fill="#009b3a"/><polygon points="15,2.5 27.5,10 15,17.5 2.5,10" fill="#fedf00"/><circle cx="15" cy="10" r="4.6" fill="#002776"/><path d="M10.6 9.2c3-.9 6.3-.5 8.8 1.1" stroke="#fff" stroke-width=".9" fill="none"/></svg><span>Português</span></a>
+            <a href="/en/help" hreflang="en" lang="en"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="GB"><rect width="30" height="20" fill="#012169"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0L30 20M30 0L0 20" stroke="#c8102e" stroke-width="1.6"/><path d="M15 0V20M0 10H30" stroke="#fff" stroke-width="6"/><path d="M15 0V20M0 10H30" stroke="#c8102e" stroke-width="3.4"/></svg><span>English</span></a>
+            <a href="/es/ayuda" hreflang="es" lang="es" aria-current="page"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="ES"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg><span>Español</span></a>
+          </nav>
+        </details>
     </div>
   </header>
 
@@ -199,7 +202,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/128/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/129/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
