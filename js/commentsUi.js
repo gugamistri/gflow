@@ -26,6 +26,46 @@ const hasDom = () => typeof document !== "undefined";
 let uid = 0;
 const nextId = (p) => `${p}-${++uid}`;
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Paths Lucide-ish (stroke). Ícones via createElementNS (sem HTML cru). */
+const ICO = {
+  edit: ["M12 20h9", "M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"],
+  trash: ["M3 6h18", "M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2", "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", "M10 11v6", "M14 11v6"],
+  reply: ["M9 14 4 9l5-5", "M20 20v-7a4 4 0 0 0-4-4H4"],
+  check: ["M20 6 9 17l-5-5"],
+  reopen: ["M3 12a9 9 0 0 1 15.5-6.4L21 8", "M21 3v5h-5", "M21 12a9 9 0 0 1-15.5 6.4L3 16", "M3 21v-5h5"],
+  send: ["M22 2 11 13", "M22 2l-7 20-4-9-9-4Z"],
+  save: ["M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z", "M17 21v-8H7v8", "M7 3v5h8"],
+  x: ["M18 6 6 18", "M6 6l12 12"],
+  goto: ["M7 17 17 7", "M8 7h9v9"],
+  more: ["M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z", "M19 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z", "M5 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"],
+};
+
+function svgIco(name) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  svg.classList.add("comment-ico");
+  for (const d of ICO[name] || []) {
+    const p = document.createElementNS(SVG_NS, "path");
+    p.setAttribute("d", d);
+    p.setAttribute("fill", "none");
+    p.setAttribute("stroke", "currentColor");
+    p.setAttribute("stroke-width", "2");
+    p.setAttribute("stroke-linecap", "round");
+    p.setAttribute("stroke-linejoin", "round");
+    svg.append(p);
+  }
+  return svg;
+}
+
+function iconBtn({ label, icon, className = "", type = "button", primary = false, danger = false, onclick }) {
+  const cls = ["comment-icon-btn", primary && "is-primary", danger && "is-danger", className].filter(Boolean).join(" ");
+  return el("button", { type, class: cls, "aria-label": label, title: label, onclick }, svgIco(icon));
+}
+
 export function createCommentsUi(deps) {
   const {
     t, request, projectId, getProject, getSelectedIndex, setSelectedIndex, getSelfId, getMembers = () => [], refreshMembers = async () => {},
@@ -189,11 +229,24 @@ export function createCommentsUi(deps) {
     ta.value = drafts.get(key) || "";
     const err = el("p", { class: "comment-error", role: "alert", hidden: true });
     const count = el("span", { class: "comment-count" });
-    const send = el("button", { type: "submit", class: "btn btn-sm btn-primary" }, submitLabel || t("comments.send"));
+    const sendLabel = submitLabel || t("comments.send");
+    const sendIcon = submitLabel ? "save" : "send";
+    const send = iconBtn({ label: sendLabel, icon: sendIcon, type: "submit", primary: true, className: "comment-send" });
+    const cancelBtn = onCancel
+      ? iconBtn({ label: t("comments.cancel"), icon: "x", className: "comment-cancel", onclick: () => { drafts.delete(key); onCancel(); } })
+      : null;
     const list = el("ul", { class: "comment-mentions", role: "listbox", id: `${id}-mentions`, "aria-label": t("comments.mention.aria"), hidden: true });
     let options = [];
     let active = -1;
-    const updateCount = () => { count.textContent = t("comments.count", { n: ta.value.length, max: COMMENT_MAX }); };
+    const syncCancel = () => {
+      if (!cancelBtn || !onCancel) return;
+      // Figma/YouTube: X só quando há texto (ou sempre no reply/edit — onCancel já implica dismiss)
+      cancelBtn.hidden = false;
+    };
+    const updateCount = () => {
+      count.textContent = t("comments.count", { n: ta.value.length, max: COMMENT_MAX });
+      syncCancel();
+    };
     const closeMentions = () => { list.hidden = true; list.replaceChildren(); options = []; active = -1; ta.removeAttribute("aria-activedescendant"); ta.setAttribute("aria-expanded", "false"); };
     const choose = (m) => {
       const st = mentionQuery(ta.value, ta.selectionStart);
@@ -243,19 +296,23 @@ export function createCommentsUi(deps) {
       const bad = validateDraft(value);
       if (bad) { err.textContent = t(`comments.errors.${bad}`); err.hidden = false; ta.focus(); return; }
       send.disabled = true;
-      send.textContent = t("comments.sending");
+      send.setAttribute("aria-busy", "true");
+      send.setAttribute("aria-label", t("comments.sending"));
+      send.title = t("comments.sending");
       const extra = attach ? attach() : {};
       // o rascunho sai antes: o repintar que vem depois do envio não pode trazê-lo de volta
       drafts.delete(key);
       const res = await onSend({ body: value, mentions: mentionedIds(value, getMembers(), getSelfId()), ...extra });
       send.disabled = false;
-      send.textContent = submitLabel || t("comments.send");
-      if (res && res.ok === false) { drafts.set(key, value); err.textContent = errText(res); err.hidden = false; return; }
+      send.removeAttribute("aria-busy");
+      send.setAttribute("aria-label", sendLabel);
+      send.title = sendLabel;
+      if (res && res.ok === false) { drafts.set(key, value); err.textContent = errText(res); err.hidden = false; updateCount(); return; }
       ta.value = "";
       updateCount();
     });
     const actions = el("div", { class: "comment-composer-actions" }, count);
-    if (onCancel) actions.append(el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => { drafts.delete(key); onCancel(); } }, t("comments.cancel")));
+    if (cancelBtn) actions.append(cancelBtn);
     actions.append(send);
     wrap.append(...(attach && attach.control ? [attach.control] : []), ta, list, err, actions);
     updateCount();
@@ -311,12 +368,17 @@ export function createCommentsUi(deps) {
       else {
         li.append(renderBody(c.body));
         const bar = el("div", { class: "comment-actions" });
-        if (c.canEdit && S.canComment) bar.append(el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => startEdit(li, c) }, t("comments.edit")));
+        if (c.canEdit && S.canComment) {
+          bar.append(iconBtn({ label: t("comments.edit"), icon: "edit", className: "comment-action-edit", onclick: () => startEdit(li, c) }));
+        }
         if (c.canDelete) {
-          bar.append(el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: async () => {
-            if (typeof deps.confirm === "function" && !(await deps.confirm(t("comments.deleteConfirm")))) return;
-            await act(() => api.remove(c.id));
-          } }, t("comments.delete")));
+          bar.append(iconBtn({
+            label: t("comments.delete"), icon: "trash", danger: true, className: "comment-action-delete",
+            onclick: async () => {
+              if (typeof deps.confirm === "function" && !(await deps.confirm(t("comments.deleteConfirm")))) return;
+              await act(() => api.remove(c.id));
+            },
+          }));
         }
         if (bar.children.length) li.append(bar);
       }
@@ -334,12 +396,20 @@ export function createCommentsUi(deps) {
           onCancel: () => { openReplies.delete(th.id); holder.replaceChildren(); },
         }));
       };
-      foot.append(el("button", { type: "button", class: "btn btn-sm", onclick: () => {
-        if (holder.firstChild) { openReplies.delete(th.id); holder.replaceChildren(); return; }
-        openReply(true);
-      } }, t("comments.reply")));
+      foot.append(iconBtn({
+        label: t("comments.reply"), icon: "reply", className: "comment-action-reply",
+        onclick: () => {
+          if (holder.firstChild) { openReplies.delete(th.id); holder.replaceChildren(); return; }
+          openReply(true);
+        },
+      }));
       if (canResolve(th)) {
-        foot.append(el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => act(() => (open ? api.resolve(th.id) : api.reopen(th.id))) }, open ? t("comments.resolve") : t("comments.reopen")));
+        foot.append(iconBtn({
+          label: open ? t("comments.resolve") : t("comments.reopen"),
+          icon: open ? "check" : "reopen",
+          className: open ? "comment-action-resolve" : "comment-action-reopen",
+          onclick: () => act(() => (open ? api.resolve(th.id) : api.reopen(th.id))),
+        }));
       }
       art.append(foot, holder);
       if (openReplies.has(th.id) || drafts.get(`reply:${th.id}`)) openReply(false);
@@ -437,7 +507,12 @@ export function createCommentsUi(deps) {
       for (const g of groups) {
         const title = g.kind === "step" ? t("comments.group.step", { n: g.n }) : g.kind === "project" ? t("comments.group.project") : t("comments.group.orphan");
         const heading = el("h3", { class: "comments-group-title" }, title);
-        if (g.stepId) heading.append(" ", el("button", { type: "button", class: "btn btn-sm btn-ghost comments-goto", onclick: () => { const i = stepIds().indexOf(g.stepId); if (i >= 0) setSelectedIndex(i); } }, t("comments.goto")));
+        if (g.stepId) {
+          heading.append(" ", iconBtn({
+            label: t("comments.goto"), icon: "goto", className: "comments-goto",
+            onclick: () => { const i = stepIds().indexOf(g.stepId); if (i >= 0) setSelectedIndex(i); },
+          }));
+        }
         const sec = el("section", { class: `comments-group${g.stepId === cur ? " is-current" : ""}`, "aria-label": title }, heading);
         for (const th of g.threads) sec.append(renderThread(th));
         listEl.append(sec);
