@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyField, diffSnapshots, inputIdForKey, keyForInputId, normalizePositions, readField, snapshotProject } from "./collabModel.js";
+import { applyField, canvasIdsForField, diffSnapshots, fieldForDomTarget, inputIdForKey, keyForInputId, normalizePositions, readField, snapshotProject, visualField } from "./collabModel.js";
 import { createOpQueue } from "./collabQueue.js";
 import { createLockManager } from "./collabLocks.js";
 import { createCollabUndo } from "./collabUndo.js";
@@ -91,6 +91,15 @@ test("campos do inspetor mapeiam para chaves e de volta", () => {
   assert.equal(keyForInputId("step-a", "prop-title"), "s:step-a:title");
   assert.equal(keyForInputId("step-a", "prop-xyz"), null);
   assert.equal(inputIdForKey("p:name"), null);
+  assert.equal(inputIdForKey("s:step-a:i18n.pt.description"), "prop-description");
+  assert.equal(inputIdForKey("s:step-a:side"), "prop-side");
+  assert.equal(fieldForDomTarget({ id: "prop-title" }), "title");
+  assert.equal(fieldForDomTarget({ id: "canvas-popover-body", dataset: { inline: "description" } }), "text");
+  assert.equal(fieldForDomTarget({ id: "canvas-caption", dataset: { inline: "caption" } }), "caption");
+  assert.equal(fieldForDomTarget({ id: "canvas-stage", dataset: {} }), null);
+  assert.equal(visualField("i18n.en.title"), "title");
+  assert.deepEqual(canvasIdsForField("text"), ["canvas-popover-body", "canvas-slide-body"]);
+  assert.deepEqual(canvasIdsForField("i18n.pt.description"), ["canvas-popover-body", "canvas-slide-body"]);
 });
 
 /* ---------- fila de ops ---------- */
