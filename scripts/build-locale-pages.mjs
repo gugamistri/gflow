@@ -11,6 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { catalogs } from "../js/i18n.js";
+import { flagSvg } from "../js/flags.js";
 import "../js/legal-i18n.js";
 import { landingCatalogs } from "../js/landing-i18n.js";
 import { formatPaywallAmount, paywallCurrency, paywallOffer } from "../js/paywall.js";
@@ -220,16 +221,27 @@ const LOCALE_NAMES = { pt: "Português", en: "English", es: "Español" };
 const LOCALE_SHORT = { pt: "PT", en: "EN", es: "ES" };
 const LOCALE_LABEL = { pt: "Idioma", en: "Language", es: "Idioma" };
 
-/** Seletor de idioma com <a href> reais (rastreáveis) no lugar do <select> que navegava por JS. */
+const CARET = '<svg class="locale-menu-caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/**
+ * Seletor de idioma com <a href> reais (rastreáveis): botão com a bandeira + ▾ e lista com bandeira e nome
+ * (mesmo padrão do seletor do editor; bandeiras em SVG porque o Windows não desenha emoji de bandeira).
+ */
 export function withLocaleLinks(html, page, loc) {
-  const re = /<label class="(?:locale|locale-select)">[\s\S]*?<\/label>|<nav class="locale-links"[\s\S]*?<\/nav>/;
+  const re = /<details class="locale-menu"[\s\S]*?<\/nav>\s*<\/details>|<label class="(?:locale|locale-select)">[\s\S]*?<\/label>|<nav class="locale-links"[\s\S]*?<\/nav>/;
   if (!re.test(html)) return html;
   const links = LOCALES.map((l) => {
     const cur = l === loc ? ' aria-current="page"' : "";
-    return `<a href="${localePath(page, l)}" hreflang="${HREFLANG[l]}" lang="${HREFLANG[l]}" title="${LOCALE_NAMES[l]}"${cur}>${LOCALE_SHORT[l]}</a>`;
-  }).join("\n          ");
-  const nav = `<nav class="locale-links" id="locale-links" aria-label="${LOCALE_LABEL[loc]}">\n          ${links}\n        </nav>`;
-  return html.replace(re, () => nav);
+    return `<a href="${localePath(page, l)}" hreflang="${HREFLANG[l]}" lang="${HREFLANG[l]}"${cur}>${flagSvg(l)}<span>${LOCALE_NAMES[l]}</span></a>`;
+  }).join("\n            ");
+  const label = `${LOCALE_LABEL[loc]}: ${LOCALE_NAMES[loc]}`;
+  const menu = `<details class="locale-menu">
+          <summary class="locale-menu-btn" aria-label="${label}" title="${label}">${flagSvg(loc)}${CARET}</summary>
+          <nav class="locale-links" id="locale-links" aria-label="${LOCALE_LABEL[loc]}">
+            ${links}
+          </nav>
+        </details>`;
+  return html.replace(re, () => menu);
 }
 
 function withHtmlAttrs(html, page, loc) {

@@ -4025,6 +4025,20 @@ export function applyI18n(root) {
   if (titleEl) titleEl.textContent = t(titleEl.getAttribute("data-i18n"));
 }
 
+/** Menu de idioma das páginas públicas (<details class="locale-menu">): Esc e clique fora fecham. */
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const open = document.querySelector("details.locale-menu[open]");
+    if (!open) return;
+    open.open = false;
+    open.querySelector("summary")?.focus();
+  });
+  document.addEventListener("click", (e) => {
+    for (const d of document.querySelectorAll("details.locale-menu[open]")) if (!d.contains(e.target)) d.open = false;
+  });
+}
+
 export function bindLocaleSelect(selectEl, onChange) {
   if (!selectEl) return;
   selectEl.value = getLocale();
