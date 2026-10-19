@@ -98,11 +98,12 @@ test("textos do embed e do guia existem em pt, es e en, sem 'nuvem'", () => {
   assert.equal(catalogs.pt["embed.button"], "Incorporar no site");
 });
 
-test("o editor tem o botão e o diálogo; a ajuda tem a seção #incorporar", () => {
+test("o editor tem a aba Incorporar; a ajuda tem a seção #incorporar", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   assert.match(html, /id="btn-share-embed"[^>]*hidden/);
   assert.match(html, /id="embed-pro-badge"/);
-  assert.match(html, /<dialog class="studio-modal embed-modal" id="modal-embed"/);
+  assert.match(html, /id="pane-share-embed"/);
+  assert.equal(html.includes('id="modal-embed"'), false);
   for (const flavor of ["html", "wordpress", "webflow"]) assert.match(html, new RegExp(`data-flavor="${flavor}"`));
   assert.match(html, /href="\/ajuda#incorporar"/);
   const help = readFileSync(new URL("../ajuda.html", import.meta.url), "utf8");

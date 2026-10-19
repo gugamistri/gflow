@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/122/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/122/css/theme.css" />
-  <link rel="stylesheet" href="a/122/css/app.css" />
-  <link rel="stylesheet" href="a/122/css/collab.css" />
-  <link rel="stylesheet" href="a/122/css/comments.css" />
+  <link rel="stylesheet" href="a/123/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/123/css/theme.css" />
+  <link rel="stylesheet" href="a/123/css/app.css" />
+  <link rel="stylesheet" href="a/123/css/collab.css" />
+  <link rel="stylesheet" href="a/123/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -162,7 +162,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/122/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/122/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/123/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/123/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span
           class="topbar-project"
@@ -431,12 +431,20 @@
             <span class="share-label" data-i18n="topbar.share">Compartilhar</span>
             <span class="share-stale-dot" id="share-stale-dot" hidden></span>
           </summary>
-          <div class="export-panel-body">
+          <div class="export-panel-body share-card" id="share-card">
+            <div class="share-tablist" role="tablist" aria-label="Compartilhar" data-i18n-aria="topbar.share">
+              <button type="button" class="share-tab" role="tab" id="tab-share-link" data-share-tab="link" aria-selected="true" aria-controls="pane-share-link" data-i18n="share.tab.link">Link</button>
+              <button type="button" class="share-tab" role="tab" id="btn-share-embed" data-share-tab="embed" aria-selected="false" tabindex="-1" aria-controls="pane-share-embed" hidden>
+                <span data-i18n="share.tab.embed">Incorporar</span>
+                <span class="pro-badge" id="embed-pro-badge" hidden>
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
+              </button>
+              <button type="button" class="share-tab" role="tab" id="tab-share-export" data-share-tab="export" aria-selected="false" tabindex="-1" aria-controls="pane-share-export" data-i18n="share.tab.export">Baixar</button>
+            </div>
+            <div class="share-pane" role="tabpanel" id="pane-share-link" aria-labelledby="tab-share-link">
             <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
-            <button type="button" class="export-option" id="btn-share-collab" hidden>
-              <strong data-i18n="collab.enable.title">Compartilhar para edição</strong>
-              <span data-i18n="collab.share.desc">Convide pessoas para editar.</span>
-            </button>
             <button type="button" class="export-option" id="btn-share-publish">
               <strong data-i18n="share.linkTitle">Link</strong>
               <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
@@ -476,15 +484,22 @@
               </span>
               <span data-i18n="share.upsell">Link que não expira</span>
             </button>
-            <button type="button" class="export-option" id="btn-share-embed" hidden>
-              <strong>
-                <span data-i18n="embed.button">Incorporar no site</span>
-                <span class="pro-badge" id="embed-pro-badge" hidden>
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </strong>
-              <span data-i18n="embed.buttonDesc">Código para colar no site.</span>
+            <label class="share-brand-toggle" id="share-brand-toggle" hidden>
+              <input type="checkbox" id="share-remove-brand" checked />
+              <span class="share-brand-text">
+                <strong>
+                  <span data-i18n="share.removeBrand">Remover marca GuiaFlow</span>
+                  <span class="pro-badge">
+                    <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                    <span data-i18n="billing.badge">Pro</span>
+                  </span>
+                </strong>
+                <small data-i18n="share.removeBrandHint">Sem o logo no link permanente. Republique para aplicar.</small>
+              </span>
+            </label>
+            <button type="button" class="export-option" id="btn-share-collab" hidden>
+              <strong data-i18n="collab.enable.title">Compartilhar para edição</strong>
+              <span data-i18n="collab.share.desc">Convide pessoas para editar.</span>
             </button>
             <button type="button" class="export-option" id="btn-share-analytics" hidden>
               <strong>
@@ -500,19 +515,40 @@
               <strong><span data-i18n="leads.open">Ver contatos recebidos</span></strong>
               <span data-i18n="leads.buttonDesc">Lista e CSV.</span>
             </button>
-            <label class="share-brand-toggle" id="share-brand-toggle" hidden>
-              <input type="checkbox" id="share-remove-brand" checked />
-              <span class="share-brand-text">
-                <strong>
-                  <span data-i18n="share.removeBrand">Remover marca GuiaFlow</span>
-                  <span class="pro-badge">
-                    <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                    <span data-i18n="billing.badge">Pro</span>
-                  </span>
-                </strong>
-                <small data-i18n="share.removeBrandHint">Sem o logo no link permanente. Republique para aplicar.</small>
-              </span>
-            </label>
+            </div>
+            <div class="share-pane" role="tabpanel" id="pane-share-embed" aria-labelledby="btn-share-embed" hidden>
+        <div class="embed-needs-publish" id="embed-needs-publish" hidden>
+          <p class="embed-lead" data-i18n="embed.needsPublish">Publique o link permanente para incorporar. Ele não expira.</p>
+          <div class="studio-modal-actions">
+            <button type="button" class="btn btn-primary" id="btn-embed-publish" data-i18n="embed.publish">Publicar link permanente</button>
+          </div>
+        </div>
+        <div class="embed-ready" id="embed-ready" hidden>
+          <p class="embed-stale" id="embed-stale" hidden data-i18n="embed.stale">O site mostra a última versão publicada. Republicar atualiza o tour em todos os sites.</p>
+          <div class="embed-tabs" role="tablist" aria-label="Onde vai colar" data-i18n-aria="embed.platform">
+            <button type="button" class="embed-tab" role="tab" data-flavor="html" aria-selected="true">HTML</button>
+            <button type="button" class="embed-tab" role="tab" data-flavor="wordpress" aria-selected="false" tabindex="-1">WordPress</button>
+            <button type="button" class="embed-tab" role="tab" data-flavor="webflow" aria-selected="false" tabindex="-1">Webflow</button>
+            <button type="button" class="embed-tab" role="tab" data-flavor="notion" aria-selected="false" tabindex="-1">Notion</button>
+            <button type="button" class="embed-tab" role="tab" data-flavor="medium" aria-selected="false" tabindex="-1">Medium</button>
+          </div>
+          <p class="embed-hint" id="embed-hint" data-i18n="embed.hint.html">Cole o código no ponto da página onde o tour deve aparecer.</p>
+          <textarea class="embed-code" id="embed-code" readonly rows="7" spellcheck="false" aria-label="Código para incorporar" data-i18n-aria="embed.codeAria"></textarea>
+          <label class="embed-autoplay" id="embed-autoplay-row">
+            <input type="checkbox" id="embed-autoplay" />
+            <span data-i18n="embed.autoplay">Iniciar sozinho (o navegador pode silenciar)</span>
+          </label>
+          <label class="embed-autoplay" id="embed-lang-row" hidden>
+            <span data-i18n="embed.lang">Idioma inicial</span>
+            <select id="embed-lang"></select>
+          </label>
+          <div class="embed-actions">
+            <a class="embed-guide" href="/ajuda#incorporar" target="_blank" rel="noopener" data-i18n="embed.guide">Como colar no WordPress / Webflow →</a>
+            <button type="button" class="btn btn-primary" id="btn-embed-copy" data-i18n="embed.copy">Copiar código</button>
+          </div>
+        </div>
+            </div>
+            <div class="share-pane" role="tabpanel" id="pane-share-export" aria-labelledby="tab-share-export" hidden>
             <button type="button" class="export-option" id="btn-export-vtt">
               <strong data-i18n="export.vttTitle">Legendas (.vtt)</strong>
               <span data-i18n="export.vttDesc">Um arquivo por idioma.</span>
@@ -564,6 +600,7 @@
               </strong>
               <span data-i18n="export.removeMarkDesc">O Pro exporta sem o logo.</span>
             </button>
+            </div>
           </div>
         </details>
       </div>
@@ -601,7 +638,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/122/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/122/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/123/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/123/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1076,7 +1113,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/122/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/123/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1226,47 +1263,6 @@
       <p class="paywall-legal" data-i18n-html="billing.legal">Ao assinar, você concorda com os <a href="/termos" target="_blank" rel="noopener">Termos</a> e a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
       </div>
     </form>
-  </dialog>
-
-  <dialog class="studio-modal embed-modal" id="modal-embed" aria-labelledby="embed-title">
-    <div class="studio-modal-body embed-dialog">
-      <div class="account-dialog-head">
-        <h3 id="embed-title" data-i18n="embed.title">Incorporar no site</h3>
-        <button type="button" class="btn btn-icon" id="btn-embed-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="embed-needs-publish" id="embed-needs-publish" hidden>
-        <p class="embed-lead" data-i18n="embed.needsPublish">Publique o link permanente para incorporar. Ele não expira.</p>
-        <div class="studio-modal-actions">
-          <button type="button" class="btn btn-primary" id="btn-embed-publish" data-i18n="embed.publish">Publicar link permanente</button>
-        </div>
-      </div>
-      <div class="embed-ready" id="embed-ready" hidden>
-        <p class="embed-stale" id="embed-stale" hidden data-i18n="embed.stale">O site mostra a última versão publicada. Republicar atualiza o tour em todos os sites.</p>
-        <div class="embed-tabs" role="tablist" aria-label="Onde vai colar" data-i18n-aria="embed.platform">
-          <button type="button" class="embed-tab" role="tab" data-flavor="html" aria-selected="true">HTML</button>
-          <button type="button" class="embed-tab" role="tab" data-flavor="wordpress" aria-selected="false" tabindex="-1">WordPress</button>
-          <button type="button" class="embed-tab" role="tab" data-flavor="webflow" aria-selected="false" tabindex="-1">Webflow</button>
-          <button type="button" class="embed-tab" role="tab" data-flavor="notion" aria-selected="false" tabindex="-1">Notion</button>
-          <button type="button" class="embed-tab" role="tab" data-flavor="medium" aria-selected="false" tabindex="-1">Medium</button>
-        </div>
-        <p class="embed-hint" id="embed-hint" data-i18n="embed.hint.html">Cole o código no ponto da página onde o tour deve aparecer.</p>
-        <textarea class="embed-code" id="embed-code" readonly rows="7" spellcheck="false" aria-label="Código para incorporar" data-i18n-aria="embed.codeAria"></textarea>
-        <label class="embed-autoplay" id="embed-autoplay-row">
-          <input type="checkbox" id="embed-autoplay" />
-          <span data-i18n="embed.autoplay">Iniciar sozinho (o navegador pode silenciar)</span>
-        </label>
-        <label class="embed-autoplay" id="embed-lang-row" hidden>
-          <span data-i18n="embed.lang">Idioma inicial</span>
-          <select id="embed-lang"></select>
-        </label>
-        <div class="embed-actions">
-          <a class="embed-guide" href="/ajuda#incorporar" target="_blank" rel="noopener" data-i18n="embed.guide">Como colar no WordPress / Webflow →</a>
-          <button type="button" class="btn btn-primary" id="btn-embed-copy" data-i18n="embed.copy">Copiar código</button>
-        </div>
-      </div>
-    </div>
   </dialog>
 
   <dialog class="studio-modal fixed-modal" id="modal-fixed-start" aria-labelledby="fixed-start-heading">
@@ -2052,8 +2048,8 @@
     </symbol>
   </svg>
 
-  <script src="a/122/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/122/js/app.js"></script>
+  <script src="a/123/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/123/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
