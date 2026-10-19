@@ -631,6 +631,7 @@ export function createCollabController(deps) {
     applyPerms();
     ui.setStatus({ online: true, pending: 0 });
     paintUndo();
+    deps.onSessionChange?.();
     return true;
   }
 
@@ -647,6 +648,7 @@ export function createCollabController(deps) {
     ctx = null;
     ui.unmount();
     deps.onUndoState?.(null);
+    deps.onSessionChange?.();
   }
 
   /** Fim da sessão (página fechando): solta locks e presença sem esperar. */
