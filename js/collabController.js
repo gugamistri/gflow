@@ -6,9 +6,9 @@
 import { collectAssetRefs, dehydrate, hydrate } from "./cloudSync.js";
 import { createCollabClient } from "./collabClient.js";
 import { createCommentsUi } from "./commentsUi.js";
-import { applyField, FIELD_INPUT_IDS, fieldLabelKey, inputIdForKey, keyForInputId, normalizePositions, parseKey, readField, snapshotProject, stepIdOf, stepKey, TEXT_FIELDS } from "./collabModel.js";
+import { applyField, FIELD_INPUT_IDS, fieldForDomTarget, fieldLabelKey, inputIdForKey, normalizePositions, parseKey, readField, snapshotProject, stepIdOf, stepKey, TEXT_FIELDS } from "./collabModel.js";
 import { createLockManager } from "./collabLocks.js";
-import { peopleFrom } from "./collabPresence.js";
+import { fieldEditors, peopleFrom } from "./collabPresence.js";
 import { createOpQueue } from "./collabQueue.js";
 import { readOnlyReason, uiPermissions } from "./collabRoles.js";
 import { createCollabUndo } from "./collabUndo.js";
@@ -32,6 +32,25 @@ function writeCollabMap(storage, map) {
   try { storage?.setItem(COLLAB_MAP_KEY, JSON.stringify(map)); } catch { /* cota */ }
 }
 
+/** Projetos locais que um convidado pode abrir: só os que /collab/shared devolveu. */
+export function guestVisibleProjects(projects, collabMap, sharedProjectIds) {
+  const allowed = new Set(sharedProjectIds || []);
+  return (projects || []).filter((project) => {
+    const remote = collabMap?.[project?.id]?.remoteId;
+    return Boolean(remote && allowed.has(remote));
+  });
+}
+
+/** Marca um projeto local como colaborativo sem apagar uma entrada que já existe. */
+export function noteCollabProject(storage, localId, entry) {
+  if (!localId || !entry?.remoteId) return false;
+  const map = readCollabMap(storage);
+  if (map[localId]) return false;
+  map[localId] = entry;
+  writeCollabMap(storage, map);
+  return true;
+}
+
 export function createCollabController(deps) {
   const {
     t, ui, request, storage = typeof localStorage !== "undefined" ? localStorage : null,
@@ -43,6 +62,7 @@ export function createCollabController(deps) {
 
   let ctx = null; // sessão colaborativa do projeto aberto
   let pendingCommentThread = null; // link do e-mail: abre o painel quando o projeto anexar
+  let ignoreSessionLoss = false;
   const assetCache = new Map(); // dehydrate
   const mediaCache = new Map(); // sha → data URL
   const uploaded = new Set();
@@ -106,9 +126,13 @@ export function createCollabController(deps) {
   const colorOf = (userId) => ctx?.people.find((p) => p.userId === userId) || null;
   function focusInfo() {
     const a = typeof document !== "undefined" ? document.activeElement : null;
-    const field = a?.id && FIELD_BY_INPUT[a.id];
     const stepId = selectedStepId();
-    if (!field || !stepId || !a.closest?.("#props-body")) return null;
+    if (!a || !stepId) return null;
+    const field = fieldForDomTarget(a);
+    if (!field) return null;
+    const inProps = Boolean(a.closest?.("#props-body"));
+    const onCanvas = Boolean(a.dataset?.inline);
+    if (!inProps && !onCanvas) return null;
     return { inputId: a.id, field, stepId, key: stepKey(stepId, field) };
   }
   const describeKey = (key) => {
@@ -319,10 +343,7 @@ export function createCollabController(deps) {
     // quem está digitando num passo que eu estou vendo: o aviso de passo travado já explica; sem toast a cada tecla
     const holder = sel ? ctx.locks.holderOf(sel) : null;
     if (holder && holder.userId === by && changed.every((x) => stepIdOf(x.key) === sel)) {
-      for (const x of changed) {
-        const id = inputIdForKey(x.key);
-        if (id) ui.flashField(id);
-      }
+      for (const x of changed) flashRemote(x.key, by);
       return;
     }
     const prevs = changed.map((x) => ({ key: x.key, value: x.prev }));
@@ -341,10 +362,13 @@ export function createCollabController(deps) {
     } else text = t("collab.toast.nOps", { name, n: changed.length });
     const structural = changed.some((x) => /:(new|del)$/.test(x.key));
     ui.toast({ text, actionLabel: structural ? "" : t("collab.toast.undo"), onAction: structural ? null : undoRemote });
-    for (const x of changed) {
-      const id = inputIdForKey(x.key);
-      if (id && stepIdOf(x.key) === sel) ui.flashField(id);
-    }
+    for (const x of changed) if (stepIdOf(x.key) === sel) flashRemote(x.key, by);
+  }
+
+  function flashRemote(key, by) {
+    const id = inputIdForKey(key);
+    if (!id) return;
+    ui.flashField(id, { color: colorOf(by)?.color || "" });
   }
 
   /** Aplica valores no projeto como edição MINHA (vira op, entra no meu desfazer). */
@@ -388,9 +412,11 @@ export function createCollabController(deps) {
   function onFieldBlur(inputId) {
     if (!ctx) return;
     const sid = selectedStepId();
-    const key = sid ? keyForInputId(sid, inputId) : null;
+    const el = inputId && typeof document !== "undefined" ? document.getElementById(inputId) : null;
+    const field = fieldForDomTarget(el) || FIELD_BY_INPUT[inputId];
+    const key = sid && field ? stepKey(sid, field) : null;
     if (key) ctx.locks.blur(sid);
-    pushPresence();
+    setTimeout(() => { if (ctx) pushPresence({ force: true }); }, 0);
     if (!key || !ctx.deferred.has(key)) return;
     const d = ctx.deferred.get(key);
     ctx.deferred.delete(key);
@@ -403,7 +429,7 @@ export function createCollabController(deps) {
     void applyRemote([{ key, value: d.value, by: d.by }]);
   }
 
-  function onFieldFocus() { pushPresence(); }
+  function onFieldFocus() { pushPresence({ force: true }); }
   async function onFieldInput(inputId) {
     if (!ctx || !ctx.perms.canEdit) return;
     const sid = selectedStepId();
@@ -480,9 +506,9 @@ export function createCollabController(deps) {
   function updateFieldMarks() {
     ui.paintFieldMarks(selectedStepId());
   }
-  function pushPresence() {
+  function pushPresence({ force = false } = {}) {
     if (!ctx?.client.isRunning()) return;
-    void ctx.client.sendPresence();
+    void ctx.client.sendPresence({ force });
   }
   function onStepSelected() {
     if (!ctx) return;
@@ -571,6 +597,8 @@ export function createCollabController(deps) {
     // o 1º state traz presença antes de eu saber quem sou: guarda e repinta depois do resync
     if (!ctx.selfId) { ctx.pendingPresence = list; return; }
     ctx.idle = ctx.idle || new Map();
+    const sid = selectedStepId();
+    const editingBefore = new Map(fieldEditors(ctx.people, sid).map((p) => [p.userId, p.field]));
     const next = peopleFrom(list, ctx.selfId, { idleMap: ctx.idle });
     for (const p of next) {
       const prev = ctx.people.find((x) => x.userId === p.userId);
@@ -581,6 +609,12 @@ export function createCollabController(deps) {
     ui.setPeople(ctx.people, { selfName: ctx.selfName });
     updateFieldMarks();
     updateLockUi();
+    for (const p of fieldEditors(ctx.people, sid)) {
+      if (!p.field || editingBefore.get(p.userId) === p.field) continue;
+      const whatKey = `collab.editing.${p.field}`;
+      const what = t(whatKey);
+      if (what !== whatKey) ui.announce(t("collab.live.field", { name: p.name, what }));
+    }
   }
 
   /* ---------- sessão ---------- */
@@ -611,6 +645,7 @@ export function createCollabController(deps) {
         onReadOnly: () => { c.ownerLapsed = true; setRole(c.role); },
         onCseq: (n) => c.comments?.onCseq(n),
         onAccessLost: () => void onAccessLost(),
+        onSessionLost: () => void onSessionLost(),
       },
     });
     c.locks = createLockManager({ selfId: "", acquire: (id) => c.client.acquireLock(id), release: (id) => c.client.releaseLock(id), onChange: () => updateLockUi() });
@@ -621,6 +656,7 @@ export function createCollabController(deps) {
       getSelfId: () => c.selfId, getMembers: () => c.members || [], refreshMembers: () => refreshMembers(),
       announce: (x) => ui.announce(x), toast: (o) => ui.toast(o), confirm: confirmDialog,
     });
+    ignoreSessionLoss = false;
     c.client.start();
     c.comments.start();
     if (pendingCommentThread && pendingCommentThread.projectId === remoteId) {
@@ -675,6 +711,22 @@ export function createCollabController(deps) {
     c.queue.clearStorage();
     await detach();
     closeToLibrary();
+  }
+
+  /** Logout ou token vencido: o convite continua; não oferece cópia nem apaga o vínculo. */
+  async function onSessionLost() {
+    if (ignoreSessionLoss || !ctx) return;
+    ignoreSessionLoss = true;
+    ctx.queue.freeze();
+    ui.toast({ text: t("collab.session.expired") });
+    await detach();
+  }
+
+  async function endSessionQuietly() {
+    ignoreSessionLoss = true;
+    if (!ctx) return;
+    ctx.queue.freeze();
+    await detach();
   }
 
   /* ---------- desfazer / refazer por usuário ---------- */
@@ -802,7 +854,7 @@ export function createCollabController(deps) {
         ui.showJoin({ status: "error", message: t(key), onLater: () => deps.onJoinDismiss?.() });
         return;
       }
-      if (res.data?.accessToken) setSession({ accessToken: res.data.accessToken, email: res.data.user?.email || "" });
+      if (res.data?.accessToken) setSession({ accessToken: res.data.accessToken, email: res.data.user?.email || "", guest: Boolean(res.data.guest) });
       const info = res.data.project;
       const entry = { remoteId: info.id, role: info.role, guest: Boolean(res.data.guest), ownerName: "", name: info.name };
       ui.toast({ text: t("collab.join.done", { name: info.name, project: info.name }) });
@@ -826,6 +878,7 @@ export function createCollabController(deps) {
       const e = mapEntry(localId);
       remember(localId, { ...e, role: role || e.role });
     }
+    deps.onSharedOpen?.({ projectId, name, role, owner });
     await openProjectLocal(localId);
   }
 
@@ -837,7 +890,7 @@ export function createCollabController(deps) {
   return {
     attach, detach, adoptOwned, onLocalChange, onFieldBlur, onFieldFocus, onFieldInput, onStepSelected, onPageHide,
     undo: () => runUndo("undo"), redo: () => runUndo("redo"),
-    enableForCurrent, openMembers, showJoin, openShared, listShared, confirmStepDelete, paywall,
+    enableForCurrent, openMembers, showJoin, openShared, listShared, confirmStepDelete, paywall, endSessionQuietly,
     guestAccount: () => Object.values(readCollabMap(storage)).some((e) => e.guest),
     openComments: (opts) => ctx?.comments?.openPanel(opts),
     /** Link do e-mail (#/comments/<projeto>/<conversa>): abre o projeto e o painel. Devolve false se o projeto não é meu/compartilhado. */

@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyField, diffSnapshots, inputIdForKey, keyForInputId, normalizePositions, readField, snapshotProject } from "./collabModel.js";
+import { applyField, canvasIdsForField, diffSnapshots, fieldForDomTarget, inputIdForKey, keyForInputId, normalizePositions, readField, snapshotProject, visualField } from "./collabModel.js";
 import { createOpQueue } from "./collabQueue.js";
 import { createLockManager } from "./collabLocks.js";
 import { createCollabUndo } from "./collabUndo.js";
 import { readOnlyReason, roleAtLeast, uiPermissions } from "./collabRoles.js";
 import { createCollabClient } from "./collabClient.js";
+import { guestVisibleProjects } from "./collabController.js";
 
 function proj() {
   return {
@@ -91,6 +92,15 @@ test("campos do inspetor mapeiam para chaves e de volta", () => {
   assert.equal(keyForInputId("step-a", "prop-title"), "s:step-a:title");
   assert.equal(keyForInputId("step-a", "prop-xyz"), null);
   assert.equal(inputIdForKey("p:name"), null);
+  assert.equal(inputIdForKey("s:step-a:i18n.pt.description"), "prop-description");
+  assert.equal(inputIdForKey("s:step-a:side"), "prop-side");
+  assert.equal(fieldForDomTarget({ id: "prop-title" }), "title");
+  assert.equal(fieldForDomTarget({ id: "canvas-popover-body", dataset: { inline: "description" } }), "text");
+  assert.equal(fieldForDomTarget({ id: "canvas-caption", dataset: { inline: "caption" } }), "caption");
+  assert.equal(fieldForDomTarget({ id: "canvas-stage", dataset: {} }), null);
+  assert.equal(visualField("i18n.en.title"), "title");
+  assert.deepEqual(canvasIdsForField("text"), ["canvas-popover-body", "canvas-slide-body"]);
+  assert.deepEqual(canvasIdsForField("i18n.pt.description"), ["canvas-popover-body", "canvas-slide-body"]);
 });
 
 /* ---------- fila de ops ---------- */
@@ -445,6 +455,36 @@ test("cliente: primeiro state sem since → resync; 304 não dispara nada; event
   assert.equal(urls[1][1], 'W/"1.a"', "manda If-None-Match com o etag do corpo");
   assert.deepEqual(log, [["role", "editor"], ["presence", 1], ["locks", 0], ["resync", 1], ["presence", 0], ["locks", 1], ["events", 1], ["lost", 404]]);
   assert.equal(c.isRunning(), false);
+});
+
+test("cliente: 401 encerra como sessão, sem perda de acesso", async () => {
+  const log = [];
+  const c = createCollabClient({
+    projectId: "p1",
+    request: async () => ({ ok: false, status: 401, error: "unauthorized" }),
+    handlers: {
+      onAccessLost: (e) => log.push(["lost", e.status]),
+      onSessionLost: (e) => log.push(["session", e.status]),
+    },
+    setTimer: () => 0,
+    clearTimer: () => {},
+  });
+  assert.equal((await c.pollOnce()).terminal, true);
+  assert.deepEqual(log, [["session", 401]]);
+  assert.equal(c.isRunning(), false);
+});
+
+test("biblioteca do convidado só inclui os projetos do convite", () => {
+  const projects = [{ id: "local-a" }, { id: "local-b" }, { id: "local-c" }];
+  const map = {
+    "local-a": { remoteId: "remote-invited" },
+    "local-b": { remoteId: "remote-other" },
+  };
+  assert.deepEqual(
+    guestVisibleProjects(projects, map, ["remote-invited"]).map((p) => p.id),
+    ["local-a"],
+  );
+  assert.deepEqual(guestVisibleProjects(projects, map, []), []);
 });
 
 test("cliente: rede cai → offline, volta → online; sendOps traduz 402/403/429/409", async () => {
