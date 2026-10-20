@@ -72,29 +72,33 @@ function fakeDom(ids) {
   return { nodes, classes };
 }
 
-test("UI por papel: leitor/comentarista ficam somente leitura (inspetor inerte, faixa); editor edita; convidado perde publicar/cobrança/criar", () => {
+test("UI por papel: membro edita e vê cobrança/criar; só dono publica", () => {
   const ids = ["props-body", "btn-share-publish", "btn-share-revoke", "btn-share-republish", "btn-results", "btn-share-embed", "btn-account-billing", "btn-new-project"];
   const { nodes, classes } = fakeDom(ids);
   const ui = createCollabUi({ t: (k) => k });
   const banner = { hidden: true, textContent: "" };
-  // sem mount: o banner não existe; applyPermissions não pode quebrar
-  ui.applyPermissions(uiPermissions("viewer", { guest: true }), { readOnlyText: "só ver" });
-  assert.equal(nodes["props-body"].hasAttribute("inert"), true);
-  assert.ok(classes.has("collab-readonly"));
-  assert.equal(nodes["btn-share-publish"].hasAttribute("data-collab-hidden"), true);
-  assert.equal(nodes["btn-account-billing"].hasAttribute("data-collab-hidden"), true);
-  assert.equal(nodes["btn-new-project"].hasAttribute("data-collab-hidden"), true);
-
-  ui.applyPermissions(uiPermissions("editor", { guest: true }));
+  // membership antiga viewer ainda edita
+  ui.applyPermissions(uiPermissions("viewer"), { readOnlyText: "" });
   assert.equal(nodes["props-body"].hasAttribute("inert"), false);
   assert.ok(!classes.has("collab-readonly"));
-  assert.equal(nodes["btn-share-publish"].hasAttribute("data-collab-hidden"), true, "convidado editor ainda não publica");
-  assert.equal(nodes["btn-new-project"].hasAttribute("data-collab-hidden"), true);
+  assert.equal(nodes["btn-share-publish"].hasAttribute("data-collab-hidden"), true);
+  assert.equal(nodes["btn-account-billing"].hasAttribute("data-collab-hidden"), false);
+  assert.equal(nodes["btn-new-project"].hasAttribute("data-collab-hidden"), false);
 
-  ui.applyPermissions(uiPermissions("owner", { guest: false }));
+  ui.applyPermissions(uiPermissions("editor"));
+  assert.equal(nodes["props-body"].hasAttribute("inert"), false);
+  assert.ok(!classes.has("collab-readonly"));
+  assert.equal(nodes["btn-share-publish"].hasAttribute("data-collab-hidden"), true, "membro não publica");
+  assert.equal(nodes["btn-new-project"].hasAttribute("data-collab-hidden"), false);
+
+  ui.applyPermissions(uiPermissions("owner"));
   assert.equal(nodes["btn-share-publish"].hasAttribute("data-collab-hidden"), false);
   assert.equal(nodes["btn-account-billing"].hasAttribute("data-collab-hidden"), false);
   assert.equal(nodes["btn-new-project"].hasAttribute("data-collab-hidden"), false);
+
+  ui.applyPermissions(uiPermissions("owner", { readOnly: true }), { readOnlyText: "lapsed" });
+  assert.equal(nodes["props-body"].hasAttribute("inert"), true);
+  assert.ok(classes.has("collab-readonly"));
   void banner;
   delete globalThis.document;
 });
@@ -103,16 +107,17 @@ test("papéis: matriz de permissões do cliente espelha a do servidor", () => {
   const p = (r, o) => uiPermissions(r, o);
   assert.equal(p(null).collab, false);
   assert.equal(p(null).canCreateProject, true, "sem colaboração nada muda");
-  assert.equal(p("viewer").canEdit, false);
-  assert.equal(p("commenter").canEdit, false);
+  assert.equal(p("viewer").canEdit, true);
+  assert.equal(p("commenter").canEdit, true);
   assert.equal(p("commenter").canComment, true);
   assert.equal(p("editor").canEdit, true);
   assert.equal(p("editor").canInvite, false);
   assert.equal(p("owner").canInvite, true);
   assert.equal(p("owner", { readOnly: true }).canEdit, false, "dono sem Team: todos somente leitura");
-  assert.equal(p("editor", { guest: true }).canPublish, false);
-  assert.equal(p("editor", { guest: true }).seeBilling, false);
-  assert.equal(p("owner", { guest: true }).canDeleteProject, false);
+  assert.equal(p("editor").canPublish, false);
+  assert.equal(p("editor").seeBilling, true);
+  assert.equal(p("editor").canDeleteProject, false);
+  assert.equal(p("owner").canDeleteProject, true);
 });
 
 /* ---------- controlador com servidor falso ---------- */
@@ -124,10 +129,22 @@ function memStorage() {
   const m = new Map();
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
 }
+function stubDocument() {
+  globalThis.document = {
+    addEventListener() {},
+    removeEventListener() {},
+    getElementById: () => null,
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    createElement: () => ({ style: {}, setAttribute() {}, append() {}, addEventListener() {} }),
+    body: { append() {}, classList: { add() {}, remove() {}, toggle() {} } },
+  };
+}
 
 test("controlador: edição local vira op, o servidor confirma (rev) e o desfazer manda o patch inverso", async () => {
+  stubDocument();
   const storage = memStorage();
-  storage.setItem("guiaflow.collab.v1", JSON.stringify({ L1: { remoteId: "R1", role: "owner", guest: false } }));
+  storage.setItem("guiaflow.collab.v1", JSON.stringify({ L1: { remoteId: "R1", role: "owner" } }));
   const project = { id: "L1", name: "Tour", steps: [{ id: "s1", scene: 1, label: "A", type: "screen", image: "", caption: "oi", popover: { title: "T", description: "D" }, pos: "V" }], customImages: {} };
   const sent = [];
   const revs = { "s:s1:caption": { rev: 1 } };
@@ -169,27 +186,44 @@ test("controlador: edição local vira op, o servidor confirma (rev) e o desfaze
   assert.equal(undoStates.at(-1)?.canRedo, true, "o desfazer não é gravado como nova ação");
   await c.detach();
   assert.equal(c.isActive(), false);
+  delete globalThis.document;
 });
 
-test("controlador: leitor não envia ops; a edição local é revertida e nada sai", async () => {
+test("controlador: membership antiga viewer vira escrita e envia ops", async () => {
+  stubDocument();
   const storage = memStorage();
-  storage.setItem("guiaflow.collab.v1", JSON.stringify({ L2: { remoteId: "R2", role: "viewer", guest: true } }));
+  storage.setItem("guiaflow.collab.v1", JSON.stringify({ L2: { remoteId: "R2", role: "viewer" } }));
   const project = { id: "L2", name: "Tour", steps: [{ id: "s1", scene: 1, label: "A", type: "screen", image: "", caption: "oi", popover: {}, pos: "V" }], customImages: {} };
-  let opsCalls = 0;
-  const request = async (path) => {
-    if (path.includes("/collab/state")) return { ok: true, status: 200, data: { ok: true, seq: 1, etag: "e", you: { userId: "u2", name: "Lia" }, role: "viewer", presence: [], locks: [], events: [], resync: true, project: { id: "R2", name: "Tour", revision: 1, payload: { name: "Tour", steps: structuredClone(project.steps), collab: { enabled: true, tombstones: {} } } }, fieldRevs: {} } };
-    if (path.endsWith("/collab/ops")) opsCalls += 1;
+  const sent = [];
+  const request = async (path, init = {}) => {
+    if (path.includes("/collab/state")) {
+      return {
+        ok: true, status: 200,
+        data: {
+          ok: true, seq: 1, etag: "e", you: { userId: "u2", name: "Lia" }, role: "viewer",
+          presence: [], locks: [], events: [], resync: true,
+          project: { id: "R2", name: "Tour", revision: 1, payload: { name: "Tour", steps: structuredClone(project.steps), collab: { enabled: true, tombstones: {} } } },
+          fieldRevs: { "s:s1:caption": { rev: 1 } },
+        },
+      };
+    }
+    if (path.endsWith("/collab/ops")) {
+      const { ops } = JSON.parse(init.body);
+      sent.push(ops);
+      return { ok: true, status: 200, data: { ok: true, seq: 2, applied: ops.map((o) => ({ key: o.key, rev: (o.baseRev || 0) + 1, prev: "oi" })), rejected: [] } };
+    }
     return { ok: true, status: 200, data: { ok: true } };
   };
   const c = createCollabController({ t: (k) => k, ui: uiStub(), request, storage, getProject: () => project, getSelectedIndex: () => 0, setSelectedIndex() {}, refresh() {}, persistLocal() {}, confirmDialog: async () => true, fetchMedia: async () => "", uploadMedia: async () => ({ ok: true }) });
   await c.attach("L2");
   await new Promise((r) => setTimeout(r, 30));
-  assert.equal(c.perms().canEdit, false);
-  project.steps[0].caption = "hack";
+  assert.equal(c.perms().canEdit, true, "viewer legado edita");
+  assert.equal(c.perms().canInvite, false);
+  project.steps[0].caption = "olá";
   c.onLocalChange();
   await c.flush();
-  assert.equal(opsCalls, 0);
-  assert.equal(project.steps[0].caption, "oi");
+  assert.equal(sent.length, 1);
+  assert.equal(project.steps[0].caption, "olá");
   await c.detach();
-  assert.deepEqual(Object.keys(readCollabMap(storage)), ["L2"]);
+  delete globalThis.document;
 });

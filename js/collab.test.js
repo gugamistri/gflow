@@ -410,21 +410,22 @@ test("papéis: matriz de permissões da UI", () => {
   assert.equal(off.canEdit && off.canCreateProject && off.canPublish && off.seeBilling, true);
   const owner = uiPermissions("owner");
   assert.deepEqual([owner.canEdit, owner.canInvite, owner.canManageMembers, owner.canPublish, owner.canDeleteProject, owner.seeBilling], [true, true, true, true, true, true]);
-  const editor = uiPermissions("editor", { guest: true });
-  assert.deepEqual([editor.canEdit, editor.canInvite, editor.canCreateProject, editor.canDeleteProject, editor.canPublish, editor.seeBilling, editor.seeAnalytics], [true, false, false, false, false, false, false]);
-  const commenter = uiPermissions("commenter", { guest: true });
-  assert.deepEqual([commenter.canEdit, commenter.canComment, commenter.readOnlyBanner], [false, true, true]);
-  const viewer = uiPermissions("viewer", { guest: true });
-  assert.deepEqual([viewer.canEdit, viewer.canComment, viewer.canInvite, viewer.readOnlyBanner], [false, false, false, true]);
+  // membro edita; só dono convida/publica; criar local e cobrança ficam (plano é da conta)
+  const editor = uiPermissions("editor");
+  assert.deepEqual([editor.canEdit, editor.canInvite, editor.canCreateProject, editor.canDeleteProject, editor.canPublish, editor.seeBilling, editor.seeAnalytics], [true, false, true, false, false, true, false]);
+  const commenter = uiPermissions("commenter");
+  assert.deepEqual([commenter.canEdit, commenter.canComment, commenter.readOnlyBanner], [true, true, false]);
+  const viewer = uiPermissions("viewer");
+  assert.deepEqual([viewer.canEdit, viewer.canComment, viewer.canInvite, viewer.readOnlyBanner], [true, true, false, false]);
   const lapsed = uiPermissions("owner", { readOnly: true });
   assert.equal(lapsed.canEdit, false);
   assert.equal(lapsed.canInvite, false);
-  assert.equal(readOnlyReason("viewer"), "collab.readonly.viewer");
+  assert.equal(readOnlyReason("viewer"), "");
   assert.equal(readOnlyReason("owner", { readOnly: true }), "collab.readonly.owner");
   assert.equal(readOnlyReason("editor"), "");
-  assert.equal(roleAtLeast("editor", "commenter"), true);
-  assert.equal(roleAtLeast("viewer", "editor"), false);
-  assert.equal(roleAtLeast("x", "viewer"), false);
+  assert.equal(roleAtLeast("editor", "editor"), true);
+  assert.equal(roleAtLeast("viewer", "editor"), true);
+  assert.equal(roleAtLeast("x", "editor"), false);
 });
 
 /* ---------- cliente de rede ---------- */
@@ -480,17 +481,10 @@ test("nome da cena: só as cenas que mudaram", () => {
   assert.deepEqual(changedSceneNumbers(null, { 1: "A" }), ["1"]);
 });
 
-test("biblioteca do convidado só inclui os projetos do convite", () => {
+test("biblioteca local não filtra por membership", () => {
   const projects = [{ id: "local-a" }, { id: "local-b" }, { id: "local-c" }];
-  const map = {
-    "local-a": { remoteId: "remote-invited" },
-    "local-b": { remoteId: "remote-other" },
-  };
-  assert.deepEqual(
-    guestVisibleProjects(projects, map, ["remote-invited"]).map((p) => p.id),
-    ["local-a"],
-  );
-  assert.deepEqual(guestVisibleProjects(projects, map, []), []);
+  assert.deepEqual(guestVisibleProjects(projects).map((p) => p.id), ["local-a", "local-b", "local-c"]);
+  assert.deepEqual(guestVisibleProjects([]), []);
 });
 
 test("cliente: rede cai → offline, volta → online; sendOps traduz 402/403/429/409", async () => {

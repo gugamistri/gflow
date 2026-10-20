@@ -307,7 +307,7 @@ export function readCloudSession(now = Date.now()) {
       return null;
     }
     const email = typeof data?.email === "string" ? data.email.trim() : "";
-    return { accessToken, email, guest: data.guest === true };
+    return { accessToken, email };
   } catch {
     return null;
   }
@@ -323,7 +323,6 @@ export function writeCloudSession(session) {
     accessToken,
     email: typeof session?.email === "string" ? session.email.trim() : "",
   };
-  if (session?.guest === true) next.guest = true;
   writeLocal(CLOUD_SESSION_KEY, JSON.stringify(next));
   return next;
 }
@@ -338,9 +337,9 @@ export function getCloudAccount() {
   return { signedIn: true, email: session.email || "" };
 }
 
-/** Conta criada (ou marcada) pelo convite. Não é o dono dos projetos deste navegador. */
+/** @deprecated Acesso é por membership no projeto; plano none/pro/team é outro eixo. */
 export function isGuestSession() {
-  return readCloudSession()?.guest === true;
+  return false;
 }
 
 function resolveAccessToken(request, env) {
@@ -738,7 +737,6 @@ export async function establishCloudSession(pasted, env, { emailHint = "", force
     writeCloudSession({
       accessToken: parsed.token,
       email: typeof email === "string" ? email : "",
-      guest: session.data?.user?.role === "guest",
     });
     return { ok: true, email: typeof email === "string" ? email : "" };
   }
@@ -760,7 +758,6 @@ export async function establishCloudSession(pasted, env, { emailHint = "", force
   writeCloudSession({
     accessToken: accessToken.trim(),
     email: typeof email === "string" ? email : "",
-    guest: verified.data?.user?.role === "guest",
   });
   return { ok: true, email: typeof email === "string" ? email : "" };
 }
@@ -770,7 +767,7 @@ function sessionFromAuthPayload(result, emailHint) {
   if (!result?.ok || !accessToken) return null;
   const email = result.data?.user?.email || result.data?.email || emailHint || "";
   const safeEmail = typeof email === "string" ? email.trim() : "";
-  writeCloudSession({ accessToken, email: safeEmail, guest: result.data?.user?.role === "guest" });
+  writeCloudSession({ accessToken, email: safeEmail });
   return { ok: true, email: safeEmail };
 }
 
