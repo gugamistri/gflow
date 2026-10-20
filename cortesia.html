@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Cortesia em troca de feedback — GuiaFlow</title>
+  <meta name="description" content="Peça uma cortesia do GuiaFlow Pro em troca de feedback. Conte para que você usaria." />
+  <link rel="canonical" href="https://guiaflow.pro/cortesia" />
+  <meta name="theme-color" content="#101010" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Cortesia em troca de feedback — GuiaFlow" />
+  <meta property="og:description" content="Peça uma cortesia do GuiaFlow Pro em troca de feedback. Conte para que você usaria." />
+  <meta property="og:url" content="https://guiaflow.pro/cortesia" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-landing.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cortesia em troca de feedback — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing.png" />
+  <script>
+    (function () {
+      try {
+        if (window.__GUIAFLOW_CLOUD__) return;
+        var host = location.hostname;
+        if (host === "guiaflow-seven.vercel.app" || host === "guiaflow.pro") {
+          window.__GUIAFLOW_CLOUD__ = "https://app.guiaflow.pro";
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/143/css/landing.css" />
+  <style>
+    .site-header .header-row > .btn { margin-left: auto; }
+    .courtesy-page { padding: 56px 0 80px; }
+    .courtesy-page .wrap { width: min(640px, calc(100% - 40px)); }
+    .courtesy-page h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); margin: 0; }
+    .courtesy-lead { color: var(--muted); margin: 12px 0 28px; }
+    .field .hint { color: var(--muted); font-weight: 400; }
+    .phone-row {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid #d4d4d8;
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .phone-row:focus-within {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+    }
+    .phone-row:has(input[aria-invalid="true"]) { border-color: #dc2626; }
+    .phone-prefix {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      border-right: 1px solid #d4d4d8;
+      background: var(--bg-soft);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .phone-prefix .gf-flag { width: 22px; height: 15px; border-radius: 2px; flex: none; }
+    .phone-row input {
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .phone-row input:focus { border-color: transparent; box-shadow: none; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="/" aria-label="GuiaFlow">
+        <img src="/a/143/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" />
+      </a>
+      <a class="btn btn-primary btn-sm" href="/editor">Abrir editor</a>
+    </div>
+  </header>
+  <main class="courtesy-page">
+    <div class="wrap">
+      <p class="eyebrow">Cortesia</p>
+      <h1>Use o GuiaFlow Pro em troca de feedback</h1>
+      <form class="card tester-form" id="courtesy-form" novalidate>
+        <div class="field">
+          <label for="cf-email">E-mail</label>
+          <input id="cf-email" name="email" type="email" autocomplete="email" maxlength="200" required />
+        </div>
+        <div class="field">
+          <label for="cf-whatsapp">WhatsApp <span class="hint">(opcional, se quiser entrar no grupo de beta testers)</span></label>
+          <div class="phone-row">
+            <span class="phone-prefix">
+              <svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false"><rect width="30" height="20" fill="#009b3a"/><polygon points="15,2.5 27.5,10 15,17.5 2.5,10" fill="#fedf00"/><circle cx="15" cy="10" r="4.6" fill="#002776"/><path d="M10.6 9.2c3-.9 6.3-.5 8.8 1.1" stroke="#fff" stroke-width=".9" fill="none"/></svg>
+              <span>+55</span>
+            </span>
+            <input id="cf-whatsapp" name="whatsapp" type="tel" autocomplete="tel-national" inputmode="numeric" maxlength="20" placeholder="(11) 99999-8888" aria-describedby="cf-whatsapp-hint" />
+          </div>
+          <span id="cf-whatsapp-hint" class="visually-hidden">Brasil, DDI +55. DDD e celular no formato (11) 99999-8888.</span>
+        </div>
+        <div class="field">
+          <label for="cf-usecase">Para que você usaria o GuiaFlow?</label>
+          <textarea id="cf-usecase" name="useCase" rows="4" maxlength="1000" required placeholder="Ex.: mandar um demo do produto para leads depois da primeira call"></textarea>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="cf-website">Website</label>
+          <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <label class="consent">
+          <input id="cf-consent" name="consent" type="checkbox" required />
+          <span>Concordo que o GuiaFlow use estes dados para avaliar o pedido de cortesia e falar comigo sobre o acesso, conforme a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Pedir cortesia</button>
+        <p class="form-status" id="cf-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <img src="/a/143/brand/logo-dark.svg" alt="GuiaFlow" width="112" height="23" loading="lazy" />
+      <nav aria-label="Links do rodapé">
+        <a href="/editor">Editor</a>
+        <a href="/ajuda">Ajuda</a>
+        <a href="/privacidade">Privacidade</a>
+        <a href="/termos">Termos</a>
+      </nav>
+    </div>
+  </footer>
+  <script>
+    (function () {
+      var form = document.getElementById("courtesy-form");
+      var status = document.getElementById("cf-status");
+      if (!form || !status) return;
+      var fields = { email: "cf-email", whatsapp: "cf-whatsapp", useCase: "cf-usecase", consent: "cf-consent" };
+      function say(kind, html) {
+        status.className = "form-status" + (kind ? " " + kind : "");
+        status.innerHTML = html;
+      }
+      function cloudBase() {
+        var value = window.__GUIAFLOW_CLOUD__;
+        if (value && typeof value === "object") value = value.baseUrl;
+        if (typeof value !== "string") return "";
+        try {
+          var url = new URL(value);
+          if (url.protocol !== "https:" && url.protocol !== "http:") return "";
+          return url.origin;
+        } catch (e) {
+          return "";
+        }
+      }
+      var phone = document.getElementById("cf-whatsapp");
+      function phoneDigits(value) {
+        var digits = String(value || "").replace(/\D/g, "");
+        if (digits.indexOf("55") === 0 && digits.length > 11) digits = digits.slice(2);
+        return digits.slice(0, 11);
+      }
+      function maskPhone(digits) {
+        if (!digits) return "";
+        if (digits.length <= 2) return "(" + digits;
+        var rest = digits.slice(2);
+        if (rest.length <= 5) return "(" + digits.slice(0, 2) + ") " + rest;
+        return "(" + digits.slice(0, 2) + ") " + rest.slice(0, 5) + "-" + rest.slice(5);
+      }
+      function phoneValue() {
+        var digits = phoneDigits(phone.value);
+        return digits ? "+55" + digits : "";
+      }
+      phone.addEventListener("input", function () {
+        var next = maskPhone(phoneDigits(phone.value));
+        if (phone.value !== next) phone.value = next;
+      });
+      function read() {
+        return {
+          email: document.getElementById("cf-email").value.trim(),
+          whatsapp: phoneValue(),
+          useCase: document.getElementById("cf-usecase").value.trim(),
+          consent: document.getElementById("cf-consent").checked,
+          website: document.getElementById("cf-website").value,
+        };
+      }
+      function mailto(body) {
+        var text = ["E-mail: " + body.email, "WhatsApp: " + (body.whatsapp || "-"), "Uso: " + body.useCase].join("\n");
+        return "mailto:contato@guiaflow.pro?subject=" + encodeURIComponent("Pedido de cortesia GuiaFlow") + "&body=" + encodeURIComponent(text);
+      }
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        Object.keys(fields).forEach(function (key) {
+          document.getElementById(fields[key]).removeAttribute("aria-invalid");
+        });
+        var body = read();
+        var bad = "";
+        var phoneDigitsOnly = body.whatsapp.replace(/\D/g, "");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) bad = "email";
+        else if (body.whatsapp && !/^55[1-9][1-9]9\d{8}$/.test(phoneDigitsOnly)) bad = "whatsapp";
+        else if (!body.useCase) bad = "useCase";
+        else if (!body.consent) bad = "consent";
+        if (bad) {
+          var el = document.getElementById(fields[bad]);
+          if (el) { el.setAttribute("aria-invalid", "true"); el.focus(); }
+          var msg = bad === "email" ? "Informe um e-mail válido." : bad === "whatsapp" ? "Use o DDD e o celular: (11) 99999-8888." : bad === "useCase" ? "Conte para que você usaria o GuiaFlow." : "Marque o consentimento para enviar.";
+          say("err", msg);
+          return;
+        }
+        var base = cloudBase();
+        var button = form.querySelector('button[type="submit"]');
+        var fail = function () {
+          say("err", 'Não foi possível enviar agora. Escreva para <a href="' + mailto(body).replace(/"/g, "%22") + '">contato@guiaflow.pro</a>.');
+        };
+        if (!base) { fail(); return; }
+        button.disabled = true;
+        say("", "Enviando…");
+        fetch(base + "/api/courtesy-requests", {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ email: body.email, whatsapp: body.whatsapp, useCase: body.useCase, consent: true, locale: "pt", consentText: document.querySelector(".consent span").textContent.trim(), website: body.website }),
+        }).then(function (res) {
+          if (res.status === 201 || res.ok) {
+            form.reset();
+            say("ok", "Pedido recebido.");
+          } else if (res.status === 429) {
+            say("err", "Muitos envios agora. Tente de novo mais tarde.");
+          } else if (res.status === 400) {
+            return res.json().then(function (payload) {
+              var field = payload && payload.field;
+              if (field && fields[field]) {
+                var input = document.getElementById(fields[field]);
+                input.setAttribute("aria-invalid", "true");
+                input.focus();
+              }
+              say("err", field === "whatsapp" ? "Use o DDD e o celular: (11) 99999-8888." : "Não foi possível enviar. Revise os campos.");
+            });
+          } else {
+            fail();
+          }
+        }).catch(fail).finally(function () { button.disabled = false; });
+      });
+    })();
+  </script>
+</body>
+</html>
