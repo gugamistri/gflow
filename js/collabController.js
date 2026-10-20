@@ -32,6 +32,16 @@ function writeCollabMap(storage, map) {
   try { storage?.setItem(COLLAB_MAP_KEY, JSON.stringify(map)); } catch { /* cota */ }
 }
 
+/** Marca um projeto local como colaborativo sem apagar uma entrada que já existe. */
+export function noteCollabProject(storage, localId, entry) {
+  if (!localId || !entry?.remoteId) return false;
+  const map = readCollabMap(storage);
+  if (map[localId]) return false;
+  map[localId] = entry;
+  writeCollabMap(storage, map);
+  return true;
+}
+
 export function createCollabController(deps) {
   const {
     t, ui, request, storage = typeof localStorage !== "undefined" ? localStorage : null,
