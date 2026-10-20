@@ -47,6 +47,8 @@ Cada publicação mexe num host só.
 
 **Editor (este repo).** Não há GitHub Action. Produção é `vercel deploy --prod` na raiz do `gflow`, que publica `guiaflow.pro`. O gancho `.cursor/hooks/deploy-vercel-on-push.sh` roda esse comando depois de um `git push` com sucesso feito pelo Cursor. Um merge no GitHub, sem esse push local, não publica o site. Preview de branch continua sendo outro deploy, sem `--prod`.
 
+`vercel.json` marca `/a/:n/*` como `immutable` por um ano. Se o diff mexe em `css/`, `js/`, `brand/`, `fonts/` ou `vendor/`, suba o prefixo (`a/138` → `a/139` na próxima) em todo HTML e em `api/lib/view-shell.cjs` no mesmo commit, antes do deploy. Sem isso o navegador continua com o CSS e o JS antigos. Confira `https://guiaflow.pro/editor` e a URL `a/<n>/` nova depois de publicar.
+
 **API (`guiaflow-cloud`).** Merge em `main` publica no Coolify sozinho. Base `/apps/api`, porta `4000`, comando `node src/index.js`. Produção fica com `DATABASE_URL` Postgres e sem `GUIAFLOW_DEV_TOKEN`. `COLLAB_ENABLED` é variável do host. Um commit só de editor não entra nesse repo e não pede deploy da API.
 
 Antes de publicar a API, o diff tem de ser só de `guiaflow-cloud`. Antes de publicar o editor, o diff tem de ser só de `gflow`. `.env` não entra em nenhum dos dois.

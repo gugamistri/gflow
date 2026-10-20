@@ -9,7 +9,7 @@ Este checkout é o editor MIT (`gflow`). A API dos planos pagos é o git vizinho
 
 Antes de listar pastas ou varrer `js/`, abra `docs/AGENT-MAP.md` e siga a linha da tarefa. Abra só os arquivos dessa linha.
 
-- Subir os dois ou publicar: `docs/REPOS.md` (Vercel só aqui; Coolify só na nuvem).
+- Subir os dois ou publicar: `docs/REPOS.md` (Vercel só aqui; Coolify só na nuvem). Estático mudou: subir `a/N` antes do deploy.
 - Contrato do plano Pro: `docs/CLOUD.md`.
 - Registro das rotas: `../guiaflow-cloud/apps/api/src/app.js`.
 
