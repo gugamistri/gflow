@@ -36,7 +36,7 @@ import {
 } from "./projects.js";
 import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
 import { parseCommentLink } from "./comments.js";
-import { createCollabController, noteCollabProject, readCollabMap } from "./collabController.js";
+import { createCollabController, guestVisibleProjects, noteCollabProject, readCollabMap } from "./collabController.js";
 import { createCollabUi } from "./collabUi.js";
 import { formatBytes } from "./mediaBytes.js";
 import {
@@ -117,6 +117,7 @@ import {
   exchangeCloudAuthCode,
   PUBLISHED_CLOUD_BASE,
   getCloudAccount,
+  isGuestSession,
   getCloudBaseUrl,
   getCloudFlags,
   isCloudEnabled,
@@ -1380,7 +1381,20 @@ function ensureCollab() {
     closeToLibrary: () => void closeProject(),
     setSession: (session) => {
       writeCloudSession(session);
+      if (session?.guest === true) guestScope = true;
       reconcileSync();
+    },
+    onSharedOpen: (item) => {
+      if (!item?.projectId) return;
+      if (!sharedCache.some((entry) => entry.projectId === item.projectId)) {
+        sharedCache = sharedCache.concat([{
+          projectId: item.projectId,
+          name: item.name || "",
+          role: item.role || "",
+          owner: item.owner || null,
+        }]);
+      }
+      sharedReady = true;
     },
     onUndoState: (state) => {
       collabUndoState = state || { canUndo: false, canRedo: false };
@@ -1450,9 +1464,59 @@ function handleJoinHash() {
 
 let sharedFetchedAt = 0;
 let sharedCache = [];
+let sharedReady = false;
+let guestScope = false;
+
+function isGuestAccount() {
+  return isGuestSession() || guestScope;
+}
+
+function guestMayOpen(localId) {
+  if (!isGuestAccount()) return true;
+  const remote = readCollabMap(localStorage)[localId]?.remoteId;
+  if (!remote || !sharedReady) return false;
+  return sharedCache.some((item) => item.projectId === remote);
+}
+
+function applyGuestRole(role) {
+  if (role == null) return;
+  const wasGuest = isGuestAccount();
+  const session = readCloudSession();
+  const guest = role === "guest";
+  guestScope = guest;
+  if (session && Boolean(session.guest) !== guest) writeCloudSession({ ...session, guest });
+  if (wasGuest !== isGuestAccount() && chromeView === "library") renderLibrary();
+}
+
+async function prefetchShared() {
+  if (!collabFlagOn() || !getCloudAccount().signedIn || !ensureCollab()) return;
+  sharedCache = await collab.listShared();
+  sharedReady = true;
+  sharedFetchedAt = Date.now();
+}
+
+/** Convidado sem projetos próprios: a biblioteca fica só no que /collab/shared listar. */
+async function refreshGuestScope() {
+  guestScope = isGuestSession();
+  if (!getCloudAccount().signedIn || !collabFlagOn() || !ensureCollab()) return;
+  if (guestScope) {
+    await prefetchShared();
+    return;
+  }
+  const [items, owned] = await Promise.all([
+    collab.listShared(),
+    cloudFetch("/projects", { method: "GET" }),
+  ]);
+  sharedCache = items;
+  sharedReady = true;
+  sharedFetchedAt = Date.now();
+  const ownedCount = owned.ok && Array.isArray(owned.data?.projects) ? owned.data.projects.length : -1;
+  if (ownedCount === 0 && items.length > 0) guestScope = true;
+}
+
 function renderSharedList() {
   const section = document.getElementById("library-shared");
-  const guest = Boolean(collab?.guestAccount());
+  const guest = Boolean(collab?.guestAccount()) || isGuestAccount();
   document.body.classList.toggle("collab-guest-account", guest);
   if (!section || !collabFlagOn() || !getCloudAccount().signedIn || !ensureCollab()) {
     if (section) section.hidden = true;
@@ -1467,7 +1531,10 @@ function renderSharedList() {
   sharedFetchedAt = Date.now();
   void collab.listShared().then((items) => {
     sharedCache = items;
-    if (chromeView === "library") paint();
+    sharedReady = true;
+    if (chromeView !== "library") return;
+    paint();
+    if (isGuestAccount()) renderLibraryGrid();
   });
 }
 
@@ -1673,6 +1740,7 @@ async function refreshEntitlement(sessionId = "") {
       result?.ok ? result.entitlement : null,
       profile?.ok ? profile.profile : null
     );
+    if (profile?.ok) applyGuestRole(profile.role);
   } else {
     billingView = { status: "hidden" };
     billingEntitlement = emptyEntitlement();
@@ -2730,16 +2798,24 @@ function bindOptimizeModal() {
 
 function renderLibrary() {
   renderSharedList();
+  renderLibraryGrid();
+}
+
+function renderLibraryGrid() {
   const index = readIndex();
   const grid = document.getElementById("library-grid");
   const empty = document.getElementById("library-empty");
-  const projects = index.projects || [];
+  if (!grid || !empty) return;
+  const all = index.projects || [];
+  const projects = isGuestAccount()
+    ? (sharedReady ? guestVisibleProjects(all, readCollabMap(localStorage), sharedCache.map((item) => item.projectId)) : [])
+    : all;
 
   const hint = document.getElementById("library-import-hint");
   const compact = isCompactTouch();
   if (!projects.length) {
     grid.innerHTML = "";
-    empty.hidden = compact;
+    empty.hidden = compact || isGuestAccount();
     if (!compact) empty.textContent = t("library.empty");
     if (hint) hint.hidden = !compact;
     return;
@@ -2844,6 +2920,10 @@ function setProjectOpenBusy(busy) {
 }
 
 async function openProject(id, { autoPreview = false } = {}) {
+  if (!guestMayOpen(id)) {
+    showLibrary();
+    return;
+  }
   const overlay = document.getElementById("project-open-overlay");
   const showOverlayTimer = setTimeout(() => {
     // why: no boot o splash já cobre — evita overlay duplicado piscando
@@ -4166,8 +4246,14 @@ function bindChrome() {
     accountDialogWantsPublish = false;
     closeAccountMenus();
     resetBillingView();
+    await collab?.endSessionQuietly?.();
     await endCloudSession();
+    guestScope = false;
+    sharedCache = [];
+    sharedReady = false;
+    sharedFetchedAt = 0;
     paintCloudShare();
+    if (chromeView === "library") renderLibrary();
   }
 
   async function afterAccountSignedIn() {
@@ -4180,6 +4266,9 @@ function bindChrome() {
     closeAccountDialog();
     paintCloudShare();
     await refreshEntitlement();
+    await refreshGuestScope();
+    if (isGuestAccount() && project?.id && !guestMayOpen(project.id)) await closeProject();
+    else if (chromeView === "library") renderLibrary();
     editor.paintHostedBadges?.();
     paintExportMark();
     if (resume) {
@@ -4711,11 +4800,14 @@ async function boot() {
   bindChrome();
   bindCaptureInbox();
   ensureCollab();
+  if (getCloudAccount().signedIn && collabFlagOn()) {
+    try { await refreshGuestScope(); } catch (err) { console.error(err); }
+  }
 
   const index = readIndex();
   const bootGeneration = captureGeneration;
   try {
-    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration) && index.activeProjectId) {
+    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration) && index.activeProjectId && guestMayOpen(index.activeProjectId)) {
       const loaded = await getProject(index.activeProjectId);
       if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
         /* a captura já abriu o projeto enquanto este carregava */
@@ -4729,7 +4821,7 @@ async function boot() {
 
     if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) return;
 
-    if (seeded) {
+    if (!isGuestAccount() && seeded) {
       const first = (readIndex().projects || [])[0];
       if (first?.id && !bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
         await openProject(first.id, { autoPreview: !joinPending });

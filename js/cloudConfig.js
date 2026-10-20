@@ -307,7 +307,7 @@ export function readCloudSession(now = Date.now()) {
       return null;
     }
     const email = typeof data?.email === "string" ? data.email.trim() : "";
-    return { accessToken, email };
+    return { accessToken, email, guest: data.guest === true };
   } catch {
     return null;
   }
@@ -323,6 +323,7 @@ export function writeCloudSession(session) {
     accessToken,
     email: typeof session?.email === "string" ? session.email.trim() : "",
   };
+  if (session?.guest === true) next.guest = true;
   writeLocal(CLOUD_SESSION_KEY, JSON.stringify(next));
   return next;
 }
@@ -335,6 +336,11 @@ export function getCloudAccount() {
   const session = readCloudSession();
   if (!session) return { signedIn: false, email: "" };
   return { signedIn: true, email: session.email || "" };
+}
+
+/** Conta criada (ou marcada) pelo convite. Não é o dono dos projetos deste navegador. */
+export function isGuestSession() {
+  return readCloudSession()?.guest === true;
 }
 
 function resolveAccessToken(request, env) {
@@ -729,7 +735,11 @@ export async function establishCloudSession(pasted, env, { emailHint = "", force
     if (!session.ok) return session;
     const email =
       session.data?.user?.email || session.data?.email || hint;
-    writeCloudSession({ accessToken: parsed.token, email: typeof email === "string" ? email : "" });
+    writeCloudSession({
+      accessToken: parsed.token,
+      email: typeof email === "string" ? email : "",
+      guest: session.data?.user?.role === "guest",
+    });
     return { ok: true, email: typeof email === "string" ? email : "" };
   }
   const verified = await cloudFetch(
@@ -750,6 +760,7 @@ export async function establishCloudSession(pasted, env, { emailHint = "", force
   writeCloudSession({
     accessToken: accessToken.trim(),
     email: typeof email === "string" ? email : "",
+    guest: verified.data?.user?.role === "guest",
   });
   return { ok: true, email: typeof email === "string" ? email : "" };
 }
@@ -759,7 +770,7 @@ function sessionFromAuthPayload(result, emailHint) {
   if (!result?.ok || !accessToken) return null;
   const email = result.data?.user?.email || result.data?.email || emailHint || "";
   const safeEmail = typeof email === "string" ? email.trim() : "";
-  writeCloudSession({ accessToken, email: safeEmail });
+  writeCloudSession({ accessToken, email: safeEmail, guest: result.data?.user?.role === "guest" });
   return { ok: true, email: safeEmail };
 }
 

@@ -41,9 +41,17 @@ export function createCollabClient({
     h("onOnline", value);
   }
 
-  /** Erros que encerram a sessão colaborativa deste projeto. */
+  /**
+   * Encerra o polling. 401 é sessão (logout ou token vencido), não perda do convite.
+   * 403/404 é acesso ao projeto: papel insuficiente ou membership revogada.
+   */
   function terminal(res) {
-    if (res.status === 404 || res.status === 403 || res.status === 401) {
+    if (res.status === 401) {
+      h("onSessionLost", { status: res.status, error: res.error });
+      stop();
+      return true;
+    }
+    if (res.status === 404 || res.status === 403) {
       h("onAccessLost", { status: res.status, error: res.error });
       stop();
       return true;
