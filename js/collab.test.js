@@ -475,6 +475,31 @@ test("cliente: 401 encerra como sessão, sem perda de acesso", async () => {
   assert.equal(c.isRunning(), false);
 });
 
+test("presença: vários focos seguidos viram um POST; o próximo espera a janela", async () => {
+  let clock = 10_000;
+  const posts = [];
+  const timers = [];
+  const c = createCollabClient({
+    projectId: "p1",
+    now: () => clock,
+    request: async (path) => { posts.push([clock, path]); return { ok: true, status: 200, data: {} }; },
+    getStep: () => "s1",
+    getField: () => "title",
+    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
+    clearTimer: () => {},
+  });
+  assert.equal((await c.sendPresence({ force: true })).status, 200);
+  assert.equal(await c.sendPresence({ force: true }), null);
+  assert.equal(await c.sendPresence({ force: true }), null);
+  assert.equal(posts.length, 1);
+  assert.equal(timers.length, 1);
+  assert.ok(timers[0].ms > 0 && timers[0].ms <= 3_500);
+  clock += 3_500;
+  assert.equal((await c.sendPresence()).status, 200);
+  assert.equal(posts.length, 2);
+  assert.ok(posts.every((p) => p[1].endsWith("/collab/presence")));
+});
+
 test("nome da cena: só as cenas que mudaram", () => {
   assert.deepEqual(changedSceneNumbers({ 1: "A", 2: "B" }, { 1: "A", 2: "C" }), ["2"]);
   assert.deepEqual(changedSceneNumbers({ 1: "A" }, { 1: "A", 3: "Nova" }), ["3"]);
