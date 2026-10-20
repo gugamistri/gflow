@@ -312,7 +312,9 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
       const label = document.querySelector(`.film-scene[data-scene="${CSS.escape(String(n))}"] .film-scene-label`);
       if (label) nodes.push(label);
       const kicker = document.getElementById("canvas-slide-kicker");
-      if (kicker && String(kicker.dataset.scene) === String(n) && isShown(kicker)) nodes.push(kicker);
+      if (kicker && String(kicker.dataset.scene) === String(n) && isShown(kicker)) {
+        nodes.push(kicker.querySelector(".kicker-scene-name") || kicker);
+      }
     }
     return nodes;
   }
