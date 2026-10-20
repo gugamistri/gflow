@@ -6,7 +6,7 @@
 import { collectAssetRefs, dehydrate, hydrate } from "./cloudSync.js";
 import { createCollabClient } from "./collabClient.js";
 import { createCommentsUi } from "./commentsUi.js";
-import { applyField, FIELD_INPUT_IDS, fieldForDomTarget, fieldLabelKey, inputIdForKey, normalizePositions, parseKey, readField, snapshotProject, stepIdOf, stepKey, TEXT_FIELDS } from "./collabModel.js";
+import { applyField, changedSceneNumbers, FIELD_INPUT_IDS, fieldForDomTarget, fieldLabelKey, inputIdForKey, normalizePositions, parseKey, readField, snapshotProject, stepIdOf, stepKey, TEXT_FIELDS } from "./collabModel.js";
 import { createLockManager } from "./collabLocks.js";
 import { fieldEditors, peopleFrom } from "./collabPresence.js";
 import { createOpQueue } from "./collabQueue.js";
@@ -131,15 +131,10 @@ export function createCollabController(deps) {
     const field = fieldForDomTarget(a);
     if (!field) return null;
     const inProps = Boolean(a.closest?.("#props-body"));
-    const onCanvas = Boolean(a.dataset?.inline);
+    const onCanvas = Boolean(a.dataset?.inline || a.dataset?.collabField);
     if (!inProps && !onCanvas) return null;
     return { inputId: a.id, field, stepId, key: stepKey(stepId, field) };
   }
-  const describeKey = (key) => {
-    const k = parseKey(key);
-    return { label: t(fieldLabelKey(key)), n: k?.kind === "step" ? Math.max(1, stepIndexOf(k.stepId) + 1) : 0, stepId: k?.stepId || null };
-  };
-
   /** Aplica uma lista de { key, value (local) } no projeto e atualiza a tela mantendo o passo selecionado. */
   function writeToProject(list, { keepSelection = true } = {}) {
     const p = proj();
@@ -337,47 +332,23 @@ export function createCollabController(deps) {
 
   function announceRemote(list, changed) {
     if (!changed?.length) return;
-    const by = list[0].by;
+    const by = list.find((op) => op.by)?.by || list[0].by;
     const name = nameOf(by);
-    const sel = selectedStepId();
-    // quem está digitando num passo que eu estou vendo: o aviso de passo travado já explica; sem toast a cada tecla
-    const holder = sel ? ctx.locks.holderOf(sel) : null;
-    if (holder && holder.userId === by && changed.every((x) => stepIdOf(x.key) === sel)) {
-      for (const x of changed) flashRemote(x.key, by);
+    const color = colorOf(by)?.color || "";
+    for (const change of changed) flashRemote(change, { name, color });
+  }
+
+  function flashRemote(change, { name, color }) {
+    const key = change.key;
+    const parsed = parseKey(key);
+    if (parsed?.kind === "project" && parsed.field === "sceneLabels") {
+      ui.flashNodes(ui.sceneNodes(changedSceneNumbers(change.prev, change.value)), { color, name });
       return;
     }
-    const prevs = changed.map((x) => ({ key: x.key, value: x.prev }));
-    const undoRemote = () => {
-      const ops = prevs.filter((x) => x.value !== undefined);
-      c_applyLocalPatches(ops);
-    };
-    let text;
-    if (changed.length === 1) {
-      const d = describeKey(changed[0].key);
-      const k = parseKey(changed[0].key);
-      if (k?.field === "new") text = t("collab.toast.stepAdded", { name });
-      else if (k?.field === "del") text = t(changed[0].value ? "collab.toast.stepRemoved" : "collab.toast.stepAdded", { name, step: list.find((x) => x.key === changed[0].key)?.stepLabel || "" });
-      else if (k?.field === "pos") text = t("collab.toast.moved", { name });
-      else text = d.n ? t("collab.toast.changed", { name, field: d.label, n: d.n }) : t("collab.toast.changedProject", { name, field: d.label });
-    } else text = t("collab.toast.nOps", { name, n: changed.length });
-    const structural = changed.some((x) => /:(new|del)$/.test(x.key));
-    ui.toast({ text, actionLabel: structural ? "" : t("collab.toast.undo"), onAction: structural ? null : undoRemote });
-    for (const x of changed) if (stepIdOf(x.key) === sel) flashRemote(x.key, by);
-  }
-
-  function flashRemote(key, by) {
+    if (parsed?.field === "new" || parsed?.field === "del" || parsed?.field === "pos") return;
     const id = inputIdForKey(key);
     if (!id) return;
-    ui.flashField(id, { color: colorOf(by)?.color || "" });
-  }
-
-  /** Aplica valores no projeto como edição MINHA (vira op, entra no meu desfazer). */
-  function c_applyLocalPatches(patches) {
-    const p = proj();
-    if (!p || !ctx) return;
-    for (const x of patches) applyField(p, x.key, x.value);
-    repaint();
-    scheduleFlush(50);
+    ui.flashField(id, { color, name });
   }
 
   /* ---------- conflitos ---------- */

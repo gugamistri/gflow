@@ -2286,6 +2286,8 @@ export function createEditor(ctx) {
     const input = document.createElement("input");
     input.type = "text";
     input.className = "inline-edit";
+    input.id = "collab-scene-label";
+    input.dataset.collabField = "sceneLabels";
     input.value = current;
     input.maxLength = 60;
     input.setAttribute("aria-label", t("editor.sceneNameAria"));
