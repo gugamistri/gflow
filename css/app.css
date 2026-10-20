@@ -5441,13 +5441,49 @@ body.standalone .caption-bar,
   color: var(--ns-muted);
 }
 
-.studio-modal-body input[type="text"] {
+.studio-modal-body :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="number"]
+) {
+  box-sizing: border-box;
   border: 1px solid var(--ns-border);
   border-radius: 8px;
   padding: 10px;
   color: var(--ns-ink);
   font-weight: 400;
   background: var(--ns-input-bg);
+}
+
+.studio-modal-body :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="number"]
+)::placeholder {
+  color: var(--ns-muted);
+  opacity: 1;
+}
+
+.studio-modal-body :is(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="number"]
+):focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 1px;
+  border-color: var(--ns-accent);
 }
 
 .studio-modal-body .delete-project-lead {
