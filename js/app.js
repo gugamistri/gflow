@@ -36,7 +36,7 @@ import {
 } from "./projects.js";
 import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
 import { parseCommentLink } from "./comments.js";
-import { createCollabController, readCollabMap } from "./collabController.js";
+import { createCollabController, noteCollabProject, readCollabMap } from "./collabController.js";
 import { createCollabUi } from "./collabUi.js";
 import { formatBytes } from "./mediaBytes.js";
 import {
@@ -1301,6 +1301,10 @@ const cloudSync = createCloudSync({
     paintSyncStatus();
   },
   onRemoteChange: (change) => handleRemoteProjectChange(change),
+  onCollabActive: ({ localId, remoteId, name }) => {
+    if (!noteCollabProject(localStorage, localId, { remoteId, role: "owner", guest: false, name: name || "" })) return;
+    if (project?.id === localId) void syncCollabForProject(localId);
+  },
 });
 
 onLocalProjectChange((event) => cloudSync.notifyLocalChange(event));

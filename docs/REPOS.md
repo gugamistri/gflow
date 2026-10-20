@@ -39,6 +39,7 @@ A API já manda presença (`stepId`, `field`) e ops. Esta mudança é só do edi
 - Quando a op chega, o campo pisca cerca de 2 s (`flashField`). Controles que não são texto (lado, tempo, imagem, tipo) piscam só no painel (`EXTRA_FLASH_IDS`).
 - Texto novo para o leitor de tela: `collab.live.field` em `js/collabI18n.js`.
 - Ops e fila: `js/collabController.js`. Rotas no outro repo: `apps/api/src/routes/collab.js` e `apps/api/src/lib/collab-ops.js`.
+- `PATCH /projects/:id` com colaboradores ativos responde 409 `collab_active`. O sync legado para de reenviar esse projeto e passa a tratá-lo como colaborativo.
 
 ## Deploy
 

@@ -32,6 +32,7 @@ function fakeCloud() {
   let settings = { payload: {}, revision: 0, updatedAt: null };
   let seq = 0;
   const calls = [];
+  const blocked = new Set();
   const present = (p, withPayload) => {
     const out = { id: p.id, clientId: p.clientId, name: p.name, revision: p.revision, updatedAt: p.updatedAt, deletedAt: p.deletedAt };
     if (withPayload) out.payload = structuredClone(p.payload);
@@ -63,6 +64,7 @@ function fakeCloud() {
       if (!p || p.deletedAt) return fail(404, "not_found");
       if (method === "GET") return ok({ project: present(p, true) });
       if (method === "PATCH") {
+        if (blocked.has(p.id)) return fail(409, "collab_active", { project: present(p, true) });
         if (body.revision != null && body.revision !== p.revision) return fail(409, "revision_conflict", { project: present(p, true) });
         Object.assign(p, { name: body.name ?? p.name, payload: structuredClone(body.payload ?? p.payload), revision: p.revision + 1, updatedAt: stamp() });
         return ok({ project: present(p, true) });
@@ -87,6 +89,7 @@ function fakeCloud() {
   return {
     request,
     calls,
+    blocked,
     projects,
     media,
     get settings() {
@@ -231,6 +234,31 @@ test("edições sobem com revision; mídia repetida não sobe de novo", async ()
   // sem mudança de conteúdo: nenhum PATCH
   const patches = cloud.calls.filter((c) => c.startsWith("PATCH")).length;
   await store.putProject(await store.getProject("p1"));
+  await a.sync.syncNow();
+  assert.equal(cloud.calls.filter((c) => c.startsWith("PATCH")).length, patches);
+});
+
+test("PATCH collab_active não derruba o sync e não tenta de novo", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const seen = [];
+  const a = engine(cloud, store, memoryStorage(), {
+    onCollabActive: (info) => seen.push(info.localId),
+  });
+  await a.sync.enable("ana@example.com");
+  const remote = [...cloud.projects.values()][0];
+  cloud.blocked.add(remote.id);
+  const p = await store.getProject("p1");
+  p.name = "Editado";
+  await store.putProject(p);
+  await a.sync.syncNow();
+  assert.equal(a.statuses.at(-1).phase, "synced");
+  assert.equal(a.statuses.at(-1).error, "");
+  assert.deepEqual(seen, ["p1"]);
+  const patches = cloud.calls.filter((c) => c.startsWith("PATCH")).length;
+  const again = await store.getProject("p1");
+  again.name = "De novo";
+  await store.putProject(again);
   await a.sync.syncNow();
   assert.equal(cloud.calls.filter((c) => c.startsWith("PATCH")).length, patches);
 });
