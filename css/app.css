@@ -6479,10 +6479,6 @@ body.standalone .caption-bar,
   margin-top: 4px;
 }
 
-.props-narr-note {
-  line-height: 1.4;
-}
-
 .view-editor.is-props-collapsed #props-panel {
   padding: 8px;
   align-items: center;
@@ -9688,7 +9684,6 @@ dialog.studio-modal.ml-modal { width: min(720px, 96vw); max-width: 96vw; }
   }
   body.is-props-sheet #props-panel #prop-type,
   body.is-props-sheet #props-panel .props-section:not([data-sec="texts"]):not([data-sec="narration"]),
-  body.is-props-sheet #props-panel .props-narr-note { display: none !important; }
   body[data-sheet-sec="texts"] #props-panel [data-sec="narration"],
   body[data-sheet-sec="narration"] #props-panel [data-sec="texts"] { display: none !important; }
   body.is-props-sheet #props-panel .props-section-head { min-height: 44px; }
@@ -9851,9 +9846,9 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .subscription-seats-row .btn { min-height: 44px; }
 
 /* Compartilhar em abas (Link / Incorporar / Baixar) */
-.export-panel-body.share-card { width: min(420px, 94vw); min-width: 0; padding: 0; gap: 0; max-height: min(78vh, 640px); }
+.export-panel-body.share-card { width: min(420px, 94vw); min-width: 0; padding: 0; gap: 0; max-height: min(78vh, 640px); font-family: var(--ns-font); font-size: 14px; line-height: 1.35; letter-spacing: 0; text-transform: none; }
 .share-tablist { display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; }
-.share-tab { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 10px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: inherit; font-weight: 650; cursor: pointer; }
+.share-tab { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 8px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.25 var(--ns-font); letter-spacing: 0; text-transform: none; cursor: pointer; }
 .share-tab[hidden] { display: none; }
 .share-tab[aria-selected="true"] { color: var(--ns-ink); border-bottom-color: var(--ns-accent); }
 .share-tab:hover { color: var(--ns-ink); }
@@ -9865,9 +9860,20 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 .share-team-off { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
 .share-team-lead { margin: 0; color: var(--ns-muted); }
 .share-team-off[hidden], .share-team-seats[hidden] { display: none; }
-.share-team-host { padding: 12px 16px 4px; max-height: 300px; overflow: auto; }
-.share-team-host .collab-invite-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.share-team-host h3 { font-size: 14px; margin: 0 0 8px; }
+.share-team-host { padding: 12px 12px 8px; overflow: visible; }
+.share-team-host .collab-members-list,
+.share-team-host .collab-invites-list { gap: 10px; }
+.share-team-host .collab-member { flex-wrap: wrap; align-items: center; min-width: 0; }
+.share-team-host .collab-member-name { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+.share-team-host .collab-member-name small { display: block; overflow-wrap: anywhere; line-height: 1.3; }
+.share-team-host .collab-role-chip,
+.share-team-host .collab-member .btn { flex: none; white-space: nowrap; }
+.share-team-host .collab-invite-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-top: 12px; }
+.share-team-host .collab-invite-form h4,
+.share-team-host .collab-invite-form label,
+.share-team-host .collab-invite-status { grid-column: 1 / -1; }
+.share-team-host .collab-invite-form input { width: 100%; min-width: 0; }
+.share-team-host h3 { font-size: 14px; margin: 0 0 8px; font-family: var(--ns-font); letter-spacing: 0; text-transform: none; }
 .share-team-seats { margin: 4px 16px 12px; }
 .export-panel-body .share-team-seats {
   width: auto;
