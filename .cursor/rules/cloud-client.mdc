@@ -1,0 +1,15 @@
+---
+description: Cliente HTTP do plano Pro no editor. A implementação mora em ../guiaflow-cloud.
+globs: js/cloudConfig.js,js/cloudSync.js,js/billing.js,js/paywall.js,js/hosted.js,js/share.js,js/viewShare.js,js/authCallback.js,auth/**,api/p/**,api/lib/permanent-share.cjs
+alwaysApply: false
+---
+
+# Cliente da nuvem
+
+Estes arquivos falam com a API. A rota correspondente está na mesma linha de `docs/AGENT-MAP.md`, sob `../guiaflow-cloud/apps/api/src/routes/`.
+
+O contrato longo está em `docs/CLOUD.md`. Flags: `hostedAi`, `tts`, `permanentShare`, `branding`, `analytics`, lidas em `js/cloudConfig.js`.
+
+Chave do usuário (BYOK) continua em `js/llm.js` e `js/cartesia.js`. Segredo de auth, Stripe e provedor fica só no `.env` da nuvem.
+
+O campo de plano na API é `cloud`. Na interface o nome é GuiaFlow Pro.

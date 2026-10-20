@@ -1,0 +1,16 @@
+---
+description: Mapa deste editor MIT e da API paga em ../guiaflow-cloud. Abrir antes de procurar arquivos.
+alwaysApply: true
+---
+
+# Onde olhar
+
+Este checkout é o editor MIT (`gflow`). A API dos planos pagos é o git vizinho `../guiaflow-cloud`. O contrato entre eles é HTTP.
+
+Antes de listar pastas ou varrer `js/`, abra `docs/AGENT-MAP.md` e siga a linha da tarefa. Abra só os arquivos dessa linha.
+
+- Subir os dois ou publicar: `docs/REPOS.md` (Vercel só aqui; Coolify só na nuvem).
+- Contrato do plano Pro: `docs/CLOUD.md`.
+- Registro das rotas: `../guiaflow-cloud/apps/api/src/app.js`.
+
+`brand/`, `fonts/`, `vendor/`, `downloads/`, `en/`, `es/`, `node_modules/` e `../guiaflow-cloud/apps/api/vendor/` estão fora de busca. O mapa diz o que cada um é.
