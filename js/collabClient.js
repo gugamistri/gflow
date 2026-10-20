@@ -29,6 +29,7 @@ export function createCollabClient({
   let online = true;
   let failures = 0;
   let lastPresenceAt = 0;
+  let presenceTimer = null;
   let polling = false;
   let lastRole = null;
   const h = (name, ...args) => {
@@ -108,13 +109,28 @@ export function createCollabClient({
     }
   }
 
-  async function sendPresence({ force = false } = {}) {
-    const t = now();
-    if (!force && t - lastPresenceAt < PRESENCE_EVERY_MS) return null;
-    lastPresenceAt = t;
+  function schedulePresence(delay) {
+    if (presenceTimer) return;
+    presenceTimer = setTimer(() => {
+      presenceTimer = null;
+      if (running) void sendPresence();
+    }, Math.max(0, delay));
+    presenceTimer?.unref?.();
+  }
+
+  /** No máximo um POST por janela. Foco e blur não furam o limite: o mais recente espera a vez. */
+  async function sendPresence() {
+    const wait = PRESENCE_EVERY_MS - (now() - lastPresenceAt);
+    if (wait > 0) {
+      schedulePresence(wait);
+      return null;
+    }
+    if (presenceTimer) { clearTimer(presenceTimer); presenceTimer = null; }
+    lastPresenceAt = now();
     const res = await request(`${base}/presence`, { method: "POST", body: JSON.stringify({ stepId: getStep(), field: getField() }), timeoutMs: 8_000 });
     if (res.ok) h("onEffectiveRole", { role: res.data?.role, effectiveRole: res.data?.effectiveRole, downgraded: Boolean(res.data?.downgraded) });
-    else if (!terminal(res) && res.status !== 429) setOnline(false);
+    else if (res.status === 429) schedulePresence((Math.max(1, Number(res.data?.retryAfterSec) || 3) * 1000));
+    else if (!terminal(res)) setOnline(false);
     return res;
   }
 
@@ -148,6 +164,8 @@ export function createCollabClient({
     running = false;
     clearTimer(timer);
     timer = null;
+    clearTimer(presenceTimer);
+    presenceTimer = null;
   }
 
   /** Acorda o polling já (aba voltou ao foco, enviou ops). */
