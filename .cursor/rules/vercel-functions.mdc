@@ -1,0 +1,19 @@
+---
+description: Funções Vercel deste repo — preview de 7 dias e proxy do link permanente.
+globs: api/**/*.js,api/**/*.cjs,vercel.json
+alwaysApply: false
+---
+
+# Funções deste repo
+
+`api/` publica com o editor na Vercel. A API paga é `../guiaflow-cloud/apps/api`, no Coolify.
+
+| Caminho | Papel |
+| --- | --- |
+| `api/share.js`, `api/v/[id].js`, `api/lib/share-store.cjs` | Preview de 7 dias no Blob |
+| `api/cron/expire-shares.js` | Apaga preview vencido |
+| `api/p/[slug].js`, `api/lib/permanent-share.cjs` | Proxy do link permanente; o dado mora na nuvem |
+| `api/oembed.js` | oEmbed |
+| `vercel.json` | Redirects, rewrites `/v` e `/p`, cron |
+
+Rewrites e hosts estão em `vercel.json`. O fluxo do link permanente no browser começa em `js/share.js`.

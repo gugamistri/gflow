@@ -1,7 +1,7 @@
 # GuiaFlow
 
-Dois repositórios, dois deploys. Leia `docs/REPOS.md` antes de:
+Editor MIT neste checkout. A API dos planos pagos é o git vizinho `../guiaflow-cloud`. Nenhum importa o código do outro; o contrato é HTTP.
 
-- subir o editor e a API juntos na máquina
-- alterar colaboração (presença, borda no texto, pulso do campo)
-- publicar: Vercel é só este repo; Coolify é só `guiaflow-cloud`
+Antes de listar pastas, abra `docs/AGENT-MAP.md` e siga a linha da tarefa.
+
+Leia `docs/REPOS.md` para subir os dois na máquina ou publicar (Vercel só aqui; Coolify só na nuvem). Leia `docs/CLOUD.md` para o contrato HTTP do plano Pro.

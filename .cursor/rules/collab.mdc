@@ -1,0 +1,19 @@
+---
+description: Presença, borda no texto e pulso do campo. Editor aqui; rotas /collab na API.
+globs: js/collab*.js,css/collab.css
+alwaysApply: false
+---
+
+# Colaboração
+
+Comportamento na tela: `docs/REPOS.md`, seção «Colaboração na tela».
+
+| Peça | Arquivo |
+| --- | --- |
+| Campo a partir do DOM | `js/collabModel.js` (`fieldForDomTarget`) |
+| Anel, nome, pulso | `js/collabUi.js`, `css/collab.css` |
+| Fila de ops | `js/collabController.js` |
+| HTTP | `js/collabClient.js` |
+| Rotas e ops na API | `../guiaflow-cloud/apps/api/src/routes/collab.js`, `apps/api/src/lib/collab-ops.js` |
+
+`COLLAB_ENABLED=0` na API faz `/collab` responder 404. `PATCH /projects/:id` com gente no projeto responde 409 `collab_active`.

@@ -1,0 +1,13 @@
+---
+description: Formato do tour. Fonte neste repo; a nuvem guarda uma cópia sincronizada.
+globs: js/tour-schema/**
+alwaysApply: false
+---
+
+# Formato do tour
+
+`js/tour-schema/README.md` nomeia cada arquivo. Edite a fonte aqui.
+
+A nuvem espelha em `../guiaflow-cloud/packages/tour-schema/`. Depois da mudança, rode na raiz da nuvem o sync que o README de lá descreve (`npm run sync:tour-schema` ou `sync:vendor`) e mantenha a cópia no mesmo commit da API.
+
+Coordenadas de agente: frações 0..1, em `agent.js`. Geometria do destaque: `geometry.js`.
