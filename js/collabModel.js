@@ -329,6 +329,7 @@ export function fieldForDomTarget(el) {
   if (!el) return null;
   const byId = Object.entries(FIELD_INPUT_IDS).find(([, id]) => id === el.id)?.[0];
   if (byId) return byId;
+  if (el.dataset?.collabField === "sceneLabels") return "sceneLabels";
   return INLINE_TO_FIELD[el.dataset?.inline] || null;
 }
 
@@ -343,6 +344,14 @@ export function visualField(field) {
 
 export function canvasIdsForField(field) {
   return CANVAS_FIELD_IDS[visualField(field)] || [];
+}
+
+/** Números de cena cujo nome mudou entre dois `sceneLabels`. */
+export function changedSceneNumbers(prev, next) {
+  const before = prev && typeof prev === "object" ? prev : {};
+  const after = next && typeof next === "object" ? next : {};
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  return [...keys].filter((key) => String(before[key] ?? "") !== String(after[key] ?? ""));
 }
 
 export const inputIdForKey = (key) => {

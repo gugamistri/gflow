@@ -1410,14 +1410,15 @@ function ensureCollab() {
   propsBody?.addEventListener("focusout", (e) => collab?.onFieldBlur(e.target?.id));
   propsBody?.addEventListener("input", (e) => collab?.onFieldInput(e.target?.id));
   const canvasStage = document.getElementById("canvas-stage");
+  const collabCanvasField = (el) => Boolean(el?.dataset?.inline || el?.dataset?.collabField);
   canvasStage?.addEventListener("focusin", (e) => {
-    if (e.target?.dataset?.inline) collab?.onFieldFocus(e.target.id);
+    if (collabCanvasField(e.target)) collab?.onFieldFocus(e.target.id);
   });
   canvasStage?.addEventListener("focusout", (e) => {
-    if (e.target?.dataset?.inline) collab?.onFieldBlur(e.target.id);
+    if (collabCanvasField(e.target)) collab?.onFieldBlur(e.target.id);
   });
   canvasStage?.addEventListener("input", (e) => {
-    if (e.target?.dataset?.inline) collab?.onFieldInput(e.target.id);
+    if (collabCanvasField(e.target)) collab?.onFieldInput(e.target.id);
   });
   window.addEventListener("pagehide", () => collab?.onPageHide());
   document.getElementById("btn-share-collab")?.addEventListener("click", () => {
