@@ -5,7 +5,7 @@
  * nos diálogos, rótulos traduzidos. Celular: diálogos viram bottom sheet (ver css/collab.css).
  */
 import { AVATAR_TEXT, diffPresence, fieldEditors, groupByStep, visibleAvatars } from "./collabPresence.js";
-import { FIELD_INPUT_IDS } from "./collabModel.js";
+import { canvasIdsForField, FIELD_INPUT_IDS, fieldForDomTarget } from "./collabModel.js";
 
 function el(tag, attrs = {}, ...kids) {
   const node = document.createElement(tag);
@@ -150,11 +150,21 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
   /* ---------- locks e indicador de campo ---------- */
 
   function clearFieldMarks() {
-    document.querySelectorAll(".collab-field-remote").forEach((n) => {
-      n.classList.remove("collab-field-remote");
+    document.querySelectorAll(".collab-field-remote, .collab-live-edit, .collab-live-host").forEach((n) => {
+      n.classList.remove("collab-field-remote", "collab-live-edit", "collab-live-host");
       n.removeAttribute("data-collab-by");
-      n.style.removeProperty("--collab-color");
+      if (!n.classList.contains("collab-field-flash")) n.style.removeProperty("--collab-color");
     });
+  }
+
+  function isShown(node) {
+    return Boolean(node && !node.hidden && !node.closest?.("[hidden]"));
+  }
+
+  function markEditing(node, person, cls) {
+    node.classList.add(cls);
+    node.setAttribute("data-collab-by", person.name);
+    node.style.setProperty("--collab-color", person.color);
   }
 
   function wrapperFor(inputId) {
@@ -162,17 +172,21 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     return input ? input.closest(".field, .prop-field, label, .props-group, .prop-row") || input.parentElement : null;
   }
 
-  /** Marca discreta (borda fina na cor da pessoa + nome em texto) nos campos que outros estão editando. */
+  /** Borda na cor da pessoa + nome, no inspetor e no texto do palco, enquanto outro edita aquele campo neste passo. */
   function paintFieldMarks(stepId) {
     clearFieldMarks();
     if (!stepId) return;
     for (const p of fieldEditors(people, stepId)) {
       const inputId = FIELD_INPUT_IDS[p.field];
       const wrap = inputId ? wrapperFor(inputId) : null;
-      if (!wrap) continue;
-      wrap.classList.add("collab-field-remote");
-      wrap.setAttribute("data-collab-by", p.name);
-      wrap.style.setProperty("--collab-color", p.color);
+      if (wrap) markEditing(wrap, p, "collab-field-remote");
+      for (const cid of canvasIdsForField(p.field)) {
+        const node = document.getElementById(cid);
+        if (!isShown(node)) continue;
+        markEditing(node, p, "collab-live-edit");
+        const host = node.closest?.("#editor-popover, #canvas-slide, #canvas-caption");
+        if (host && host !== node) markEditing(host, p, "collab-live-host");
+      }
     }
   }
 
@@ -265,13 +279,27 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     return close;
   }
 
-  /** Destaque curto (1,5 s) no campo que mudou por causa de outra pessoa. */
-  function flashField(inputId) {
+  /** Pulso curto no campo (inspetor e texto do palco) quando o valor chega de outra pessoa. */
+  function flashField(inputId, { color = "" } = {}) {
+    const field = fieldForDomTarget({ id: inputId });
+    const nodes = [];
     const wrap = inputId ? wrapperFor(inputId) : null;
-    if (!wrap) return;
-    wrap.classList.add("collab-field-flash");
-    clearTimeout(flashTimers.get(inputId));
-    flashTimers.set(inputId, setTimeout(() => wrap.classList.remove("collab-field-flash"), 1500));
+    if (wrap) nodes.push([inputId, wrap]);
+    for (const cid of canvasIdsForField(field)) {
+      const node = document.getElementById(cid);
+      if (isShown(node)) nodes.push([cid, node]);
+    }
+    for (const [key, node] of nodes) {
+      if (color) node.style.setProperty("--collab-color", color);
+      node.classList.add("collab-field-flash");
+      clearTimeout(flashTimers.get(key));
+      flashTimers.set(key, setTimeout(() => {
+        node.classList.remove("collab-field-flash");
+        if (!node.classList.contains("collab-live-edit") && !node.classList.contains("collab-field-remote") && !node.classList.contains("collab-live-host")) {
+          node.style.removeProperty("--collab-color");
+        }
+      }, 2200));
+    }
   }
 
   /** Faixa inline no campo em foco: "Ana alterou este campo — Ver versão dela · Manter a minha". */

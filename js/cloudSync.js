@@ -145,6 +145,7 @@ export function emptyMeta(account = "") {
     remote: {},
     dirty: {},
     pendingDeletes: {},
+    collabBlocked: {},
     settingsRevision: 0,
     settingsDirty: false,
     media: {},
@@ -193,6 +194,7 @@ export function createCloudSync(deps) {
     skipProject = () => false,
     // colaboração ativa: o servidor é a verdade (ops); o PATCH completo e o pull ficam de fora
     isCollab = () => false,
+    onCollabActive = () => {},
     conflictName = (name) => `${name} (outra versão)`,
     debounceMs = 2500,
     pollMs = 60 * 1000,
@@ -232,9 +234,16 @@ export function createCloudSync(deps) {
     timer?.unref?.(); // Node (testes): não segura o processo
   }
 
+  function collabOwned(localId) {
+    return Boolean(isCollab(localId) || meta?.collabBlocked?.[localId]);
+  }
+
   function notifyLocalChange(event) {
     if (!meta) return;
-    if (event?.type === "put" && event.id) meta.dirty[event.id] = true;
+    if (event?.type === "put" && event.id) {
+      if (collabOwned(event.id)) delete meta.dirty[event.id];
+      else meta.dirty[event.id] = true;
+    }
     if (event?.type === "delete" && event.id) {
       const link = meta.remote[event.id];
       if (link) meta.pendingDeletes[link.id] = true;
@@ -285,7 +294,7 @@ export function createCloudSync(deps) {
 
   async function pushProject(localId) {
     const project = await store.getProject(localId);
-    if (!project || isCollab(localId)) {
+    if (!project || collabOwned(localId)) {
       delete meta.dirty[localId];
       return;
     }
@@ -321,6 +330,17 @@ export function createCloudSync(deps) {
         method: "PATCH",
         body: JSON.stringify({ name, payload, revision: res.data.project.revision }),
       });
+    }
+    if (!res.ok && res.status === 409 && res.error === "collab_active") {
+      // o PATCH completo atropelaria as ops; a partir daqui este projeto só anda pelo canal de colaboração
+      meta.collabBlocked = meta.collabBlocked || {};
+      meta.collabBlocked[localId] = true;
+      const server = res.data?.project;
+      if (link && server?.revision != null) link.rev = server.revision;
+      delete meta.dirty[localId];
+      save();
+      onCollabActive({ localId, remoteId: link?.id || server?.id || "", name: server?.name || name });
+      return;
     }
     if (!res.ok && res.status === 404 && link) {
       delete meta.remote[localId];
@@ -375,7 +395,7 @@ export function createCloudSync(deps) {
         continue;
       }
       const link = localId ? meta.remote[localId] : null;
-      if (localId && isCollab(localId)) continue;
+      if (localId && collabOwned(localId)) continue;
       if (link && link.rev === item.revision) continue;
       if (localId && (meta.dirty[localId] || isProjectBusy(localId))) continue;
       const full = await request(`/projects/${encodeURIComponent(item.id)}`, { method: "GET" });

@@ -258,10 +258,17 @@ function unavailableResult(result) {
   return Boolean(result && (result.status === 404 || result.status === 503));
 }
 
+/** `guest` quando a API diz; `""` quando o papel veio e não é convidado; null se a resposta não tem o campo. */
+export function accountRoleFromMe(data) {
+  const user = data?.user;
+  if (!user || typeof user !== "object" || !Object.prototype.hasOwnProperty.call(user, "role")) return null;
+  return user.role === "guest" ? "guest" : "";
+}
+
 export async function fetchAccountProfile(env) {
   const result = await cloudFetch(AUTH_ME_PATH, { method: "GET" }, env);
-  if (!result.ok) return { ...result, profile: null };
-  return { ok: true, status: result.status, profile: parseEntitlement(result.data) };
+  if (!result.ok) return { ...result, profile: null, role: null };
+  return { ok: true, status: result.status, profile: parseEntitlement(result.data), role: accountRoleFromMe(result.data) };
 }
 
 export function mergeAccountAccess(entitlement, profile) {

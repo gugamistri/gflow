@@ -31,12 +31,21 @@
 .collab-lock-dot { width: 8px; height: 8px; border-radius: 999px; margin-inline-start: 4px; border: 1.5px solid var(--ns-panel, #fff); }
 .film-item.collab-locked { box-shadow: inset 0 0 0 2px rgba(127, 127, 127, .35); }
 
-/* indicador discreto do campo em edição por outra pessoa */
-.collab-field-remote { position: relative; border-radius: 8px; box-shadow: 0 0 0 1.5px var(--collab-color, #1d5fa8); }
-.collab-field-remote::after { content: attr(data-collab-by); position: absolute; top: -9px; inset-inline-end: 8px; font-size: 10px; font-weight: 700; line-height: 1; padding: 2px 6px; border-radius: 999px; background: var(--collab-color, #1d5fa8); color: #fff; pointer-events: none; }
-.collab-field-flash { animation: collab-flash 1.4s ease-out; }
-@keyframes collab-flash { 0% { background: rgba(42, 157, 143, .28); } 100% { background: transparent; } }
-@media (prefers-reduced-motion: reduce) { .collab-field-flash { animation: none; background: rgba(42, 157, 143, .18); } }
+/* quem está editando este campo neste passo: anel na cor da pessoa + nome */
+.collab-field-remote, .collab-live-edit { position: relative; border-radius: 6px; box-shadow: 0 0 0 2px var(--collab-color, #1d5fa8); }
+.collab-field-remote::after, .collab-live-edit::after { content: attr(data-collab-by); position: absolute; z-index: 3; top: -10px; inset-inline-end: 6px; font-size: 11px; font-weight: 700; line-height: 1; padding: 3px 7px; border-radius: 999px; background: var(--collab-color, #1d5fa8); color: #fff; pointer-events: none; white-space: nowrap; }
+.collab-live-host { outline: 2px solid var(--collab-color, #1d5fa8); outline-offset: 4px; border-radius: 8px; animation: collab-edit-pulse 1.8s ease-in-out infinite; }
+@keyframes collab-edit-pulse { 0%, 100% { outline-color: var(--collab-color, #1d5fa8); } 50% { outline-color: color-mix(in srgb, var(--collab-color, #1d5fa8) 35%, transparent); } }
+.collab-field-flash { animation: collab-flash 2.2s ease-out; }
+.collab-live-edit.collab-field-flash, .collab-field-remote.collab-field-flash { animation: collab-flash 2.2s ease-out; }
+@keyframes collab-flash {
+  0%, 18% { background-color: color-mix(in srgb, var(--collab-color, #2a9d8f) 48%, transparent); box-shadow: inset 4px 0 0 var(--collab-color, #2a9d8f), 0 0 0 3px var(--collab-color, #2a9d8f); }
+  100% { background-color: transparent; box-shadow: inset 0 0 0 transparent, 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .collab-live-host, .collab-field-flash, .collab-live-edit.collab-field-flash, .collab-field-remote.collab-field-flash { animation: none; }
+  .collab-field-flash { background-color: color-mix(in srgb, var(--collab-color, #2a9d8f) 28%, transparent); }
+}
 
 /* faixas */
 .collab-banner, .collab-lock-banner, .collab-removed-banner { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 13px; border-radius: 8px; margin: 8px; background: #eef6ff; color: #12385f; border: 1px solid #b9d6f5; }
