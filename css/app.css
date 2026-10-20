@@ -9848,7 +9848,7 @@ dialog.upgrade-modal { width: min(560px, calc(100vw - 24px)); max-width: 560px; 
 /* Compartilhar em abas (Link / Incorporar / Baixar) */
 .export-panel-body.share-card { width: min(420px, 94vw); min-width: 0; padding: 0; gap: 0; max-height: min(78vh, 640px); font-family: var(--ns-font); font-size: 14px; line-height: 1.35; letter-spacing: 0; text-transform: none; }
 .share-tablist { display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; }
-.share-tab { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 8px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.25 var(--ns-font); letter-spacing: 0; text-transform: none; cursor: pointer; }
+.share-tab { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 4px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.15 var(--ns-font); letter-spacing: 0; text-transform: none; text-wrap: balance; white-space: normal; cursor: pointer; }
 .share-tab[hidden] { display: none; }
 .share-tab[aria-selected="true"] { color: var(--ns-ink); border-bottom-color: var(--ns-accent); }
 .share-tab:hover { color: var(--ns-ink); }

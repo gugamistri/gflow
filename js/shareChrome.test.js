@@ -55,6 +55,12 @@ test("Compartilhar em abas: Link, No site e Baixar, com ids e ARIA de abas", () 
   assert.ok(inPane("pane-share-embed", "embed-code"));
   assert.ok(inPane("pane-share-export", "btn-export-video"));
   assert.ok(inPane("pane-share-export", "export-video-quality"));
+  const exportPane = card.slice(card.indexOf('id="pane-share-export"'));
+  assert.ok(exportPane.indexOf('id="btn-export-html"') < exportPane.indexOf('id="btn-export-video"'));
+  assert.ok(exportPane.indexOf('id="btn-export-video"') < exportPane.indexOf('id="btn-export-vtt"'));
+  assert.match(exportPane, /id="export-quality-presets" hidden/);
+  assert.match(html, /id="modal-link-copied"/);
+  assert.match(html, /data-i18n="share\.tab\.team">Gerenciar Acessos/);
 });
 
 test("aba Equipe: botões, painel e host presentes; ativar/gerenciar preservam ids", () => {

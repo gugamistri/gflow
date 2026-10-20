@@ -770,7 +770,7 @@ export function createCollabController(deps) {
     });
   }
 
-  /** Aba Equipe do Compartilhar: lista/convites dentro do painel (sem diálogo). */
+  /** Aba Gerenciar Acessos do Compartilhar: lista/convites dentro do painel (sem diálogo). */
   function teamHost() { return typeof document !== "undefined" ? document.getElementById("share-team-host") : null; }
   async function openMembers() {
     if (!ctx) return;
