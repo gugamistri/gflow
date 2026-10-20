@@ -1,0 +1,17 @@
+---
+description: Ao publicar o editor, subir o prefixo a/N se css, js ou outro estático mudou. A URL /a/N é imutável por um ano.
+alwaysApply: true
+---
+
+# Cache dos estáticos
+
+`vercel.json` marca `/a/:n/*` como `immutable` por um ano. O rewrite entrega o arquivo atual, mas a CDN e o navegador guardam o corpo antigo dessa URL. Limpar dados do site não troca o número.
+
+Antes de `vercel deploy --prod`, ou do `git push` que dispara `.cursor/hooks/deploy-vercel-on-push.sh`, olhe o diff deste repo. Se mexe em `css/`, `js/`, `brand/`, `fonts/` ou `vendor/`:
+
+1. Leia o número em `editor.html`.
+2. Troque `a/<n>/` por `a/<n+1>/` em todo HTML e em `api/lib/view-shell.cjs`. Um número só. Não reutilize o anterior.
+3. O número novo entra no mesmo commit do estático.
+4. Depois do deploy, `https://guiaflow.pro/editor` cita o número novo e `https://guiaflow.pro/a/<n+1>/…` devolve o arquivo novo.
+
+HTML sem mudança de estático não pede bump. A API em `../guiaflow-cloud` não usa esse prefixo.
