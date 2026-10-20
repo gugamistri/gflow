@@ -33,7 +33,8 @@
 
 /* quem está editando, ou acabou de atualizar: retângulo na cor da pessoa + nome */
 .collab-field-remote, .collab-live-edit, .collab-updated { position: relative; border-radius: 6px; outline: 2px solid var(--collab-color, #1d5fa8); outline-offset: 3px; }
-.collab-field-remote::after, .collab-live-edit::after, .collab-updated::after { content: attr(data-collab-by); position: absolute; z-index: 4; top: 0; inset-inline-start: 0; font-size: 11px; font-weight: 700; line-height: 1; padding: 3px 7px; border-radius: 999px; background: var(--collab-color, #1d5fa8); color: #fff; pointer-events: none; white-space: nowrap; text-transform: none; letter-spacing: 0; }
+/* o nome fica acima do contorno: top:0 cobria o texto do campo */
+.collab-field-remote::after, .collab-live-edit::after, .collab-updated::after { content: attr(data-collab-by); position: absolute; z-index: 5; bottom: calc(100% + 8px); inset-inline-start: 0; font-size: 11px; font-weight: 700; line-height: 1; padding: 3px 7px; border-radius: 999px; background: var(--collab-color, #1d5fa8); color: #fff; pointer-events: none; white-space: nowrap; text-transform: none; letter-spacing: 0; }
 .collab-live-host { outline: 2px solid var(--collab-color, #1d5fa8); outline-offset: 4px; border-radius: 8px; animation: collab-edit-pulse 1.8s ease-in-out infinite; }
 @keyframes collab-edit-pulse { 0%, 100% { outline-color: var(--collab-color, #1d5fa8); } 50% { outline-color: color-mix(in srgb, var(--collab-color, #1d5fa8) 35%, transparent); } }
 .collab-field-flash { animation: collab-flash 2.2s ease-out; }
