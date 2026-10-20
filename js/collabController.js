@@ -10,7 +10,7 @@ import { applyField, changedSceneNumbers, FIELD_INPUT_IDS, fieldForDomTarget, fi
 import { createLockManager } from "./collabLocks.js";
 import { fieldEditors, peopleFrom } from "./collabPresence.js";
 import { createOpQueue } from "./collabQueue.js";
-import { readOnlyReason, uiPermissions } from "./collabRoles.js";
+import { normalizeClientRole, readOnlyReason, uiPermissions } from "./collabRoles.js";
 import { createCollabUndo } from "./collabUndo.js";
 
 export const COLLAB_MAP_KEY = "guiaflow.collab.v1";
@@ -32,13 +32,9 @@ function writeCollabMap(storage, map) {
   try { storage?.setItem(COLLAB_MAP_KEY, JSON.stringify(map)); } catch { /* cota */ }
 }
 
-/** Projetos locais que um convidado pode abrir: só os que /collab/shared devolveu. */
-export function guestVisibleProjects(projects, collabMap, sharedProjectIds) {
-  const allowed = new Set(sharedProjectIds || []);
-  return (projects || []).filter((project) => {
-    const remote = collabMap?.[project?.id]?.remoteId;
-    return Boolean(remote && allowed.has(remote));
-  });
+/** @deprecated Biblioteca mostra todos os projetos locais; membership não filtra IndexedDB. */
+export function guestVisibleProjects(projects) {
+  return projects || [];
 }
 
 /** Marca um projeto local como colaborativo sem apagar uma entrada que já existe. */
@@ -167,8 +163,8 @@ export function createCollabController(deps) {
     ui.applyPermissions(perms, { readOnlyText: perms.readOnlyBanner ? t(readOnlyReason(ctx.role, { readOnly: ctx.ownerLapsed })) : "" });
   }
   function setRole(role) {
-    ctx.role = role;
-    ctx.perms = uiPermissions(role, { guest: ctx.guest, readOnly: ctx.ownerLapsed });
+    ctx.role = normalizeClientRole(role) || role;
+    ctx.perms = uiPermissions(ctx.role, { readOnly: ctx.ownerLapsed });
     if (!ctx.perms.canEdit) ctx.queue.freeze();
     applyPerms();
     ctx.comments?.refresh({ quiet: true });
@@ -595,7 +591,7 @@ export function createCollabController(deps) {
     await detach();
     const remoteId = entry.remoteId;
     const c = {
-      localId, remoteId, role: entry.role || "viewer", guest: Boolean(entry.guest), ownerLapsed: false, selfId: "", selfName: "",
+      localId, remoteId, role: normalizeClientRole(entry.role) || "editor", ownerLapsed: false, selfId: "", selfName: "",
       queue: createOpQueue({ storage, storageKey: QUEUE_KEY(remoteId) }),
       undo: createCollabUndo(), people: [], names: new Map(), members: [], deferred: new Map(), goneShown: new Set(),
       online: true, sending: false, again: false, ready: false, applyingRemote: false, lastRecordAt: 0, lastStep: null,
@@ -603,7 +599,7 @@ export function createCollabController(deps) {
     };
     ctx = c;
     ui.mount();
-    c.perms = uiPermissions(c.role, { guest: c.guest });
+    c.perms = uiPermissions(c.role);
     c.client = createCollabClient({
       request, projectId: remoteId, getStep: selectedStepId,
       getField: () => focusInfo()?.field || null,
@@ -754,7 +750,7 @@ export function createCollabController(deps) {
       ui.toast({ text: t("collab.invite.errGeneric") });
       return;
     }
-    remember(p.id, { remoteId, role: "owner", guest: false, ownerName: "", name: p.name });
+    remember(p.id, { remoteId, role: "owner", ownerName: "", name: p.name });
     await attach(p.id);
     deps.onTeamChange?.();
     await openMembers();
@@ -764,7 +760,7 @@ export function createCollabController(deps) {
     if (!p || mapEntry(p.id) || !(Number(p.collab?.v) >= 1)) return false;
     const remoteId = remoteIdFor(p.id);
     if (!remoteId) return false;
-    remember(p.id, { remoteId, role: "owner", guest: false, ownerName: "", name: p.name });
+    remember(p.id, { remoteId, role: "owner", ownerName: "", name: p.name });
     return true;
   }
   function paywall() {
@@ -785,7 +781,7 @@ export function createCollabController(deps) {
     const reopen = () => setTimeout(() => void openMembers(), 0);
     ui.openMembers({
       host: teamHost(),
-      members, invites: inv?.ok ? inv.data.invites || [] : [], you: data?.you || { userId: c.selfId }, perms: c.perms, canRoleEdit: c.perms.canManageMembers,
+      members, invites: inv?.ok ? inv.data.invites || [] : [], you: data?.you || { userId: c.selfId }, perms: c.perms, canRoleEdit: false,
       onInvite: async ({ email, role }) => {
         if (!/^\S+@\S+\.\S+$/.test(email)) return { ok: false, message: t("collab.invite.errEmail") };
         const r = await request(`/projects/${encodeURIComponent(c.remoteId)}/collab/invites`, { method: "POST", body: JSON.stringify({ email, role }) });
@@ -825,17 +821,16 @@ export function createCollabController(deps) {
         ui.showJoin({ status: "error", message: t(key), onLater: () => deps.onJoinDismiss?.() });
         return;
       }
-      if (res.data?.accessToken) setSession({ accessToken: res.data.accessToken, email: res.data.user?.email || "", guest: Boolean(res.data.guest) });
+      if (res.data?.accessToken) setSession({ accessToken: res.data.accessToken, email: res.data.user?.email || "" });
       const info = res.data.project;
-      const entry = { remoteId: info.id, role: info.role, guest: Boolean(res.data.guest), ownerName: "", name: info.name };
       ui.toast({ text: t("collab.join.done", { name: info.name, project: info.name }) });
       deps.onJoinDismiss?.();
-      await openShared({ projectId: info.id, name: info.name, role: info.role, guest: entry.guest });
+      await openShared({ projectId: info.id, name: info.name, role: info.role });
     }
   }
 
   /** Abre um projeto compartilhado comigo: cria a cópia local na 1ª vez, depois só abre. */
-  async function openShared({ projectId, name, role, guest = null, owner = null }) {
+  async function openShared({ projectId, name, role, owner = null }) {
     let localId = findLocalByRemote(projectId);
     if (localId && !(await deps.hasLocal?.(localId))) { forget(localId); localId = null; }
     if (!localId) {
@@ -844,10 +839,11 @@ export function createCollabController(deps) {
       const payload = await toLocalValue(res.data.project.payload || {}, projectId);
       const created = await createLocalProject({ ...payload, name: res.data.project.name || name, steps: Array.isArray(payload.steps) ? payload.steps : [] });
       localId = created.id;
-      remember(localId, { remoteId: projectId, role: res.data.role || role, guest: guest ?? true, ownerName: owner?.name || "", name: created.name });
+      const memberRole = normalizeClientRole(res.data.role || role) || "editor";
+      remember(localId, { remoteId: projectId, role: memberRole, ownerName: owner?.name || "", name: created.name });
     } else {
       const e = mapEntry(localId);
-      remember(localId, { ...e, role: role || e.role });
+      remember(localId, { ...e, role: normalizeClientRole(role || e.role) || e.role });
     }
     deps.onSharedOpen?.({ projectId, name, role, owner });
     await openProjectLocal(localId);
@@ -862,7 +858,7 @@ export function createCollabController(deps) {
     attach, detach, adoptOwned, onLocalChange, onFieldBlur, onFieldFocus, onFieldInput, onStepSelected, onPageHide,
     undo: () => runUndo("undo"), redo: () => runUndo("redo"),
     enableForCurrent, openMembers, showJoin, openShared, listShared, confirmStepDelete, paywall, endSessionQuietly,
-    guestAccount: () => Object.values(readCollabMap(storage)).some((e) => e.guest),
+    guestAccount: () => false,
     openComments: (opts) => ctx?.comments?.openPanel(opts),
     /** Link do e-mail (#/comments/<projeto>/<conversa>): abre o projeto e o painel. Devolve false se o projeto não é meu/compartilhado. */
     async openCommentLink({ projectId, threadId }) {

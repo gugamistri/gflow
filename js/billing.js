@@ -258,11 +258,11 @@ function unavailableResult(result) {
   return Boolean(result && (result.status === 404 || result.status === 503));
 }
 
-/** `guest` quando a API diz; `""` quando o papel veio e não é convidado; null se a resposta não tem o campo. */
+/** Papel de conta na sessão: sempre vazio. Acesso ao projeto é membership; plano é none/pro/team. */
 export function accountRoleFromMe(data) {
   const user = data?.user;
   if (!user || typeof user !== "object" || !Object.prototype.hasOwnProperty.call(user, "role")) return null;
-  return user.role === "guest" ? "guest" : "";
+  return "";
 }
 
 export async function fetchAccountProfile(env) {

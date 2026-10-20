@@ -59,8 +59,6 @@
 .collab-conflict { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; padding: 6px 8px; font-size: 12px; border-radius: 8px; background: #fff8e6; border: 1px solid #e6c75c; color: #4d3800; }
 .collab-conflict-text { flex: 1 1 100%; font-weight: 600; }
 
-body.collab-guest-account #btn-new-project, body.collab-guest-account .library-create-card { display: none !important; }
-
 /* somente leitura: o inspetor fica inerte e esmaecido; ações de edição somem */
 body.collab-readonly #props-body { opacity: .72; }
 body.collab-readonly .film-actions,

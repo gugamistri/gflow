@@ -227,7 +227,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
   function applyPermissions(perms, { readOnlyText = "" } = {}) {
     document.body.classList.add("collab-on");
     document.body.classList.toggle("collab-readonly", !perms.canEdit);
-    document.body.classList.toggle("collab-guest", !perms.seeBilling);
+    document.body.classList.remove("collab-guest");
     const body = document.getElementById("props-body");
     if (body) {
       if (!perms.canEdit) body.setAttribute("inert", "");
@@ -237,14 +237,13 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
       banner.hidden = !readOnlyText;
       banner.textContent = readOnlyText || "";
     }
-    for (const sel of ["#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-results", "#btn-share-embed", "#btn-account-billing"]) {
+    for (const sel of ["#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-results", "#btn-share-embed"]) {
       document.querySelectorAll(sel).forEach((n) => {
-        if (!perms.canPublish && !sel.includes("billing")) n.toggleAttribute("data-collab-hidden", true);
-        else if (!perms.seeBilling && sel.includes("billing")) n.toggleAttribute("data-collab-hidden", true);
-        else n.removeAttribute("data-collab-hidden");
+        n.toggleAttribute("data-collab-hidden", !perms.canPublish);
       });
     }
-    document.querySelectorAll("#btn-new-project, .library-create-card").forEach((n) => n.toggleAttribute("data-collab-hidden", !perms.canCreateProject));
+    document.querySelectorAll("#btn-account-billing").forEach((n) => n.removeAttribute("data-collab-hidden"));
+    document.querySelectorAll("#btn-new-project, .library-create-card").forEach((n) => n.removeAttribute("data-collab-hidden"));
   }
 
   function setStatus({ online = true, pending = 0, syncing = false } = {}) {
@@ -396,29 +395,28 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     const list = el("ul", { class: "collab-members-list" });
     for (const m of members) {
       const p = { color: m.color, initials: m.initials, idle: false, name: m.name };
+      const roleLabel = m.isOwner || m.role === "owner" ? t("collab.role.owner") : t("collab.role.editor");
       const row = el("li", { class: "collab-member" }, avatar(p, { size: "md" }),
         el("span", { class: "collab-member-name" }, m.name, m.userId === you?.userId ? ` (${t("collab.you")})` : "", m.email ? el("small", {}, m.email) : null));
-      if (perms.canManageMembers && !m.isOwner && canRoleEdit) {
-        const sel = el("select", { "aria-label": t("collab.invite.role"), onchange: (e) => onRole(m, e.target.value) },
-          ["editor", "commenter", "viewer"].map((r) => el("option", { value: r, selected: r === m.role }, t(`collab.role.${r}`))));
-        row.append(sel, el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => onRemove(m) }, t("collab.members.remove")));
-      } else row.append(el("span", { class: "collab-role-chip" }, t(`collab.role.${m.role}`)));
+      if (perms.canManageMembers && !m.isOwner) {
+        row.append(el("span", { class: "collab-role-chip" }, roleLabel),
+          el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => onRemove(m) }, t("collab.members.remove")));
+      } else row.append(el("span", { class: "collab-role-chip" }, roleLabel));
       list.append(row);
     }
     dlg.append(el("h3", { id: "collab-members-title" }, t("collab.members.title")), list);
     if (perms.canInvite) {
       const status = el("p", { class: "collab-invite-status", role: "status" });
       const email = el("input", { type: "email", id: "collab-invite-email", autocomplete: "off", required: true, placeholder: "ana@empresa.com" });
-      const role = el("select", { id: "collab-invite-role", "aria-label": t("collab.invite.role") }, ["editor", "commenter", "viewer"].map((r) => el("option", { value: r }, t(`collab.role.${r}`))));
       const send = el("button", { type: "submit", class: "btn btn-primary" }, t("collab.invite.send"));
       const form = el("form", { class: "collab-invite-form", novalidate: true }, el("h4", {}, t("collab.invite.title")),
-        el("label", { for: "collab-invite-email" }, t("collab.invite.email")), email, role, send, status);
+        el("label", { for: "collab-invite-email" }, t("collab.invite.email")), email, send, status);
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         send.disabled = true;
         send.textContent = t("collab.invite.sending");
         try {
-          const res = await onInvite({ email: email.value.trim(), role: role.value });
+          const res = await onInvite({ email: email.value.trim(), role: "editor" });
           status.textContent = res.message || "";
           status.dataset.kind = res.ok ? "ok" : "error";
           status.replaceChildren(res.message || "");
@@ -433,7 +431,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
       const pend = invites.filter((i) => i.status === "pending");
       if (pend.length) {
         dlg.append(el("h4", {}, t("collab.invite.pending")), el("ul", { class: "collab-invites-list" },
-          pend.map((i) => el("li", {}, `${i.email} · ${t(`collab.role.${i.role}`)}`, el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => onRevoke(i) }, t("collab.invite.revoke"))))));
+          pend.map((i) => el("li", {}, i.email, el("button", { type: "button", class: "btn btn-sm btn-ghost", onclick: () => onRevoke(i) }, t("collab.invite.revoke"))))));
       }
     }
     const foot = el("div", { class: "collab-dialog-actions" });
