@@ -3087,6 +3087,7 @@ export function createEditor(ctx) {
     }
     if (action === "show-caption") toggleShowCaptionOnSelection();
     if (action === "cover") ctx.onSetCover?.(getSelectedIndex());
+    if (action === "comment") ctx.onAddComment?.();
   }
 
   async function openFilmContextMenu(x, y, index) {
@@ -3122,6 +3123,7 @@ export function createEditor(ctx) {
         kbd: t("shortcuts.autoPreviewChord"),
       }),
       `<div class="film-context-sep" role="separator"></div>`,
+      ...(ctx.canAddComment?.() ? [filmMenuButton("comment", t("comments.film.add")), `<div class="film-context-sep" role="separator"></div>`] : []),
       filmMenuButton("generate-copy", t("props.generateCopyShort"), {
         title: t("props.generateCopy"),
         badge: hostedBadge(Boolean(llmBridge() || llmConfigured)),

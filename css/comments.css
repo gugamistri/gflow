@@ -112,7 +112,10 @@
 .comment-mention-option[aria-selected="true"] { background: var(--ns-accent, #2a9d8f); color: #fff; }
 
 /* selos */
-.comment-film-badge { position: absolute; bottom: 4px; inset-inline-start: 4px; padding: 1px 6px; border-radius: 999px; background: #3f3f46; color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; pointer-events: none; }
+.comment-film-badge { position: absolute; bottom: 4px; inset-inline-start: 4px; padding: 1px 6px; border: 0; border-radius: 999px; background: #3f3f46; color: #fff; font: inherit; font-size: 10px; font-weight: 700; line-height: 16px; cursor: pointer; }
+.comment-slide-open { position: absolute; z-index: 4; top: 8px; inset-inline-end: 8px; padding: 4px 8px; border: 0; border-radius: 999px; background: #3f3f46; color: #fff; font: inherit; font-size: 12px; font-weight: 700; line-height: 1.2; cursor: pointer; }
+.comment-slide-open:hover, .comment-film-badge:hover { background: #27272a; }
+.comment-slide-open:focus-visible, .comment-film-badge:focus-visible { outline: 2px solid var(--ns-accent, #2a9d8f); outline-offset: 2px; }
 .comment-film-badge.has-unread { background: #b3261e; }
 .comment-field-btn { appearance: none; display: inline-flex; align-items: center; margin-inline-start: 6px; padding: 1px 7px; min-height: 22px; border-radius: 999px; border: 1px solid var(--ns-border, rgba(127, 127, 127, .35)); background: transparent; color: var(--ns-muted, #71717a); font: inherit; font-size: 11px; cursor: pointer; opacity: .55; }
 .comment-field-btn.has-open { opacity: 1; background: #3f3f46; color: #fff; border-color: transparent; }

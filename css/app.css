@@ -2133,6 +2133,15 @@ body.is-presenting .local-save {
   text-underline-offset: 2px;
 }
 
+.sync-cloud {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  color: var(--ns-accent, #2a9d8f);
+}
+.sync-cloud[hidden] { display: none; }
+.sync-cloud svg { width: 14px; height: 14px; }
+
 .sync-dot {
   width: 8px;
   height: 8px;

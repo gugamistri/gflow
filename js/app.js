@@ -588,6 +588,8 @@ const editor = createEditor({
   viewerIsPro: () => viewerIsPro(),
   onOpenFixedStep: (kind) => openFixedStep(kind),
   onSelectStep: () => collab?.onStepSelected(),
+  canAddComment: () => Boolean(collab?.isActive?.()),
+  onAddComment: () => collab?.openComments?.({ compose: true, stepId: project?.steps?.[selectedIndex]?.id || null }),
   confirmStepDelete: collabFlagOn() ? (id) => (collab?.isActive() ? collab.confirmStepDelete(id) : Promise.resolve(true)) : undefined,
 });
 

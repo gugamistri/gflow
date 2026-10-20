@@ -161,17 +161,7 @@ export function createCommentsUi(deps) {
   }
 
   /* ---------- botão da barra e selos ---------- */
-  function mountToggle() {
-    const bar = document.getElementById("collab-topbar");
-    if (!bar || toggle?.isConnected) return;
-    toggleBadge = el("span", { class: "comments-toggle-count", "aria-hidden": "true" });
-    toggle = el("button", { type: "button", class: "comments-toggle", id: "comments-toggle", "aria-haspopup": "dialog", "aria-expanded": "false", "aria-controls": "comments-panel", onclick: () => (S.open ? closePanel() : openPanel()) },
-      el("span", { class: "comments-toggle-icon", "aria-hidden": "true" }, "💬"), el("span", { class: "comments-toggle-text" }, t("comments.open")), toggleBadge);
-    bar.append(toggle);
-  }
-
   function paintToggle() {
-    mountToggle();
     if (!toggle) return;
     const open = S.summary.openThreads || 0;
     toggle.setAttribute("aria-label", t("comments.openCount", { n: open }));
@@ -186,13 +176,43 @@ export function createCommentsUi(deps) {
     if (!film) return;
     film.querySelectorAll(".comment-film-badge").forEach((n) => n.remove());
     film.querySelectorAll(".film-item").forEach((item) => {
-      const id = getProject()?.steps?.[Number(item.dataset.index)]?.id;
+      const index = Number(item.dataset.index);
+      const id = getProject()?.steps?.[index]?.id;
       const n = id ? openCountForStep(S.summary, id) : 0;
       if (!n) return;
       const unread = Number(S.summary.byStep?.[id]?.unread) || 0;
-      item.append(el("span", { class: `comment-film-badge${unread ? " has-unread" : ""}`, title: t("comments.badge.aria", { n }) },
-        el("span", { "aria-hidden": "true" }, `💬 ${n}`), el("span", { class: "collab-sr-only" }, t("comments.badge.aria", { n }))));
+      const label = t("comments.badge.aria", { n });
+      item.append(el("button", {
+        type: "button",
+        class: `comment-film-badge${unread ? " has-unread" : ""}`,
+        title: label,
+        "aria-label": label,
+        onclick: (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setSelectedIndex(index);
+          openPanel({ stepId: id });
+        },
+      }, el("span", { "aria-hidden": "true" }, `💬 ${n}`)));
     });
+  }
+
+  /** No palco, o passo que já tem conversa ganha um botão para abrir só ela. */
+  function paintSlideOpen() {
+    const frame = document.getElementById("canvas-frame");
+    if (!frame) return;
+    frame.querySelectorAll(".comment-slide-open").forEach((n) => n.remove());
+    const sid = selStepId();
+    const n = sid ? openCountForStep(S.summary, sid) : 0;
+    if (!n) return;
+    const label = t("comments.badge.aria", { n });
+    frame.append(el("button", {
+      type: "button",
+      class: "comment-slide-open",
+      title: label,
+      "aria-label": label,
+      onclick: (e) => { e.preventDefault(); e.stopPropagation(); openPanel({ stepId: sid }); },
+    }, `💬 ${n}`));
   }
 
   /* ---------- botões nos campos ---------- */
@@ -499,7 +519,8 @@ export function createCommentsUi(deps) {
         ? el("div", { class: "comments-state" }, el("p", {}, t("comments.error")), el("button", { type: "button", class: "btn btn-sm", onclick: () => { S.error = false; void refresh(); } }, t("comments.retry")))
         : el("p", { class: "comments-state" }, t("comments.loading")));
     } else {
-      const shown = filterThreads(S.threads, S.filter, getSelfId());
+      let shown = filterThreads(S.threads, S.filter, getSelfId());
+      if (S.stepScope) shown = shown.filter((th) => th.stepId === S.stepScope);
       if (!shown.length) listEl.append(el("p", { class: "comments-state" }, t(`comments.empty.${S.filter}`)));
       const cur = selStepId();
       const groups = groupThreads(shown, stepIds());
@@ -549,12 +570,18 @@ export function createCommentsUi(deps) {
       const node = listEl.querySelector(`[data-thread="${CSS.escape(focusThread)}"]`);
       if (node) { node.scrollIntoView({ block: "center" }); node.focus({ preventScroll: true }); node.classList.add("is-focus"); focusThread = null; }
     }
+    if (S.compose) {
+      const box = panel.querySelector("#comments-foot textarea");
+      if (box) { box.focus(); S.compose = false; }
+    }
   }
 
-  function openPanel({ threadId = null, filter = null } = {}) {
+  function openPanel({ threadId = null, filter = null, stepId = null, compose = false } = {}) {
     buildPanel();
     closePopover();
     S.open = true;
+    S.stepScope = stepId || null;
+    S.compose = Boolean(compose);
     if (filter) S.filter = filter;
     focusThread = threadId;
     if (threadId) {
@@ -567,7 +594,7 @@ export function createCommentsUi(deps) {
     paintPanel();
     if (!S.loaded) void refresh();
     else void refresh({ quiet: true });
-    if (!threadId) panel.querySelector("#comments-panel-title")?.focus();
+    if (!threadId && !S.compose) panel.querySelector("#comments-panel-title")?.focus();
   }
 
   function closePanel() {
@@ -657,6 +684,7 @@ export function createCommentsUi(deps) {
     if (destroyed || typeof document === "undefined") return;
     paintToggle();
     paintFilmstrip();
+    paintSlideOpen();
     paintFieldButtons();
     withFocusKept(() => {
       if (S.open) paintPanel();
@@ -674,7 +702,6 @@ export function createCommentsUi(deps) {
   function start() {
     if (typeof document === "undefined") { void refresh(); return; }
     document.addEventListener("keydown", onEscape);
-    mountToggle();
     const film = document.getElementById("filmstrip");
     if (film && typeof MutationObserver !== "undefined") {
       observer = new MutationObserver(() => paintFilmstrip());
@@ -701,13 +728,19 @@ export function createCommentsUi(deps) {
     panel?.remove();
     toggle?.remove();
     document.body.classList.remove("comments-open");
-    document.querySelectorAll(".comment-film-badge, .comment-field-btn").forEach((n) => n.remove());
+    document.querySelectorAll(".comment-film-badge, .comment-field-btn, .comment-slide-open").forEach((n) => n.remove());
   }
 
   return {
     start, destroy, refresh, onCseq, openPanel, closePanel, paint,
-    onStepSelected: () => { if (!hasDom()) return; paintFieldButtons(); if (S.open) paintPanel(); },
-    repaint: () => { if (!hasDom()) return; paintFilmstrip(); paintFieldButtons(); },
+    onStepSelected: () => {
+      if (!hasDom()) return;
+      if (S.open && S.stepScope) S.stepScope = selStepId();
+      paintSlideOpen();
+      paintFieldButtons();
+      if (S.open) paintPanel();
+    },
+    repaint: () => { if (!hasDom()) return; paintFilmstrip(); paintSlideOpen(); paintFieldButtons(); },
     state: () => S,
   };
 }
