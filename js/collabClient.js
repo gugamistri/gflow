@@ -1,13 +1,16 @@
 /**
  * Transporte da colaboração (cliente): polling de `state` com ETag/304, envio de ops, presença e locks.
  * Sem DOM. `request(path, init)` é o `cloudFetch` ({ ok, status, error, data }).
- * Intervalos: 3 s com a aba visível, 15 s em segundo plano; presença no máximo a cada ~3,5 s
- * (o servidor limita a 1 por 3 s). Falha de rede → offline com recuo até 15 s; ao voltar, o
- * `state` traz `resync` se o log de eventos não cobre o intervalo.
+ * Intervalos: 3 s com a aba visível, 15 s em segundo plano. O GET de state é o que revela
+ * edição dos outros; com ETag igual o servidor responde 304. Presença só vai no POST quando
+ * o passo ou o campo mudou, ou a cada 20 s para renovar o prazo de 45 s. O servidor recusa
+ * mais de 1 POST a cada 3 s, então a janela mínima é 3,5 s. Falha de rede → offline com
+ * recuo até 15 s; ao voltar, o `state` traz `resync` se o log de eventos não cobre o intervalo.
  */
 export const POLL_ACTIVE_MS = 3_000;
 export const POLL_HIDDEN_MS = 15_000;
 export const PRESENCE_EVERY_MS = 3_500;
+export const PRESENCE_HEARTBEAT_MS = 20_000;
 const BACKOFF = [3_000, 6_000, 10_000, 15_000];
 
 export function createCollabClient({
@@ -28,7 +31,8 @@ export function createCollabClient({
   let running = false;
   let online = true;
   let failures = 0;
-  let lastPresenceAt = 0;
+  let lastPresenceAt = null;
+  let lastPresenceKey = null;
   let presenceTimer = null;
   let polling = false;
   let lastRole = null;
@@ -109,28 +113,42 @@ export function createCollabClient({
     }
   }
 
-  function schedulePresence(delay) {
+  function presenceKey() {
+    return `${getStep() || ""}\n${getField() || ""}`;
+  }
+
+  function schedulePresence(delay, { force = false } = {}) {
     if (presenceTimer) return;
     presenceTimer = setTimer(() => {
       presenceTimer = null;
-      if (running) void sendPresence();
+      if (running) void sendPresence({ force });
     }, Math.max(0, delay));
     presenceTimer?.unref?.();
   }
 
-  /** No máximo um POST por janela. Foco e blur não furam o limite: o mais recente espera a vez. */
-  async function sendPresence() {
-    const wait = PRESENCE_EVERY_MS - (now() - lastPresenceAt);
+  /**
+   * POST só se o passo/campo mudou ou se o batimento de 20 s venceu.
+   * why: a presença expira em 45 s; repetir o mesmo cursor a cada poll só gera 429.
+   */
+  async function sendPresence({ force = false } = {}) {
+    const key = presenceKey();
+    const changed = key !== lastPresenceKey;
+    const age = lastPresenceAt == null ? PRESENCE_HEARTBEAT_MS : now() - lastPresenceAt;
+    if (!force && !changed && age < PRESENCE_HEARTBEAT_MS) return null;
+    const wait = PRESENCE_EVERY_MS - age;
     if (wait > 0) {
-      schedulePresence(wait);
+      schedulePresence(wait, { force: force || changed });
       return null;
     }
     if (presenceTimer) { clearTimer(presenceTimer); presenceTimer = null; }
     lastPresenceAt = now();
     const res = await request(`${base}/presence`, { method: "POST", body: JSON.stringify({ stepId: getStep(), field: getField() }), timeoutMs: 8_000 });
-    if (res.ok) h("onEffectiveRole", { role: res.data?.role, effectiveRole: res.data?.effectiveRole, downgraded: Boolean(res.data?.downgraded) });
-    else if (res.status === 429) schedulePresence((Math.max(1, Number(res.data?.retryAfterSec) || 3) * 1000));
-    else if (!terminal(res)) setOnline(false);
+    if (res.ok) {
+      lastPresenceKey = key;
+      h("onEffectiveRole", { role: res.data?.role, effectiveRole: res.data?.effectiveRole, downgraded: Boolean(res.data?.downgraded) });
+    } else if (res.status === 429) {
+      schedulePresence((Math.max(1, Number(res.data?.retryAfterSec) || 3) * 1000), { force: true });
+    } else if (!terminal(res)) setOnline(false);
     return res;
   }
 

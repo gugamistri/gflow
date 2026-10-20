@@ -495,9 +495,34 @@ test("presença: vários focos seguidos viram um POST; o próximo espera a janel
   assert.equal(timers.length, 1);
   assert.ok(timers[0].ms > 0 && timers[0].ms <= 3_500);
   clock += 3_500;
-  assert.equal((await c.sendPresence()).status, 200);
+  assert.equal(await c.sendPresence(), null, "o mesmo passo e campo não gera outro POST");
+  assert.equal(posts.length, 1);
+  clock += 20_000;
+  assert.equal((await c.sendPresence()).status, 200, "o batimento renova a presença sem mudar o cursor");
   assert.equal(posts.length, 2);
   assert.ok(posts.every((p) => p[1].endsWith("/collab/presence")));
+});
+
+test("presença: mudar o campo manda um POST depois da janela", async () => {
+  let clock = 0;
+  let field = "title";
+  const posts = [];
+  const c = createCollabClient({
+    projectId: "p1",
+    now: () => clock,
+    request: async (path, init) => { posts.push(JSON.parse(init.body).field); return { ok: true, status: 200, data: {} }; },
+    getStep: () => "s1",
+    getField: () => field,
+    setTimer: (fn) => fn,
+    clearTimer: () => {},
+  });
+  await c.sendPresence();
+  field = "text";
+  clock += 1_000;
+  assert.equal(await c.sendPresence(), null);
+  clock += 3_500;
+  assert.equal((await c.sendPresence()).status, 200);
+  assert.deepEqual(posts, ["title", "text"]);
 });
 
 test("nome da cena: só as cenas que mudaram", () => {
