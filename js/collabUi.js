@@ -78,6 +78,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     removedBanner?.remove();
     clearFieldMarks();
     document.querySelectorAll(".collab-film-avatars").forEach((n) => n.remove());
+    paintCloudSaved(false);
     document.body.classList.remove("collab-on", "collab-readonly");
     document.getElementById("props-body")?.removeAttribute("inert");
     mounted = false;
@@ -257,14 +258,30 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
       text = pending ? t("collab.status.pending", { n: pending }) : t("collab.status.syncing");
       kind = "syncing";
     } else {
-      // tudo confirmado pelo servidor: salvo na nuvem do projeto (vale para convidado sem plano próprio)
-      text = t("collab.status.saved");
+      // confirmado: o texto sai do cabeçalho e vira o ícone ao lado de "Sincronizado"
       kind = "saved";
     }
-    statusEl.hidden = !text;
-    statusEl.textContent = text;
+    const saved = kind === "saved";
+    statusEl.hidden = saved || !text;
+    statusEl.textContent = saved ? "" : text;
     statusEl.dataset.kind = kind;
     statusEl.setAttribute("role", "status");
+    paintCloudSaved(saved);
+  }
+
+  function paintCloudSaved(on) {
+    const label = on ? t("collab.status.saved") : "";
+    document.querySelectorAll("[data-sync-cloud]").forEach((n) => {
+      n.hidden = !on;
+      if (on) {
+        n.title = label;
+        n.setAttribute("role", "img");
+        n.setAttribute("aria-label", label);
+      } else {
+        n.removeAttribute("title");
+        n.removeAttribute("aria-label");
+      }
+    });
   }
 
   /* ---------- toasts e avisos ---------- */
