@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyField, canvasIdsForField, diffSnapshots, fieldForDomTarget, inputIdForKey, keyForInputId, normalizePositions, readField, snapshotProject, visualField } from "./collabModel.js";
+import { applyField, canvasIdsForField, changedSceneNumbers, diffSnapshots, fieldForDomTarget, inputIdForKey, keyForInputId, normalizePositions, readField, snapshotProject, visualField } from "./collabModel.js";
 import { createOpQueue } from "./collabQueue.js";
 import { createLockManager } from "./collabLocks.js";
 import { createCollabUndo } from "./collabUndo.js";
@@ -472,6 +472,12 @@ test("cliente: 401 encerra como sessão, sem perda de acesso", async () => {
   assert.equal((await c.pollOnce()).terminal, true);
   assert.deepEqual(log, [["session", 401]]);
   assert.equal(c.isRunning(), false);
+});
+
+test("nome da cena: só as cenas que mudaram", () => {
+  assert.deepEqual(changedSceneNumbers({ 1: "A", 2: "B" }, { 1: "A", 2: "C" }), ["2"]);
+  assert.deepEqual(changedSceneNumbers({ 1: "A" }, { 1: "A", 3: "Nova" }), ["3"]);
+  assert.deepEqual(changedSceneNumbers(null, { 1: "A" }), ["1"]);
 });
 
 test("biblioteca do convidado só inclui os projetos do convite", () => {

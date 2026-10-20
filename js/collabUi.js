@@ -152,6 +152,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
   function clearFieldMarks() {
     document.querySelectorAll(".collab-field-remote, .collab-live-edit, .collab-live-host").forEach((n) => {
       n.classList.remove("collab-field-remote", "collab-live-edit", "collab-live-host");
+      if (n.classList.contains("collab-updated")) return;
       n.removeAttribute("data-collab-by");
       if (!n.classList.contains("collab-field-flash")) n.style.removeProperty("--collab-color");
     });
@@ -177,6 +178,10 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     clearFieldMarks();
     if (!stepId) return;
     for (const p of fieldEditors(people, stepId)) {
+      if (p.field === "sceneLabels") {
+        for (const node of sceneNodes(sceneNumberOfKicker())) markEditing(node, p, "collab-live-edit");
+        continue;
+      }
       const inputId = FIELD_INPUT_IDS[p.field];
       const wrap = inputId ? wrapperFor(inputId) : null;
       if (wrap) markEditing(wrap, p, "collab-field-remote");
@@ -279,27 +284,52 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     return close;
   }
 
-  /** Pulso curto no campo (inspetor e texto do palco) quando o valor chega de outra pessoa. */
-  function flashField(inputId, { color = "" } = {}) {
-    const field = fieldForDomTarget({ id: inputId });
+  function sceneNumberOfKicker() {
+    const kicker = document.getElementById("canvas-slide-kicker");
+    return kicker?.dataset?.scene ? [kicker.dataset.scene] : [];
+  }
+
+  /** Rótulo da cena no filmstrip e, se for a cena deste slide, o kicker. */
+  function sceneNodes(sceneNumbers) {
     const nodes = [];
-    const wrap = inputId ? wrapperFor(inputId) : null;
-    if (wrap) nodes.push([inputId, wrap]);
-    for (const cid of canvasIdsForField(field)) {
-      const node = document.getElementById(cid);
-      if (isShown(node)) nodes.push([cid, node]);
+    for (const n of sceneNumbers || []) {
+      const label = document.querySelector(`.film-scene[data-scene="${CSS.escape(String(n))}"] .film-scene-label`);
+      if (label) nodes.push(label);
+      const kicker = document.getElementById("canvas-slide-kicker");
+      if (kicker && String(kicker.dataset.scene) === String(n) && isShown(kicker)) nodes.push(kicker);
     }
-    for (const [key, node] of nodes) {
+    return nodes;
+  }
+
+  function flashNodes(nodes, { color = "", name = "" } = {}) {
+    for (const node of nodes) {
+      if (!node) continue;
       if (color) node.style.setProperty("--collab-color", color);
-      node.classList.add("collab-field-flash");
+      if (name) node.setAttribute("data-collab-by", name);
+      node.classList.add("collab-field-flash", "collab-updated");
+      const key = node.id || node;
       clearTimeout(flashTimers.get(key));
       flashTimers.set(key, setTimeout(() => {
-        node.classList.remove("collab-field-flash");
+        node.classList.remove("collab-field-flash", "collab-updated");
         if (!node.classList.contains("collab-live-edit") && !node.classList.contains("collab-field-remote") && !node.classList.contains("collab-live-host")) {
+          node.removeAttribute("data-collab-by");
           node.style.removeProperty("--collab-color");
         }
       }, 2200));
     }
+  }
+
+  /** Pulso curto no campo (inspetor e texto do palco) quando o valor chega de outra pessoa. */
+  function flashField(inputId, { color = "", name = "" } = {}) {
+    const field = fieldForDomTarget({ id: inputId });
+    const nodes = [];
+    const wrap = inputId ? wrapperFor(inputId) : null;
+    if (wrap) nodes.push(wrap);
+    for (const cid of canvasIdsForField(field)) {
+      const node = document.getElementById(cid);
+      if (isShown(node)) nodes.push(node);
+    }
+    flashNodes(nodes, { color, name });
   }
 
   /** Faixa inline no campo em foco: "Ana alterou este campo — Ver versão dela · Manter a minha". */
@@ -455,6 +485,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
 
   return {
     mount, unmount, announce, setPeople, paintStack, paintFilmstrip, paintFieldMarks, setLocks, paintLockBanner,
+    sceneNodes, flashNodes,
     applyPermissions, setStatus, toast, flashField, showInlineConflict, showConflictDialog, showStepRemoved, showMessage,
     openMembers, showJoin, renderShared,
     isMounted: () => mounted,
