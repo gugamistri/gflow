@@ -73,11 +73,11 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/142/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/142/css/theme.css" />
-  <link rel="stylesheet" href="a/142/css/app.css" />
-  <link rel="stylesheet" href="a/142/css/collab.css" />
-  <link rel="stylesheet" href="a/142/css/comments.css" />
+  <link rel="stylesheet" href="a/143/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/143/css/theme.css" />
+  <link rel="stylesheet" href="a/143/css/app.css" />
+  <link rel="stylesheet" href="a/143/css/collab.css" />
+  <link rel="stylesheet" href="a/143/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -172,7 +172,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/142/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/142/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/143/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/143/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -258,7 +258,7 @@
               </button>
               <button type="button" class="share-tab" role="tab" id="tab-share-export" data-share-tab="export" aria-selected="false" tabindex="-1" aria-controls="pane-share-export" data-i18n="share.tab.export">Baixar</button>
               <button type="button" class="share-tab" role="tab" id="tab-share-team" data-share-tab="team" aria-selected="false" tabindex="-1" aria-controls="pane-share-team" hidden>
-                <span data-i18n="share.tab.team">Equipe</span>
+                <span data-i18n="share.tab.team">Gerenciar Acessos</span>
               </button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-link" aria-labelledby="tab-share-link">
@@ -357,10 +357,6 @@
               <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-export" aria-labelledby="tab-share-export" hidden>
-            <button type="button" class="export-option" id="btn-export-vtt">
-              <strong data-i18n="export.vttTitle">Legendas (.vtt)</strong>
-              <span data-i18n="export.vttDesc">Um arquivo por idioma.</span>
-            </button>
             <button type="button" class="export-option" id="btn-export-html">
               <strong data-i18n="export.htmlTitle">HTML navegável</strong>
               <span data-i18n="export.htmlDesc">Tour num arquivo só.</span>
@@ -369,25 +365,28 @@
               <strong data-i18n="export.videoTitle">Vídeo MP4</strong>
               <span data-i18n="export.videoDesc">Slack, e-mail, WhatsApp.</span>
             </button>
-            <div class="export-quality" id="export-quality">
-              <div class="export-quality-head">
-                <span data-i18n="export.qualityLabel">Qualidade do vídeo</span>
-                <span class="pro-badge" id="export-quality-badge">
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </div>
-              <div class="export-quality-row">
-                <select id="export-video-quality" aria-label="Qualidade do vídeo" data-i18n-aria="export.qualityLabel">
-                  <option value="standard" data-i18n="export.qStandard">Padrão · 1080p</option>
-                  <option value="high" data-i18n="export.qHigh">Alta qualidade · 1080p (Pro)</option>
-                  <option value="qhd" data-i18n="export.qQhd">Alta qualidade · 1440p (Pro)</option>
-                  <option value="uhd" data-i18n="export.qUhd">Alta qualidade · 4K (Pro)</option>
-                </select>
-                <select id="export-video-fps" aria-label="Quadros por segundo" data-i18n-aria="export.fpsLabel">
-                  <option value="30">30 fps</option>
-                  <option value="60" data-i18n="export.fps60">60 fps (Pro)</option>
-                </select>
+            <div class="export-quality" id="export-quality" hidden>
+              <div id="export-quality-presets" hidden>
+                <div class="export-quality-head">
+                  <span data-i18n="export.qualityLabel">Qualidade do vídeo</span>
+                  <span class="pro-badge" id="export-quality-badge">
+                    <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                    <span data-i18n="billing.badge">Pro</span>
+                  </span>
+                </div>
+                <div class="export-quality-row">
+                  <select id="export-video-quality" aria-label="Qualidade do vídeo" data-i18n-aria="export.qualityLabel">
+                    <option value="standard" selected data-i18n="export.qStandard">Padrão · 1080p</option>
+                    <option value="high" data-i18n="export.qHigh">Alta qualidade · 1080p (Pro)</option>
+                    <option value="qhd" data-i18n="export.qQhd">Alta qualidade · 1440p (Pro)</option>
+                    <option value="uhd" data-i18n="export.qUhd">Alta qualidade · 4K (Pro)</option>
+                  </select>
+                  <select id="export-video-fps" aria-label="Quadros por segundo" data-i18n-aria="export.fpsLabel">
+                    <option value="30" selected>30 fps</option>
+                    <option value="60" data-i18n="export.fps60">60 fps (Pro)</option>
+                  </select>
+                </div>
+                <small id="export-quality-hint" data-i18n="export.qualityHintFree">Pro: até 4K e 60 fps.</small>
               </div>
               <div class="export-quality-row" id="export-lang-row" hidden>
                 <select id="export-video-lang" aria-label="Idioma do vídeo" data-i18n-aria="export.langLabel"></select>
@@ -396,7 +395,6 @@
                   <option value="0" data-i18n="export.ccOff">Sem legenda</option>
                 </select>
               </div>
-              <small id="export-quality-hint" data-i18n="export.qualityHintFree">Pro: até 4K e 60 fps.</small>
             </div>
             <button type="button" class="export-option" id="btn-export-unbrand" hidden>
               <strong>
@@ -415,6 +413,10 @@
                 <small data-i18n="share.removeBrandHint">Vale para o link e para o vídeo. Republique o link para aplicar.</small>
               </span>
             </label>
+            <button type="button" class="export-option" id="btn-export-vtt">
+              <strong data-i18n="export.vttTitle">Legendas (.vtt)</strong>
+              <span data-i18n="export.vttDesc">Um arquivo por idioma.</span>
+            </button>
             </div>
           </div>
         </details>
@@ -457,7 +459,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/142/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/142/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/143/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/143/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1133,7 +1135,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/142/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/143/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1816,6 +1818,17 @@
     </form>
   </dialog>
 
+  <dialog class="studio-modal" id="modal-link-copied" aria-labelledby="link-copied-title">
+    <form method="dialog" class="studio-modal-body">
+      <h3 id="link-copied-title" data-i18n="share.copiedTitle">Link copiado</h3>
+      <p class="shortcuts-lead" data-i18n="share.copiedLead">Já está na área de transferência. Cole onde quiser enviar.</p>
+      <input id="link-copied-url" type="text" readonly />
+      <div class="studio-modal-actions">
+        <button type="submit" class="btn btn-primary" data-i18n="modal.close">Fechar</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" hidden></div>
 
   <dialog class="image-modal" id="image-modal">
@@ -2077,8 +2090,8 @@
     </symbol>
   </svg>
 
-  <script src="a/142/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/142/js/app.js"></script>
+  <script src="a/143/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/143/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

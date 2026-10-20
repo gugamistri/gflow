@@ -3512,6 +3512,8 @@ function bindChrome() {
     if (!row || !sel) return;
     const langs = project ? exportLangs(project) : [];
     row.hidden = !langs.length;
+    const qualityBox = document.getElementById("export-quality");
+    if (qualityBox) qualityBox.hidden = !langs.length;
     if (!langs.length) return;
     const prev = sel.value;
     sel.replaceChildren(...langs.map((l) => new Option(langLabel(l), l)), new Option(t("export.allLangs", { n: langs.length }), "all"));
@@ -3699,8 +3701,8 @@ function bindChrome() {
         result = await exportVideo(demo, {
           watermark,
           pro: !billingWatermark,
-          quality: qualitySelect?.value || "standard",
-          fps: Number(fpsSelect?.value) || 30,
+          quality: "standard",
+          fps: 30,
           canvas: previewCanvas,
           signal: exportAbort.signal,
           fileBase: lang ? `${base}.${lang}` : "",
@@ -3725,6 +3727,19 @@ function bindChrome() {
       }
     }
   });
+
+  function showLinkCopied(url) {
+    const dialog = document.getElementById("modal-link-copied");
+    const field = document.getElementById("link-copied-url");
+    if (!dialog || !field) {
+      toast(t("toast.shareCopied"), 4200);
+      return;
+    }
+    field.value = url || "";
+    if (!dialog.open) dialog.showModal();
+    field.focus();
+    field.select();
+  }
 
   async function runSharePublish({ update }) {
     closeExportMenu();
@@ -3755,14 +3770,10 @@ function bindChrome() {
       hideExportOverlay();
       await copyText(share.url);
       if (exportPanel) exportPanel.open = true;
-      toast(
-        share.renewed
-          ? t("toast.shareRenewed")
-          : update
-            ? t("toast.shareRepublished")
-            : t("toast.sharePublished"),
-        4200
-      );
+      if (!update && !share.renewed) showLinkCopied(share.url);
+      else {
+        toast(share.renewed ? t("toast.shareRenewed") : t("toast.shareRepublished"), 4200);
+      }
     } catch (err) {
       console.error(err);
       hideExportOverlay();
@@ -4421,7 +4432,8 @@ function bindChrome() {
       if (exportPanel) exportPanel.open = true;
       try {
         await copyText(share.url);
-        toast(updating ? t("toast.shareRepublished") : t("toast.shareCopied"), 4200);
+        if (updating) toast(t("toast.shareRepublished"), 4200);
+        else showLinkCopied(share.url);
         if (share.coverSkipped && updating) setTimeout(() => toast(t("share.cover.skipped"), 4200), 4300);
       } catch (err) {
         console.error(err);
