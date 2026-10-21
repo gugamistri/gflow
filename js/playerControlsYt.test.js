@@ -38,6 +38,6 @@ test("barra única: pausa, som, autoplay, CC e ⚙ no mesmo grupo; menu estilo Y
   const player = readFileSync(new URL("./player.js", import.meta.url), "utf8");
   assert.match(player, /autoplay: autoplayEnabled/);
   assert.match(player, /isAutoplay: \(\) => autoplayEnabled/);
-  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+  const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
   assert.match(css, /body\.gf-cc-off\.gf-player-on #canvas-caption/);
 });

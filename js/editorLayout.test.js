@@ -222,7 +222,7 @@ test("topo da filmstrip: só a duração, com ícone de relógio e tooltip tradu
 });
 
 test("Preview ocupa a tela toda mesmo com o painel recolhido (sem grade de 3 colunas)", () => {
-  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n").replace(/\/\*[\s\S]*?\*\//g, "");
   const offenders = [];
   let presentingOneColumn = false;
   for (const [, selectorList, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
@@ -246,7 +246,7 @@ test("Preview ocupa a tela toda mesmo com o painel recolhido (sem grade de 3 col
 });
 
 test("topo da filmstrip e barra do canvas têm a mesma altura (variável compartilhada)", () => {
-  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n").replace(/\/\*[\s\S]*?\*\//g, "");
   const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => ({
     sels: sel.split(",").map((s) => s.trim()),
     body,

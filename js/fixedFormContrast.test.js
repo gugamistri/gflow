@@ -28,7 +28,7 @@ test("campos do passo inicial ficam legíveis em todos os temas (texto, placehol
   }
 });
 
-const appCss = readFileSync(new URL("../css/app.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+const appCss = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n").replace(/\/\*[\s\S]*?\*\//g, "");
 function rule(selector) {
   for (const [, sel, body] of appCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (sel.split(",").map((s) => s.trim()).includes(selector)) return body;

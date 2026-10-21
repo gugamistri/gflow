@@ -223,9 +223,10 @@ ${driverJs}</script>
 
 export async function exportStandaloneHtml(demo, { onProgress, langData = null } = {}) {
   onProgress?.(t("export.readStyles"));
-  const [themeCss, appCss, driverCss, driverJs, playerJs] = await Promise.all([
+  const [themeCss, shellCss, playerCss, driverCss, driverJs, playerJs] = await Promise.all([
     fetchText("css/theme.css"),
-    fetchText("css/app.css"),
+    fetchText("css/shell.css"),
+    fetchText("css/player.css"),
     fetchTextSoft(DRIVER_CSS),
     fetchTextSoft(DRIVER_JS),
     fetchText("js/standalonePlayer.js"),
@@ -245,7 +246,7 @@ body.standalone .view-player { height: calc(100% - 56px); display: flex; }
 body.standalone .topbar-title { font-size: 0.78rem; }
 `;
   const fontCss = await embeddedThemeFontCss(embedded?.theme?.font);
-  const css = [driverCss, themeCss, appCss, extra, fontCss].filter(Boolean).join("\n");
+  const css = [driverCss, themeCss, shellCss, playerCss, extra, fontCss].filter(Boolean).join("\n");
   const langJs = langData ? htmlLangScript(langData) : "";
   const html = standaloneHtmlShell({ css, driverJs, playerJs, demoJson, appearance, langJs });
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });

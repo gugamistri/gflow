@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
 const editorJs = readFileSync(new URL("./editor.js", import.meta.url), "utf8");
 
 function rule(selector) {

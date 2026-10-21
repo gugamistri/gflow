@@ -1,0 +1,301 @@
+/* why: casca das páginas públicas (ajuda, termos, privacidade, integrações). O editor e o player carregam este arquivo antes dos outros. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* why: display no seletor do diálogo ganha do display:none do UA e vaza o modal fechado. */
+dialog:not([open]) {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--ns-font);
+  color: var(--ns-ink);
+  background: var(--ns-surface);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 16px;
+  background: var(--ns-topbar);
+  color: var(--ns-button-text);
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  flex: none;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.logo {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.logo span {
+  color: var(--ns-accent);
+}
+
+/* Logo em imagem: a barra do topo é escura nos dois temas, então usa sempre a versão clara do texto. */
+.logo-brand {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  flex: none;
+}
+
+.logo-brand img,
+.logo-brand svg {
+  display: block;
+  height: 26px;
+  width: auto;
+}
+
+.logo-brand .logo-mark {
+  display: none;
+  height: 28px;
+}
+
+@media (max-width: 700px) {
+.logo-brand .logo-full {
+    display: none;
+  
+}
+.logo-brand .logo-mark {
+    display: block;
+  
+}
+}
+
+.topbar-appearance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar > .topbar-appearance {
+  margin-left: auto;
+}
+
+.locale-select select {
+  height: calc(1.2em + 0.9em + 2px);
+  border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
+  border-radius: 7px;
+  background-color: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.45rem center;
+  background-size: 0.7rem;
+  color: var(--ns-button-text);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0 1.5rem 0 0.7rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.topbar .locale-links {
+  display: flex;
+  gap: 4px;
+}
+
+.topbar .locale-links a {
+  display: inline-flex;
+  align-items: center;
+  height: calc(1.2em + 0.9em + 2px);
+  padding: 0 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  color: var(--ns-button-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.topbar .locale-links a:hover {
+  border-color: var(--ns-topbar-muted);
+}
+
+.topbar .locale-links a[aria-current="page"] {
+  background: var(--ns-button-text);
+  border-color: var(--ns-button-text);
+  color: var(--ns-topbar);
+}
+
+.topbar .locale-links a:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.locale-select select:hover {
+  border-color: var(--ns-topbar-muted);
+}
+
+.locale-select select:focus {
+  border-color: var(--ns-topbar-muted);
+  outline: none;
+}
+
+.locale-select select:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.locale-select select option {
+  background: var(--ns-topbar);
+  color: var(--ns-button-text);
+}
+
+.topbar-title {
+  font-size: 0.85rem;
+  color: var(--ns-topbar-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.topbar .btn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.btn {
+  display: inline-flex;
+  text-decoration: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  border: 1px solid var(--ns-border);
+  border-radius: 7px;
+  padding: 0.45em 0.85em;
+  min-height: 32px;
+  cursor: pointer;
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--ns-button);
+  color: var(--ns-button-text);
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  background: var(--ns-accent-dark);
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 900px),
+  (hover: none) and (pointer: coarse) and (max-height: 500px) {
+/* Celular / tablet estreito: player, sem edição nem extensão */
+button,
+  .btn,
+  summary {
+    touch-action: manipulation;
+  
+}
+.topbar {
+    height: auto;
+    min-height: 56px;
+    padding: 8px 12px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    flex-wrap: wrap;
+    gap: 8px;
+  
+}
+/* ───────── Mobile (toque compacto): cabeçalho de uma linha, painéis como folha inferior, alvos de 44px ─────────
+ * why: o topo quebrava em duas linhas e passava da largura da tela, o navegador reduzia o zoom e os diálogos ficavam cortados. */
+html,
+  body { max-width: 100%; overflow-x: hidden; 
+}
+}
+
+/* Seletor de idioma com bandeira (langPicker.js) — tokens do GuiaFlow, claro/escuro */
+.gf-flag { display: inline-block; flex: none; width: 20px; height: 14px; border-radius: 3px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ns-ink) 18%, transparent); vertical-align: middle; overflow: hidden; 
+}
+
+/* Menu de idioma das páginas de ajuda/legais (topo): bandeira + ▾, lista com bandeira e nome */
+.topbar .locale-menu { position: relative; 
+}
+
+.topbar .locale-menu > summary { list-style: none; 
+}
+
+.topbar .locale-menu > summary::-webkit-details-marker { display: none; 
+}
+
+.topbar .locale-menu-btn { display: inline-flex; align-items: center; gap: 6px; height: calc(1.2em + 0.9em + 2px); padding: 0 8px; border: 1px solid color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent); border-radius: 7px; background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar)); color: var(--ns-button-text); cursor: pointer; 
+}
+
+.topbar .locale-menu-btn:hover { border-color: var(--ns-topbar-muted); 
+}
+
+.topbar .locale-menu-btn:focus-visible { outline: 2px solid var(--ns-accent); outline-offset: 2px; 
+}
+
+.topbar .locale-menu-caret { width: 14px; height: 14px; transition: transform .15s ease; 
+}
+
+.topbar .locale-menu[open] .locale-menu-caret { transform: rotate(180deg); 
+}
+
+.topbar .locale-menu .locale-links { position: absolute; right: 0; top: calc(100% + 6px); z-index: 400; flex-direction: column; gap: 2px; min-width: 170px; padding: 6px; border: 1px solid var(--ns-border); border-radius: 12px; background: var(--ns-panel); box-shadow: 0 12px 32px rgba(0,0,0,.18); 
+}
+
+.topbar .locale-menu .locale-links a { height: auto; min-height: 36px; gap: 10px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ns-ink); font-size: 0.875rem; font-weight: 500; 
+}
+
+.topbar .locale-menu .locale-links a:hover { background: var(--ns-hover); 
+}
+
+.topbar .locale-menu .locale-links a[aria-current="page"] { background: transparent; color: var(--ns-ink); font-weight: 700; 
+}
+
+.topbar .locale-menu .locale-links a[aria-current="page"]::after { content: "✓"; margin-left: auto; color: var(--ns-accent); 
+}

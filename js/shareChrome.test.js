@@ -4,7 +4,7 @@ import test from "node:test";
 
 const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
 const theme = readFileSync(new URL("../css/theme.css", import.meta.url), "utf8");
-const app = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+const app = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
 
 test("a seta anterior do cartão tem contorno visível e não usa a cor da barra", () => {
   const start = theme.indexOf(".driver-popover.demo-popover .driver-popover-prev-btn {");
@@ -96,7 +96,7 @@ test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado
 test("Sem marca unificado: um só project.removeBranding para link e vídeo; abas com alvos de 44px no celular", () => {
   const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const js = readFileSync(new URL("./app.js", import.meta.url), "utf8");
-  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+  const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
   assert.ok(h.includes('id="share-remove-brand"') && h.includes('id="export-remove-brand"'));
   assert.match(js, /for \(const id of \["share-remove-brand", "export-remove-brand"\]\)/);
   assert.match(js, /const watermark = billingWatermark \|\| project\.removeBranding === false/);
