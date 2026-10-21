@@ -20,7 +20,7 @@ export const AUTH_HANDOFF_PATH = "/auth/handoff";
 const SESSION_ID_RE = /^cs_[A-Za-z0-9_]+$/;
 
 export function emptyEntitlement() {
-  return { plan: "none", status: "none", interval: "", active: false, planSource: null, isAdmin: false };
+  return { plan: "none", status: "none", interval: "", active: false, planSource: null, isAdmin: false, tier: "" };
 }
 
 /** Intervalo que o checkout aceita. month/year da resposta não voltam no pedido. */
@@ -73,10 +73,12 @@ export function parseEntitlement(data) {
   const src = { ...user, ...body, ...(nested || {}) };
   const planSource = planSourceOf(src.planSource);
   const isAdmin = src.isAdmin === true || user.isAdmin === true;
-  const plan = planRank(src.plan ?? src.tier ?? src.product);
+  const plan = planRank(src.plan ?? src.product);
   const status = String(src.status ?? "").trim().toLowerCase();
   const interval = normalizeBillingInterval(src.interval);
-  const base = { interval, planSource, isAdmin };
+  const tierRaw = String(src.tier ?? src.planTier ?? "").trim().toLowerCase();
+  const tier = tierRaw === "team" ? "team" : tierRaw === "pro" ? "pro" : "";
+  const base = { interval, planSource, isAdmin, tier };
   if (isCourtesySource(planSource)) {
     return { ...base, plan: "pro", status: status || "active", active: true };
   }
@@ -281,6 +283,7 @@ export function mergeAccountAccess(entitlement, profile) {
     active: billing.active || me.active,
     planSource: me.planSource || billing.planSource,
     isAdmin: me.isAdmin || billing.isAdmin,
+    tier: billing.tier || me.tier || me.planTier || "",
   });
 }
 
@@ -428,7 +431,8 @@ export function subscriptionScreen(data, locale = "pt") {
     return {
       ...EMPTY_SUBSCRIPTION_SCREEN,
       kind: "courtesy",
-      planKey: "billing.planComp",
+      // why: cortesia Team não abre assentos pagos (team fica false); só muda o rótulo
+      planKey: sub.tier === "team" ? "billing.planCompTeam" : "billing.planComp",
       whenKey: whenDate ? "billing.subValidUntil" : "billing.subNoEnd",
       whenDate,
     };
