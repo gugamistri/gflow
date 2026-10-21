@@ -44,7 +44,7 @@ test("landing/ajuda: menu de idioma com bandeiras e links rastreáveis", () => {
 });
 
 test("selos Pro somem para assinante, exceto no diálogo de upgrade", () => {
-  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+  const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
   assert.match(css, /body\.gf-subscriber \.pro-badge:not\(#modal-upgrade \.pro-badge\)/);
   assert.match(css, /body\.gf-subscriber \.pro-crown/);
   const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");

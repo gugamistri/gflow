@@ -1,0 +1,2059 @@
+/* why: tour publicado e preview. O editor também carrega este arquivo; a ajuda não. */
+body.view-share {
+  min-height: 100dvh;
+}
+
+body.view-share .view-editor {
+  height: calc(100dvh - 56px);
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+body.view-share .canvas-wrap,
+body.view-share .canvas-stage {
+  height: 100%;
+  min-height: 0;
+}
+
+body.view-share .view-editor.is-presenting {
+  grid-template-columns: 1fr;
+}
+
+body.view-share .canvas-wrap {
+  min-height: 0;
+}
+
+body.view-share .topbar .logo {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* why: link permanente (/p) é Pro — sem logo GuiaFlow; o autor pode ligar um crédito discreto */
+html.is-unbranded body.view-share .topbar .logo {
+  display: none;
+}
+
+.view-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--ns-topbar-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+.view-credit img {
+  width: 14px;
+  height: 14px;
+}
+
+.view-credit:hover,
+.view-credit:focus-visible {
+  opacity: 1;
+  color: var(--ns-button-text);
+  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+}
+
+.view-credit:focus-visible {
+  outline: 2px solid var(--ns-topbar-muted);
+  outline-offset: 1px;
+}
+
+.view-credit[hidden] {
+  display: none;
+}
+
+.view-share-status {
+  display: grid;
+  place-items: center;
+  min-height: 40vh;
+  padding: 24px;
+  text-align: center;
+  color: var(--ns-muted);
+}
+
+.view-share-status[hidden] {
+  display: none;
+}
+
+body.view-share .canvas-stage {
+  height: 100%;
+}
+
+.view-share-closed {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  min-height: 100%;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.view-share-closed[hidden] {
+  display: none;
+}
+
+.view-share-closed h1 {
+  margin: 0;
+  max-width: 24ch;
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--ns-ink);
+}
+
+body.view-share:focus {
+  outline: none;
+}
+
+/* Capa do embed: ▶ antes de qualquer áudio */
+.view-share-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--ns-overlay, #101010);
+}
+
+.view-share-cover[hidden] {
+  display: none;
+}
+
+.view-share-cover-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  filter: blur(2px) brightness(0.5);
+  transform: scale(1.04);
+}
+
+.view-share-cover-image[hidden] {
+  display: none;
+}
+
+.view-share-cover-body {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+}
+
+.view-share-cover-title {
+  margin: 0;
+  max-width: 28ch;
+  font-size: clamp(1.1rem, 3.2vw, 1.75rem);
+  font-weight: 650;
+  line-height: 1.25;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
+.view-share-cover-title:empty {
+  display: none;
+}
+
+.view-share-cover-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font-size: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.view-share-cover-play svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Embed (?embed=1): barra mínima com o logo, sem dica de Esc, palco na altura do iframe */
+html.is-embed body.view-share {
+  min-height: 0;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+html.is-embed body.view-share .topbar,
+html.is-embed body.view-share.is-presenting .topbar {
+  display: flex;
+  height: 36px;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+html.is-embed body.view-share .topbar .logo-full {
+  height: 18px;
+  width: auto;
+}
+
+html.is-embed body.view-share .topbar .logo-mark {
+  height: 22px;
+  width: 22px;
+}
+
+html.is-embed body.view-share .topbar-title {
+  font-size: 0.8rem;
+}
+
+html.is-embed body.view-share .view-credit {
+  padding: 2px 6px;
+  font-size: 0.68rem;
+}
+
+html.is-embed body.view-share .view-editor,
+html.is-embed body.view-share.is-presenting .view-editor {
+  height: calc(100dvh - 36px);
+}
+
+html.is-embed .present-hint {
+  display: none !important;
+}
+
+.player-autoplay select {
+  margin-left: 6px;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  border: 1px solid var(--ns-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  max-width: 220px;
+}
+
+img.is-broken {
+  display: none !important;
+}
+
+.btn-ghost {
+  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  color: var(--ns-button-text);
+  border-color: color-mix(in srgb, var(--ns-topbar-muted) 45%, transparent);
+  font-size: 0.8125rem;
+}
+
+.view {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.view-editor {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+}
+
+.view-editor.is-presenting {
+  grid-template-columns: 1fr;
+}
+
+.view-editor.is-presenting .canvas-wrap {
+  min-height: 0;
+}
+
+.view-editor.is-presenting .canvas-stage {
+  height: 100%;
+}
+
+.present-hint {
+  position: fixed;
+  top: 68px;
+  right: 16px;
+  z-index: 1000000003;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--ns-button-text) 18%, transparent);
+  background: color-mix(in srgb, var(--ns-overlay) 88%, transparent);
+  color: var(--ns-button-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.present-hint[hidden] {
+  display: none !important;
+}
+
+/* why: pista sutil do hold no autoplay — o apresentador vê quanto falta p/ o próximo passo */
+.present-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  z-index: 1000000004;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--ns-button-text) 10%, transparent);
+}
+
+.present-progress[hidden] {
+  display: none !important;
+}
+
+.present-progress-fill {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: color-mix(in srgb, var(--ns-accent) 80%, var(--ns-button-text));
+  opacity: 0.9;
+}
+
+.image-missing {
+  width: min(720px, 90vw);
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: var(--ns-muted);
+  background: var(--ns-thumb);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.canvas-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--ns-canvas);
+}
+
+.canvas-stage,
+.player-stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: auto;
+  position: relative;
+  /* why: 100cqw na foto usa a largura do palco, não a do frame */
+  container-type: inline-size;
+  /* why: mantém frame/zoom num stacking abaixo do overlay/popover do Driver */
+  isolation: isolate;
+  z-index: 0;
+}
+
+.canvas-frame,
+.player-frame {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+  justify-self: center;
+  align-self: center;
+  line-height: 0;
+  background: var(--ns-canvas);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* why: abaixo do Driver — transform no zoom não pode “vencer” o popover */
+  z-index: 0;
+}
+
+.canvas-stage.is-zooming,
+.player-stage.is-zooming {
+  overflow: hidden;
+}
+
+.canvas-frame img,
+.player-frame img {
+  display: block;
+  /* why: 100% do frame estica o palco além da foto e o zoom corta o destaque na borda */
+  max-width: min(1200px, 100cqw);
+  max-height: calc(100vh - 160px);
+  width: auto;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.slide-card {
+  position: relative;
+  box-sizing: border-box;
+  width: min(1200px, 100%);
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: calc(100vh - 160px);
+  min-height: 0;
+  padding: 48px 56px 72px 40px;
+  background: var(--demo-popover-bg);
+  color: var(--demo-popover-text);
+  border: 1px solid color-mix(in srgb, var(--demo-accent) 28%, var(--ns-border));
+  border-radius: 4px;
+  box-shadow: 0 18px 50px color-mix(in srgb, var(--demo-overlay) 28%, transparent);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.slide-card[data-valign="top"] {
+  justify-content: flex-start;
+}
+
+.slide-card[data-valign="bottom"] {
+  justify-content: flex-end;
+}
+
+.slide-card[data-align="center"] {
+  text-align: center;
+}
+
+.slide-card[data-align="end"] {
+  text-align: right;
+}
+
+.slide-card[data-align="center"] #canvas-slide-body {
+  margin-inline: auto;
+}
+
+.slide-card[data-align="end"] #canvas-slide-body {
+  margin-left: auto;
+}
+
+.slide-card-close,
+.slide-card-play {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.slide-card-close {
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--demo-popover-text);
+  /* why: o X só faz sentido no preview/apresentação — na edição do passo não tem ação útil */
+  display: none;
+}
+
+body.is-presenting .slide-card-close {
+  display: inline-flex;
+}
+
+.slide-card-close:hover {
+  color: var(--demo-popover-title);
+  background: color-mix(in srgb, var(--demo-popover-text) 12%, transparent);
+}
+
+.slide-card-play {
+  right: 16px;
+  bottom: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  background: var(--demo-button);
+  color: var(--ns-button-text);
+}
+
+.slide-card-play:hover {
+  background: var(--demo-accent-dark);
+}
+
+.slide-card-close svg,
+.slide-card-play svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.slide-kicker {
+  margin: 0;
+  color: var(--demo-accent-text, var(--demo-accent));
+  font-family: var(--ns-font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.slide-card h2 {
+  margin: 0;
+  color: var(--demo-popover-title);
+  font-family: var(--demo-font, var(--ns-font));
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.slide-card #canvas-slide-body {
+  margin: 0;
+  color: var(--demo-popover-text);
+  font-size: 1.05rem;
+  max-width: 36ch;
+}
+
+.driver-popover.is-slide-hidden {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.hotspot {
+  position: absolute;
+  border: 2px solid var(--demo-hotspot);
+  background: color-mix(in srgb, var(--demo-hotspot) 18%, transparent);
+  border-radius: 6px;
+  cursor: move;
+  z-index: 5;
+}
+
+.hotspot-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ns-button-text);
+  background: var(--demo-hotspot);
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.click-point {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  margin-top: -14px;
+  z-index: 8;
+  cursor: grab;
+  touch-action: none;
+}
+
+.click-point:active {
+  cursor: grabbing;
+}
+
+.click-point-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--demo-hotspot);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--demo-hotspot) 20%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ns-button-text) 85%, transparent);
+  animation: click-pulse 1.6s ease-out infinite;
+}
+
+.click-point-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--demo-hotspot);
+  border: 1.5px solid var(--ns-button-text);
+}
+
+.click-point-label {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ns-button-text);
+  background: var(--demo-hotspot);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.player-click-point {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.view-editor:not(.is-presenting) [data-inline][contenteditable="true"] {
+  cursor: text;
+  border-radius: 4px;
+  min-height: 1.2em;
+}
+
+.view-editor:not(.is-presenting) [data-inline][contenteditable="true"]:focus {
+  outline: 2px solid color-mix(in srgb, var(--demo-accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+#canvas-slide-body,
+#canvas-caption {
+  white-space: pre-wrap;
+}
+
+.view-editor:not(.is-presenting) .caption-bar {
+  z-index: 4;
+}
+
+.view-editor:not(.is-presenting) .caption-bar[contenteditable="true"] {
+  pointer-events: auto;
+  cursor: text;
+  min-height: 2.6em;
+}
+
+.view-editor:not(.is-presenting) .slide-card-play {
+  z-index: 6;
+}
+
+.caption-bar {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  /* why: no editor, dentro do frame. No preview o nó sai do palco (ver .is-above-overlay). */
+  z-index: 1000000002;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--demo-overlay, #0f172a) 82%, transparent);
+  color: var(--ns-button-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+/* why: o palco tem isolation + z-index 0. position:fixed dentro dele continua
+   abaixo do véu do Driver (z-index no body). .is-above-overlay marca a legenda
+   depois de movê-la para o body — aí 1000000015 fica acima do overlay (…0008)
+   e abaixo do popover (…0020). */
+body.is-presenting .caption-bar,
+body.view-share .caption-bar,
+body.standalone .caption-bar,
+.caption-bar.is-above-overlay {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  width: min(720px, calc(100vw - 40px));
+  transform: translateX(-50%);
+  z-index: 1000000015;
+}
+
+.checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  font-weight: 500 !important;
+  color: var(--ns-ink) !important;
+}
+
+.view-player {
+  display: flex;
+  flex-direction: column;
+  background: var(--ns-canvas);
+}
+
+.player-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--ns-panel);
+  border-bottom: 1px solid var(--ns-border);
+}
+
+.player-progress {
+  margin-left: auto;
+  color: var(--ns-muted);
+  font-size: 0.85rem;
+}
+
+.hotspot.is-pressed {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--demo-hotspot) 28%, transparent);
+  border-color: var(--demo-hotspot);
+}
+
+.player-hotspot {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+/* No preview/player o Driver cuida do foco — some a borda de edição */
+.hotspot.is-previewing {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.hotspot.is-previewing .hotspot-label {
+  display: none !important;
+}
+
+.hotspot.is-previewing.is-pressed,
+.player-hotspot.is-pressed {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.driver-active-element.player-hotspot,
+.driver-active-element.hotspot.is-previewing {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.click-fx {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  margin-top: -6px;
+  z-index: 1000000005;
+  pointer-events: none;
+}
+
+.click-fx-ring,
+.click-fx-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+}
+
+.click-fx-ring {
+  width: 72px;
+  height: 72px;
+  border: 3px solid var(--ns-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ns-accent) 55%, transparent);
+}
+
+.click-fx-ring-2 {
+  width: 110px;
+  height: 110px;
+  border-width: 2px;
+}
+
+.click-fx-burst {
+  width: 18px;
+  height: 18px;
+  background: var(--ns-accent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--ns-accent) 80%, transparent);
+}
+
+.click-fx.is-active .click-fx-ring {
+  animation: click-ripple 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.click-fx.is-active .click-fx-ring-2 {
+  animation: click-ripple 0.85s 0.06s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.click-fx.is-active .click-fx-burst {
+  animation: click-burst 0.45s ease-out forwards;
+}
+
+.sim-cursor {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin-left: -3px;
+  margin-top: -1px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' stroke='%23111' stroke-width='1.4' d='M4 3l7 17 2.2-6.3L20 12z'/%3E%3C/svg%3E") center / contain no-repeat;
+  z-index: 1000000010;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(18px, 18px) scale(0.9);
+  transition:
+    left 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.18s ease,
+    opacity 0.2s ease;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+}
+
+.sim-cursor.is-visible {
+  opacity: 1;
+  transform: translate(0, 0) scale(1);
+}
+
+.sim-cursor.is-click {
+  transform: translate(1px, 2px) scale(0.78);
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ns-ink);
+  color: var(--ns-surface);
+  padding: 10px 16px;
+  border-radius: 8px;
+  z-index: 100;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  text-align: center;
+  max-width: min(420px, calc(100vw - 32px));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.player-stage {
+  flex: 1;
+  width: 100%;
+}
+
+/* Editor: colunas — filmstrip estreita, painel recolhível */
+.view-editor {
+  grid-template-columns: 168px minmax(0, 1fr) 300px;
+}
+
+/* Topo da filmstrip e barra do canvas: mesma altura, divisória de baixo na mesma linha.
+   why: com alturas próprias (padding + conteúdo) as bordas de baixo ficavam desencontradas. */
+.view-editor {
+  --editor-bar-h: 49px;
+}
+
+/* why: o palco divide a altura com a barra do passo (e com o player, quando há áudio) */
+.view-editor:not(.is-presenting) .canvas-stage {
+  --media-chrome: 236px;
+}
+
+.view-editor:not(.is-presenting) .canvas-frame img {
+  max-height: calc(100vh - var(--media-chrome, 160px));
+}
+
+.view-editor:not(.is-presenting) .slide-card {
+  max-height: calc(100vh - var(--media-chrome, 160px));
+}
+
+@media (max-width: 1100px) {
+.view-editor {
+    grid-template-columns: 148px minmax(0, 1fr) 260px;
+  
+}
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 900px),
+  (hover: none) and (pointer: coarse) and (max-height: 500px) {
+.view-editor:not(.is-presenting) {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(168px, 36vh);
+  
+}
+.view-editor:not(.is-presenting) .canvas-wrap {
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  
+}
+.view-editor:not(.is-presenting) #canvas-frame:has(#canvas-slide:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  
+}
+.view-editor:not(.is-presenting) #canvas-slide {
+    height: auto !important;
+    max-height: none;
+    aspect-ratio: auto;
+    min-height: 168px;
+  
+}
+.view-editor:not(.is-presenting) #canvas-slide:not([hidden]) ~ #canvas-caption {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    max-width: 100%;
+    margin-top: 8px;
+  
+}
+.view-editor:not(.is-presenting) #canvas-caption,
+  .view-editor:not(.is-presenting) #canvas-slide-body {
+    font-size: 16px;
+  
+}
+.view-editor:not(.is-presenting) .hotspot {
+    cursor: default;
+    pointer-events: none;
+  
+}
+.view-editor:not(.is-presenting) .hotspot-label,
+  .view-editor:not(.is-presenting) .click-point {
+    display: none !important;
+  
+}
+body.is-presenting .topbar {
+    display: none;
+  
+}
+body.is-presenting .present-hint {
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: calc(60px + env(safe-area-inset-left, 0px));
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    white-space: normal;
+    max-width: none;
+    text-align: left;
+  
+}
+body.is-presenting .view-editor {
+    height: 100%;
+  
+}
+body.is-presenting .canvas-wrap {
+    min-height: 0;
+    height: 100%;
+  
+}
+body.is-presenting .canvas-stage {
+    padding: 8px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    padding-right: calc(8px + env(safe-area-inset-right, 0px));
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(8px + env(safe-area-inset-left, 0px));
+    height: 100%;
+    max-height: 100dvh;
+  
+}
+body.is-presenting .canvas-frame img,
+  body.is-presenting .slide-card {
+    max-width: min(1200px, 100cqw);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px);
+  
+}
+}
+
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) {
+/* Paisagem no toque: palco usa a altura toda */
+body.is-presenting .present-hint {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  
+}
+body.is-presenting .canvas-stage {
+    padding: 4px;
+    padding-top: calc(4px + env(safe-area-inset-top, 0px));
+    padding-right: calc(4px + env(safe-area-inset-right, 0px));
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(4px + env(safe-area-inset-left, 0px));
+  
+}
+body.is-presenting .canvas-frame img,
+  body.is-presenting .slide-card {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 8px);
+  
+}
+.view-editor:not(.is-presenting) {
+    grid-template-rows: minmax(0, 1fr) minmax(112px, 40vh);
+  
+}
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 900px),
+  (hover: none) and (pointer: coarse) and (max-height: 500px) {
+/* Celular/tablet em pé ou deitado: mantém o editor leve como era (lista com título e ↑ ↓ ×) */
+.view-editor:not(.is-presenting) .canvas-stage {
+    --media-chrome: 160px;
+  
+}
+}
+
+/* Cartão do passo fixo no /v e /p (tema do tour) */
+.view-share-fixed {
+  display: grid;
+  /* why: "safe" — se não couber, rola a partir do topo em vez de cortar o título */
+  align-items: safe center;
+  justify-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: clamp(8px, 3vh, 24px) 12px;
+  overflow: auto;
+}
+
+.view-share-fixed[hidden] {
+  display: none;
+}
+
+.fixed-card {
+  box-sizing: border-box;
+  width: min(480px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: clamp(8px, 1.6vh, 14px);
+  padding: clamp(14px, 3vh, 26px) clamp(14px, 4vw, 24px) clamp(12px, 2.4vh, 20px);
+  text-align: center;
+  /* why: o passo inicial e o final são balões do tour — mesmos tokens do .driver-popover.demo-popover
+     (fundo, texto, título, botão, raio, fonte), nunca as cores do app (--ns-*). */
+  background: var(--demo-popover-bg);
+  color: var(--demo-popover-text);
+  color-scheme: var(--demo-color-scheme, light);
+  font-family: var(--ns-font);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+}
+
+.fixed-card-title {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.6vw, 1.4rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--demo-popover-title);
+  overflow-wrap: anywhere;
+}
+
+.fixed-card-body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--demo-popover-text);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.fixed-card-actions {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.fixed-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-shadow: none;
+  border: 1px solid transparent;
+  background: var(--demo-button);
+  color: var(--ns-button-text);
+  cursor: pointer;
+}
+
+.fixed-card-btn:hover {
+  background: var(--demo-accent-dark);
+  color: var(--ns-button-text);
+}
+
+.fixed-card-btn:focus-visible,
+.fixed-card-replay:focus-visible {
+  outline: 2px solid var(--demo-form-focus);
+  outline-offset: 2px;
+}
+
+.fixed-card-btn svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.fixed-card-btn.fixed-card-contact {
+  /* why: botão secundário igual ao "voltar" do balão — contorno na cor do título */
+  background: transparent;
+  color: var(--demo-popover-title);
+  border: 1.5px solid color-mix(in srgb, var(--demo-popover-title) 55%, transparent);
+}
+
+.fixed-card-btn.fixed-card-contact:hover {
+  background: color-mix(in srgb, var(--demo-popover-title) 10%, transparent);
+  color: var(--demo-popover-title);
+  border-color: var(--demo-popover-title);
+}
+
+.fixed-card-btn.fixed-card-wa {
+  background: #25d366;
+  color: #0b3d20;
+}
+
+.fixed-card-btn.fixed-card-wa:hover {
+  background: #25d366;
+  color: #0b3d20;
+  filter: brightness(1.06);
+}
+
+.fixed-card-replay {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--demo-popover-title);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.fixed-card-replay:hover {
+  text-decoration: underline;
+}
+
+.wa-phone {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wa-phone > input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wa-cc-flag {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.wa-cc-pop {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  background: var(--ns-panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.wa-cc-pop[hidden] {
+  display: none !important;
+}
+
+.wa-cc-list {
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.wa-cc-option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--ns-ink);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.wa-cc-option:hover {
+  background: color-mix(in srgb, var(--ns-accent) 7%, transparent);
+}
+
+.wa-cc-option.is-active {
+  background: color-mix(in srgb, var(--ns-accent) 16%, transparent);
+}
+
+.wa-cc-option[aria-selected="true"] {
+  font-weight: 700;
+}
+
+.wa-cc-option-flag {
+  font-size: 1.1em;
+}
+
+.wa-cc-option-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wa-cc-option-dial {
+  color: var(--ns-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-cc-empty {
+  margin: 0;
+  padding: 6px 8px;
+  font-size: 0.8rem;
+  color: var(--ns-muted);
+}
+
+.fixed-preview {
+  display: grid;
+  place-items: center;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--demo-overlay, #101010) 70%, var(--ns-panel));
+}
+
+.fixed-preview .fixed-card {
+  padding: 16px 14px 12px;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+.wa-cc-option {
+    min-height: 40px;
+  
+}
+}
+
+/* Passo inicial (lead) e formulário de contato */
+.fixed-form {
+  display: grid;
+  gap: clamp(8px, 1.4vh, 12px);
+  width: 100%;
+  text-align: left;
+}
+
+.fixed-form .fixed-card-title,
+.fixed-form .fixed-card-body,
+.fixed-form-title {
+  text-align: center;
+}
+
+.fixed-form-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--demo-popover-title);
+}
+
+.fixed-form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 8px 10px;
+}
+
+.fixed-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fixed-card .fixed-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--demo-popover-text);
+}
+
+/* Telefone internacional no cartão (passo inicial e contato): mesmos tokens do balão/campos (#66).
+   A lista de países flutua sobre o cartão (não empurra o layout nem cria rolagem — #57). */
+.fixed-field-phone {
+  position: relative;
+}
+
+/* why: bandeira + DDI + número não cabem numa coluna de 140px — o telefone ocupa a linha
+   e nome/e-mail ficam lado a lado (mesma altura do formulário de 2 campos + 1 linha). */
+.fixed-form-fields:has(> .fixed-field-phone):has(> .fixed-field:not(.fixed-field-phone)) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+}
+
+.fixed-form-fields > .fixed-field-phone:not(:only-child) {
+  grid-column: 1 / -1;
+}
+
+.fixed-card .fixed-phone {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fixed-card .fixed-cc {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 5px 0 7px;
+  border: 1px solid var(--demo-field-border, #8a8a94);
+  border-radius: 4px;
+  background: var(--demo-field-bg, #ffffff);
+  color: var(--demo-field-ink, #18181b);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fixed-card .fixed-cc:focus-visible,
+.fixed-card .fixed-cc[aria-expanded="true"] {
+  outline: 2px solid var(--demo-form-focus);
+  outline-offset: 1px;
+  border-color: var(--demo-form-focus);
+}
+
+.fixed-card .fixed-cc-pop {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  width: min(100%, 320px);
+  min-width: min(248px, calc(100vw - 24px));
+  box-sizing: border-box;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--demo-field-border, #8a8a94);
+  border-radius: 6px;
+  background: var(--demo-popover-bg, #ffffff);
+  color: var(--demo-popover-text, #18181b);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  text-align: left;
+}
+
+.fixed-card .fixed-cc-pop .fixed-cc-search {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  margin: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--demo-field-border, #8a8a94);
+  border-radius: 4px;
+  background: var(--demo-field-bg, #ffffff);
+  color: var(--demo-field-ink, #18181b);
+  -webkit-text-fill-color: var(--demo-field-ink, #18181b);
+  font: inherit;
+  font-size: 14px;
+}
+
+.fixed-card .fixed-cc-pop .fixed-cc-search::placeholder {
+  color: var(--demo-field-placeholder, #6b6b76);
+  -webkit-text-fill-color: var(--demo-field-placeholder, #6b6b76);
+  opacity: 1;
+}
+
+.fixed-card .fixed-cc-pop .fixed-cc-search:focus-visible {
+  outline: 2px solid var(--demo-form-focus);
+  outline-offset: 0;
+  border-color: var(--demo-form-focus);
+}
+
+.fixed-card .fixed-cc-pop .wa-cc-list {
+  max-height: var(--cc-list-max, min(196px, 34vh));
+}
+
+.fixed-card .fixed-cc-pop .wa-cc-option {
+  min-height: 32px;
+  color: var(--demo-popover-text, #18181b);
+  font-size: 13px;
+}
+
+.fixed-card .fixed-cc-pop .wa-cc-option:hover {
+  background: color-mix(in srgb, var(--demo-form-focus) 10%, transparent);
+}
+
+.fixed-card .fixed-cc-pop .wa-cc-option.is-active {
+  background: color-mix(in srgb, var(--demo-form-focus) 20%, transparent);
+}
+
+.fixed-card .fixed-cc-pop .wa-cc-option-dial,
+.fixed-card .fixed-cc-pop .wa-cc-empty {
+  color: var(--demo-popover-text, #18181b);
+  opacity: 0.75;
+}
+
+.fixed-field-error {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #d93025;
+}
+
+.fixed-field-error[hidden],
+.fixed-form-status[hidden] {
+  display: none;
+}
+
+.fixed-consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+  align-items: start;
+}
+
+.fixed-card .fixed-consent label {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--demo-popover-text);
+  cursor: pointer;
+}
+
+/* why: a caixa nativa seguia o color-scheme do app (escuro → preenchimento preto mesmo desmarcada).
+   Desenhada aqui: desmarcada = mesmo fundo/borda dos campos; marcada = cor de destaque do tema. */
+.fixed-card .fixed-consent input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  padding: 0;
+  border: 1.5px solid var(--demo-field-border, #8a8a94);
+  border-radius: 3px;
+  background: var(--demo-field-bg, #ffffff) center / 12px 12px no-repeat;
+  accent-color: var(--demo-accent);
+  cursor: pointer;
+}
+
+.fixed-card .fixed-consent input[type="checkbox"]:hover {
+  border-color: var(--demo-form-focus);
+}
+
+.fixed-card .fixed-consent input[type="checkbox"]:checked {
+  border-color: var(--demo-accent);
+  background-color: var(--demo-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.fixed-card .fixed-consent input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--demo-form-focus);
+  outline-offset: 2px;
+}
+
+.fixed-card .fixed-consent input[type="checkbox"][aria-invalid="true"] {
+  border-color: #d93025;
+}
+
+.fixed-consent .fixed-field-error {
+  grid-column: 1 / -1;
+}
+
+.fixed-hp {
+  position: absolute !important;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.fixed-form-status {
+  margin: 0;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.fixed-card .fixed-form .fixed-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 0;
+}
+
+.fixed-form-actions .fixed-card-btn {
+  flex: 1 1 180px;
+}
+
+.fixed-form-actions .fixed-card-replay {
+  flex: 0 0 auto;
+  margin: 0 auto;
+}
+
+.fixed-privacy {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--demo-popover-text);
+}
+
+.fixed-form-done {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+}
+
+.fixed-form-done p {
+  margin: 0;
+}
+
+.fixed-preview .fixed-card .fixed-cc {
+  min-height: 34px;
+}
+
+.fixed-preview .fixed-card-btn {
+  min-height: 38px;
+}
+
+@media (max-width: 720px), (pointer: coarse) {
+/* why: no celular, 16px evita o zoom automático do iOS ao focar o campo */
+.fixed-card .fixed-cc-pop .fixed-cc-search {
+    font-size: 16px;
+  
+}
+.fixed-card .fixed-cc-pop .wa-cc-option {
+    min-height: 40px;
+  
+}
+}
+
+@media (max-height: 560px) {
+/* Embed baixo (ex.: iframe de 420px) e celular deitado: tudo mais junto, sem rolagem */
+.view-share-fixed {
+    padding: 6px 8px;
+  
+}
+.fixed-card {
+    gap: 6px;
+    padding: 10px 12px 8px;
+  
+}
+.fixed-form-fields {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+    gap: 6px 8px;
+  
+}
+.fixed-field {
+    gap: 2px;
+  
+}
+.fixed-form {
+    gap: 7px;
+  
+}
+.fixed-card-title {
+    font-size: 1.05rem;
+  
+}
+.fixed-card-body {
+    font-size: 0.86rem;
+    line-height: 1.35;
+  
+}
+.fixed-card .fixed-field label {
+    font-size: 12.5px;
+  
+}
+.fixed-card .fixed-cc {
+    min-height: 36px;
+  
+}
+.fixed-card .fixed-consent label {
+    font-size: 12.5px;
+    line-height: 1.35;
+  
+}
+.fixed-card-btn {
+    min-height: 38px;
+  
+}
+.fixed-card-replay {
+    padding: 4px 8px;
+  
+}
+.fixed-privacy {
+    font-size: 11.5px;
+  
+}
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 900px) and (orientation: portrait) {
+/* Celular apresentando, em pé: captura no alto; embaixo ficam a legenda e o balão (folha) */
+body.is-presenting .canvas-stage {
+    align-items: start;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+  
+}
+body.is-presenting .canvas-stage > .canvas-frame,
+  body.is-presenting .canvas-stage > #canvas-frame {
+    align-self: start;
+  
+}
+body.is-presenting .canvas-frame img,
+  body.is-presenting .slide-card {
+    max-height: calc(100dvh - 56px - min(300px, 40dvh) - 140px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  
+}
+body.is-presenting .caption-bar,
+  body.view-share .caption-bar,
+  .caption-bar.is-above-overlay {
+    bottom: calc(var(--gf-pop-h, 180px) + 16px + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  
+}
+}
+
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+/* Celular deitado: captura à esquerda; legenda e balão na coluna da direita */
+body.is-presenting .canvas-stage {
+    padding-right: calc(min(320px, 40vw) + 16px + env(safe-area-inset-right, 0px));
+  
+}
+body.is-presenting .caption-bar,
+  body.view-share .caption-bar,
+  .caption-bar.is-above-overlay {
+    left: auto;
+    right: calc(8px + env(safe-area-inset-right, 0px));
+    transform: none;
+    width: min(320px, 40vw);
+    bottom: calc(var(--gf-pop-h, 180px) + 16px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - var(--gf-pop-h, 180px) - 32px);
+    overflow: auto;
+  
+}
+}
+
+/* ---- Acessibilidade do player (WCAG 2.1 AA) ---- */
+.gf-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* why: 2.2.2 / 1.4.2 — pausar o avanço automático e silenciar ficam sempre visíveis no tour */
+.gf-player-controls {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  /* why: acima do véu do Driver (que sobe no celular) — senão o toque cai no véu e fecha a prévia */
+  z-index: 2147483000;
+  pointer-events: auto;
+  /* barra única estilo YouTube: um só fundo escuro translúcido funciona sobre qualquer imagem (claro/escuro) */
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 14px;
+  background: rgba(10, 22, 30, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.gf-player-controls[hidden],
+.gf-player-ctl[hidden] {
+  display: none !important;
+}
+
+.gf-player-ctl {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.gf-player-ctl svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.gf-player-ctl:hover,
+.gf-player-ctl.is-open {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.gf-player-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* CC ativo: sublinhado na cor de destaque (como o vermelho do YouTube) */
+.gf-cc-btn[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: 7px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ns-accent, #2a9d8f);
+}
+
+.gf-cc-btn[aria-pressed="false"] svg {
+  opacity: 0.8;
+}
+
+/* toggle de reprodução automática */
+.gf-switch {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.15s ease;
+}
+
+.gf-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #10242f;
+  transform: translateY(-50%);
+  transition: left 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.gf-switch-knob svg {
+  width: 14px;
+  height: 14px;
+}
+
+.gf-autoplay-btn {
+  width: 52px;
+}
+
+.gf-autoplay-btn[aria-pressed="true"] .gf-switch {
+  background: color-mix(in srgb, var(--ns-accent, #2a9d8f) 85%, #ffffff);
+}
+
+.gf-autoplay-btn[aria-pressed="true"] .gf-switch-knob {
+  left: 16px;
+  color: var(--ns-accent-dark, #1f6b62);
+}
+
+/* legenda desligada pelo botão CC (só com o player na tela) */
+body.gf-cc-off.gf-player-on #canvas-caption {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.gf-switch,
+  .gf-switch-knob {
+    transition: none;
+  
+}
+}
+
+@media (hover: none) and (pointer: coarse) {
+/* no toque o aviso "Toque fora para sair" ocupa o topo: abre espaço para os controles à direita */
+body.is-presenting .present-hint {
+    top: calc(max(12px, env(safe-area-inset-top, 0px)) + 56px);
+  
+}
+}
+
+/* why: 2.4.7 — foco sempre visível nos controles do player (halo duplo funciona em fundo claro e escuro) */
+.driver-popover.demo-popover button:focus-visible,
+.driver-popover.demo-popover a:focus-visible,
+.slide-card button:focus-visible,
+.fixed-card :is(button, a, input, select, textarea, summary):focus-visible,
+#view-share-replay:focus-visible {
+  outline: 3px solid #111111 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 7px #ffffff !important;
+}
+
+/* título/texto recebem foco só para o leitor de tela começar dali (não são controles) */
+.driver-popover.demo-popover .driver-popover-title:focus,
+.driver-popover.demo-popover .driver-popover-description:focus,
+.slide-card h2:focus {
+  outline: none !important;
+}
+
+/* why: 3.3.2 — legenda do asterisco nos formulários do tour */
+.fixed-required-legend {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--demo-popover-text, #3f3f46);
+}
+
+@media (hover: hover), (pointer: fine) {
+/* why: 1.4.4 — com texto a 200% o balão rola por dentro em vez de cortar (desktop) */
+/* o balão em si não rola (cortaria a seta do Driver); o texto sim */
+.driver-popover.demo-popover .driver-popover-description {
+    max-height: calc(100vh - 170px);
+    max-height: calc(100dvh - 170px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  
+}
+}
+
+@media (prefers-reduced-motion: reduce) {
+/* why: 2.3.3 / preferências do sistema — sem animações nem transições para quem pede menos movimento */
+.is-presenting *,
+  .is-presenting *::before,
+  .is-presenting *::after,
+  .driver-popover,
+  .driver-popover *,
+  .driver-overlay,
+  .fixed-card,
+  .fixed-card *,
+  .view-share-cover,
+  .view-share-cover * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  
+}
+}
+
+@media (hover: hover), (pointer: fine) {
+/* no editor o topo tem a barra do app (conta/assinar): os controles descem para baixo dela */
+body:not(.view-share) .gf-player-controls {
+    top: 52px;
+  
+}
+body:not(.view-share).is-presenting .present-hint {
+    top: 104px;
+  
+}
+}
+
+/* why: o driver.css zera pointer-events de tudo em .driver-active; os controles do player precisam receber o toque */
+.driver-active .gf-player-controls,
+.driver-active .gf-player-controls * {
+  pointer-events: auto !important;
+}
+
+/* ---- Fonte do tema: a mesma no balão, no slide de texto, nos cartões inicial/final, no formulário e na legenda ---- */
+.driver-popover.demo-popover,
+.driver-popover.demo-popover *:not(svg):not(svg *),
+.slide-card h2,
+.slide-card #canvas-slide-body,
+.slide-card p:not(.slide-kicker),
+.fixed-card,
+.fixed-card :is(h1, h2, h3, p, label, input, textarea, select, button, a, span, li),
+.caption-bar,
+.view-share-cover,
+.view-share-cover :is(h1, h2, p, button, span) {
+  font-family: var(--demo-font, var(--ns-font)) !important;
+}
+
+.gf-flag-globe { box-shadow: none; width: 18px; height: 18px; border-radius: 0; 
+}
+
+.gf-flag-code { display: inline-flex; align-items: center; justify-content: center; font: 700 9px/1 var(--ns-font); letter-spacing: .02em; color: var(--ns-ink); background: var(--ns-surface); 
+}
+
+/* ---- Player: foco dos controles e menu ⚙ estilo YouTube ---- */
+.gf-player-ctl:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: -2px !important;
+  box-shadow: 0 0 0 4px var(--ns-accent, #2a9d8f) !important;
+}
+
+.gf-settings-menu {
+  position: fixed;
+  z-index: 2147483001;
+  min-width: 300px;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 6px 0;
+  border-radius: 12px;
+  background: rgba(10, 22, 30, 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font: 14px/1.3 var(--ns-font, system-ui, sans-serif);
+}
+
+.gf-settings-menu,
+.gf-settings-menu * {
+  pointer-events: auto !important;
+}
+
+.gf-settings-menu[hidden] {
+  display: none !important;
+}
+
+.gf-set-list {
+  display: grid;
+}
+
+.gf-set-item,
+.gf-set-back {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gf-set-back {
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  margin-bottom: 4px;
+}
+
+.gf-set-item:hover,
+.gf-set-back:hover,
+.gf-set-item:focus-visible,
+.gf-set-back:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+.gf-set-item:focus-visible,
+.gf-set-back:focus-visible {
+  box-shadow: inset 3px 0 0 var(--ns-accent, #2a9d8f);
+}
+
+.gf-set-label {
+  flex: 1 1 auto;
+  margin-right: 12px;
+}
+
+.gf-set-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
+}
+
+.gf-set-chev {
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.gf-set-check {
+  width: 16px;
+  color: var(--ns-accent, #2a9d8f);
+  font-weight: 700;
+  filter: brightness(1.25);
+}
+
+.gf-set-radio[aria-checked="true"] .gf-set-label {
+  font-weight: 700;
+}
+
+.gf-settings-menu .gf-flag,
+.gf-flag-space {
+  flex: none;
+  width: 20px;
+  height: 14px;
+}
+
+@media (max-width: 640px), (hover: none) and (pointer: coarse) {
+.gf-settings-menu {
+    top: auto !important;
+    left: 8px;
+    right: 8px !important;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    max-width: none;
+    max-height: 75vh;
+  
+}
+.gf-set-item,
+  .gf-set-back {
+    min-height: 48px;
+  
+}
+}
+
+@keyframes click-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  70% { transform: scale(1.35); opacity: 0.35; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+@keyframes click-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.15);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes click-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+}

@@ -85,7 +85,7 @@ function cssRules(source) {
 
 test("o diálogo Pro fica oculto até abrir, e os outros modais também", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
-  const css = readFileSync(new URL("../css/app.css", import.meta.url), "utf8");
+  const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
   for (const id of ["modal-upgrade", "modal-subscription", "modal-account"]) {
     const at = html.indexOf(`id="${id}"`);
     const tagStart = html.lastIndexOf("<dialog", at);
