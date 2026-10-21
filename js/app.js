@@ -241,7 +241,6 @@ function beginInlineEdit(host, { value, maxLength = 80, onSave }) {
         await onSave(next);
         return;
       } catch (err) {
-        console.error(err);
         toast(err?.message || t("toast.renameFail"));
       }
     }
@@ -397,8 +396,8 @@ async function attachSavedHistory(state) {
       for (const snap of [...(saved?.undo || []), ...(saved?.redo || [])]) {
         if (snap && typeof snap === "object" && renumberScenes(snap)) stacksChanged = true;
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      /* why: histórico salvo corrompido não pode impedir abrir o projeto */
     }
   }
   if (saved && (saved.undo.length || saved.redo.length)) history.restore(state, saved);
@@ -505,7 +504,6 @@ function flushAutosave() {
   saveChain = saveChain
     .then(() => putProjectAndHistory(snapshot, history.exportStacks()))
     .catch((err) => {
-      console.error(err);
       toast(t("toast.autosaveFail"));
     });
   return saveChain;
@@ -547,7 +545,7 @@ function optimizeIncomingMedia(sources, { audio = true } = {}) {
         await putProject(saved, { keepUpdatedAt: true });
       }
     })
-    .catch((err) => console.warn("media optimize", err));
+    .catch(() => {});
   return ingestChain;
 }
 
@@ -1338,7 +1336,7 @@ function ensureCollab() {
       editor.refresh();
     },
     persistLocal: () => {
-      if (project) void putProject(project, { silent: true, keepUpdatedAt: true }).catch((err) => console.error(err));
+      if (project) void putProject(project, { silent: true, keepUpdatedAt: true }).catch(() => {});
     },
     confirmDialog: (message) => Promise.resolve(window.confirm(message)),
     fetchMedia: async (path) => {
@@ -1576,7 +1574,6 @@ async function restorePublishedLinks() {
     if (chromeView === "library") renderLibrary();
     toast(result.restored ? t("sync.restored", { n: result.restored }) : t("sync.restoreNone"), 4200);
   } catch (err) {
-    console.error(err);
     toast(t("sync.restoreFail"), 4200);
   }
 }
@@ -1661,8 +1658,10 @@ function paintAccount() {
     planEl.hidden = !menu.showPlan;
     planEl.classList.toggle("is-pending", pending);
     if (pending) planEl.textContent = t("billing.pastDue");
-    else if (menu.planLabel === "comp") planEl.textContent = t("billing.planLine", { plan: t("billing.planComp") });
-    else if (menu.showPlan) planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
+    else if (menu.planLabel === "comp") {
+      const compKey = billingEntitlement.tier === "team" ? "billing.planCompTeam" : "billing.planComp";
+      planEl.textContent = t("billing.planLine", { plan: t(compKey) });
+    } else if (menu.showPlan) planEl.textContent = t("billing.planLine", { plan: t("billing.planCloud") });
   }
   const adminBtn = document.getElementById("btn-account-admin");
   if (adminBtn) adminBtn.hidden = !menu.showAdmin;
@@ -2122,7 +2121,6 @@ function openAdmin() {
       }
       tab.location.href = result.url;
     } catch (err) {
-      console.error(err);
       tab.close();
       toast(t("account.adminFail"));
     }
@@ -2387,7 +2385,6 @@ async function submitUpgrade(interval) {
     }
     location.assign(result.url);
   } catch (err) {
-    console.error(err);
     setUpgradeStatus(t("billing.unavailable"), "error");
   } finally {
     if (button) button.disabled = false;
@@ -2441,8 +2438,8 @@ function applyCloudAuthHref(href) {
     // why: `history` neste módulo é a pilha de desfazer, não a do navegador.
     //      replaceState cedo demais também pode ser reposto pelo carregamento.
     window.history.replaceState(null, "", relative);
-  } catch (err) {
-    console.error(err);
+  } catch {
+    /* why: o editor segue mesmo se o navegador recusar trocar a URL */
   }
 }
 
@@ -2694,7 +2691,6 @@ async function openOptimizeProject(id) {
     els.apply.disabled = false;
   } catch (err) {
     if (optimizeRun !== run || err?.code === "aborted") return;
-    console.error(err);
     els.progress.hidden = true;
     els.status.textContent = err?.message || t("optimize.fail");
   }
@@ -2752,7 +2748,6 @@ function bindOptimizeModal() {
       optimizeRun = null;
       els.modal.close();
     } catch (err) {
-      console.error(err);
       els.status.textContent = err?.message || t("optimize.fail");
       els.apply.disabled = false;
     }
@@ -3313,7 +3308,6 @@ function bindChrome() {
         try {
           await window.guiaDesktopApp.openCapture();
         } catch (err) {
-          console.error(err);
           toast(err?.message || t("toast.captureWindowFail"));
         }
       });
@@ -3356,7 +3350,6 @@ function bindChrome() {
       });
       toast(t("toast.imported"));
     } catch (err) {
-      console.error(err);
       toast(t("toast.importFail"));
     }
     e.target.value = "";
@@ -3639,7 +3632,6 @@ function bindChrome() {
       // why: o HTML leva o áudio de todos os idiomas (RF26): avisa o tamanho
       toast(langData ? t("toast.htmlDownloadedLangs", { mb, n: langData.langs.length }) : t("toast.htmlDownloaded", { mb }), langData ? 5200 : undefined);
     } catch (err) {
-      console.error(err);
       hideExportOverlay();
       toast(err?.message || t("toast.htmlFail"));
     }
@@ -3718,7 +3710,6 @@ function bindChrome() {
         toast(t("toast.videoDownloaded", { ext: result.ext }));
       }
     } catch (err) {
-      console.error(err);
       hideExportOverlay();
       if (err?.name === "AbortError") {
         toast(t("toast.videoCancelled"));
@@ -3775,7 +3766,6 @@ function bindChrome() {
         toast(share.renewed ? t("toast.shareRenewed") : t("toast.shareRepublished"), 4200);
       }
     } catch (err) {
-      console.error(err);
       hideExportOverlay();
       toast(err?.message || t("share.errGeneric"));
     }
@@ -3804,7 +3794,6 @@ function bindChrome() {
       await copyText(url);
       toast(t("toast.shareCopied"));
     } catch (err) {
-      console.error(err);
       const field = document.getElementById("share-link-url");
       field?.focus();
       field?.select();
@@ -4052,7 +4041,6 @@ function bindChrome() {
       await copyText(code);
       toast(t(isLinkEmbedFlavor(embedFlavor) ? "embed.linkCopied" : "embed.copied"), 3200);
     } catch (err) {
-      console.error(err);
       const field = document.getElementById("embed-code");
       field?.focus();
       field?.select();
@@ -4315,7 +4303,6 @@ function bindChrome() {
       if (accountDialogWantsPublish && project?.id) writeCloudPublishIntent(project.id);
       setCloudLoginStatus(t("share.cloud.sent", { email: String(email).trim() }), "ok");
     } catch (err) {
-      console.error(err);
       setCloudLoginStatus(t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
@@ -4343,7 +4330,6 @@ function bindChrome() {
       if (field) field.value = "";
       await afterAccountSignedIn();
     } catch (err) {
-      console.error(err);
       setCloudLoginStatus(t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
@@ -4375,7 +4361,6 @@ function bindChrome() {
       setCloudLoginStatus("");
       await afterAccountSignedIn();
     } catch (err) {
-      console.error(err);
       setCloudLoginStatus(err?.message || t("share.cloud.network"), "error");
     } finally {
       if (button) button.disabled = false;
@@ -4435,11 +4420,10 @@ function bindChrome() {
         if (updating) toast(t("toast.shareRepublished"), 4200);
         else showLinkCopied(share.url);
         if (share.coverSkipped && updating) setTimeout(() => toast(t("share.cover.skipped"), 4200), 4300);
-      } catch (err) {
-        console.error(err);
+      } catch {
+        /* why: o link já foi publicado; falha ao copiar não desfaz a publicação */
       }
     } catch (err) {
-      console.error(err);
       hideExportOverlay();
       const gate = classifyCloudGate({
         status: err?.status,
@@ -4498,7 +4482,6 @@ function bindChrome() {
       hideExportOverlay();
       toast(t("toast.shareRevoked"));
     } catch (err) {
-      console.error(err);
       hideExportOverlay();
       toast(err?.message || t("share.errGeneric"));
     }
@@ -4604,7 +4587,6 @@ async function receiveCapture(data) {
     captureClaims.commit(data);
     postCaptureAck({ id: data.id, ok: true, mode, projectId: result.id });
   } catch (err) {
-    console.error(err);
     captureClaims.release(data);
     if (captureGeneration === generation) captureGeneration -= 1;
     postCaptureAck({
@@ -4639,7 +4621,6 @@ function bindCaptureInbox() {
       const created = await importCapturePayload(event.detail);
       toast(t("toast.projectCreated", { name: created.name }));
     } catch (err) {
-      console.error(err);
       toast(err?.message || t("toast.captureCreateFail"));
     }
   });
@@ -4730,8 +4711,8 @@ async function boot() {
       applyCloudAuthHref(authCallback.href);
       window.addEventListener("load", () => applyCloudAuthHref(authCallback.href), { once: true });
     }
-  } catch (err) {
-    console.error(err);
+  } catch {
+    /* why: falha no retorno do login não pode impedir o editor de abrir */
   }
   bindExtensionBanner();
   bindReleaseNotes();
@@ -4757,7 +4738,6 @@ async function boot() {
     const migration = await ensureMigrated();
     seeded = Boolean(migration?.seeded);
   } catch (err) {
-    console.error(err);
     toast(t("toast.migrationFail"));
   }
 
@@ -4767,7 +4747,7 @@ async function boot() {
   bindCaptureInbox();
   ensureCollab();
   if (getCloudAccount().signedIn && collabFlagOn()) {
-    try { await refreshSharedProjects(); } catch (err) { console.error(err); }
+    try { await refreshSharedProjects(); } catch { /* why: a lista compartilhada falhar não impede o editor de abrir */ }
   }
 
   const index = readIndex();

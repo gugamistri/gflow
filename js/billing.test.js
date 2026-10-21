@@ -79,6 +79,7 @@ test("entitlement lê plan e status, no corpo ou aninhado", () => {
     active: false,
     planSource: null,
     isAdmin: false,
+    tier: "",
   });
   assert.deepEqual(parseEntitlement({ plan: "pro", status: "active", interval: "annual", active: true }), {
     plan: "pro",
@@ -87,6 +88,7 @@ test("entitlement lê plan e status, no corpo ou aninhado", () => {
     active: true,
     planSource: null,
     isAdmin: false,
+    tier: "",
   });
   assert.deepEqual(parseEntitlement({ entitlement: { plan: "pro", status: "trialing", interval: "month" } }), {
     plan: "pro",
@@ -95,7 +97,9 @@ test("entitlement lê plan e status, no corpo ou aninhado", () => {
     active: true,
     planSource: null,
     isAdmin: false,
+    tier: "",
   });
+  assert.equal(parseEntitlement({ plan: "pro", tier: "team", status: "active" }).tier, "team");
   assert.equal(parseEntitlement({ plan: "cloud", status: "active" }).plan, "pro");
   assert.equal(parseEntitlement({ plan: "free", status: "none" }).plan, "none");
   assert.equal(parseEntitlement({ plan: "pro", status: "canceled" }).active, true);
@@ -405,6 +409,26 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(forever.whenDate, "");
   assert.equal(forever.canCancel, false);
   assert.equal(forever.showPortal, false);
+
+  const teamComp = subscriptionScreen(
+    {
+      plan: "pro",
+      planSource: "comp",
+      tier: "team",
+      status: "none",
+      amount: null,
+      interval: null,
+      compUntil: "2026-12-01T15:00:00.000Z",
+      canCancel: true,
+    },
+    "pt"
+  );
+  assert.equal(teamComp.kind, "courtesy");
+  assert.equal(teamComp.planKey, "billing.planCompTeam");
+  assert.equal(teamComp.team, false);
+  assert.equal(teamComp.showPortal, false);
+  assert.equal(teamComp.canCancel, false);
+  assert.equal(teamComp.extraGuests, 0);
 
   assert.equal(subscriptionScreen({ plan: "none", planSource: null }, "pt").kind, "none");
   assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 36);
