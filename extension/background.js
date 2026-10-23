@@ -1,5 +1,5 @@
 import { captureFileName, optimizeCaptureDataUrl } from "./lib/capture-image.js";
-import { buildDemoPayload, nextClickAction, pointFromClick } from "./lib/demo-payload.js";
+import { buildDemoPayload, hostLabel, nextClickAction, pointFromClick, suggestCaptureName } from "./lib/demo-payload.js";
 import {
   DEFAULT_EDITOR_ORIGIN,
   originToMatchPattern,
@@ -7,13 +7,15 @@ import {
   tabMatchesOrigin,
 } from "./lib/editor-origin.js";
 import { setLocale, resolveLocale, getLocale, t } from "./lib/i18n.js";
+import { fileSchemeAllowed, isRestrictedUrl } from "./lib/tab-access.js";
 
 const LOCALE_KEY = "guiaLocale";
 
 setLocale(resolveLocale(typeof navigator !== "undefined" ? navigator.languages || [navigator.language] : []), { persist: false });
 chrome.storage.local.get(LOCALE_KEY).then((stored) => {
   if (stored[LOCALE_KEY]) setLocale(stored[LOCALE_KEY], { persist: false });
-});
+  return syncAllTabActions();
+}).catch(() => {});
 
 const SCRIPT_ID = "guia-capture";
 const BRIDGE_ID = "guia-bridge";
@@ -22,15 +24,26 @@ const STORAGE_KEY = "guiaCapture";
 const SETTINGS_KEY = "guiaCaptureSettings";
 const HANDOFF_KEY = "guiaCaptureHandoff";
 
+const COLOR_ICONS = {
+  16: "icons/icon16.png",
+  32: "icons/icon32.png",
+  48: "icons/icon48.png",
+};
+const GREY_ICONS = {
+  16: "icons/icon16-off.png",
+  32: "icons/icon32-off.png",
+  48: "icons/icon48-off.png",
+};
+
 let session = null;
 let settings = null;
 let captureLock = false;
 let lastCaptureAt = 0;
-let blobUrl = null;
 let handoffTimer = null;
+let fileAccess = false;
 
 function emptySession() {
-  return { active: false, shots: [], pendingDownloadId: null };
+  return { active: false, shots: [] };
 }
 
 function defaultSettings() {
@@ -95,7 +108,6 @@ function captureUi() {
     capture: t("ext.barCapture"),
     create: t("ext.create"),
     append: t("ext.append"),
-    download: t("ext.download"),
     undo: t("ext.undo"),
     cancel: t("ext.cancel"),
     stepOne: t("ext.stepOne"),
@@ -108,9 +120,33 @@ function captureUi() {
 }
 
 function suggestProjectName() {
-  const first = session?.shots?.[0]?.label;
-  if (first) return first;
-  return fileStamp();
+  return suggestCaptureName(session?.shots, fileStamp());
+}
+
+function canCapture(url) {
+  return !isRestrictedUrl(url, { fileAccess });
+}
+
+async function refreshFileAccess() {
+  fileAccess = await fileSchemeAllowed();
+  return fileAccess;
+}
+
+// why: chrome.action.disable impede o popup; o ícone cinza por aba deixa o aviso abrir
+async function syncTabAction(tab) {
+  if (!tab?.id) return;
+  const restricted = isRestrictedUrl(tab.url, { fileAccess });
+  await chrome.action.setIcon({ tabId: tab.id, path: restricted ? GREY_ICONS : COLOR_ICONS });
+  await chrome.action.setTitle({
+    tabId: tab.id,
+    title: restricted ? t("ext.restrictedTitle") : t("ext.actionTitle"),
+  });
+}
+
+async function syncAllTabActions() {
+  await refreshFileAccess();
+  const tabs = await chrome.tabs.query({});
+  await Promise.all(tabs.map((tab) => syncTabAction(tab).catch(() => {})));
 }
 
 async function updateBadge() {
@@ -129,9 +165,6 @@ function trimTitle(title) {
   return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 }
 
-function isCapturable(url) {
-  return /^https?:\/\//.test(url || "");
-}
 
 async function ensureBridge(origin) {
   const pattern = originToMatchPattern(origin);
@@ -202,7 +235,7 @@ async function hideOverlay(tabId) {
 }
 
 async function start(tab) {
-  if (!tab?.id || !isCapturable(tab.url)) {
+  if (!tab?.id || !canCapture(tab.url)) {
     return publicState({
       ok: false,
       error: t("ext.openProduct"),
@@ -227,7 +260,7 @@ async function start(tab) {
 
 async function captureShot(tab, meta, { withClick }) {
   if (!session?.active) return publicState({ ok: false, error: t("ext.notActive") });
-  if (!tab?.id || !isCapturable(tab.url)) {
+  if (!tab?.id || !canCapture(tab.url)) {
     return publicState({ ok: false, error: t("ext.pageBlocked") });
   }
   if (captureLock) return { ignore: true };
@@ -265,7 +298,9 @@ async function captureShot(tab, meta, { withClick }) {
       imageId: randId("img-"),
       stepId: randId("step-"),
       name: captureFileName(stepNumber, dataUrl),
-      label: trimTitle(meta?.title) || `Passo ${stepNumber}`,
+      label: trimTitle(meta?.title) || t("ext.defaultStep", { n: stepNumber }),
+      host: hostLabel(meta?.url || tab.url),
+      url: meta?.url || tab.url || "",
       dataUrl,
       addedAt: Date.now(),
       clickPoint: withClick ? pointFromClick(meta) : null,
@@ -275,7 +310,7 @@ async function captureShot(tab, meta, { withClick }) {
     await saveSession();
     const state = publicState({
       status: withClick
-        ? `Passo ${stepNumber} salvo com o clique.`
+        ? t("ext.clickSaved", { n: stepNumber })
         : t("ext.screenSaved"),
     });
     await broadcast(state);
@@ -325,10 +360,6 @@ async function clearHandoff() {
 }
 
 async function cancel() {
-  if (blobUrl) {
-    URL.revokeObjectURL(blobUrl);
-    blobUrl = null;
-  }
   await clearHandoff();
   session = emptySession();
   await saveSession();
@@ -345,42 +376,8 @@ function fileStamp() {
 }
 
 function buildPayload(name) {
-  const projectName = String(name || settings?.projectName || "").trim() || suggestProjectName();
+  const projectName = String(name || "").trim() || suggestProjectName();
   return buildDemoPayload({ name: projectName, shots: session.shots });
-}
-
-async function downloadJson() {
-  if (!session.shots.length) {
-    return publicState({ ok: false, error: t("ext.needOne") });
-  }
-  let payload;
-  try {
-    payload = buildPayload();
-  } catch {
-    return publicState({ ok: false, error: t("ext.incomplete") });
-  }
-
-  if (blobUrl) URL.revokeObjectURL(blobUrl);
-  blobUrl = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
-
-  let downloadId;
-  try {
-    downloadId = await chrome.downloads.download({
-      url: blobUrl,
-      filename: `${payload.name || fileStamp()}.json`,
-      saveAs: true,
-      conflictAction: "uniquify",
-    });
-  } catch {
-    return publicState({
-      ok: false,
-      error: t("ext.downloadFail"),
-    });
-  }
-
-  session.pendingDownloadId = downloadId;
-  await saveSession();
-  return publicState({ status: t("ext.chooseSave") });
 }
 
 async function findEditorTab(origin) {
@@ -496,32 +493,6 @@ async function deliverHandoff({ name, editorOrigin, mode } = {}) {
   return state;
 }
 
-async function settleDownload(downloadId, state) {
-  session = await loadSession();
-  if (!session.pendingDownloadId || session.pendingDownloadId !== downloadId) return;
-  if (state === "complete") {
-    if (blobUrl) {
-      URL.revokeObjectURL(blobUrl);
-      blobUrl = null;
-    }
-    session = emptySession();
-    await saveSession();
-    await dropRegistered();
-    await broadcast(publicState({ show: false, status: t("ext.jsonDownloaded") }));
-    return;
-  }
-  if (state === "interrupted") {
-    session.pendingDownloadId = null;
-    await saveSession();
-    await broadcast(
-      publicState({
-        ok: false,
-        error: t("ext.downloadCancelled"),
-      })
-    );
-  }
-}
-
 async function onHandoffAck(msg) {
   await clearHandoff();
   if (!msg.ok) {
@@ -558,6 +529,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 async function handle(msg, sender) {
+  await refreshFileAccess();
   session = await loadSession();
   settings = await loadSettings();
   switch (msg.type) {
@@ -568,6 +540,7 @@ async function handle(msg, sender) {
       await chrome.storage.local.set({ [LOCALE_KEY]: locale });
       const state = publicState();
       await broadcast(state);
+      await syncAllTabActions().catch(() => {});
       return state;
     }
     case "SAVE_SETTINGS":
@@ -595,8 +568,6 @@ async function handle(msg, sender) {
       return createProject({ name: msg.name, editorOrigin: msg.editorOrigin });
     case "APPEND_TO_PROJECT":
       return appendToProject({ name: msg.name, editorOrigin: msg.editorOrigin });
-    case "DOWNLOAD_JSON":
-      return downloadJson();
     case "FINISH":
       return createProject();
     case "HANDOFF_GET":
@@ -611,6 +582,7 @@ async function handle(msg, sender) {
 }
 
 chrome.commands.onCommand.addListener(async (command) => {
+  await refreshFileAccess();
   session = await loadSession();
   settings = await loadSettings();
   if (!session.active) return;
@@ -624,14 +596,36 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-chrome.downloads.onChanged.addListener((delta) => {
-  const state = delta.state?.current;
-  if (state !== "complete" && state !== "interrupted") return;
-  settleDownload(delta.id, state).catch(() => {});
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  refreshFileAccess()
+    .then(() => chrome.tabs.get(tabId))
+    .then((tab) => syncTabAction(tab))
+    .catch(() => {});
+});
+
+chrome.tabs.onUpdated.addListener((_tabId, info, tab) => {
+  if (!info.url && info.status !== "complete") return;
+  refreshFileAccess()
+    .then(() => syncTabAction(tab))
+    .catch(() => {});
+});
+
+chrome.tabs.onReplaced.addListener((addedTabId) => {
+  refreshFileAccess()
+    .then(() => chrome.tabs.get(addedTabId))
+    .then((tab) => syncTabAction(tab))
+    .catch(() => {});
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  syncAllTabActions().catch(() => {});
 });
 
 chrome.runtime.onStartup.addListener(async () => {
   session = await loadSession();
   settings = await loadSettings();
   await updateBadge();
+  await syncAllTabActions();
 });
+
+syncAllTabActions().catch(() => {});

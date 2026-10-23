@@ -66,7 +66,6 @@
     create: "Criar projeto",
     append: "Copiar para o projeto",
     undo: "Desfazer",
-    download: "Baixar JSON",
     cancel: "Cancelar",
     stepOne: "1 passo",
     stepsN: "{n} passos",
@@ -93,7 +92,6 @@
     ["create", "create", "primary"],
     ["append", "append", "primary"],
     ["undo", "undo", ""],
-    ["download", "download", ""],
     ["cancel", "cancel", "danger"],
   ]) {
     const button = document.createElement("button");
@@ -180,7 +178,6 @@
     }
     if (action === "create") send({ type: "CREATE_PROJECT" });
     if (action === "append") send({ type: "APPEND_TO_PROJECT" });
-    if (action === "download") send({ type: "DOWNLOAD_JSON" });
     if (action === "undo") send({ type: "UNDO" });
     if (action === "cancel") send({ type: "CANCEL" });
   });
