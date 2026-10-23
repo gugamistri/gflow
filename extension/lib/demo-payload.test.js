@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildDemoPayload,
+  hostLabel,
   hotspotAround,
   nextClickAction,
   pointFromClick,
+  suggestCaptureName,
 } from "./demo-payload.js";
 import { setLocale, t } from "./i18n.js";
 
@@ -40,6 +42,19 @@ test("clique depois de Capturar só marca o último passo", () => {
   assert.equal(nextClickAction([{ awaitingHotspot: true }]), "mark");
   assert.equal(nextClickAction([{ awaitingHotspot: false }]), "capture");
   assert.equal(nextClickAction([]), "capture");
+});
+
+test("o nome do projeto sai do título da primeira tela", () => {
+  assert.equal(suggestCaptureName([{ label: "Ajustes · Acme", host: "acme.com" }]), "Ajustes · Acme");
+  assert.equal(hostLabel("https://www.acme.com/app"), "acme.com");
+});
+
+test("título genérico cai no domínio e sem captura não inventa nome", () => {
+  assert.equal(suggestCaptureName([{ label: "Passo 1", host: "acme.com" }]), "acme.com");
+  assert.equal(suggestCaptureName([{ label: "Paso 2", url: "https://www.loja.es/inicio" }]), "loja.es");
+  assert.equal(suggestCaptureName([{ label: "Step 3", host: "app.example.com" }]), "app.example.com");
+  assert.equal(suggestCaptureName([]), "");
+  assert.equal(suggestCaptureName(null, "reserva"), "reserva");
 });
 
 test("payload liga cada passo à imagem embutida", () => {

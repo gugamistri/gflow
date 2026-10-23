@@ -56,6 +56,26 @@ export function nextClickAction(shots) {
   return "capture";
 }
 
+export function hostLabel(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+const GENERIC_STEP = /^(passo|paso|step)\s+\d+$/i;
+
+/** Título da primeira tela; se for só "Passo 1", o domínio. O editor é quem renomeia. */
+export function suggestCaptureName(shots, fallback = "") {
+  const first = Array.isArray(shots) ? shots[0] : null;
+  const label = String(first?.label || "").replace(/\s+/g, " ").trim();
+  if (label && !GENERIC_STEP.test(label)) return label;
+  const host = String(first?.host || "").trim() || hostLabel(first?.url);
+  if (host) return host;
+  return fallback;
+}
+
 const THEME = {
   presetId: "documento",
   accent: "#2A9D8F",

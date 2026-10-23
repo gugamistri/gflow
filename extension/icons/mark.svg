@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GuiaFlow" viewBox="19.99 1.49 530.34 530.34" width="530" height="530">
+<defs><mask id="bm" maskUnits="userSpaceOnUse" x="-200" y="-200" width="1200" height="1200"><rect x="-200" y="-200" width="1200" height="1200" fill="#fff"/><path d="M363.00 270.00 L521.73 314.86 L460.31 331.42 L529.32 400.44 L493.44 436.32 L424.42 367.31 L407.86 428.73 Z" fill="#000" stroke="#000" stroke-width="41.0" stroke-linejoin="round"/></mask></defs>
+<path d="M272.07 140.67 A136 136 0 1 0 336.00 256.00 L212.00 256" fill="none" stroke="#2A9D8F" stroke-width="58" stroke-linecap="round" stroke-linejoin="round" mask="url(#bm)"/>
+<path d="M363.00 270.00 L521.73 314.86 L460.31 331.42 L529.32 400.44 L493.44 436.32 L424.42 367.31 L407.86 428.73 Z" fill="#2A9D8F" stroke="#2A9D8F" stroke-width="13.0" stroke-linejoin="round"/>
+</svg>

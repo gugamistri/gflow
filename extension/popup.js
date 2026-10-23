@@ -1,35 +1,68 @@
+import { hostLabel } from "./lib/demo-payload.js";
 import { DEFAULT_EDITOR_ORIGIN } from "./lib/editor-origin.js";
 import { initLocale, applyI18n, bindLocaleSelect, t, getLocale } from "./lib/i18n.js";
+import { fileSchemeAllowed, isRestrictedUrl } from "./lib/tab-access.js";
 
 const idle = document.getElementById("idle");
 const live = document.getElementById("live");
+const panels = document.getElementById("panels");
+const restrictedEl = document.getElementById("restricted");
+const restrictedActiveEl = document.getElementById("restricted-active");
+const helpEl = document.getElementById("help");
+const keysEl = document.getElementById("keys");
 const countEl = document.getElementById("count");
 const statusEl = document.getElementById("status");
-const nameEl = document.getElementById("project-name");
+const nameEl = document.getElementById("name-preview");
 const originEl = document.getElementById("editor-origin");
+const createBtn = document.getElementById("create");
+const appendBtn = document.getElementById("append");
+const undoBtn = document.getElementById("undo");
+
+const GENERIC_TITLE = /^(new tab|nova guia|nueva pestaña|about:blank)$/i;
 
 originEl.placeholder = DEFAULT_EDITOR_ORIGIN;
 if (!originEl.value) originEl.value = DEFAULT_EDITOR_ORIGIN;
 
-function paint(state) {
+function previewName(state, tab) {
+  if (state?.suggestedName) return state.suggestedName;
+  const title = String(tab?.title || "").replace(/\s+/g, " ").trim();
+  if (title && !GENERIC_TITLE.test(title)) {
+    return title.length > 60 ? `${title.slice(0, 57)}…` : title;
+  }
+  return hostLabel(tab?.url);
+}
+
+function paint(state, tab) {
+  const restricted = Boolean(state?.restricted);
   const active = Boolean(state?.active);
-  idle.hidden = active;
-  live.hidden = !active;
   const count = state?.count || 0;
-  countEl.textContent = active
-    ? count === 1
-      ? t("ext.stepOne")
-      : t("ext.stepsN", { n: count })
-    : t("ext.off");
+  restrictedEl.hidden = !restricted;
+  restrictedActiveEl.hidden = !restricted || !active;
+  panels.hidden = restricted;
+  helpEl.hidden = restricted;
+  keysEl.hidden = restricted;
+  idle.hidden = restricted || active;
+  live.hidden = restricted || !active;
+
+  if (restricted && !active) countEl.textContent = t("ext.restrictedShort");
+  else if (active) countEl.textContent = count === 1 ? t("ext.stepOne") : t("ext.stepsN", { n: count });
+  else countEl.textContent = t("ext.off");
+
   statusEl.textContent = state?.error || state?.status || "";
   statusEl.classList.toggle("is-error", Boolean(state?.error));
 
+  const name = restricted ? "" : previewName(state, tab);
+  nameEl.hidden = !name;
+  nameEl.textContent = name ? t("ext.namePreview", { name }) : "";
+  nameEl.title = name ? t("ext.nameHint") : "";
+
+  const hasShots = count > 0;
+  createBtn.disabled = !hasShots;
+  appendBtn.disabled = !hasShots;
+  undoBtn.disabled = !hasShots;
+
   if (document.activeElement !== originEl) {
     originEl.value = state?.editorOrigin || DEFAULT_EDITOR_ORIGIN;
-  }
-  if (document.activeElement !== nameEl) {
-    if (state?.projectName) nameEl.value = state.projectName;
-    else if (!nameEl.value && state?.suggestedName) nameEl.placeholder = state.suggestedName;
   }
 }
 
@@ -51,87 +84,80 @@ function closeIfOk(state) {
   window.close();
 }
 
-initLocale();
-applyI18n(document);
-bindLocaleSelect(document.getElementById("locale-select"), (locale) => {
-  send({ type: "SET_LOCALE", locale }).then(paint);
-});
-send({ type: "SET_LOCALE", locale: getLocale() });
+function editorOrigin() {
+  return originEl.value.trim() || DEFAULT_EDITOR_ORIGIN;
+}
+
+function persistOrigin() {
+  return send({ type: "SAVE_SETTINGS", editorOrigin: editorOrigin() });
+}
 
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab;
 }
 
-function settingsPayload() {
-  return {
-    name: nameEl.value.trim(),
-    editorOrigin: originEl.value.trim() || DEFAULT_EDITOR_ORIGIN,
-  };
+async function refresh() {
+  const tab = await activeTab();
+  const fileAccess = await fileSchemeAllowed();
+  const state = await send({ type: "STATUS" });
+  paint({ ...state, restricted: isRestrictedUrl(tab?.url, { fileAccess }) }, tab);
 }
 
-async function persistSettings() {
-  return send({
-    type: "SAVE_SETTINGS",
-    projectName: nameEl.value.trim(),
-    editorOrigin: originEl.value.trim() || DEFAULT_EDITOR_ORIGIN,
-  });
-}
-
-nameEl.addEventListener("change", () => {
-  persistSettings().then(paint);
+initLocale();
+applyI18n(document);
+bindLocaleSelect(document.getElementById("locale-select"), () => {
+  send({ type: "SET_LOCALE", locale: getLocale() }).then(() => refresh());
 });
+
 originEl.addEventListener("change", () => {
-  persistSettings().then(paint);
+  persistOrigin().then(() => refresh());
 });
 
 document.getElementById("start").addEventListener("click", async () => {
-  await persistSettings();
+  await persistOrigin();
   const tab = await activeTab();
   if (!tab?.id) {
-    paint({ ok: false, error: t("ext.noActiveTab") });
+    paint({ ok: false, error: t("ext.noActiveTab") }, tab);
     return;
   }
   const state = await send({ type: "START", tabId: tab.id });
-  paint(state);
+  const fileAccess = await fileSchemeAllowed();
+  paint({ ...state, restricted: isRestrictedUrl(tab.url, { fileAccess }) }, tab);
   closeIfOk(state);
 });
 
 document.getElementById("shot").addEventListener("click", async () => {
   const tab = await activeTab();
   const state = await send({ type: "CAPTURE_NOW", tabId: tab?.id });
-  paint(state);
+  paint({ ...state, restricted: false }, tab);
   closeIfOk(state);
 });
 
 document.getElementById("create").addEventListener("click", async () => {
-  const { name, editorOrigin } = settingsPayload();
-  const state = await send({ type: "CREATE_PROJECT", name, editorOrigin });
-  paint(state);
+  const tab = await activeTab();
+  const state = await send({ type: "CREATE_PROJECT", editorOrigin: editorOrigin() });
+  paint({ ...state, restricted: false }, tab);
   closeIfOk(state);
 });
 
 document.getElementById("append").addEventListener("click", async () => {
-  const { name, editorOrigin } = settingsPayload();
-  const state = await send({ type: "APPEND_TO_PROJECT", name, editorOrigin });
-  paint(state);
-  closeIfOk(state);
-});
-
-document.getElementById("download").addEventListener("click", async () => {
-  const state = await send({ type: "DOWNLOAD_JSON" });
-  paint(state);
+  const tab = await activeTab();
+  const state = await send({ type: "APPEND_TO_PROJECT", editorOrigin: editorOrigin() });
+  paint({ ...state, restricted: false }, tab);
   closeIfOk(state);
 });
 
 document.getElementById("undo").addEventListener("click", async () => {
-  paint(await send({ type: "UNDO" }));
+  const tab = await activeTab();
+  paint({ ...(await send({ type: "UNDO" })), restricted: false }, tab);
 });
 
 document.getElementById("cancel").addEventListener("click", async () => {
+  const tab = await activeTab();
   const state = await send({ type: "CANCEL" });
-  paint(state);
+  paint({ ...state, restricted: false }, tab);
   closeIfOk(state);
 });
 
-send({ type: "STATUS" }).then(paint);
+send({ type: "SET_LOCALE", locale: getLocale() }).then(() => refresh());
