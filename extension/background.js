@@ -120,7 +120,7 @@ function captureUi() {
 }
 
 function suggestProjectName() {
-  return suggestCaptureName(session?.shots, fileStamp());
+  return suggestCaptureName(session?.shots, "");
 }
 
 function canCapture(url) {
@@ -376,7 +376,7 @@ function fileStamp() {
 }
 
 function buildPayload(name) {
-  const projectName = String(name || "").trim() || suggestProjectName();
+  const projectName = String(name || "").trim() || suggestCaptureName(session.shots, fileStamp());
   return buildDemoPayload({ name: projectName, shots: session.shots });
 }
 
