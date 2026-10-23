@@ -68,14 +68,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/147/css/theme.css" />
-  <link rel="stylesheet" href="/a/147/css/shell.css" />
-  <link rel="stylesheet" href="/a/147/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/148/css/theme.css" />
+  <link rel="stylesheet" href="/a/148/css/shell.css" />
+  <link rel="stylesheet" href="/a/148/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/147/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/147/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/148/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/148/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
@@ -127,7 +127,7 @@
 
     <section class="card" id="gravar">
       <h2 data-i18n="help.recordTitle">2. Record the screens</h2>
-      <p data-i18n-html="help.recordIntro">Keep the editor open at this address. In the store extension, the <strong>Editor</strong> field already points at the published GuiaFlow. If the address below is different, paste it into that field:</p>
+      <p data-i18n-html="help.recordIntro">Keep the editor open at this address. The extension already points at the published GuiaFlow. If the address below is different, open <strong>Advanced</strong> in the popup and paste it there:</p>
       <p class="origin" id="editor-origin"></p>
       <ol>
         <li data-i18n="help.record1">Open the product page you want to show.</li>
@@ -137,7 +137,7 @@
         <li data-i18n="help.record5">Follow the product flow and repeat capture + click.</li>
         <li data-i18n-html="help.record6"><strong>Create project</strong> opens the editor with a new project, already with images and click points.</li>
       </ol>
-      <p data-i18n-html="help.recordTips"><strong>Undo</strong> removes the last step. <strong>Download JSON</strong> saves a file if the editor is not open. Shortcuts: Option+Shift+C captures, Option+Shift+E creates the project.</p>
+      <p data-i18n-html="help.recordTips"><strong>Undo</strong> removes the last step. <strong>Cancel</strong> discards the capture. Shortcuts: Option+Shift+C captures, Option+Shift+E creates the project.</p>
       <p data-i18n-html="help.recordPrefer">Prefer <strong>Capture</strong> and only then click. A direct click on the page also creates a step, but the photo may show the screen after it already changed.</p>
     </section>
 
@@ -185,7 +185,7 @@
       <h2 data-i18n="help.privacyTitle">Privacy</h2>
       <ul>
         <li data-i18n="help.privacy1">A photo is only taken when you capture or click during a recording.</li>
-        <li data-i18n="help.privacy2">Images stay in Chrome until you create the project, download the JSON, or cancel.</li>
+        <li data-i18n="help.privacy2">Images stay in Chrome until you create the project or cancel.</li>
         <li data-i18n="help.privacy3">Create project sends images only to the editor address in the popup, in this browser.</li>
         <li data-i18n="help.privacy4">The extension does not send captures to another server and does not sell that data.</li>
       </ul>
@@ -202,7 +202,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/147/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/148/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

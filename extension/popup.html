@@ -7,8 +7,11 @@
   </head>
   <body>
     <header>
-      <strong data-i18n="doc.title.popup">Captura</strong>
-      <span id="count" data-i18n="ext.off">desligada</span>
+      <img class="mark" src="icons/mark.svg" width="22" height="22" alt="" />
+      <div class="title-block">
+        <strong data-i18n="doc.title.popup">Captura</strong>
+        <span id="count" data-i18n="ext.off">desligada</span>
+      </div>
       <label class="locale-select">
         <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
           <option value="pt">PT</option>
@@ -20,27 +23,53 @@
     <p id="help" data-i18n="ext.help">
       Congela a tela do produto, marca o clique e cria um projeto novo no editor.
     </p>
-    <label class="field">
-      <span data-i18n="ext.projectName">Nome do projeto</span>
-      <input type="text" id="project-name" placeholder="Ex.: Tour RCV" data-i18n-placeholder="ext.projectPlaceholder" autocomplete="off" />
-    </label>
-    <label class="field">
-      <span data-i18n="ext.editor">Editor</span>
-      <input type="url" id="editor-origin" autocomplete="off" />
-    </label>
-    <div id="idle">
-      <button type="button" class="primary" id="start" data-i18n="ext.start">Iniciar nesta aba</button>
+    <p id="name-preview" class="name-preview" hidden></p>
+    <div id="restricted" class="restricted" hidden>
+      <p data-i18n="ext.restricted">A captura não funciona nesta página do navegador. Abra um site e tente de novo.</p>
+      <p id="restricted-active" hidden data-i18n="ext.restrictedActive">A captura continua na aba do produto. Volte para ela para fotografar ou criar o projeto.</p>
     </div>
-    <div id="live" hidden>
-      <button type="button" class="primary" id="shot" data-i18n="ext.shot">Capturar esta tela</button>
-      <button type="button" class="primary" id="create" data-i18n="ext.create">Criar projeto</button>
-      <button type="button" class="primary" id="append" data-i18n="ext.append">Copiar para o projeto</button>
-      <button type="button" id="download" data-i18n="ext.download">Baixar JSON</button>
-      <button type="button" id="undo" data-i18n="ext.undo">Desfazer</button>
-      <button type="button" class="danger" id="cancel" data-i18n="ext.cancel">Cancelar</button>
+    <div id="panels">
+      <div id="idle">
+        <button type="button" class="primary" id="start">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.2 3.2v9.6L13 8 5.2 3.2z" fill="currentColor"/></svg>
+          <span data-i18n="ext.start">Iniciar nesta aba</span>
+        </button>
+      </div>
+      <div id="live" hidden>
+        <button type="button" class="primary" id="shot">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.2 5.4h2.1l1-1.6h5.4l1 1.6h2.1c.5 0 .9.4.9.9v6c0 .5-.4.9-.9.9H2.2a.9.9 0 0 1-.9-.9v-6c0-.5.4-.9.9-.9z" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8.7" r="1.9" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+          <span data-i18n="ext.shot">Capturar esta tela</span>
+        </button>
+        <button type="button" class="strong" id="create">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.2v9.6M3.2 8h9.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span data-i18n="ext.create">Criar projeto</span>
+        </button>
+        <button type="button" class="ghost" id="append">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="6" width="8" height="8" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10 6V3.4A1.4 1.4 0 0 0 8.6 2H3.4A1.4 1.4 0 0 0 2 3.4v5.2A1.4 1.4 0 0 0 3.4 10H6" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+          <span data-i18n="ext.append">Copiar para o projeto</span>
+        </button>
+        <button type="button" class="ghost" id="undo">
+          <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.2 4.2 3.2 7.2l3 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.6 7.2h6.1a3.1 3.1 0 0 1 0 6.2H8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span data-i18n="ext.undo">Desfazer</span>
+        </button>
+        <div class="danger-slot">
+          <button type="button" class="danger" id="cancel">
+            <svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.4 4.4l7.2 7.2M11.6 4.4l-7.2 7.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span data-i18n="ext.cancel">Cancelar</span>
+          </button>
+        </div>
+      </div>
     </div>
+    <details id="advanced">
+      <summary data-i18n="ext.advanced">Avançado</summary>
+      <label class="field">
+        <span data-i18n="ext.editor">Editor</span>
+        <input type="url" id="editor-origin" autocomplete="off" spellcheck="false" />
+      </label>
+      <p class="advanced-hint" data-i18n="ext.advancedHint">O endereço do editor. Quase nunca muda.</p>
+    </details>
     <p id="status"></p>
-    <p class="keys" data-i18n="ext.keys">Option+Shift+C captura · Option+Shift+E cria o projeto</p>
+    <p id="keys" class="keys" data-i18n="ext.keys">Option+Shift+C captura · Option+Shift+E cria o projeto</p>
     <script type="module" src="popup.js"></script>
   </body>
 </html>

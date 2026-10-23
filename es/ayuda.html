@@ -68,14 +68,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/147/css/theme.css" />
-  <link rel="stylesheet" href="/a/147/css/shell.css" />
-  <link rel="stylesheet" href="/a/147/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/148/css/theme.css" />
+  <link rel="stylesheet" href="/a/148/css/shell.css" />
+  <link rel="stylesheet" href="/a/148/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/147/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/147/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/148/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/148/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
@@ -127,7 +127,7 @@
 
     <section class="card" id="gravar">
       <h2 data-i18n="help.recordTitle">2. Grabar las pantallas</h2>
-      <p data-i18n-html="help.recordIntro">Deje el editor abierto en esta dirección. En la extensión de la tienda, el campo <strong>Editor</strong> ya apunta al GuiaFlow publicado. Si la dirección de abajo es otra, péguela en ese campo:</p>
+      <p data-i18n-html="help.recordIntro">Deje el editor abierto en esta dirección. La extensión ya apunta al GuiaFlow publicado. Si la dirección de abajo es otra, abra <strong>Avanzado</strong> en el popup y péguela allí:</p>
       <p class="origin" id="editor-origin"></p>
       <ol>
         <li data-i18n="help.record1">Abra la página del producto que quiere mostrar.</li>
@@ -137,7 +137,7 @@
         <li data-i18n="help.record5">Siga el flujo del producto y repita capturar + clic.</li>
         <li data-i18n-html="help.record6"><strong>Crear proyecto</strong> abre el editor con un proyecto nuevo, ya con las imágenes y los puntos de clic.</li>
       </ol>
-      <p data-i18n-html="help.recordTips"><strong>Deshacer</strong> quita el último paso. <strong>Descargar JSON</strong> guarda un archivo si el editor no está abierto. Atajos: Option+Shift+C captura, Option+Shift+E crea el proyecto.</p>
+      <p data-i18n-html="help.recordTips"><strong>Deshacer</strong> quita el último paso. <strong>Cancelar</strong> descarta la captura. Atajos: Option+Shift+C captura, Option+Shift+E crea el proyecto.</p>
       <p data-i18n-html="help.recordPrefer">Prefiera <strong>Capturar</strong> y solo entonces hacer clic. Un clic directo en la página también genera un paso, pero la foto puede salir de la pantalla ya cambiada.</p>
     </section>
 
@@ -185,7 +185,7 @@
       <h2 data-i18n="help.privacyTitle">Privacidad</h2>
       <ul>
         <li data-i18n="help.privacy1">La foto solo se toma cuando captura o hace clic durante una grabación.</li>
-        <li data-i18n="help.privacy2">Las imágenes permanecen en Chrome hasta que cree el proyecto, descargue el JSON o cancele.</li>
+        <li data-i18n="help.privacy2">Las imágenes permanecen en Chrome hasta que cree el proyecto o cancele.</li>
         <li data-i18n="help.privacy3">Crear proyecto envía las imágenes solo a la dirección del editor del popup, en este navegador.</li>
         <li data-i18n="help.privacy4">La extensión no envía capturas a otro servidor y no vende esos datos.</li>
       </ul>
@@ -202,7 +202,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/147/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/148/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
