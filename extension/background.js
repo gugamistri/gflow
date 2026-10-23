@@ -104,7 +104,7 @@ function publicState(extra = {}) {
 
 function captureUi() {
   return {
-    title: t("ext.barTitle"),
+    title: t("doc.title.popup"),
     capture: t("ext.barCapture"),
     create: t("ext.create"),
     append: t("ext.append"),
@@ -232,6 +232,8 @@ async function broadcast(state) {
 
 async function hideOverlay(tabId) {
   await chrome.tabs.sendMessage(tabId, { type: "HIDE_OVERLAY" });
+  // why: o print às vezes sai no frame anterior; sem esta pausa a barra entra na foto
+  await new Promise((resolve) => setTimeout(resolve, 80));
 }
 
 async function start(tab) {
