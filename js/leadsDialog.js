@@ -1,7 +1,7 @@
 /**
- * Contatos recebidos no link permanente (passo inicial + formulário do passo final)
- * e o webhook que os envia para fora (Pro).
- * Só o dono vê (GET /shares/:slug/leads e /webhook com Bearer); CSV no navegador.
+ * Contatos recebidos no link permanente (passo inicial + formulário do passo final),
+ * o webhook e o HubSpot que os enviam para fora (Pro).
+ * Só o dono vê (GET /shares/:slug/leads, /webhook e /hubspot com Bearer); CSV no navegador.
  */
 import { t, getLocale } from "./i18n.js";
 import { cloudFetch } from "./cloudConfig.js";
@@ -15,6 +15,15 @@ import {
   planWebhookSave,
   webhookProblem,
 } from "./leadWebhook.js";
+import {
+  HUBSPOT_FIELDS,
+  HUBSPOT_HELP,
+  authorizeUrlOf,
+  hubspotProblem,
+  normalizeHubspot,
+  normalizeTestResult as normalizeHubspotTest,
+  planHubspotSave,
+} from "./hubspot.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -58,6 +67,10 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let secretVisible = false;
   let secretDirty = false;
   let webhookBusy = false;
+  let hubspot = null;
+  let hubspotBusy = false;
+  let hubspotDirty = new Set();
+  let hubspotReturn = null;
 
   const els = () => ({
     dialog: $("modal-leads"),
@@ -79,6 +92,16 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     save: $("btn-leads-webhook-save"),
     test: $("btn-leads-webhook-test"),
     rotate: $("btn-leads-webhook-rotate"),
+    hsAccount: $("leads-hubspot-account"),
+    hsEnabled: $("leads-hubspot-enabled"),
+    hsDelivery: $("leads-hubspot-delivery"),
+    hsStatus: $("leads-hubspot-status"),
+    hsConnect: $("btn-leads-hubspot-connect"),
+    hsSave: $("btn-leads-hubspot-save"),
+    hsTest: $("btn-leads-hubspot-test"),
+    hsRemove: $("btn-leads-hubspot-remove"),
+    hsHelp: $("leads-hubspot-help"),
+    map: Object.fromEntries(HUBSPOT_FIELDS.map((key) => [key, document.querySelector(`[data-hubspot-field="${key}"]`)])),
   });
 
   function sourceLabel(source) {
@@ -468,6 +491,224 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     }
   }
 
+  function setHubspotMessage(text, error = false) {
+    const node = els().hsStatus;
+    if (!node) return;
+    node.textContent = text || "";
+    node.classList.toggle("is-error", Boolean(error && text));
+  }
+
+  function mappingValues() {
+    const map = els().map || {};
+    const values = {};
+    for (const key of HUBSPOT_FIELDS) values[key] = map[key]?.value || "";
+    return values;
+  }
+
+  function paintHubspot() {
+    const e = els();
+    if (!e.hsConnect) return;
+    for (const key of HUBSPOT_FIELDS) {
+      const input = e.map?.[key];
+      if (!input || hubspotDirty.has(key)) continue;
+      input.value = hubspot?.mapping?.[key] ?? "";
+    }
+    e.hsConnect.textContent = t(hubspot?.connected ? "leads.hubspot.reconnect" : "leads.hubspot.connect");
+    if (e.hsRemove) e.hsRemove.hidden = !hubspot?.connected;
+    if (e.hsHelp) e.hsHelp.href = HUBSPOT_HELP[getLocale()] || HUBSPOT_HELP.pt;
+    for (const btn of [e.hsConnect, e.hsSave, e.hsTest, e.hsRemove]) {
+      if (btn) btn.disabled = hubspotBusy;
+    }
+    paintHubspotAccount();
+    paintHubspotDelivery();
+  }
+
+  function paintHubspotAccount() {
+    const node = els().hsAccount;
+    if (!node) return;
+    if (!hubspot?.connected) {
+      node.textContent = t("leads.hubspot.disconnected");
+      return;
+    }
+    const parts = [hubspot.account ? t("leads.hubspot.account", { account: hubspot.account }) : t("leads.hubspot.connected")];
+    if (hubspot.tokenLast4) parts.push(t("leads.hubspot.token", { last4: hubspot.tokenLast4 }));
+    if (hubspot.scopes?.length) parts.push(t("leads.hubspot.scopes", { scopes: hubspot.scopes.join(", ") }));
+    node.textContent = parts.join(" ");
+  }
+
+  function paintHubspotDelivery() {
+    const node = els().hsDelivery;
+    if (!node) return;
+    if (!hubspot) {
+      node.textContent = "";
+      return;
+    }
+    const parts = [];
+    for (const delivery of (hubspot.deliveries || []).slice(0, 3)) {
+      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
+      const date = delivery.at ? formatDate(delivery.at) : "—";
+      parts.push(t(delivery.ok ? "leads.hubspot.lastOk" : "leads.hubspot.lastFail", { date, status }));
+    }
+    if (hubspot.consecutiveFailures > 0) parts.push(t("leads.hubspot.failures", { n: hubspot.consecutiveFailures }));
+    if (hubspot.autoDisabled) parts.push(t("leads.hubspot.autoOff"));
+    node.textContent = parts.join(" ");
+  }
+
+  function hubspotPath(extra = "") {
+    return `/shares/${encodeURIComponent(getSlug())}/hubspot${extra}`;
+  }
+
+  function showHubspotReturn() {
+    if (!hubspotReturn) return;
+    const notice = hubspotReturn;
+    hubspotReturn = null;
+    setHubspotMessage(t(notice.key, notice.vars), notice.error);
+  }
+
+  function handleHubspotProblem(res, fallbackKey) {
+    const problem = hubspotProblem(res);
+    if (problem === "paywall") {
+      els().dialog?.close();
+      onPaywall?.();
+      return true;
+    }
+    const key = problem === "auth" ? "leads.hubspot.errAuth"
+      : problem === "config" ? "leads.hubspot.errConfig"
+        : fallbackKey;
+    setHubspotMessage(t(key), true);
+    return true;
+  }
+
+  async function loadHubspot() {
+    if (!getSlug() || !els().hsConnect) return;
+    const res = await cloudFetch(hubspotPath(), { method: "GET" });
+    if (!res.ok && res.status !== 404) {
+      if (!hubspotReturn) handleHubspotProblem(res, "leads.hubspot.errLoad");
+      else showHubspotReturn();
+      return;
+    }
+    hubspot = res.ok ? normalizeHubspot(res.data) : null;
+    hubspotDirty = new Set();
+    const enabled = els().hsEnabled;
+    if (enabled) enabled.checked = hubspot ? hubspot.enabled : true;
+    paintHubspot();
+    if (hubspotReturn) showHubspotReturn();
+    else setHubspotMessage("");
+  }
+
+  async function connectHubspot() {
+    if (!guardSlug(setHubspotMessage) || hubspotBusy) return;
+    hubspotBusy = true;
+    paintHubspot();
+    setHubspotMessage(t("leads.hubspot.opening"));
+    const res = await cloudFetch(hubspotPath("/authorize"), { method: "GET" });
+    const url = res.ok ? authorizeUrlOf(res.data) : "";
+    hubspotBusy = false;
+    paintHubspot();
+    if (!res.ok || !url) {
+      if (!res.ok) handleHubspotProblem(res, "leads.hubspot.errConnect");
+      else setHubspotMessage(t("leads.hubspot.errConnect"), true);
+      return;
+    }
+    const popup = window.open(url, "_blank");
+    try {
+      if (popup) popup.opener = null;
+    } catch {
+      /* o navegador já isolou a janela */
+    }
+    if (!popup) location.assign(url);
+  }
+
+  async function submitHubspot() {
+    if (hubspotBusy) return;
+    if (!guardSlug(setHubspotMessage)) return;
+    const plan = planHubspotSave({
+      enabled: Boolean(els().hsEnabled?.checked),
+      values: mappingValues(),
+      baseMapping: hubspot?.mapping,
+      dirtyKeys: hubspotDirty,
+    });
+    hubspotBusy = true;
+    paintHubspot();
+    setHubspotMessage(t("leads.hubspot.saving"));
+    const res = await cloudFetch(hubspotPath(), { method: "PUT", body: JSON.stringify(plan.body) });
+    hubspotBusy = false;
+    if (!res.ok) {
+      paintHubspot();
+      handleHubspotProblem(res, "leads.hubspot.errSave");
+      return;
+    }
+    const next = normalizeHubspot(res.data) || {
+      ...(hubspot || {}),
+      connected: Boolean(hubspot?.connected),
+      enabled: plan.body.enabled,
+      mapping: plan.body.mapping ? { ...(hubspot?.mapping || {}), ...plan.body.mapping } : hubspot?.mapping || null,
+      autoDisabled: false,
+    };
+    hubspot = next;
+    hubspotDirty = new Set();
+    const enabled = els().hsEnabled;
+    if (enabled) enabled.checked = next.enabled;
+    paintHubspot();
+    setHubspotMessage(t("leads.hubspot.saved"));
+    toast?.(t("leads.hubspot.saved"), 3200);
+  }
+
+  async function sendHubspotTest() {
+    if (!guardSlug(setHubspotMessage) || hubspotBusy) return;
+    if (!hubspot?.connected) {
+      setHubspotMessage(t("leads.hubspot.needsConnect"), true);
+      return;
+    }
+    hubspotBusy = true;
+    paintHubspot();
+    setHubspotMessage(t("leads.hubspot.sending"));
+    const res = await cloudFetch(hubspotPath("/test"), { method: "POST", body: "{}" });
+    hubspotBusy = false;
+    paintHubspot();
+    if (!res.ok) {
+      handleHubspotProblem(res, "leads.hubspot.errTest");
+      return;
+    }
+    const result = normalizeHubspotTest(res.data) || { ok: true, httpStatus: res.status, at: "", error: "" };
+    if (result.error === "owner_not_pro") {
+      handleHubspotProblem({ ok: false, status: 402, error: "owner_not_pro" }, "leads.hubspot.errTest");
+      return;
+    }
+    if (!result.at) result.at = new Date().toISOString();
+    const fromBody = normalizeHubspot(res.data);
+    const deliveries = [result, ...((fromBody?.deliveries || hubspot?.deliveries || []).filter((item) => item !== result))].slice(0, 8);
+    hubspot = {
+      ...(hubspot || {}),
+      ...(fromBody || {}),
+      deliveries,
+      lastDelivery: result,
+      consecutiveFailures: result.ok ? 0 : (hubspot?.consecutiveFailures || 0) + 1,
+    };
+    paintHubspot();
+    const status = result.httpStatus ? String(result.httpStatus) : result.error || "—";
+    setHubspotMessage(t(result.ok ? "leads.hubspot.testOk" : "leads.hubspot.testFail", { status }), !result.ok);
+  }
+
+  async function removeHubspot() {
+    if (!guardSlug(setHubspotMessage) || !hubspot?.connected || hubspotBusy) return;
+    if (!window.confirm(t("leads.hubspot.confirmRemove"))) return;
+    hubspotBusy = true;
+    paintHubspot();
+    const res = await cloudFetch(hubspotPath(), { method: "DELETE" });
+    hubspotBusy = false;
+    if (!res.ok && res.status !== 404) {
+      paintHubspot();
+      handleHubspotProblem(res, "leads.hubspot.errRemove");
+      return;
+    }
+    hubspot = null;
+    hubspotDirty = new Set();
+    paintHubspot();
+    setHubspotMessage(t("leads.hubspot.removed"));
+    toast?.(t("leads.hubspot.removed"), 3000);
+  }
+
   function bind() {
     if (bound) return;
     bound = true;
@@ -476,6 +717,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.refresh?.addEventListener("click", () => {
       void load();
       void loadWebhook();
+      void loadHubspot();
     });
     e.csv?.addEventListener("click", downloadCsv);
     e.secret?.addEventListener("input", () => {
@@ -500,7 +742,17 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.save?.addEventListener("click", () => void submitWebhook());
     e.test?.addEventListener("click", () => void sendTest());
     e.remove?.addEventListener("click", () => void removeWebhook());
-    window.addEventListener("ns-locale-change", () => paintWebhook());
+    e.hsConnect?.addEventListener("click", () => void connectHubspot());
+    e.hsSave?.addEventListener("click", () => void submitHubspot());
+    e.hsTest?.addEventListener("click", () => void sendHubspotTest());
+    e.hsRemove?.addEventListener("click", () => void removeHubspot());
+    for (const key of HUBSPOT_FIELDS) {
+      e.map?.[key]?.addEventListener("input", () => hubspotDirty.add(key));
+    }
+    window.addEventListener("ns-locale-change", () => {
+      paintWebhook();
+      paintHubspot();
+    });
   }
 
   function open() {
@@ -517,16 +769,26 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     secretDraft = "";
     secretVisible = false;
     secretDirty = false;
+    hubspot = null;
+    hubspotDirty = new Set();
     e.status.textContent = "";
     if (e.url) e.url.value = "";
     if (e.enabled) e.enabled.checked = true;
+    if (e.hsEnabled) e.hsEnabled.checked = true;
     setWebhookMessage("");
+    setHubspotMessage("");
     paintWebhook();
+    paintHubspot();
     if (!e.dialog.open) e.dialog.showModal();
     void load();
     void loadWebhook();
+    void loadHubspot();
+  }
+
+  function noteReturn(notice) {
+    hubspotReturn = notice || null;
   }
 
   bind();
-  return { open };
+  return { open, noteReturn };
 }

@@ -69,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/149/css/theme.css" />
-  <link rel="stylesheet" href="/a/149/css/shell.css" />
-  <link rel="stylesheet" href="/a/149/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/150/css/theme.css" />
+  <link rel="stylesheet" href="/a/150/css/shell.css" />
+  <link rel="stylesheet" href="/a/150/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -90,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/149/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/149/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/150/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/150/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Integraciones</span></span>
     </div>
     <div class="topbar-appearance">
@@ -163,6 +163,17 @@
       </ol>
       <p>El contacto lleva el origen de la visita: los parámetros <code>utm_*</code> y el sitio del que llegó la persona.</p>
     </section>
+    <section class="card" id="hubspot">
+      <h2>HubSpot</h2>
+      <p>En el editor, abre los contactos del enlace permanente. La sección <strong>HubSpot</strong> (Pro) crea o actualiza el contacto por el correo.</p>
+      <ol>
+        <li>Haz clic en <strong>Conectar</strong> y autoriza GuiaFlow en la cuenta de HubSpot.</li>
+        <li>En el mapeo, el valor es el nombre interno de la propiedad. Déjalo en blanco para no enviar ese campo.</li>
+        <li>Guarda, activa o desactiva el envío y usa <strong>Enviar prueba</strong>. La sección muestra la cuenta, los 4 últimos caracteres del token, los permisos, los fallos y las últimas entregas.</li>
+        <li><strong>Desconectar</strong> quita la cuenta de este enlace.</li>
+      </ol>
+      <p>Si la conexión todavía no está disponible, el editor avisa en lugar de abrir HubSpot.</p>
+    </section>
     <section class="card">
       <h2>Qué pedir</h2>
       <p>Ejemplos: “Crea un tour con estas 4 capturas y publícalo”, “Escribe los textos de los pasos con IA”, “¿Cuántas personas completaron el tour del checkout esta semana?”.</p>
@@ -180,7 +191,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/149/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/150/js/i18n.js";
     initLocale();
     applyI18n(document);
     const titles = { pt: "Integrações", es: "Integraciones", en: "Integrations" };
