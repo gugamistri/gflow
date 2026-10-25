@@ -8,6 +8,7 @@ import {
   privacySignal,
   shortLocale,
   shouldTrack,
+  leadAttribution,
   trafficSource,
   uuidV4,
 } from "./viewAnalytics.js";
@@ -40,6 +41,12 @@ test("trafficSource: só host do referrer e UTM; o próprio site não conta", ()
   assert.equal(trafficSource("https://guiaflow.pro/", "", "https://guiaflow.pro").referrerHost, null);
   assert.equal(trafficSource("javascript:alert(1)", "").referrerHost, null);
   assert.equal(trafficSource("", "?utm_source=" + "x".repeat(300)).utm_source.length, 100);
+  assert.deepEqual(
+    leadAttribution("https://www.linkedin.com/feed/?x=secret", "?utm_source=news&utm_medium=email&utm_campaign=out&utm_term=crm&utm_content=hero&email=a@b.c", "https://guiaflow.pro"),
+    { referrerHost: "linkedin.com", utm_source: "news", utm_medium: "email", utm_campaign: "out", utm_term: "crm", utm_content: "hero" }
+  );
+  assert.deepEqual(leadAttribution("", "", "https://guiaflow.pro"), {});
+  assert.equal(leadAttribution("", "?utm_term=" + "y".repeat(300), "").utm_term.length, 100);
   assert.equal(deviceKind({ coarse: true, width: 1200 }), "mobile");
   assert.equal(deviceKind({ width: 1440 }), "desktop");
   assert.equal(shortLocale("pt-br"), "pt-BR");
