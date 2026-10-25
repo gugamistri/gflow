@@ -1,6 +1,6 @@
 /**
- * Contatos recebidos no link permanente (passo inicial + formulário do passo final),
- * o webhook e os conectores RD Station Marketing, HubSpot e LeadPronto (Pro).
+ * Contatos do link permanente e os conectores Webhook, RD Station, HubSpot e LeadPronto.
+ * A lista fica na aba Contatos; os conectores, na aba Envio automático do mesmo diálogo.
  * Webhook, RD Station e HubSpot são do link. O LeadPronto é da conta
  * (GET/PUT/DELETE /integrations/leadpronto). CSV no navegador.
  */
@@ -104,13 +104,13 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let returnNotice = null;
 
   const els = () => ({
-    dialog: $("modal-leads"),
+    dialog: $("modal-results"),
     meta: $("leads-meta"),
     status: $("leads-status"),
     list: $("leads-list"),
     csv: $("btn-leads-csv"),
     refresh: $("btn-leads-refresh"),
-    close: $("btn-leads-close"),
+    close: $("btn-results-close"),
     url: $("leads-webhook-url"),
     enabled: $("leads-webhook-enabled"),
     secret: $("leads-webhook-secret"),
@@ -1356,11 +1356,11 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
 
   function open() {
     const e = els();
-    if (!e.dialog) return;
+    if (!e.dialog) return false;
     bind();
     if (!getSlug()) {
       toast?.(t("leads.needsPublish"), 4200);
-      return;
+      return false;
     }
     leads = [];
     title = "";
@@ -1401,6 +1401,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     void loadRd();
     void loadHubspot();
     void loadLeadPronto();
+    return true;
   }
 
   function noteHubspotReturn(notice) {
