@@ -320,6 +320,7 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
 
 .theme-panel summary,
 .export-panel summary,
+.people-panel summary,
 .more-panel > summary {
   list-style: none;
   cursor: pointer;
@@ -339,6 +340,7 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
 
 .theme-panel summary::-webkit-details-marker,
 .export-panel summary::-webkit-details-marker,
+.people-panel summary::-webkit-details-marker,
 .more-panel > summary::-webkit-details-marker {
   display: none;
 }
@@ -5306,6 +5308,13 @@ body.is-presenting .editor-popover {
     height: 44px;
   
 }
+.people-panel > summary.people-menu {
+    min-width: 44px;
+    min-height: 44px;
+    height: 44px;
+    justify-content: center;
+  
+}
 .export-option {
     min-height: 44px;
   
@@ -5450,7 +5459,8 @@ body.is-presenting .rotate-hint:not([hidden]) {
   .toolbar-pos,
   .split-caret,
   .split-btn .split-label,
-  .share-label {
+  .share-label,
+  .people-label {
     display: none !important;
   
 }
@@ -8076,10 +8086,10 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .export-panel-body.share-card { width: min(420px, 94vw); min-width: 0; padding: 0; gap: 0; max-height: min(78vh, 640px); font-family: var(--ns-font); font-size: 14px; line-height: 1.35; letter-spacing: 0; text-transform: none; 
 }
 
-.share-tablist { display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; 
+.share-tablist { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; overflow: visible; 
 }
 
-.share-tab { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 4px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.15 var(--ns-font); letter-spacing: 0; text-transform: none; text-wrap: balance; white-space: normal; cursor: pointer; 
+.share-tab { flex: 1 1 auto; min-width: min-content; max-width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 8px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.15 var(--ns-font); letter-spacing: 0; text-transform: none; text-wrap: balance; white-space: normal; cursor: pointer; overflow: visible; 
 }
 
 .share-tab[hidden] { display: none; 
@@ -8094,7 +8104,55 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .share-tab:focus-visible { outline: 2px solid color-mix(in srgb, var(--ns-accent) 55%, transparent); outline-offset: -2px; border-radius: 6px; 
 }
 
-.share-pane { display: grid; gap: 4px; padding: 8px; align-content: start; 
+.share-pane { display: grid; gap: 4px; padding: 8px; align-content: start; min-width: 0; 
+}
+
+.share-kind { display: grid; gap: 6px; margin: 4px 0; padding: 10px 12px; border: 1px solid var(--ns-border); border-radius: 10px; background: color-mix(in srgb, var(--ns-accent) 6%, var(--ns-panel)); min-width: 0; 
+}
+
+#share-permanent-card { border-color: color-mix(in srgb, var(--ns-accent) 55%, var(--ns-border)); 
+}
+
+.share-kind-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; 
+}
+
+.share-kind-head strong { font-size: 0.9rem; color: var(--ns-ink); 
+}
+
+.share-recommended { font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: color-mix(in srgb, var(--ns-accent) 22%, transparent); color: var(--ns-ink); 
+}
+
+.share-kind-note { margin: 0; color: var(--ns-muted); font-size: 0.75rem; 
+}
+
+.share-kind .share-expiry-note { margin: 0; 
+}
+
+.share-kind .export-option { padding: 8px 0; 
+}
+
+.share-kind .share-link-actions { border-bottom: 0; margin: 0; padding: 0; 
+}
+
+.people-panel { position: relative; 
+}
+
+.people-panel[hidden] { display: none; 
+}
+
+.people-panel > summary.people-menu { position: relative; width: auto; min-height: 32px; height: 32px; padding: 0 12px; gap: 6px; border-radius: 8px; background: transparent; color: var(--ns-ink); font-weight: 650; 
+}
+
+.people-panel[open] > summary.people-menu { background: color-mix(in srgb, var(--ns-accent) 12%, transparent); 
+}
+
+.people-avatars { display: inline-flex; align-items: center; 
+}
+
+.people-avatars:empty { display: none; 
+}
+
+.people-panel-body { width: min(420px, 94vw); padding: 8px; 
 }
 
 .share-pane[hidden] { display: none; 

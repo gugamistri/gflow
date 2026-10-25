@@ -616,7 +616,12 @@ export function createCollabController(deps) {
       },
     });
     c.locks = createLockManager({ selfId: "", acquire: (id) => c.client.acquireLock(id), release: (id) => c.client.releaseLock(id), onChange: () => updateLockUi() });
-    ui.stackButton()?.addEventListener("click", () => { if (teamHost() && deps.onOpenTeam) deps.onOpenTeam(); else void openMembers(); });
+    ui.stackButton()?.addEventListener("click", (e) => {
+      // o summary do Pessoas abre o painel sozinho; forçar open aqui desfaz o toggle
+      if (e?.target?.closest?.("summary")) return;
+      if (teamHost() && deps.onOpenTeam) deps.onOpenTeam();
+      else void openMembers();
+    });
     // comentários do Team: só dentro da sessão colaborativa (flag `collab`); o cseq chega no mesmo polling
     c.comments = createCommentsUi({
       t, request, projectId: remoteId, getProject, getSelectedIndex, setSelectedIndex,
@@ -770,7 +775,7 @@ export function createCollabController(deps) {
     });
   }
 
-  /** Aba Gerenciar Acessos do Compartilhar: lista/convites dentro do painel (sem diálogo). */
+  /** Botão Pessoas: lista e convites dentro do painel (sem diálogo). */
   function teamHost() { return typeof document !== "undefined" ? document.getElementById("share-team-host") : null; }
   async function openMembers() {
     if (!ctx) return;
