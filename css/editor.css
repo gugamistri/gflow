@@ -6447,6 +6447,55 @@ dialog.analytics-modal {
   overscroll-behavior: contain;
 }
 
+/* Resultados: um diálogo. O cabeçalho e as abas ficam fixos; a aba rola por dentro. */
+dialog.results-modal[open] {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 24px));
+  max-width: 760px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  overflow: hidden;
+}
+
+dialog.results-modal .results-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+dialog.results-modal .account-dialog-head,
+dialog.results-modal .results-tablist {
+  flex: none;
+}
+
+.results-panes {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+}
+
+.results-pane {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.results-pane[hidden] {
+  display: none;
+}
+
+#results-pane-delivery .leads-webhook:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .analytics-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -8141,10 +8190,17 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .results-btn { display: inline-flex; align-items: center; gap: 6px; 
 }
 
-.results-tablist { position: static; padding: 0; margin: 0 0 12px; 
+.results-tablist { position: static; padding: 0; margin: 0; flex-wrap: wrap; 
 }
 
-.results-tablist .results-tab { flex: 0 1 auto; padding: 0 16px; 
+.results-tablist .results-tab { flex: 1 1 auto; padding: 6px 12px; 
+}
+
+.results-tab .pro-badge { margin-left: 4px; 
+}
+
+body.is-compact-touch dialog.results-modal[open] {
+  overflow: hidden;
 }
 
 @media (max-width: 760px) {
