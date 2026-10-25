@@ -167,6 +167,7 @@ import {
 } from "./paywall.js";
 import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 import { createLeadsDialog } from "./leadsDialog.js";
+import { leadProntoReturnKey, readLeadProntoReturn, stripLeadProntoReturn } from "./leadPronto.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
@@ -2094,6 +2095,17 @@ async function consumeBillingReturn() {
     return;
   }
   if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
+}
+
+function consumeLeadProntoReturn() {
+  const found = readLeadProntoReturn(location.href);
+  if (!found) return;
+  applyCloudAuthHref(stripLeadProntoReturn(location.href));
+  const key = found.kind === "connected" ? "leads.lp.connectedToast" : leadProntoReturnKey(found.reason);
+  toast(t(key), found.kind === "error" ? 5600 : 4200);
+  leadsDialog.noteReturn(found);
+  const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
+  if (slug) leadsDialog.open();
 }
 
 function openAdmin() {
@@ -4789,6 +4801,7 @@ async function boot() {
     void (async () => {
       await consumeBillingReturn();
       if (getCloudAccount().signedIn && billingView.status !== "ready") await refreshEntitlement();
+      consumeLeadProntoReturn();
       consumeProIntent();
     })();
   }

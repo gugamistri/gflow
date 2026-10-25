@@ -69,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/150/css/theme.css" />
-  <link rel="stylesheet" href="/a/150/css/shell.css" />
-  <link rel="stylesheet" href="/a/150/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/151/css/theme.css" />
+  <link rel="stylesheet" href="/a/151/css/shell.css" />
+  <link rel="stylesheet" href="/a/151/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -90,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/150/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/150/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/151/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/151/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Integraciones</span></span>
     </div>
     <div class="topbar-appearance">
@@ -173,6 +173,15 @@
       </ol>
       <p>El evento de conversión es el título del tour, o el slug si el título está vacío. Nombre, correo, teléfono, UTMs y el consentimiento van en los campos de RD Station. Mensaje, idioma y el origen de la visita van en campos <code>cf_guiaflow_*</code>.</p>
     </section>
+    <section class="card" id="leadpronto">
+      <h2>LeadPronto</h2>
+      <p>En el editor, abre los contactos del enlace permanente. La sección <strong>LeadPronto</strong> (Pro) envía los contactos de la cuenta a LeadPronto, sin pegar dirección ni secreto.</p>
+      <ol>
+        <li>Haz clic en <strong>Conectar con LeadPronto</strong> y autoriza en LeadPronto.</li>
+        <li>Al volver, la sección muestra <strong>Conectado a</strong> tu empresa. Elige todos los tours o solo algunos, y enciende o apaga el envío.</li>
+        <li><strong>Desconectar</strong> deja de enviar.</li>
+      </ol>
+    </section>
     <section class="card">
       <h2>Qué pedir</h2>
       <p>Ejemplos: “Crea un tour con estas 4 capturas y publícalo”, “Escribe los textos de los pasos con IA”, “¿Cuántas personas completaron el tour del checkout esta semana?”.</p>
@@ -190,7 +199,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/150/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/151/js/i18n.js";
     initLocale();
     applyI18n(document);
     const titles = { pt: "Integrações", es: "Integraciones", en: "Integrations" };
