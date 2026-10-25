@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/151/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/151/css/theme.css" />
-  <link rel="stylesheet" href="a/151/css/shell.css" />
-  <link rel="stylesheet" href="a/151/css/player.css" />
-  <link rel="stylesheet" href="a/151/css/editor.css" />
-  <link rel="stylesheet" href="a/151/css/collab.css" />
-  <link rel="stylesheet" href="a/151/css/comments.css" />
+  <link rel="stylesheet" href="a/152/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/152/css/theme.css" />
+  <link rel="stylesheet" href="a/152/css/shell.css" />
+  <link rel="stylesheet" href="a/152/css/player.css" />
+  <link rel="stylesheet" href="a/152/css/editor.css" />
+  <link rel="stylesheet" href="a/152/css/collab.css" />
+  <link rel="stylesheet" href="a/152/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/151/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/151/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/152/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/152/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -461,7 +461,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/151/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/151/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/152/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/152/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1137,7 +1137,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/151/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/152/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1421,6 +1421,46 @@
           <button type="button" class="btn" id="btn-leads-rd-test" data-i18n="leads.rd.test">Enviar teste</button>
           <button type="button" class="btn" id="btn-leads-rd-remove" data-i18n="leads.rd.disconnect" hidden>Desconectar</button>
           <a class="embed-guide" id="leads-rd-help" href="/integracoes#rd-station" target="_blank" rel="noopener" data-i18n="leads.rd.help">Como conectar</a>
+        </div>
+      </section>
+
+      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading">
+        <h4 id="leads-hubspot-heading">
+          <span data-i18n="leads.hubspot.title">HubSpot</span>
+          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </h4>
+        <p class="leads-webhook-lead" data-i18n="leads.hubspot.lead">Cada contato novo cria ou atualiza a pessoa no HubSpot, pelo e-mail.</p>
+        <p class="leads-webhook-delivery" id="leads-hubspot-account" role="status"></p>
+        <label class="fixed-check">
+          <input type="checkbox" id="leads-hubspot-enabled" checked />
+          <span data-i18n="leads.hubspot.enabled">Enviar contatos para o HubSpot</span>
+        </label>
+        <fieldset class="leads-hubspot-map">
+          <legend data-i18n="leads.hubspot.mapping">Mapeamento de campos</legend>
+          <p class="fixed-hint" data-i18n="leads.hubspot.mappingHint">Nome interno da propriedade no HubSpot. Em branco, o campo não é enviado.</p>
+          <div class="leads-hubspot-grid">
+            <label class="leads-webhook-field" for="leads-hubspot-email"><span data-i18n="leads.hubspot.field.email">E-mail</span><input type="text" id="leads-hubspot-email" data-hubspot-field="email" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-firstname"><span data-i18n="leads.hubspot.field.firstname">Nome</span><input type="text" id="leads-hubspot-firstname" data-hubspot-field="firstname" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-lastname"><span data-i18n="leads.hubspot.field.lastname">Sobrenome</span><input type="text" id="leads-hubspot-lastname" data-hubspot-field="lastname" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-phone"><span data-i18n="leads.hubspot.field.phone">Telefone</span><input type="text" id="leads-hubspot-phone" data-hubspot-field="phone" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-tour"><span data-i18n="leads.hubspot.field.tour">Tour</span><input type="text" id="leads-hubspot-tour" data-hubspot-field="tour" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-utm-source"><span data-i18n="leads.hubspot.field.utm_source">utm_source</span><input type="text" id="leads-hubspot-utm-source" data-hubspot-field="utm_source" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-utm-medium"><span data-i18n="leads.hubspot.field.utm_medium">utm_medium</span><input type="text" id="leads-hubspot-utm-medium" data-hubspot-field="utm_medium" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-utm-campaign"><span data-i18n="leads.hubspot.field.utm_campaign">utm_campaign</span><input type="text" id="leads-hubspot-utm-campaign" data-hubspot-field="utm_campaign" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-utm-term"><span data-i18n="leads.hubspot.field.utm_term">utm_term</span><input type="text" id="leads-hubspot-utm-term" data-hubspot-field="utm_term" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-utm-content"><span data-i18n="leads.hubspot.field.utm_content">utm_content</span><input type="text" id="leads-hubspot-utm-content" data-hubspot-field="utm_content" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-consent-text"><span data-i18n="leads.hubspot.field.consentText">Texto do consentimento</span><input type="text" id="leads-hubspot-consent-text" data-hubspot-field="consentText" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+            <label class="leads-webhook-field" for="leads-hubspot-consent-at"><span data-i18n="leads.hubspot.field.consentAt">Data do consentimento</span><input type="text" id="leads-hubspot-consent-at" data-hubspot-field="consentAt" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="200" /></label>
+          </div>
+        </fieldset>
+        <p class="leads-webhook-delivery" id="leads-hubspot-delivery" role="status"></p>
+        <p class="leads-webhook-status" id="leads-hubspot-status" role="status"></p>
+        <div class="leads-webhook-actions">
+          <button type="button" class="btn btn-primary" id="btn-leads-hubspot-connect" data-i18n="leads.hubspot.connect">Conectar</button>
+          <button type="button" class="btn" id="btn-leads-hubspot-save" data-i18n="leads.hubspot.save">Salvar</button>
+          <button type="button" class="btn" id="btn-leads-hubspot-test" data-i18n="leads.hubspot.test">Enviar teste</button>
+          <button type="button" class="btn" id="btn-leads-hubspot-remove" data-i18n="leads.hubspot.disconnect" hidden>Desconectar</button>
+          <a class="embed-guide" id="leads-hubspot-help" href="/integracoes#hubspot" target="_blank" rel="noopener" data-i18n="leads.hubspot.help">Como conectar</a>
         </div>
       </section>
       <div class="studio-modal-actions">
@@ -2154,8 +2194,8 @@
     </symbol>
   </svg>
 
-  <script src="a/151/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/151/js/app.js"></script>
+  <script src="a/152/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/152/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
