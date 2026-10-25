@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 1[123] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/149\/css\/ajuda\.css/);
+    assert.match(html, /a\/150\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -145,7 +145,7 @@ test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos 
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
   assert.equal(/data-doc-locale="(es|en)"/.test(html), false);
   assert.equal(/(href|src)="a\//.test(html), false);
-  assert.match(html, /a\/149\/css\/ajuda\.css/);
+  assert.match(html, /a\/150\/css\/ajuda\.css/);
   assert.match(read("sitemap.xml"), /guiaflow\.pro\/integracoes/);
   assert.match(read("index.html"), /href="\/integracoes"/);
 });
