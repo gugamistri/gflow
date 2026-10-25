@@ -89,3 +89,20 @@ test("textos do RD Station existem em pt, en e es", () => {
     }
   }
 });
+
+test("usa a última entrega terminada da lista deliveries da API", () => {
+  const rd = normalizeRdStation({
+    ok: true,
+    rdStation: {
+      enabled: true, status: "active", failures: 1, keyLast4: "ab12",
+      deliveries: [
+        { status: "pending", createdAt: "2026-10-25T10:00:00Z" },
+        { status: "failed", lastStatus: 401, lastError: "http_401", createdAt: "2026-10-25T09:00:00Z" },
+      ],
+    },
+  });
+  assert.deepEqual(rd.lastDelivery, { ok: false, httpStatus: 401, at: "2026-10-25T09:00:00Z", error: "http_401" });
+  assert.equal(rd.consecutiveFailures, 1);
+  const okRd = normalizeRdStation({ rdStation: { keyLast4: "ab12", deliveries: [{ status: "delivered", lastStatus: 200, deliveredAt: "2026-10-25T11:00:00Z" }] } });
+  assert.deepEqual(okRd.lastDelivery, { ok: true, httpStatus: 200, at: "2026-10-25T11:00:00Z", error: "" });
+});

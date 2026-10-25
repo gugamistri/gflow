@@ -47,6 +47,24 @@ function connectorOf(data) {
   return undefined;
 }
 
+/**
+ * A API manda `deliveries` (mais recente primeiro) com status "pending" | "delivered" | "failed",
+ * lastStatus (HTTP) e lastError. Usa a primeira que já terminou.
+ */
+function deliveryFromList(list) {
+  if (!Array.isArray(list)) return null;
+  const row = list.find((d) => d && typeof d === "object" && d.status && d.status !== "pending");
+  if (!row) return null;
+  const httpStatus = firstNumber(row.lastStatus, row.last_status);
+  const ok = row.status === "delivered";
+  return {
+    ok,
+    httpStatus,
+    at: String(row.deliveredAt || row.delivered_at || row.createdAt || row.created_at || ""),
+    error: ok ? "" : String(row.lastError || row.last_error || row.status || ""),
+  };
+}
+
 /** Conector do GET/PUT, ou null quando o link ainda não tem chave. */
 export function normalizeRdStation(data) {
   const raw = connectorOf(data);
@@ -67,7 +85,8 @@ export function normalizeRdStation(data) {
     status,
     consecutiveFailures: failures,
     autoDisabled,
-    lastDelivery: normalizeDelivery(raw.lastDelivery || raw.last_delivery || raw.delivery || data?.lastDelivery),
+    lastDelivery: normalizeDelivery(raw.lastDelivery || raw.last_delivery || raw.delivery || data?.lastDelivery)
+      || deliveryFromList(raw.deliveries),
   };
 }
 
