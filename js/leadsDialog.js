@@ -403,7 +403,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       handleProblem(res, "leads.webhook.errTest");
       return;
     }
-    const result = normalizeTestResult(res.data) || { ok: true, httpStatus: res.status, at: new Date().toISOString(), error: "" };
+    const result = normalizeTestResult(res.data) || { ok: true, httpStatus: res.status, at: "", error: "" };
+    if (!result.at) result.at = new Date().toISOString();
     webhook = {
       ...(webhook || {}),
       lastDelivery: result,

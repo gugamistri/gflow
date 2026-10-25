@@ -105,3 +105,12 @@ test("textos do webhook existem em pt, en e es", () => {
     }
   }
 });
+
+test("teste do webhook segue o formato da API (test.delivered)", () => {
+  const failed = normalizeTestResult({ ok: true, test: { delivered: false, status: 500, error: "http_500", msgId: "m" } });
+  assert.equal(failed.ok, false);
+  assert.equal(failed.httpStatus, 500);
+  const sent = normalizeTestResult({ ok: true, test: { delivered: true, status: 200, error: null, msgId: "m" } });
+  assert.equal(sent.ok, true);
+  assert.equal(sent.httpStatus, 200);
+});

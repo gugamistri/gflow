@@ -81,12 +81,14 @@ export function normalizeDelivery(raw) {
     typeof raw.status === "number" ? raw.status : null
   );
   const state = typeof raw.status === "string" ? raw.status : typeof raw.state === "string" ? raw.state : "";
-  const ok = typeof raw.ok === "boolean"
+  const ok = typeof raw.delivered === "boolean"
+    ? raw.delivered
+    : typeof raw.ok === "boolean"
     ? raw.ok
     : raw.success === true || state === "succeeded" || state === "success" || (httpStatus >= 200 && httpStatus < 300);
   const at = raw.at || raw.createdAt || raw.created_at || raw.deliveredAt || raw.delivered_at || "";
   const error = typeof raw.error === "string" ? raw.error : "";
-  if (!at && !httpStatus && !error && raw.ok == null && raw.success == null && !state) return null;
+  if (!at && !httpStatus && !error && raw.delivered == null && raw.ok == null && raw.success == null && !state) return null;
   return { ok: Boolean(ok) && !error, httpStatus, at: String(at || ""), error };
 }
 
@@ -130,7 +132,8 @@ export function normalizeWebhook(data) {
 
 export function normalizeTestResult(data) {
   const src = data && typeof data === "object" ? data : {};
-  const nested = src.delivery || src.result;
+  // why: a API responde { ok: true, test: { delivered, status, error } }; o ok de fora só diz que a chamada rodou
+  const nested = src.test || src.delivery || src.result;
   return normalizeDelivery(nested && typeof nested === "object" ? { ...src, ...nested } : src);
 }
 
