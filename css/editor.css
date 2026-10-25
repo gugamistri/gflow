@@ -6388,9 +6388,34 @@ dialog.leads-modal {
   overflow-wrap: anywhere;
 }
 
+.leads-hubspot-map {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.leads-hubspot-map legend {
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.leads-hubspot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
 @media (max-width: 720px), (pointer: coarse) {
   .leads-webhook-field input {
     font-size: 16px;
+  }
+
+  .leads-hubspot-grid {
+    grid-template-columns: 1fr;
   }
 }
 

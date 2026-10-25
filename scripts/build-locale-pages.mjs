@@ -66,6 +66,17 @@ export const PAGES = [
     },
   },
   {
+    src: "integracoes/leads.html",
+    path: "/integracoes/leads",
+    slugs: { en: "/integrations/leads", es: "/integraciones/leads" },
+    docSrc: "locale-src/integracoes-leads",
+    lastmod: "2026-10-25",
+    meta: {
+      en: { title: "Leads in Make, n8n and Zapier — GuiaFlow", description: "Send GuiaFlow leads to Pipefy, Google Sheets or Pipedrive with Make, n8n or Zapier. Signed webhook, importable templates and a signature check." },
+      es: { title: "Leads en Make, n8n y Zapier — GuiaFlow", description: "Lleva los leads de GuiaFlow a Pipefy, Google Sheets o Pipedrive con Make, n8n o Zapier. Webhook firmado, modelos para importar y verificación de la firma." },
+    },
+  },
+  {
     src: "integracoes.html",
     path: "/integracoes",
     slugs: { en: "/integrations", es: "/integraciones" },
@@ -254,7 +265,7 @@ function withHtmlAttrs(html, page, loc) {
   });
 }
 
-const LOCALIZED_LINK = /href="\/(ajuda\/api|ajuda|termos|privacidade|integracoes)?(?=["?#])([^"]*)"/g;
+const LOCALIZED_LINK = /href="\/(integracoes\/leads|ajuda\/api|ajuda|termos|privacidade|integracoes)?(?=["?#])([^"]*)"/g;
 
 /** Preços da landing na moeda do idioma (o landing.js pinta o mesmo no navegador). */
 function withPrices(html, loc) {

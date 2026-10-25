@@ -1,0 +1,81 @@
+{
+  "name": "GuiaFlow para Google Sheets",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": null,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Crie um webhook novo ao importar"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth",
+        "tlsType": "",
+        "proxyKeychain": ""
+      },
+      "mapper": {
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/SEU_ID_DA_PLANILHA/values/Leads!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer SEU_TOKEN_GOOGLE"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "parseResponse": true,
+        "body": "{\"values\":[[\"{{1.id}}\",\"{{1.createdAt}}\",\"{{1.source}}\",\"{{1.lead.name}}\",\"{{1.lead.email}}\",\"{{1.lead.phone}}\",\"{{1.lead.message}}\",\"{{1.tour.title}}\",\"{{1.tour.url}}\",\"{{1.context.utm_source}}\",\"{{1.context.utm_medium}}\",\"{{1.context.utm_campaign}}\",\"{{1.context.referrerHost}}\",\"{{1.lead.consent.given}}\"]]}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 320,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "instant": true,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}

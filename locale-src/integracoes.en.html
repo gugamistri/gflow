@@ -54,6 +54,7 @@
         <li>Save and use <strong>Send test</strong>. The last delivery shows in the same section.</li>
       </ol>
       <p>The contact includes where the visit came from: <code>utm_*</code> parameters and the site the person came from.</p>
+      <p>Recipes to create a Pipefy card, a Google Sheets row or a Pipedrive lead, with Make and n8n templates: <a href="/integracoes/leads">Leads in Make, n8n and Zapier</a>. In Zapier the trigger is <strong>Webhooks by Zapier</strong>.</p>
     </section>
     <section class="card" id="rd-station">
       <h2>RD Station Marketing</h2>
@@ -64,6 +65,17 @@
         <li><strong>Disconnect</strong> stops sending. To replace the key, paste another one and save.</li>
       </ol>
       <p>The conversion event is the tour title, or the slug if the title is empty. Name, email, phone, UTMs and consent go in the RD Station fields. Message, language and the visit source go in <code>cf_guiaflow_*</code> fields.</p>
+    </section>
+    <section class="card" id="hubspot">
+      <h2>HubSpot</h2>
+      <p>In the editor, open the contacts for the permanent link. The <strong>HubSpot</strong> section (Pro) creates or updates the contact by email.</p>
+      <ol>
+        <li>Click <strong>Connect</strong> and authorize GuiaFlow in the HubSpot account.</li>
+        <li>In the mapping, the value is the internal property name. Leave it blank to skip that field.</li>
+        <li>Save, turn sending on or off, and use <strong>Send test</strong>. The section shows the account, the last 4 characters of the token, the scopes, failures and recent deliveries.</li>
+        <li><strong>Disconnect</strong> removes the account from this link.</li>
+      </ol>
+      <p>If the connection is not available yet, the editor says so instead of opening HubSpot.</p>
     </section>
     <section class="card" id="leadpronto">
       <h2>LeadPronto</h2>

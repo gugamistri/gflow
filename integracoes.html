@@ -69,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/151/css/theme.css" />
-  <link rel="stylesheet" href="/a/151/css/shell.css" />
-  <link rel="stylesheet" href="/a/151/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/153/css/theme.css" />
+  <link rel="stylesheet" href="/a/153/css/shell.css" />
+  <link rel="stylesheet" href="/a/153/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -90,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/151/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/151/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/153/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/153/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Integrações</span></span>
     </div>
     <div class="topbar-appearance">
@@ -162,6 +162,7 @@
         <li>Salve e use <strong>Enviar teste</strong>. O último envio aparece na mesma seção.</li>
       </ol>
       <p>O contato leva a origem da visita: os parâmetros <code>utm_*</code> e o site de onde a pessoa veio.</p>
+      <p>Receitas para criar um card no Pipefy, uma linha no Google Sheets ou um lead no Pipedrive, com modelos do Make e do n8n: <a href="/integracoes/leads">Leads no Make, n8n e Zapier</a>. No Zapier o gatilho é <strong>Webhooks by Zapier</strong>.</p>
     </section>
     <section class="card" id="rd-station">
       <h2>RD Station Marketing</h2>
@@ -172,6 +173,17 @@
         <li><strong>Desconectar</strong> para de enviar. Para trocar a chave, cole outra e salve.</li>
       </ol>
       <p>O evento de conversão é o título do tour, ou o slug se o título estiver vazio. Nome, e-mail, telefone, UTMs e o consentimento vão nos campos do RD Station. Mensagem, idioma e a origem da visita vão em campos <code>cf_guiaflow_*</code>.</p>
+    </section>
+    <section class="card" id="hubspot">
+      <h2>HubSpot</h2>
+      <p>No editor, abra os contatos do link permanente. A seção <strong>HubSpot</strong> (Pro) cria ou atualiza o contato pelo e-mail.</p>
+      <ol>
+        <li>Clique em <strong>Conectar</strong> e autorize o GuiaFlow na conta HubSpot.</li>
+        <li>No mapeamento, o valor é o nome interno da propriedade. Deixe em branco para não enviar aquele campo.</li>
+        <li>Salve, ligue ou desligue o envio e use <strong>Enviar teste</strong>. A seção mostra a conta, os 4 últimos caracteres do token, os escopos, as falhas e as últimas entregas.</li>
+        <li><strong>Desconectar</strong> tira a conta deste link.</li>
+      </ol>
+      <p>Se a conexão ainda não estiver disponível, o editor avisa em vez de abrir o HubSpot.</p>
     </section>
     <section class="card" id="leadpronto">
       <h2>LeadPronto</h2>
@@ -199,7 +211,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/151/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/153/js/i18n.js";
     initLocale();
     applyI18n(document);
     const titles = { pt: "Integrações", es: "Integraciones", en: "Integrations" };
