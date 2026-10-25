@@ -6458,7 +6458,7 @@ dialog.results-modal[open] {
   overflow: hidden;
 }
 
-dialog.results-modal .results-dialog {
+dialog.results-modal[open] .results-dialog {
   display: flex;
   flex-direction: column;
   gap: 12px;
