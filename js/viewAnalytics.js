@@ -67,6 +67,26 @@ export function trafficSource(referrer, search, origin = "") {
   };
 }
 
+const LEAD_UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
+
+/** Campos de origem que o POST do lead leva para o webhook. Omite o que estiver vazio. */
+export function leadAttribution(referrer, search, origin = "") {
+  const base = trafficSource(referrer, search, origin);
+  let params;
+  try {
+    params = new URLSearchParams(String(search || ""));
+  } catch {
+    params = new URLSearchParams();
+  }
+  const out = {};
+  if (base.referrerHost) out.referrerHost = base.referrerHost;
+  for (const key of LEAD_UTM) {
+    const value = key in base ? base[key] : clip(params.get(key), 100);
+    if (value) out[key] = value;
+  }
+  return out;
+}
+
 export function deviceKind({ coarse = false, width = 1280 } = {}) {
   return coarse || width < 768 ? "mobile" : "desktop";
 }
