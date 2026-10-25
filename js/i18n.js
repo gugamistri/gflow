@@ -8,6 +8,7 @@ export const HTML_LANG = { pt: "pt-BR", es: "es", en: "en" };
 
 import { COLLAB_STRINGS } from "./collabI18n.js";
 import { COMMENTS_STRINGS } from "./commentsI18n.js";
+import { SETTINGS_STRINGS } from "./settingsI18n.js";
 
 export const catalogs = {
   pt: {
@@ -4427,6 +4428,7 @@ export const catalogs = {
 
 for (const loc of Object.keys(COLLAB_STRINGS)) Object.assign(catalogs[loc], COLLAB_STRINGS[loc]);
 for (const loc of Object.keys(COMMENTS_STRINGS)) Object.assign(catalogs[loc], COMMENTS_STRINGS[loc]);
+for (const loc of Object.keys(SETTINGS_STRINGS)) Object.assign(catalogs[loc], SETTINGS_STRINGS[loc]);
 
 let currentLocale = "en";
 
