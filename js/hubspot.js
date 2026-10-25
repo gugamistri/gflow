@@ -39,14 +39,14 @@ export const HUBSPOT_FIELDS = Object.freeze([
 
 const FIELD_SET = new Set(HUBSPOT_FIELDS);
 const REASON_RE = /^[A-Za-z0-9_-]{1,40}$/;
-/** App privado do HubSpot: pat- + região (na1, eu1, …) + UUID. */
-const PRIVATE_APP_TOKEN_RE = /^pat-[a-z]{2}\d-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+/** App privado do HubSpot: pat- + região (na1, eu1, …) + segredo. Mesma regra da API (guiaflow-cloud). */
+const PRIVATE_APP_TOKEN_RE = /^pat-[a-z0-9]{2,12}-[A-Za-z0-9_-]{20,200}$/;
 
 /** "" se o valor pode ir no PUT; "token" se não é um app privado. Vazio não é erro aqui. */
 export function hubspotTokenError(raw) {
   const value = String(raw || "").trim();
   if (!value) return "";
-  if (value.length > 80 || /\s/.test(value) || !PRIVATE_APP_TOKEN_RE.test(value)) return "token";
+  if (value.length > 220 || /\s/.test(value) || !PRIVATE_APP_TOKEN_RE.test(value)) return "token";
   return "";
 }
 
