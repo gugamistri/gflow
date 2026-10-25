@@ -598,7 +598,7 @@ const fixedStepsEditor = createFixedStepsEditor({
   getProject: () => project,
   viewerIsPro: () => viewerIsPro(),
   openFeatureGate: (feature) => openFeatureGate(feature),
-  openLeads: () => leadsDialog.open(),
+  openLeads: () => openResults("leads"),
   onSaved: (kind) => {
     onChange();
     editor.refresh();
@@ -836,9 +836,35 @@ function enhanceLangSelects() {
 }
 enhanceLangSelects();
 
-function openAnalytics() {
+const RESULTS_TAB_ORDER = ["leads", "delivery", "analytics", "campaigns"];
+let resultsSidesLoaded = { leads: false, analytics: false };
+
+function selectResultsTab(name, { focus = false } = {}) {
+  const tabs = [...document.querySelectorAll("#modal-results [data-results-tab]")].filter((tab) => !tab.hidden);
+  const target = tabs.find((tab) => tab.dataset.resultsTab === name) || tabs.find((tab) => tab.dataset.resultsTab === "analytics") || tabs[0];
+  if (!target) return "";
+  for (const tab of tabs) {
+    const on = tab === target;
+    tab.setAttribute("aria-selected", on ? "true" : "false");
+    tab.tabIndex = on ? 0 : -1;
+    const pane = document.getElementById(tab.getAttribute("aria-controls"));
+    if (pane) pane.hidden = !on;
+  }
+  if (focus) target.focus();
+  return target.dataset.resultsTab || "";
+}
+
+function ensureResultsSide(tab) {
+  const side = tab === "leads" || tab === "delivery" ? "leads" : "analytics";
+  if (resultsSidesLoaded[side]) return;
+  const opened = side === "leads" ? leadsDialog.open() : analyticsDialog.open();
+  if (opened) resultsSidesLoaded[side] = true;
+}
+
+/** Um diálogo. Análise é o padrão do botão; Contatos e a volta do OAuth escolhem a aba. */
+function openResults(tab = "analytics") {
   if (!viewerIsPro()) {
-    openFeatureGate("analytics");
+    openFeatureGate(tab === "leads" || tab === "delivery" ? "leads" : "analytics");
     return;
   }
   const slug = permanentSlug(activeShareRecord());
@@ -847,7 +873,12 @@ function openAnalytics() {
     link.hidden = !slug;
     if (slug) link.href = `${location.origin}/p/${encodeURIComponent(slug)}?preview=1`;
   }
-  analyticsDialog.open();
+  const selected = selectResultsTab(RESULTS_TAB_ORDER.includes(tab) ? tab : "analytics");
+  ensureResultsSide(selected);
+}
+
+function openAnalytics() {
+  openResults("analytics");
 }
 
 /** Início = captura de lead (Pro, precisa do link permanente); Fim = livre. */
@@ -1205,13 +1236,12 @@ function paintShareMenu() {
   if (resultsBtn) resultsBtn.hidden = !showAnalytics;
   const resultsBadge = document.getElementById("results-pro-badge");
   if (resultsBadge) resultsBadge.hidden = pro;
-  // no celular o Resultados sai do cabeçalho e fica no menu ☰ (Análise e Contatos no mesmo diálogo)
+  // no celular o Resultados sai do cabeçalho e fica no menu ☰ (o mesmo diálogo)
   const menuResults = document.getElementById("btn-menu-results");
   if (menuResults) menuResults.hidden = !showAnalytics;
   const menuResultsBadge = document.getElementById("menu-results-pro-badge");
   if (menuResultsBadge) menuResultsBadge.hidden = pro;
-  const leadsAvailable = Boolean(pro && cloudShareEnabled() && permanentSlug(record));
-  for (const tab of document.querySelectorAll("[data-results-tab=\"leads\"]")) tab.hidden = !leadsAvailable;
+  for (const badge of document.querySelectorAll("#modal-results .results-tab .pro-badge")) badge.hidden = pro;
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
   const brandToggle = document.getElementById("share-brand-toggle");
   if (brandToggle) brandToggle.hidden = !(pro && cloudShareEnabled());
@@ -2106,7 +2136,7 @@ function consumeLeadProntoReturn() {
   toast(t(key), found.kind === "error" ? 5600 : 4200);
   leadsDialog.noteLeadProntoReturn(found);
   const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
-  if (slug) leadsDialog.open();
+  if (slug) openResults("delivery");
 }
 
 function consumeHubspotReturn() {
@@ -2117,7 +2147,7 @@ function consumeHubspotReturn() {
   leadsDialog.noteHubspotReturn(notice);
   toast(t(notice.key, notice.vars), notice.error ? 6400 : 5200);
   const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
-  if (found.slug && slug && found.slug === slug) leadsDialog.open();
+  if (found.slug && slug && found.slug === slug) openResults("delivery");
 }
 
 function openAdmin() {
@@ -4016,21 +4046,27 @@ function bindChrome() {
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
   document.getElementById("btn-results")?.addEventListener("click", () => openAnalytics());
-  document.addEventListener("click", (e) => {
+  document.getElementById("modal-results")?.addEventListener("close", () => {
+    resultsSidesLoaded = { leads: false, analytics: false };
+  });
+  document.getElementById("modal-results")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.("[data-results-tab]");
     if (!tab || tab.getAttribute("aria-selected") === "true") return;
-    const from = document.getElementById(tab.dataset.resultsTab === "leads" ? "modal-analytics" : "modal-leads");
-    const to = document.getElementById(tab.dataset.resultsTab === "leads" ? "modal-leads" : "modal-analytics");
-    if (tab.dataset.resultsTab === "leads") leadsDialog.open();
-    else openAnalytics();
-    // só fecha o atual se o outro realmente abriu (sem link permanente ele recusa)
-    if (to?.open && from?.open) from.close();
+    const name = selectResultsTab(tab.dataset.resultsTab);
+    if (name) ensureResultsSide(name);
   });
-  document.addEventListener("keydown", (e) => {
-    const tab = e.target.closest?.("[data-results-tab]");
-    if (!tab || (e.key !== "ArrowRight" && e.key !== "ArrowLeft")) return;
-    const other = [...tab.parentElement.querySelectorAll("[data-results-tab]")].find((x) => x !== tab && !x.hidden);
-    if (other) { e.preventDefault(); other.click(); }
+  document.querySelector("#modal-results .results-tablist")?.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
+    const tabs = [...document.querySelectorAll("#modal-results [data-results-tab]")].filter((tab) => !tab.hidden);
+    const current = Math.max(0, tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true"));
+    let next = current;
+    if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (current + tabs.length - 1) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else next = tabs.length - 1;
+    e.preventDefault();
+    const name = selectResultsTab(tabs[next].dataset.resultsTab, { focus: true });
+    if (name) ensureResultsSide(name);
   });
   embedModal?.querySelector(".embed-tabs")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.(".embed-tab");
