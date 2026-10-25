@@ -167,7 +167,7 @@ export function authorizeUrlOf(data) {
     if (!value) continue;
     try {
       const url = new URL(value);
-      if (url.protocol === "https:" || url.protocol === "http:") return url.toString();
+      if (url.protocol === "https:") return url.toString();
     } catch {
       /* ignora o que não é URL */
     }

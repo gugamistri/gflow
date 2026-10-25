@@ -1,7 +1,7 @@
 /**
  * Contatos recebidos no link permanente (passo inicial + formulário do passo final),
- * o webhook e o HubSpot que os enviam para fora (Pro).
- * Só o dono vê (GET /shares/:slug/leads, /webhook e /hubspot com Bearer); CSV no navegador.
+ * o webhook e os conectores RD Station Marketing e HubSpot que os enviam para fora (Pro).
+ * Só o dono vê (GET /shares/:slug/leads, /webhook, /rd-station e /hubspot com Bearer); CSV no navegador.
  */
 import { t, getLocale } from "./i18n.js";
 import { cloudFetch } from "./cloudConfig.js";
@@ -15,6 +15,12 @@ import {
   planWebhookSave,
   webhookProblem,
 } from "./leadWebhook.js";
+import {
+  RD_HELP,
+  normalizeRdStation,
+  planRdSave,
+  rdProblem,
+} from "./rdStation.js";
 import {
   HUBSPOT_FIELDS,
   HUBSPOT_HELP,
@@ -67,6 +73,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let secretVisible = false;
   let secretDirty = false;
   let webhookBusy = false;
+  let rd = null;
+  let rdKeyDraft = "";
+  let rdBusy = false;
   let hubspot = null;
   let hubspotBusy = false;
   let hubspotDirty = new Set();
@@ -92,6 +101,15 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     save: $("btn-leads-webhook-save"),
     test: $("btn-leads-webhook-test"),
     rotate: $("btn-leads-webhook-rotate"),
+    rdKey: $("leads-rd-key"),
+    rdEnabled: $("leads-rd-enabled"),
+    rdHint: $("leads-rd-key-hint"),
+    rdHelp: $("leads-rd-help"),
+    rdStatus: $("leads-rd-status"),
+    rdDelivery: $("leads-rd-delivery"),
+    rdSave: $("btn-leads-rd-save"),
+    rdTest: $("btn-leads-rd-test"),
+    rdRemove: $("btn-leads-rd-remove"),
     hsAccount: $("leads-hubspot-account"),
     hsEnabled: $("leads-hubspot-enabled"),
     hsDelivery: $("leads-hubspot-delivery"),
@@ -217,9 +235,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     return `/shares/${encodeURIComponent(getSlug())}/webhook${extra}`;
   }
 
-  function guardSlug() {
+  function guardSlug(setMessage = setWebhookMessage) {
     if (getSlug()) return true;
-    setWebhookMessage(t("leads.needsPublish"), true);
+    setMessage(t("leads.needsPublish"), true);
     return false;
   }
 
@@ -491,6 +509,182 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     }
   }
 
+  function setRdMessage(text, error = false) {
+    const node = els().rdStatus;
+    if (!node) return;
+    node.textContent = text || "";
+    node.classList.toggle("is-error", Boolean(error && text));
+  }
+
+  function paintRd() {
+    const e = els();
+    if (!e.rdKey) return;
+    e.rdKey.value = rdKeyDraft;
+    e.rdKey.placeholder = rd?.keyLast4 ? `····${rd.keyLast4}` : "";
+    if (e.rdHint) {
+      e.rdHint.textContent = rd?.keyLast4 && !rdKeyDraft
+        ? t("leads.rd.keySaved", { last4: rd.keyLast4 })
+        : t("leads.rd.keyHint");
+    }
+    if (e.rdRemove) e.rdRemove.hidden = !rd?.hasKey;
+    if (e.rdHelp) e.rdHelp.href = RD_HELP[getLocale()] || RD_HELP.pt;
+    for (const btn of [e.rdSave, e.rdTest, e.rdRemove]) {
+      if (btn) btn.disabled = rdBusy;
+    }
+    paintRdDelivery();
+  }
+
+  function paintRdDelivery() {
+    const node = els().rdDelivery;
+    if (!node) return;
+    if (!rd) {
+      node.textContent = "";
+      return;
+    }
+    const parts = [];
+    const delivery = rd.lastDelivery;
+    if (delivery) {
+      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
+      const date = delivery.at ? formatDate(delivery.at) : "—";
+      parts.push(t(delivery.ok ? "leads.rd.lastOk" : "leads.rd.lastFail", { date, status }));
+    }
+    if (rd.consecutiveFailures > 0) parts.push(t("leads.rd.failures", { n: rd.consecutiveFailures }));
+    if (rd.autoDisabled) parts.push(t("leads.rd.autoOff"));
+    node.textContent = parts.join(" ");
+  }
+
+  function rdPath(extra = "") {
+    return `/shares/${encodeURIComponent(getSlug())}/rd-station${extra}`;
+  }
+
+  function handleRdProblem(res, fallbackKey) {
+    const problem = rdProblem(res);
+    if (problem === "paywall") {
+      els().dialog?.close();
+      onPaywall?.();
+      return true;
+    }
+    const key = problem === "auth" ? "leads.rd.errAuth"
+      : problem === "key" ? "leads.rd.errKey"
+        : fallbackKey;
+    setRdMessage(t(key), true);
+    return true;
+  }
+
+  async function loadRd() {
+    if (!getSlug() || !els().rdKey) return;
+    const res = await cloudFetch(rdPath(), { method: "GET" });
+    if (!res.ok && res.status !== 404) {
+      handleRdProblem(res, "leads.rd.errLoad");
+      return;
+    }
+    rd = res.ok ? normalizeRdStation(res.data) : null;
+    rdKeyDraft = "";
+    const e = els();
+    if (e.rdEnabled) e.rdEnabled.checked = rd ? rd.enabled : true;
+    setRdMessage("");
+    paintRd();
+  }
+
+  async function submitRd() {
+    if (rdBusy) return;
+    const e = els();
+    const plan = planRdSave({
+      apiKey: rdKeyDraft,
+      enabled: Boolean(e.rdEnabled?.checked),
+      connected: Boolean(rd?.hasKey),
+    });
+    if (plan.error) {
+      setRdMessage(t(plan.error === "key" ? "leads.rd.errKey" : "leads.rd.errRequired"), true);
+      return;
+    }
+    if (!guardSlug(setRdMessage)) return;
+    rdBusy = true;
+    paintRd();
+    setRdMessage(t("leads.rd.saving"));
+    const res = await cloudFetch(rdPath(), { method: "PUT", body: JSON.stringify(plan.body) });
+    rdBusy = false;
+    if (!res.ok) {
+      paintRd();
+      handleRdProblem(res, "leads.rd.errSave");
+      return;
+    }
+    const sentTail = plan.body.apiKey ? plan.body.apiKey.slice(-4) : "";
+    const next = normalizeRdStation(res.data) || {
+      ...(rd || {}),
+      enabled: plan.body.enabled,
+      hasKey: true,
+      keyLast4: sentTail || rd?.keyLast4 || "",
+      lastDelivery: rd?.lastDelivery || null,
+      consecutiveFailures: rd?.consecutiveFailures || 0,
+      autoDisabled: false,
+      status: "",
+    };
+    if (sentTail && !next.keyLast4) next.keyLast4 = sentTail;
+    next.hasKey = Boolean(next.keyLast4 || next.hasKey);
+    rd = next;
+    rdKeyDraft = "";
+    if (e.rdEnabled) e.rdEnabled.checked = next.enabled;
+    paintRd();
+    setRdMessage(t("leads.rd.saved"));
+    toast?.(t("leads.rd.saved"), 3200);
+  }
+
+  async function sendRdTest() {
+    if (!guardSlug(setRdMessage) || rdBusy) return;
+    if (!rd?.hasKey) {
+      setRdMessage(t("leads.rd.needsSave"), true);
+      return;
+    }
+    rdBusy = true;
+    paintRd();
+    setRdMessage(t("leads.rd.sending"));
+    const res = await cloudFetch(rdPath("/test"), { method: "POST", body: "{}" });
+    rdBusy = false;
+    paintRd();
+    if (!res.ok) {
+      handleRdProblem(res, "leads.rd.errTest");
+      return;
+    }
+    const result = normalizeTestResult(res.data) || { ok: true, httpStatus: res.status, at: "", error: "" };
+    if (result.error === "owner_not_pro") {
+      handleRdProblem({ ok: false, status: 402, error: "owner_not_pro" }, "leads.rd.errTest");
+      return;
+    }
+    if (!result.at) result.at = new Date().toISOString();
+    const fromBody = normalizeRdStation(res.data);
+    rd = {
+      ...(rd || {}),
+      ...(fromBody || {}),
+      lastDelivery: fromBody?.lastDelivery || result,
+      consecutiveFailures: result.ok ? 0 : (rd?.consecutiveFailures || 0) + 1,
+    };
+    paintRd();
+    const status = result.httpStatus ? String(result.httpStatus) : result.error || "—";
+    setRdMessage(t(result.ok ? "leads.rd.testOk" : "leads.rd.testFail", { status }), !result.ok);
+  }
+
+  async function removeRd() {
+    if (!guardSlug(setRdMessage) || !rd?.hasKey || rdBusy) return;
+    if (!window.confirm(t("leads.rd.confirmRemove"))) return;
+    rdBusy = true;
+    paintRd();
+    const res = await cloudFetch(rdPath(), { method: "DELETE" });
+    rdBusy = false;
+    if (!res.ok && res.status !== 404) {
+      paintRd();
+      handleRdProblem(res, "leads.rd.errRemove");
+      return;
+    }
+    rd = null;
+    rdKeyDraft = "";
+    const e = els();
+    if (e.rdEnabled) e.rdEnabled.checked = true;
+    paintRd();
+    setRdMessage(t("leads.rd.removed"));
+    toast?.(t("leads.rd.removed"), 3000);
+  }
+
   function setHubspotMessage(text, error = false) {
     const node = els().hsStatus;
     if (!node) return;
@@ -717,7 +911,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.refresh?.addEventListener("click", () => {
       void load();
       void loadWebhook();
-      void loadHubspot();
+      void loadRd();
     });
     e.csv?.addEventListener("click", downloadCsv);
     e.secret?.addEventListener("input", () => {
@@ -742,6 +936,15 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.save?.addEventListener("click", () => void submitWebhook());
     e.test?.addEventListener("click", () => void sendTest());
     e.remove?.addEventListener("click", () => void removeWebhook());
+    e.rdKey?.addEventListener("input", () => {
+      rdKeyDraft = e.rdKey.value.trim();
+      if (e.rdHint && rd?.keyLast4) {
+        e.rdHint.textContent = rdKeyDraft ? t("leads.rd.keyHint") : t("leads.rd.keySaved", { last4: rd.keyLast4 });
+      }
+    });
+    e.rdSave?.addEventListener("click", () => void submitRd());
+    e.rdTest?.addEventListener("click", () => void sendRdTest());
+    e.rdRemove?.addEventListener("click", () => void removeRd());
     e.hsConnect?.addEventListener("click", () => void connectHubspot());
     e.hsSave?.addEventListener("click", () => void submitHubspot());
     e.hsTest?.addEventListener("click", () => void sendHubspotTest());
@@ -751,6 +954,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     }
     window.addEventListener("ns-locale-change", () => {
       paintWebhook();
+      paintRd();
       paintHubspot();
     });
   }
@@ -769,20 +973,25 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     secretDraft = "";
     secretVisible = false;
     secretDirty = false;
+    rd = null;
+    rdKeyDraft = "";
     hubspot = null;
     hubspotDirty = new Set();
     e.status.textContent = "";
     if (e.url) e.url.value = "";
     if (e.enabled) e.enabled.checked = true;
+    if (e.rdEnabled) e.rdEnabled.checked = true;
     if (e.hsEnabled) e.hsEnabled.checked = true;
     setWebhookMessage("");
+    setRdMessage("");
     setHubspotMessage("");
     paintWebhook();
+    paintRd();
     paintHubspot();
     if (!e.dialog.open) e.dialog.showModal();
     void load();
     void loadWebhook();
-    void loadHubspot();
+    void loadRd();
   }
 
   function noteReturn(notice) {
