@@ -167,6 +167,7 @@ import {
 } from "./paywall.js";
 import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 import { createLeadsDialog } from "./leadsDialog.js";
+import { hubspotReturnNotice, readHubspotReturn, stripHubspotReturn } from "./hubspot.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
@@ -2094,6 +2095,17 @@ async function consumeBillingReturn() {
     return;
   }
   if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
+}
+
+function consumeHubspotReturn() {
+  const found = readHubspotReturn(location.href);
+  if (!found) return;
+  applyCloudAuthHref(stripHubspotReturn(location.href));
+  const notice = hubspotReturnNotice(found);
+  leadsDialog.noteReturn?.(notice);
+  toast(t(notice.key, notice.vars), notice.error ? 6400 : 5200);
+  const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
+  if (found.slug && slug && found.slug === slug) leadsDialog.open();
 }
 
 function openAdmin() {
@@ -4789,6 +4801,7 @@ async function boot() {
     void (async () => {
       await consumeBillingReturn();
       if (getCloudAccount().signedIn && billingView.status !== "ready") await refreshEntitlement();
+      consumeHubspotReturn();
       consumeProIntent();
     })();
   }
