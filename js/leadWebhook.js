@@ -8,9 +8,9 @@
  */
 
 export const WEBHOOK_HELP = {
-  pt: "/integracoes#webhook",
-  en: "/en/integrations#webhook",
-  es: "/es/integraciones#webhook",
+  pt: "/integracoes/leads",
+  en: "/en/integrations/leads",
+  es: "/es/integraciones/leads",
 };
 
 const SECRET_RE = /^whsec_[A-Za-z0-9+/_=-]{16,200}$/;

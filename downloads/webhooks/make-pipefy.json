@@ -1,0 +1,81 @@
+{
+  "name": "GuiaFlow para Pipefy",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": null,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Crie um webhook novo ao importar"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth",
+        "tlsType": "",
+        "proxyKeychain": ""
+      },
+      "mapper": {
+        "url": "https://api.pipefy.com/graphql",
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer SEU_TOKEN_PIPEFY"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "parseResponse": true,
+        "body": "{\"query\":\"mutation ($pipe: ID!, $phase: ID!, $title: String!, $name: String, $email: String, $phone: String) {\\n  createCard(input: {\\n    pipe_id: $pipe\\n    phase_id: $phase\\n    title: $title\\n    fields_attributes: [\\n      { field_id: \\\"nome\\\", field_value: $name }\\n      { field_id: \\\"email\\\", field_value: $email }\\n      { field_id: \\\"telefone\\\", field_value: $phone }\\n    ]\\n  }) { card { id } }\\n}\",\"variables\":{\"pipe\":\"0\",\"phase\":\"0\",\"title\":\"{{1.lead.name}}\",\"name\":\"{{1.lead.name}}\",\"email\":\"{{1.lead.email}}\",\"phone\":\"{{1.lead.phone}}\"}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 320,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "instant": true,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}

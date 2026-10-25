@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" data-page-locale="en" data-alt-pt="/integracoes/leads" data-alt-en="/en/integrations/leads" data-alt-es="/es/integraciones/leads">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leads in Make, n8n and Zapier — GuiaFlow</title>
+  <meta name="description" content="Send GuiaFlow leads to Pipefy, Google Sheets or Pipedrive with Make, n8n or Zapier. Signed webhook, importable templates and a signature check." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/en/integrations/leads" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes/leads" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/integrations/leads" />
+  <link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/integraciones/leads" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes/leads" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Leads in Make, n8n and Zapier — GuiaFlow" />
+  <meta property="og:description" content="Send GuiaFlow leads to Pipefy, Google Sheets or Pipedrive with Make, n8n or Zapier. Signed webhook, importable templates and a signature check." />
+  <meta property="og:url" content="https://guiaflow.pro/en/integrations/leads" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Create interactive guided tours" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Leads in Make, n8n and Zapier — GuiaFlow" />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var fixed = document.documentElement.getAttribute("data-page-locale");
+        var stored = fixed || localStorage.getItem("ns-locale");
+        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
+        var pick = stored;
+        if (!pick) {
+          for (var i = 0; i < langs.length; i++) {
+            var p = String(langs[i] || "").toLowerCase().split("-")[0];
+            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
+          }
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/150/css/theme.css" />
+  <link rel="stylesheet" href="/a/150/css/shell.css" />
+  <link rel="stylesheet" href="/a/150/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+    .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
+    .page .install-row a.btn-primary { color: var(--ns-button-text); text-decoration: none; }
+    .page ol { padding-left: 1.2em; }
+    .page ol li { margin: 4px 0; }
+    .api-doc[hidden] { display: none; }
+    .page pre { overflow: auto; padding: 10px 12px; border-radius: 8px; background: var(--ns-input-bg); border: 1px solid var(--ns-border); font-size: 0.8rem; line-height: 1.45; }
+    .page pre code { background: none; padding: 0; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--ns-border); }
+    .page th { color: var(--ns-muted); font-weight: 600; }
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"GuiaFlow","applicationCategory":"DeveloperApplication","url":"https://guiaflow.pro/en/integrations/leads","operatingSystem":"Any"}</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/150/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/150/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title"><span data-int-title>Leads in Make, n8n and Zapier</span></span>
+    </div>
+    <div class="topbar-appearance">
+      <details class="locale-menu">
+          <summary class="locale-menu-btn" aria-label="Language: English" title="Language: English"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="GB"><rect width="30" height="20" fill="#012169"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0L30 20M30 0L0 20" stroke="#c8102e" stroke-width="1.6"/><path d="M15 0V20M0 10H30" stroke="#fff" stroke-width="6"/><path d="M15 0V20M0 10H30" stroke="#c8102e" stroke-width="3.4"/></svg><svg class="locale-menu-caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <nav class="locale-links" id="locale-links" aria-label="Language">
+            <a href="/integracoes/leads" hreflang="pt-BR" lang="pt-BR"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="BR"><rect width="30" height="20" fill="#009b3a"/><polygon points="15,2.5 27.5,10 15,17.5 2.5,10" fill="#fedf00"/><circle cx="15" cy="10" r="4.6" fill="#002776"/><path d="M10.6 9.2c3-.9 6.3-.5 8.8 1.1" stroke="#fff" stroke-width=".9" fill="none"/></svg><span>Português</span></a>
+            <a href="/en/integrations/leads" hreflang="en" lang="en" aria-current="page"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="GB"><rect width="30" height="20" fill="#012169"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M0 0L30 20M30 0L0 20" stroke="#c8102e" stroke-width="1.6"/><path d="M15 0V20M0 10H30" stroke="#fff" stroke-width="6"/><path d="M15 0V20M0 10H30" stroke="#c8102e" stroke-width="3.4"/></svg><span>English</span></a>
+            <a href="/es/integraciones/leads" hreflang="es" lang="es"><svg class="gf-flag" viewBox="0 0 30 20" aria-hidden="true" focusable="false" data-flag="ES"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg><span>Español</span></a>
+          </nav>
+        </details>
+    </div>
+  </header>
+
+  <main class="page">
+  <div class="api-doc" data-doc-locale="en">
+    <h1>Leads in Make, n8n and Zapier</h1>
+    <p class="lead">Recipes that send each tour contact to a system without a native connector: a card in Pipefy, a row in Google Sheets, or a person and a lead in Pipedrive. GuiaFlow sends a signed https POST. Pro plan required.</p>
+    <section class="card" id="ligar">
+      <h2>Connect the webhook</h2>
+      <ol>
+        <li>Publish the tour and open the contacts for the permanent link. The <strong>Webhook</strong> section is in that dialog.</li>
+        <li>Paste the https URL from Make, n8n or Zapier. https only, port 443, on a public host.</li>
+        <li>Generate a <code>whsec_…</code> secret or paste the one the destination created. Save it: the full value is not shown again.</li>
+        <li>Save and click <strong>Send test</strong>. The test event has <code>type</code> <code>lead.test</code>.</li>
+      </ol>
+      <p>The default event is <code>lead.created</code> (opening form, <code>source: "start"</code>, and closing form, <code>source: "contact"</code>). <code>lead.session_completed</code> is optional and fires when the person finishes the tour, with <code>progress.reachedStep</code>.</p>
+      <p>Field overview: <a href="/en/integrations#webhook">Integrations</a>.</p>
+    </section>
+    <section class="card" id="payload">
+      <h2>What the POST contains</h2>
+      <p><code>Content-Type: application/json</code>. For <code>lead.created</code>, <code>webhook-id</code> is the lead <code>id</code> and stays the same on every retry. The phone number is E.164. <code>lead.consent</code> has <code>given</code>, the text the person saw (<code>text</code>) and the time (<code>at</code>).</p>
+      <pre><code>{
+  "type": "lead.created",
+  "id": "6f1c0e2a-4b7d-4e0a-9c3d-1a2b3c4d5e6f",
+  "createdAt": "2026-10-25T14:00:00.000Z",
+  "source": "start",
+  "lead": {
+    "name": "Ana Souza",
+    "email": "ana@example.com",
+    "phone": "+5511999999999",
+    "message": null,
+    "lang": "pt",
+    "consent": {
+      "given": true,
+      "text": "I agree to be contacted about this tour.",
+      "at": "2026-10-25T14:00:00.000Z"
+    }
+  },
+  "tour": {
+    "slug": "checkout",
+    "title": "Checkout tour",
+    "url": "https://guiaflow.pro/p/checkout"
+  },
+  "context": {
+    "referrerHost": "linkedin.com",
+    "utm_source": "linkedin",
+    "utm_medium": "social",
+    "utm_campaign": "launch",
+    "embed": false,
+    "device": "desktop"
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="assinatura">
+      <h2>Check the signature</h2>
+      <p><a href="https://www.standardwebhooks.com/" target="_blank" rel="noopener">Standard Webhooks</a>. The three headers:</p>
+      <table>
+        <thead><tr><th>Header</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>webhook-id</code></td><td>Stable event id. The same on every retry.</td></tr>
+          <tr><td><code>webhook-timestamp</code></td><td>Unix seconds when this attempt was signed.</td></tr>
+          <tr><td><code>webhook-signature</code></td><td><code>v1,</code> plus the base64 HMAC. Several values can be separated by spaces.</td></tr>
+        </tbody>
+      </table>
+      <p>The signed content is <code>webhook-id</code> + <code>.</code> + <code>webhook-timestamp</code> + <code>.</code> + the raw POST body (do not rebuild the JSON). The key is the base64 after <code>whsec_</code>. The HMAC is SHA-256 and the digest is base64. Reject a clock skew of more than 5 minutes.</p>
+      <p>Node example, the same algorithm GuiaFlow uses to send: <a href="/downloads/webhooks/verify-signature.mjs">verify-signature.mjs</a>.</p>
+      <pre><code>import { verifyStandardWebhook } from "./verify-signature.mjs";
+
+const raw = await readRawBody(req);
+const ok = verifyStandardWebhook({
+  secret: process.env.GUIAFLOW_WEBHOOK_SECRET,
+  id: req.headers["webhook-id"],
+  timestamp: req.headers["webhook-timestamp"],
+  signature: req.headers["webhook-signature"],
+  body: raw,
+});</code></pre>
+      <p>The n8n templates already include this step (<strong>Raw Body</strong> on the webhook and a <strong>Verificar assinatura</strong> code node). Replace <code>whsec_COLE_O_SEGREDO</code>. Make and Zapier answer 200 as soon as they accept the call, before later modules run, so they do not reject a bad signature in the HTTP response. Use n8n or the Node example when a forged POST must be refused.</p>
+    </section>
+    <section class="card" id="planilha">
+      <h2>Google Sheets</h2>
+      <p>One row per contact, on a sheet named <strong>Leads</strong>. Create the header row in this order:</p>
+      <p><code>id</code>, <code>criado_em</code>, <code>origem</code>, <code>nome</code>, <code>email</code>, <code>telefone</code>, <code>mensagem</code>, <code>tour</code>, <code>url</code>, <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>referrer</code>, <code>consentimento</code>.</p>
+      <h3>Make</h3>
+      <ol>
+        <li>Create a scenario. Add <strong>Webhooks → Custom webhook</strong>, click <strong>Add</strong>, name it and copy the URL into GuiaFlow.</li>
+        <li>Save the webhook in the editor and click <strong>Send test</strong>. In Make, <strong>Run once</strong> so it learns the JSON.</li>
+        <li>Add <strong>Google Sheets → Add a row</strong>. Connect Google, pick the spreadsheet and the Leads sheet.</li>
+        <li>Map each column: <code>nome</code> from <code>lead.name</code>, <code>email</code> from <code>lead.email</code>, <code>telefone</code> from <code>lead.phone</code> (E.164), <code>tour</code> from <code>tour.title</code>, <code>url</code> from <code>tour.url</code>, <code>id</code> from the event id, <code>utm_*</code> and <code>referrer</code> from <code>context</code>, and <code>consentimento</code> from <code>lead.consent.given</code>.</li>
+        <li>Turn the scenario on.</li>
+      </ol>
+      <p>HTTP blueprint, if you already have a Google OAuth token for the Sheets API: <a href="/downloads/webhooks/make-google-sheets.json">make-google-sheets.json</a>. Import it into a new scenario (three-dot menu → <strong>Import blueprint</strong>). On the first module, create a new webhook. Replace <code>SEU_ID_DA_PLANILHA</code> and <code>SEU_TOKEN_GOOGLE</code>. The row is appended on the Leads sheet, in the header order above.</p>
+      <h3>n8n</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/n8n-google-sheets.json">n8n-google-sheets.json</a> (workflow menu → Import from file).</li>
+        <li>In <strong>Verificar assinatura</strong>, paste the <code>whsec_…</code>. In <strong>Acrescentar linha</strong>, connect Google and replace <code>SEU_ID_DA_PLANILHA</code> with the id in <code>/spreadsheets/d/</code> in the spreadsheet URL. The sheet must be named Leads.</li>
+        <li>Copy the production webhook URL (not the test URL) into GuiaFlow. Send the test and activate the workflow.</li>
+      </ol>
+      <p>In Zapier the trigger is <strong>Webhooks by Zapier → Catch Hook</strong> and the action is <strong>Google Sheets → Create Spreadsheet Row</strong>. See <a href="#zapier">Zapier</a>.</p>
+    </section>
+    <section class="card" id="pipefy">
+      <h2>Pipefy</h2>
+      <p>Creates a card directly in a phase. The pipe id is the number in the URL: <code>https://app.pipefy.com/pipes/123456</code>. Phase and field ids come from this query (a token from <a href="https://app.pipefy.com/tokens" target="_blank" rel="noopener">app.pipefy.com/tokens</a>, or a service account, which Pipefy recommends for production):</p>
+      <pre><code>{
+  pipe(id: 123456) {
+    name
+    phases { id name }
+    start_form_fields { id label required type }
+  }
+}</code></pre>
+      <p><code>POST https://api.pipefy.com/graphql</code> with <code>Authorization: Bearer</code> and the token. Mutation reference: <a href="https://developers.pipefy.com/reference/create-a-card-with-the-required-fields-fulfilled" target="_blank" rel="noopener">createCard</a>.</p>
+      <h3>Make</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/make-pipefy.json">make-pipefy.json</a>. On the webhook, click <strong>Add</strong> and copy the URL into GuiaFlow.</li>
+        <li>In the HTTP module, replace <code>SEU_TOKEN_PIPEFY</code>. In the body, <code>pipe</code> and <code>phase</code> are <code>"0"</code>: put the real ids. The sample <code>field_id</code> values are <code>nome</code>, <code>email</code> and <code>telefone</code> — use the ids from the query, and include every required start-form field.</li>
+        <li>Send the test from the editor. The response must include <code>data.createCard.card.id</code>. An <code>errors</code> array means the card was not created.</li>
+        <li>Turn the scenario on. The same result is available with <strong>Pipefy → Create a Card</strong>: pick the pipe and the phase from the list and map <code>lead.name</code>, <code>lead.email</code> and <code>lead.phone</code>.</li>
+      </ol>
+      <h3>n8n</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/n8n-pipefy.json">n8n-pipefy.json</a>.</li>
+        <li>Paste the secret into the signature node. In <strong>Criar card</strong>, replace the token, <code>pipe</code>, <code>phase</code> and the <code>field_id</code> values.</li>
+        <li>Paste the production URL into GuiaFlow, send the test and activate.</li>
+      </ol>
+      <p>In Zapier: <strong>Webhooks by Zapier → Catch Hook</strong>, then <strong>Pipefy → Create Card</strong>.</p>
+    </section>
+    <section class="card" id="pipedrive">
+      <h2>Pipedrive</h2>
+      <p>Creates the person with API v2 and a lead linked to that person (<code>POST /api/v1/leads</code>). The host is your company domain, the same one in the browser bar: <code>https://SUA_EMPRESA.pipedrive.com</code>. The token is under Personal preferences → API and is sent in the <code>x-api-token</code> header. Reference: <a href="https://developers.pipedrive.com/docs/api/v1/Persons" target="_blank" rel="noopener">persons (v2)</a> and <a href="https://developers.pipedrive.com/docs/api/v1/Leads#addLead" target="_blank" rel="noopener">leads</a>.</p>
+      <h3>Make</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/make-pipedrive.json">make-pipedrive.json</a>. Create the webhook on the first module and paste the URL into GuiaFlow.</li>
+        <li>In both HTTP modules, replace <code>SUA_EMPRESA</code> and <code>SEU_TOKEN_PIPEDRIVE</code>. The second module reads <code>data.id</code> from the person just created and stores the GuiaFlow lead id in <code>origin_id</code>.</li>
+        <li>If a contact has no email or no phone, remove the matching empty array from the person body. Send the test and check the person and the lead in Pipedrive.</li>
+        <li>The same flow exists as <strong>Pipedrive → Create a Person</strong> and <strong>Create a Lead</strong>, mapping name, email and phone.</li>
+      </ol>
+      <h3>n8n</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/n8n-pipedrive.json">n8n-pipedrive.json</a>.</li>
+        <li>Paste the secret. In <strong>Criar pessoa</strong> and <strong>Criar lead</strong>, replace the subdomain and the token.</li>
+        <li>Production URL in GuiaFlow, then test and activate.</li>
+      </ol>
+      <p>In Zapier: <strong>Webhooks by Zapier → Catch Hook</strong>, then <strong>Pipedrive → Create Person</strong>. A following step can create the lead with that person id.</p>
+    </section>
+    <section class="card" id="zapier">
+      <h2>Zapier</h2>
+      <p>Zapier starts from the <strong>Webhooks by Zapier</strong> trigger, event <strong>Catch Hook</strong>. There is no connector named GuiaFlow.</p>
+      <ol>
+        <li>Create a Zap. For the trigger, choose <strong>Webhooks by Zapier → Catch Hook</strong> and copy the URL into the tour webhook.</li>
+        <li>In the GuiaFlow editor, save and click <strong>Send test</strong>. In Zapier, test the trigger so it shows <code>lead</code>, <code>tour</code> and <code>context</code>.</li>
+        <li>The action depends on the destination: <strong>Google Sheets → Create Spreadsheet Row</strong>, <strong>Pipefy → Create Card</strong> or <strong>Pipedrive → Create Person</strong>. Map name, email, phone and the tour title.</li>
+        <li>Publish the Zap.</li>
+      </ol>
+      <p>Catch Hook does not check the HMAC. To refuse a POST without a valid signature, use the n8n template or <a href="/downloads/webhooks/verify-signature.mjs">verify-signature.mjs</a>.</p>
+    </section>
+    <section class="card" id="entrega">
+      <h2>Delivery and retries</h2>
+      <ul>
+        <li>GuiaFlow waits at most 5 seconds and does not follow redirects. Any 2xx counts as delivered.</li>
+        <li>When the call fails, the same message is sent again with the same <code>webhook-id</code> and a new signature. After the immediate attempt the gaps are 1 minute, 5 minutes, 30 minutes, 2 hours and 12 hours.</li>
+        <li>About 20 failures in a row turn the webhook off. Saving again, or rotating the secret, clears the count.</li>
+        <li>A destination that answers 200 and only then writes the card can duplicate the contact if the write takes longer than 5 seconds: GuiaFlow tries again. The lead <code>id</code> is the key for spotting the duplicate.</li>
+      </ul>
+      <p>Questions: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/en/help" data-i18n="topbar.help">Help</a>
+      <a href="/en/privacy" data-i18n="legal.privacy">Privacy</a>
+      <a href="/en/terms" data-i18n="legal.terms">Terms</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module">
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/150/js/i18n.js";
+    initLocale();
+    applyI18n(document);
+    const titles = { pt: "Leads", es: "Leads", en: "Leads" };
+    const setTitle = (loc) => { const t = document.querySelector("[data-int-title]"); if (t) t.textContent = titles[loc] || titles.pt; };
+    setTitle(getLocale());
+    bindLocaleSelect(document.getElementById("locale-select"), setTitle);
+  </script>
+</body>
+</html>
