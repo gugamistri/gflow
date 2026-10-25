@@ -44,8 +44,8 @@ function node() {
 
 function hubspotDom() {
   const ids = [
-    "modal-leads", "leads-meta", "leads-status", "leads-list",
-    "btn-leads-csv", "btn-leads-refresh", "btn-leads-close",
+    "modal-results", "leads-meta", "leads-status", "leads-list",
+    "btn-leads-csv", "btn-leads-refresh", "btn-results-close",
     "leads-hubspot-account", "leads-hubspot-enabled", "leads-hubspot-delivery", "leads-hubspot-status",
     "btn-leads-hubspot-connect", "btn-leads-hubspot-use-token", "leads-hubspot-token", "leads-hubspot-token-block",
     "btn-leads-hubspot-save", "btn-leads-hubspot-test", "btn-leads-hubspot-remove", "leads-hubspot-help",

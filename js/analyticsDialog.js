@@ -1,9 +1,10 @@
 /**
- * Diálogo "Análise do tour" (Pro 👑): lê GET /shares/:slug/analytics e desenha
-import { langLabel } from "./tour-schema/i18n.js";
- * cartões, gráfico SVG (sem dependência), "Onde as pessoas param" e "De onde vieram".
+ * Aba Análise do diálogo Resultados (Pro 👑): lê GET /shares/:slug/analytics e desenha
+ * cartões, gráfico SVG (sem dependência) e "Onde as pessoas param".
+ * "De onde vieram" é desenhado na aba Campanhas do mesmo diálogo.
  * why: contagem sem cookies e sem dados pessoais; os passos fixos (início/fim) não entram no drop-off.
  */
+import { langLabel } from "./tour-schema/i18n.js";
 import { t, getLocale } from "./i18n.js";
 import { cloudFetch } from "./cloudConfig.js";
 
@@ -104,7 +105,7 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
   let ticket = 0;
 
   const els = () => ({
-    dialog: $("modal-analytics"),
+    dialog: $("modal-results"),
     title: $("analytics-tour"),
     status: $("analytics-status"),
     body: $("analytics-body"),
@@ -115,7 +116,7 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
     steps: $("analytics-steps"),
     sources: $("analytics-sources"),
     range: $("analytics-range"),
-    close: $("btn-analytics-close"),
+    close: $("btn-results-close"),
   });
 
   function card(label, value, sub) {
@@ -172,11 +173,24 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
     }
   }
 
+  function setCampaignsEmpty(show) {
+    const note = $("results-campaigns-empty");
+    if (note) note.hidden = !show;
+  }
+
+  function clearCampaigns() {
+    $("analytics-sources")?.replaceChildren();
+    setCampaignsEmpty(true);
+  }
+
   function paintSources(data) {
     const e = els();
+    if (!e.sources) return;
     e.sources.replaceChildren();
+    const list = Array.isArray(data.sources) ? data.sources.slice(0, 8) : [];
+    setCampaignsEmpty(list.length === 0);
     const total = Math.max(1, data.totals.views);
-    for (const src of data.sources.slice(0, 8)) {
+    for (const src of list) {
       const row = el("div", "analytics-source");
       row.append(el("span", "analytics-source-name", sourceLabel(src.key)));
       const bar = el("span", "analytics-source-bar");
@@ -270,11 +284,13 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
         return;
       }
       e.status.textContent = res.status === 401 ? t("analytics.errAuth") : t("analytics.errLoad");
+      clearCampaigns();
       return;
     }
     const data = res.data || {};
     if (!data.totals) {
       e.status.textContent = t("analytics.errLoad");
+      clearCampaigns();
       return;
     }
     e.status.hidden = true;
@@ -283,6 +299,7 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
     e.empty.hidden = !empty;
     e.body.hidden = empty;
     if (!empty) paint(data);
+    else clearCampaigns();
   }
 
   function paintRange() {
@@ -309,12 +326,12 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
 
   function open() {
     const e = els();
-    if (!e.dialog) return;
+    if (!e.dialog) return false;
     bind();
     const slug = getSlug?.();
     if (!slug) {
       toast?.(t("analytics.needsPublish"), 4200);
-      return;
+      return false;
     }
     e.title.textContent = String(getTitle?.() || "").trim();
     e.body.hidden = true;
@@ -322,6 +339,7 @@ export function createAnalyticsDialog({ getSlug, getTitle, toast, onPaywall } = 
     paintRange();
     if (!e.dialog.open) e.dialog.showModal();
     void load();
+    return true;
   }
 
   return { open };
