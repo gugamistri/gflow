@@ -1,0 +1,161 @@
+<div class="api-doc" data-doc-locale="en">
+    <h1>Leads in Make, n8n and Zapier</h1>
+    <p class="lead">Recipes that send each tour contact to a system without a native connector: a card in Pipefy, a row in Google Sheets, or a person and a lead in Pipedrive. GuiaFlow sends a signed https POST. Pro plan required.</p>
+    <section class="card" id="ligar">
+      <h2>Connect the webhook</h2>
+      <ol>
+        <li>Publish the tour and open the contacts for the permanent link. The <strong>Webhook</strong> section is in that dialog.</li>
+        <li>Paste the https URL from Make, n8n or Zapier. https only, port 443, on a public host.</li>
+        <li>Generate a <code>whsec_…</code> secret or paste the one the destination created. Save it: the full value is not shown again.</li>
+        <li>Save and click <strong>Send test</strong>. The test event has <code>type</code> <code>lead.test</code>.</li>
+      </ol>
+      <p>The default event is <code>lead.created</code> (opening form, <code>source: "start"</code>, and closing form, <code>source: "contact"</code>). <code>lead.session_completed</code> is optional and fires when the person finishes the tour, with <code>progress.reachedStep</code>.</p>
+      <p>Field overview: <a href="/integracoes#webhook">Integrations</a>.</p>
+    </section>
+    <section class="card" id="payload">
+      <h2>What the POST contains</h2>
+      <p><code>Content-Type: application/json</code>. For <code>lead.created</code>, <code>webhook-id</code> is the lead <code>id</code> and stays the same on every retry. The phone number is E.164. <code>lead.consent</code> has <code>given</code>, the text the person saw (<code>text</code>) and the time (<code>at</code>).</p>
+      <pre><code>{
+  "type": "lead.created",
+  "id": "6f1c0e2a-4b7d-4e0a-9c3d-1a2b3c4d5e6f",
+  "createdAt": "2026-10-25T14:00:00.000Z",
+  "source": "start",
+  "lead": {
+    "name": "Ana Souza",
+    "email": "ana@example.com",
+    "phone": "+5511999999999",
+    "message": null,
+    "lang": "pt",
+    "consent": {
+      "given": true,
+      "text": "I agree to be contacted about this tour.",
+      "at": "2026-10-25T14:00:00.000Z"
+    }
+  },
+  "tour": {
+    "slug": "checkout",
+    "title": "Checkout tour",
+    "url": "https://guiaflow.pro/p/checkout"
+  },
+  "context": {
+    "referrerHost": "linkedin.com",
+    "utm_source": "linkedin",
+    "utm_medium": "social",
+    "utm_campaign": "launch",
+    "embed": false,
+    "device": "desktop"
+  }
+}</code></pre>
+    </section>
+    <section class="card" id="assinatura">
+      <h2>Check the signature</h2>
+      <p><a href="https://www.standardwebhooks.com/" target="_blank" rel="noopener">Standard Webhooks</a>. The three headers:</p>
+      <table>
+        <thead><tr><th>Header</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td><code>webhook-id</code></td><td>Stable event id. The same on every retry.</td></tr>
+          <tr><td><code>webhook-timestamp</code></td><td>Unix seconds when this attempt was signed.</td></tr>
+          <tr><td><code>webhook-signature</code></td><td><code>v1,</code> plus the base64 HMAC. Several values can be separated by spaces.</td></tr>
+        </tbody>
+      </table>
+      <p>The signed content is <code>webhook-id</code> + <code>.</code> + <code>webhook-timestamp</code> + <code>.</code> + the raw POST body (do not rebuild the JSON). The key is the base64 after <code>whsec_</code>. The HMAC is SHA-256 and the digest is base64. Reject a clock skew of more than 5 minutes.</p>
+      <p>Node example, the same algorithm GuiaFlow uses to send: <a href="/downloads/webhooks/verify-signature.mjs">verify-signature.mjs</a>.</p>
+      <pre><code>import { verifyStandardWebhook } from "./verify-signature.mjs";
+
+const raw = await readRawBody(req);
+const ok = verifyStandardWebhook({
+  secret: process.env.GUIAFLOW_WEBHOOK_SECRET,
+  id: req.headers["webhook-id"],
+  timestamp: req.headers["webhook-timestamp"],
+  signature: req.headers["webhook-signature"],
+  body: raw,
+});</code></pre>
+      <p>The n8n templates already include this step (<strong>Raw Body</strong> on the webhook and a <strong>Verificar assinatura</strong> code node). Replace <code>whsec_COLE_O_SEGREDO</code>. Make and Zapier answer 200 as soon as they accept the call, before later modules run, so they do not reject a bad signature in the HTTP response. Use n8n or the Node example when a forged POST must be refused.</p>
+    </section>
+    <section class="card" id="planilha">
+      <h2>Google Sheets</h2>
+      <p>One row per contact, on a sheet named <strong>Leads</strong>. Create the header row in this order:</p>
+      <p><code>id</code>, <code>criado_em</code>, <code>origem</code>, <code>nome</code>, <code>email</code>, <code>telefone</code>, <code>mensagem</code>, <code>tour</code>, <code>url</code>, <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>referrer</code>, <code>consentimento</code>.</p>
+      <h3>Make</h3>
+      <ol>
+        <li>Create a scenario. Add <strong>Webhooks → Custom webhook</strong>, click <strong>Add</strong>, name it and copy the URL into GuiaFlow.</li>
+        <li>Save the webhook in the editor and click <strong>Send test</strong>. In Make, <strong>Run once</strong> so it learns the JSON.</li>
+        <li>Add <strong>Google Sheets → Add a row</strong>. Connect Google, pick the spreadsheet and the Leads sheet.</li>
+        <li>Map each column: <code>nome</code> from <code>lead.name</code>, <code>email</code> from <code>lead.email</code>, <code>telefone</code> from <code>lead.phone</code> (E.164), <code>tour</code> from <code>tour.title</code>, <code>url</code> from <code>tour.url</code>, <code>id</code> from the event id, <code>utm_*</code> and <code>referrer</code> from <code>context</code>, and <code>consentimento</code> from <code>lead.consent.given</code>.</li>
+        <li>Turn the scenario on.</li>
+      </ol>
+      <p>HTTP blueprint, if you already have a Google OAuth token for the Sheets API: <a href="/downloads/webhooks/make-google-sheets.json">make-google-sheets.json</a>. Import it into a new scenario (three-dot menu → <strong>Import blueprint</strong>). On the first module, create a new webhook. Replace <code>SEU_ID_DA_PLANILHA</code> and <code>SEU_TOKEN_GOOGLE</code>. The row is appended on the Leads sheet, in the header order above.</p>
+      <h3>n8n</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/n8n-google-sheets.json">n8n-google-sheets.json</a> (workflow menu → Import from file).</li>
+        <li>In <strong>Verificar assinatura</strong>, paste the <code>whsec_…</code>. In <strong>Acrescentar linha</strong>, connect Google and replace <code>SEU_ID_DA_PLANILHA</code> with the id in <code>/spreadsheets/d/</code> in the spreadsheet URL. The sheet must be named Leads.</li>
+        <li>Copy the production webhook URL (not the test URL) into GuiaFlow. Send the test and activate the workflow.</li>
+      </ol>
+      <p>In Zapier the trigger is <strong>Webhooks by Zapier → Catch Hook</strong> and the action is <strong>Google Sheets → Create Spreadsheet Row</strong>. See <a href="#zapier">Zapier</a>.</p>
+    </section>
+    <section class="card" id="pipefy">
+      <h2>Pipefy</h2>
+      <p>Creates a card directly in a phase. The pipe id is the number in the URL: <code>https://app.pipefy.com/pipes/123456</code>. Phase and field ids come from this query (a token from <a href="https://app.pipefy.com/tokens" target="_blank" rel="noopener">app.pipefy.com/tokens</a>, or a service account, which Pipefy recommends for production):</p>
+      <pre><code>{
+  pipe(id: 123456) {
+    name
+    phases { id name }
+    start_form_fields { id label required type }
+  }
+}</code></pre>
+      <p><code>POST https://api.pipefy.com/graphql</code> with <code>Authorization: Bearer</code> and the token. Mutation reference: <a href="https://developers.pipefy.com/reference/create-a-card-with-the-required-fields-fulfilled" target="_blank" rel="noopener">createCard</a>.</p>
+      <h3>Make</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/make-pipefy.json">make-pipefy.json</a>. On the webhook, click <strong>Add</strong> and copy the URL into GuiaFlow.</li>
+        <li>In the HTTP module, replace <code>SEU_TOKEN_PIPEFY</code>. In the body, <code>pipe</code> and <code>phase</code> are <code>"0"</code>: put the real ids. The sample <code>field_id</code> values are <code>nome</code>, <code>email</code> and <code>telefone</code> — use the ids from the query, and include every required start-form field.</li>
+        <li>Send the test from the editor. The response must include <code>data.createCard.card.id</code>. An <code>errors</code> array means the card was not created.</li>
+        <li>Turn the scenario on. The same result is available with <strong>Pipefy → Create a Card</strong>: pick the pipe and the phase from the list and map <code>lead.name</code>, <code>lead.email</code> and <code>lead.phone</code>.</li>
+      </ol>
+      <h3>n8n</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/n8n-pipefy.json">n8n-pipefy.json</a>.</li>
+        <li>Paste the secret into the signature node. In <strong>Criar card</strong>, replace the token, <code>pipe</code>, <code>phase</code> and the <code>field_id</code> values.</li>
+        <li>Paste the production URL into GuiaFlow, send the test and activate.</li>
+      </ol>
+      <p>In Zapier: <strong>Webhooks by Zapier → Catch Hook</strong>, then <strong>Pipefy → Create Card</strong>.</p>
+    </section>
+    <section class="card" id="pipedrive">
+      <h2>Pipedrive</h2>
+      <p>Creates the person with API v2 and a lead linked to that person (<code>POST /api/v1/leads</code>). The host is your company domain, the same one in the browser bar: <code>https://SUA_EMPRESA.pipedrive.com</code>. The token is under Personal preferences → API and is sent in the <code>x-api-token</code> header. Reference: <a href="https://developers.pipedrive.com/docs/api/v1/Persons" target="_blank" rel="noopener">persons (v2)</a> and <a href="https://developers.pipedrive.com/docs/api/v1/Leads#addLead" target="_blank" rel="noopener">leads</a>.</p>
+      <h3>Make</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/make-pipedrive.json">make-pipedrive.json</a>. Create the webhook on the first module and paste the URL into GuiaFlow.</li>
+        <li>In both HTTP modules, replace <code>SUA_EMPRESA</code> and <code>SEU_TOKEN_PIPEDRIVE</code>. The second module reads <code>data.id</code> from the person just created and stores the GuiaFlow lead id in <code>origin_id</code>.</li>
+        <li>If a contact has no email or no phone, remove the matching empty array from the person body. Send the test and check the person and the lead in Pipedrive.</li>
+        <li>The same flow exists as <strong>Pipedrive → Create a Person</strong> and <strong>Create a Lead</strong>, mapping name, email and phone.</li>
+      </ol>
+      <h3>n8n</h3>
+      <ol>
+        <li>Import <a href="/downloads/webhooks/n8n-pipedrive.json">n8n-pipedrive.json</a>.</li>
+        <li>Paste the secret. In <strong>Criar pessoa</strong> and <strong>Criar lead</strong>, replace the subdomain and the token.</li>
+        <li>Production URL in GuiaFlow, then test and activate.</li>
+      </ol>
+      <p>In Zapier: <strong>Webhooks by Zapier → Catch Hook</strong>, then <strong>Pipedrive → Create Person</strong>. A following step can create the lead with that person id.</p>
+    </section>
+    <section class="card" id="zapier">
+      <h2>Zapier</h2>
+      <p>Zapier starts from the <strong>Webhooks by Zapier</strong> trigger, event <strong>Catch Hook</strong>. There is no connector named GuiaFlow.</p>
+      <ol>
+        <li>Create a Zap. For the trigger, choose <strong>Webhooks by Zapier → Catch Hook</strong> and copy the URL into the tour webhook.</li>
+        <li>In the GuiaFlow editor, save and click <strong>Send test</strong>. In Zapier, test the trigger so it shows <code>lead</code>, <code>tour</code> and <code>context</code>.</li>
+        <li>The action depends on the destination: <strong>Google Sheets → Create Spreadsheet Row</strong>, <strong>Pipefy → Create Card</strong> or <strong>Pipedrive → Create Person</strong>. Map name, email, phone and the tour title.</li>
+        <li>Publish the Zap.</li>
+      </ol>
+      <p>Catch Hook does not check the HMAC. To refuse a POST without a valid signature, use the n8n template or <a href="/downloads/webhooks/verify-signature.mjs">verify-signature.mjs</a>.</p>
+    </section>
+    <section class="card" id="entrega">
+      <h2>Delivery and retries</h2>
+      <ul>
+        <li>GuiaFlow waits at most 5 seconds and does not follow redirects. Any 2xx counts as delivered.</li>
+        <li>When the call fails, the same message is sent again with the same <code>webhook-id</code> and a new signature. After the immediate attempt the gaps are 1 minute, 5 minutes, 30 minutes, 2 hours and 12 hours.</li>
+        <li>About 20 failures in a row turn the webhook off. Saving again, or rotating the secret, clears the count.</li>
+        <li>A destination that answers 200 and only then writes the card can duplicate the contact if the write takes longer than 5 seconds: GuiaFlow tries again. The lead <code>id</code> is the key for spotting the duplicate.</li>
+      </ul>
+      <p>Questions: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </div>

@@ -1,0 +1,116 @@
+{
+  "name": "GuiaFlow para Pipedrive",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": null,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "label": "Crie um webhook novo ao importar"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth",
+        "tlsType": "",
+        "proxyKeychain": ""
+      },
+      "mapper": {
+        "url": "https://SUA_EMPRESA.pipedrive.com/api/v2/persons",
+        "method": "post",
+        "headers": [
+          {
+            "name": "x-api-token",
+            "value": "SEU_TOKEN_PIPEDRIVE"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "parseResponse": true,
+        "body": "{\"name\":\"{{1.lead.name}}\",\"emails\":[{\"value\":\"{{1.lead.email}}\",\"primary\":true}],\"phones\":[{\"value\":\"{{1.lead.phone}}\",\"primary\":true}]}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 320,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:MakeRequest",
+      "version": 4,
+      "parameters": {
+        "authenticationType": "noAuth",
+        "tlsType": "",
+        "proxyKeychain": ""
+      },
+      "mapper": {
+        "url": "https://SUA_EMPRESA.pipedrive.com/api/v1/leads",
+        "method": "post",
+        "headers": [
+          {
+            "name": "x-api-token",
+            "value": "SEU_TOKEN_PIPEDRIVE"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "qs": [],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "parseResponse": true,
+        "body": "{\"title\":\"{{1.tour.title}} — {{1.lead.email}}\",\"person_id\":\"{{2.data.id}}\",\"origin_id\":\"{{1.id}}\"}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 640,
+          "y": 0
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "instant": true,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    }
+  }
+}

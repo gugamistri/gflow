@@ -1,0 +1,102 @@
+{
+  "name": "GuiaFlow para Pipefy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "guiaflow-pipefy",
+        "responseMode": "lastNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "8f0c1a10-6fe3-4a11-9c02-000000000001",
+      "name": "GuiaFlow",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "8f0c1a10-6fe3-4a11-9c02-000000000001"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Cole no nó Code do n8n (Run Once for All Items), depois do Webhook com Raw Body ligado.\n// Troque o segredo pelo whsec_ do diálogo Leads. O corpo usado é o byte cru do POST.\nconst SECRET = \"whsec_COLE_O_SEGREDO\";\n\nfunction guiaflowSignatureOk(input) {\n  const id = input.id;\n  const timestamp = input.timestamp;\n  const signature = input.signature;\n  const raw = input.raw;\n  const nowSec = input.nowSec;\n  const toleranceSec = 300;\n  const ts = Number(timestamp);\n  if (!id || timestamp == null || timestamp === \"\" || !signature || typeof raw !== \"string\") return false;\n  if (!Number.isInteger(ts)) return false;\n  if (Math.abs(nowSec - ts) > toleranceSec) return false;\n  const secret = String(input.secret || \"\");\n  if (!secret.startsWith(\"whsec_\")) return false;\n  const b64 = secret.slice(\"whsec_\".length);\n  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) return false;\n  let keyBytes;\n  try {\n    const bin = atob(b64);\n    keyBytes = new Uint8Array(bin.length);\n    for (let i = 0; i < bin.length; i++) keyBytes[i] = bin.charCodeAt(i);\n  } catch {\n    return false;\n  }\n  if (!keyBytes.length) return false;\n  let round = \"\";\n  for (const b of keyBytes) round += String.fromCharCode(b);\n  if (btoa(round).replace(/=+$/, \"\") !== b64.replace(/=+$/, \"\")) return false;\n  return crypto.subtle\n    .importKey(\"raw\", keyBytes, { name: \"HMAC\", hash: \"SHA-256\" }, false, [\"sign\"])\n    .then(async (key) => {\n      const signed = new TextEncoder().encode(`${id}.${ts}.${raw}`);\n      const mac = new Uint8Array(await crypto.subtle.sign(\"HMAC\", key, signed));\n      let binary = \"\";\n      for (const b of mac) binary += String.fromCharCode(b);\n      const expected = btoa(binary);\n      const expectedBytes = new TextEncoder().encode(expected);\n      for (const part of String(signature).split(\" \")) {\n        const comma = part.indexOf(\",\");\n        if (comma < 0 || part.slice(0, comma) !== \"v1\") continue;\n        const got = new TextEncoder().encode(part.slice(comma + 1));\n        if (got.length !== expectedBytes.length) continue;\n        let diff = 0;\n        for (let i = 0; i < got.length; i++) diff |= got[i] ^ expectedBytes[i];\n        if (diff === 0) return true;\n      }\n      return false;\n    });\n}\n\nconst item = $input.first();\nconst headers = item.json.headers || {};\nlet raw;\ntry {\n  raw = (await this.helpers.getBinaryDataBuffer(0, \"data\")).toString(\"utf8\");\n} catch (err) {\n  throw new Error(\"Ative Raw Body nas opções do webhook.\");\n}\nconst ok = await guiaflowSignatureOk({\n  secret: SECRET,\n  id: headers[\"webhook-id\"],\n  timestamp: headers[\"webhook-timestamp\"],\n  signature: headers[\"webhook-signature\"],\n  raw,\n  nowSec: Math.floor(Date.now() / 1000),\n});\nif (!ok) throw new Error(\"Assinatura do GuiaFlow inválida\");\n\nconst body = JSON.parse(raw);\nconst lead = body.lead || {};\nconst tour = body.tour || {};\nconst context = body.context || {};\nreturn [\n  {\n    json: {\n      type: body.type || \"\",\n      id: body.id || \"\",\n      createdAt: body.createdAt || \"\",\n      source: body.source || \"\",\n      name: lead.name || \"\",\n      email: lead.email || \"\",\n      phone: lead.phone || \"\",\n      message: lead.message || \"\",\n      lang: lead.lang || \"\",\n      consent: lead.consent && typeof lead.consent === \"object\" ? Boolean(lead.consent.given) : Boolean(lead.consent),\n      tour: tour.title || \"\",\n      tourUrl: tour.url || \"\",\n      slug: tour.slug || \"\",\n      referrerHost: context.referrerHost || \"\",\n      utm_source: context.utm_source || \"\",\n      utm_medium: context.utm_medium || \"\",\n      utm_campaign: context.utm_campaign || \"\",\n      embed: Boolean(context.embed),\n      device: context.device || \"\",\n    },\n  },\n];\n"
+      },
+      "id": "8f0c1a10-6fe3-4a11-9c02-000000000002",
+      "name": "Verificar assinatura",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipefy.com/graphql",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer SEU_TOKEN_PIPEFY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query: \"mutation ($pipe: ID!, $phase: ID!, $title: String!, $name: String, $email: String, $phone: String) {\\n  createCard(input: {\\n    pipe_id: $pipe\\n    phase_id: $phase\\n    title: $title\\n    fields_attributes: [\\n      { field_id: \\\"nome\\\", field_value: $name }\\n      { field_id: \\\"email\\\", field_value: $email }\\n      { field_id: \\\"telefone\\\", field_value: $phone }\\n    ]\\n  }) { card { id } }\\n}\", variables: { pipe: \"0\", phase: \"0\", title: $json.name || $json.email || \"Lead GuiaFlow\", name: $json.name, email: $json.email, phone: $json.phone } }) }}",
+        "options": {
+          "timeout": 4000
+        }
+      },
+      "id": "8f0c1a10-6fe3-4a11-9c02-000000000003",
+      "name": "Criar card",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "GuiaFlow": {
+      "main": [
+        [
+          {
+            "node": "Verificar assinatura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar assinatura": {
+      "main": [
+        [
+          {
+            "node": "Criar card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -51,6 +51,16 @@
       "permanent": true
     },
     {
+      "source": "/en/integracoes/leads",
+      "destination": "/en/integrations/leads",
+      "permanent": true
+    },
+    {
+      "source": "/es/integracoes/leads",
+      "destination": "/es/integraciones/leads",
+      "permanent": true
+    },
+    {
       "source": "/es/integracoes",
       "destination": "/es/integraciones",
       "permanent": true
