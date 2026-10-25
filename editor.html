@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/149/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/149/css/theme.css" />
-  <link rel="stylesheet" href="a/149/css/shell.css" />
-  <link rel="stylesheet" href="a/149/css/player.css" />
-  <link rel="stylesheet" href="a/149/css/editor.css" />
-  <link rel="stylesheet" href="a/149/css/collab.css" />
-  <link rel="stylesheet" href="a/149/css/comments.css" />
+  <link rel="stylesheet" href="a/150/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/150/css/theme.css" />
+  <link rel="stylesheet" href="a/150/css/shell.css" />
+  <link rel="stylesheet" href="a/150/css/player.css" />
+  <link rel="stylesheet" href="a/150/css/editor.css" />
+  <link rel="stylesheet" href="a/150/css/collab.css" />
+  <link rel="stylesheet" href="a/150/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/149/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/149/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/150/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/150/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -461,7 +461,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/149/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/149/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/150/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/150/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1137,7 +1137,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/149/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/150/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1396,6 +1396,31 @@
           <button type="button" class="btn" id="btn-leads-webhook-test" data-i18n="leads.webhook.test">Enviar teste</button>
           <button type="button" class="btn" id="btn-leads-webhook-remove" data-i18n="leads.webhook.remove" hidden>Remover</button>
           <a class="embed-guide" id="leads-webhook-help" href="/integracoes#webhook" target="_blank" rel="noopener" data-i18n="leads.webhook.help">Como conectar</a>
+        </div>
+      </section>
+      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading">
+        <h4 id="leads-rd-heading">
+          <span data-i18n="leads.rd.title">RD Station Marketing</span>
+          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </h4>
+        <p class="leads-webhook-lead" data-i18n="leads.rd.lead">Cada contato novo vira uma conversão no RD Station Marketing.</p>
+        <label class="leads-webhook-field" for="leads-rd-key">
+          <span data-i18n="leads.rd.key">Chave de API</span>
+          <input type="password" id="leads-rd-key" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="500" data-i18n-aria="leads.rd.key" aria-label="Chave de API" />
+        </label>
+        <p class="fixed-hint" id="leads-rd-key-hint" data-i18n="leads.rd.keyHint">Cole a chave pública. Depois de salvar, ela não aparece de novo: só os 4 últimos caracteres.</p>
+        <label class="fixed-check">
+          <input type="checkbox" id="leads-rd-enabled" checked />
+          <span data-i18n="leads.rd.enabled">Enviar contatos como conversão</span>
+        </label>
+        <p class="fixed-hint" data-i18n="leads.rd.mapping">O evento de conversão é o título do tour (ou o slug, se o título estiver vazio). Nome, e-mail, telefone, UTMs e o consentimento vão nos campos do RD Station. Mensagem, idioma e a origem da visita vão em campos cf_guiaflow_*.</p>
+        <p class="leads-webhook-delivery" id="leads-rd-delivery" role="status"></p>
+        <p class="leads-webhook-status" id="leads-rd-status" role="status"></p>
+        <div class="leads-webhook-actions">
+          <button type="button" class="btn btn-primary" id="btn-leads-rd-save" data-i18n="leads.rd.save">Salvar</button>
+          <button type="button" class="btn" id="btn-leads-rd-test" data-i18n="leads.rd.test">Enviar teste</button>
+          <button type="button" class="btn" id="btn-leads-rd-remove" data-i18n="leads.rd.disconnect" hidden>Desconectar</button>
+          <a class="embed-guide" id="leads-rd-help" href="/integracoes#rd-station" target="_blank" rel="noopener" data-i18n="leads.rd.help">Como conectar</a>
         </div>
       </section>
       <div class="studio-modal-actions">
@@ -2129,8 +2154,8 @@
     </symbol>
   </svg>
 
-  <script src="a/149/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/149/js/app.js"></script>
+  <script src="a/150/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/150/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

@@ -232,7 +232,8 @@ test("o HTML publicado aponta app.guiaflow.pro e os assets em a/83", () => {
   }
   for (const file of ["../index.html", "../editor.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(text, /a\/149\//);
+    assert.match(text, /a\/150\//);
+    assert.equal(text.includes("a/149/"), false);
     assert.equal(text.includes("a/147/"), false);
     assert.equal(text.includes("a/146/"), false);
     assert.equal(text.includes("a/70/"), false);
