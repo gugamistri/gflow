@@ -6283,6 +6283,105 @@ dialog.leads-modal {
   color: var(--ns-danger);
 }
 
+.leads-webhook {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ns-border);
+}
+
+.leads-webhook h4 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.leads-webhook h4 .pro-badge {
+  margin-left: 0;
+}
+
+.leads-webhook-lead,
+.leads-webhook-status,
+.leads-webhook-delivery {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--ns-muted);
+}
+
+.leads-webhook-status:empty,
+.leads-webhook-delivery:empty {
+  display: none;
+}
+
+.leads-webhook-status.is-error {
+  color: var(--ns-danger);
+  font-weight: 650;
+}
+
+.leads-webhook-field {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.leads-webhook-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--ns-ink) 42%, var(--ns-input-bg));
+  border-radius: 8px;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  -webkit-text-fill-color: var(--ns-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.leads-webhook-field input::placeholder {
+  color: var(--ns-muted);
+  -webkit-text-fill-color: var(--ns-muted);
+  opacity: 1;
+}
+
+.leads-webhook-field input:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 1px;
+}
+
+.leads-webhook-secret-row,
+.leads-webhook-actions,
+.leads-webhook-secret-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.leads-webhook-secret-row {
+  align-items: end;
+}
+
+.leads-webhook-secret-row .leads-webhook-field {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+@media (max-width: 720px), (pointer: coarse) {
+  .leads-webhook-field input {
+    font-size: 16px;
+  }
+}
+
 /* Análise do tour (Pro) */
 dialog.analytics-modal {
   width: min(760px, calc(100vw - 24px));

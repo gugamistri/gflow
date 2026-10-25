@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/148/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/148/css/theme.css" />
-  <link rel="stylesheet" href="a/148/css/shell.css" />
-  <link rel="stylesheet" href="a/148/css/player.css" />
-  <link rel="stylesheet" href="a/148/css/editor.css" />
-  <link rel="stylesheet" href="a/148/css/collab.css" />
-  <link rel="stylesheet" href="a/148/css/comments.css" />
+  <link rel="stylesheet" href="a/149/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/149/css/theme.css" />
+  <link rel="stylesheet" href="a/149/css/shell.css" />
+  <link rel="stylesheet" href="a/149/css/player.css" />
+  <link rel="stylesheet" href="a/149/css/editor.css" />
+  <link rel="stylesheet" href="a/149/css/collab.css" />
+  <link rel="stylesheet" href="a/149/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/148/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/148/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/149/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/149/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -461,7 +461,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/148/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/148/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/149/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/149/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1137,7 +1137,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/148/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/149/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1361,6 +1361,43 @@
       <p class="leads-status" id="leads-status" role="status"></p>
       <div class="leads-list" id="leads-list" role="list"></div>
       <p class="fixed-hint" data-i18n="leads.controllerNote">Você controla estes dados (LGPD). Use só para a finalidade informada e exclua quando o titular pedir.</p>
+      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading">
+        <h4 id="leads-webhook-heading">
+          <span data-i18n="leads.webhook.title">Webhook</span>
+          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </h4>
+        <p class="leads-webhook-lead" data-i18n="leads.webhook.lead">Cada contato novo sai para o endereço abaixo, assinado. Use Make, n8n, Zapier, o LeadPronto ou o seu sistema.</p>
+        <label class="leads-webhook-field">
+          <span data-i18n="leads.webhook.url">URL (https://)</span>
+          <input type="url" id="leads-webhook-url" inputmode="url" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="2000" placeholder="https://" />
+        </label>
+        <label class="fixed-check">
+          <input type="checkbox" id="leads-webhook-enabled" checked />
+          <span data-i18n="leads.webhook.enabled">Enviar contatos para esta URL</span>
+        </label>
+        <div class="leads-webhook-secret-row">
+          <label class="leads-webhook-field" for="leads-webhook-secret">
+            <span data-i18n="leads.webhook.secret">Segredo</span>
+            <input type="password" id="leads-webhook-secret" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="220" placeholder="whsec_…" data-i18n-aria="leads.webhook.secret" aria-label="Segredo" />
+          </label>
+          <div class="leads-webhook-secret-actions">
+            <button type="button" class="btn" id="btn-leads-webhook-generate" data-i18n="leads.webhook.generate">Gerar</button>
+            <button type="button" class="btn" id="btn-leads-webhook-paste" data-i18n="leads.webhook.paste">Colar</button>
+            <button type="button" class="btn" id="btn-leads-webhook-reveal" data-i18n="leads.webhook.reveal">Revelar</button>
+            <button type="button" class="btn" id="btn-leads-webhook-rotate" data-i18n="leads.webhook.rotate">Girar</button>
+            <button type="button" class="btn" id="btn-leads-webhook-copy" data-i18n="leads.webhook.copy" hidden>Copiar</button>
+          </div>
+        </div>
+        <p class="fixed-hint" data-i18n="leads.webhook.secretHint">Começa com whsec_. Cole o segredo do destino ou gere um aqui. Revelar mostra o atual; girar troca.</p>
+        <p class="leads-webhook-delivery" id="leads-webhook-delivery" role="status"></p>
+        <p class="leads-webhook-status" id="leads-webhook-status" role="status"></p>
+        <div class="leads-webhook-actions">
+          <button type="button" class="btn btn-primary" id="btn-leads-webhook-save" data-i18n="leads.webhook.save">Salvar webhook</button>
+          <button type="button" class="btn" id="btn-leads-webhook-test" data-i18n="leads.webhook.test">Enviar teste</button>
+          <button type="button" class="btn" id="btn-leads-webhook-remove" data-i18n="leads.webhook.remove" hidden>Remover</button>
+          <a class="embed-guide" id="leads-webhook-help" href="/integracoes#webhook" target="_blank" rel="noopener" data-i18n="leads.webhook.help">Como conectar</a>
+        </div>
+      </section>
       <div class="studio-modal-actions">
         <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
         <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
@@ -2092,8 +2129,8 @@
     </symbol>
   </svg>
 
-  <script src="a/148/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/148/js/app.js"></script>
+  <script src="a/149/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/149/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

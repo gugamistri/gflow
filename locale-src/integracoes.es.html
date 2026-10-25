@@ -45,6 +45,16 @@
   }
 }</code></pre>
     </section>
+    <section class="card" id="webhook">
+      <h2>Webhook de leads</h2>
+      <p>En el editor, abre los contactos del enlace permanente. La sección <strong>Webhook</strong> (Pro) envía cada contacto a una dirección https, firmado.</p>
+      <ol>
+        <li>Pega la URL https del destino (Make, n8n, Zapier, LeadPronto o tu propio sistema).</li>
+        <li>Genera un secreto <code>whsec_…</code> o pega el que creó el destino. Después puedes revelarlo y girarlo.</li>
+        <li>Guarda y usa <strong>Enviar prueba</strong>. El último envío aparece en la misma sección.</li>
+      </ol>
+      <p>El contacto lleva el origen de la visita: los parámetros <code>utm_*</code> y el sitio del que llegó la persona.</p>
+    </section>
     <section class="card">
       <h2>Qué pedir</h2>
       <p>Ejemplos: “Crea un tour con estas 4 capturas y publícalo”, “Escribe los textos de los pasos con IA”, “¿Cuántas personas completaron el tour del checkout esta semana?”.</p>

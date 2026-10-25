@@ -9,7 +9,7 @@ import { applyDocumentLang, createLangMenu, readStoredLangs, resolvePlayerLangs,
 import { setCaptions } from "./playerControls.js";
 import { baseLang, langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
-import { createViewTracker, ctaFromAction, defaultSender, deviceKind, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
+import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
 import { resolveShareMedia } from "./shareMedia.js";
 import {
   decideEscape,
@@ -324,6 +324,16 @@ function storeLead(value) {
   }
 }
 
+/** Corpo do lead com o idioma visto e a origem (utm_* e referrerHost) para o webhook. */
+function leadBody(value) {
+  const body = value && typeof value === "object" ? { ...value } : {};
+  if (langState) body.lang = langState.text;
+  const referrer = typeof document !== "undefined" ? document.referrer : "";
+  const search = typeof location !== "undefined" ? location.search : "";
+  const origin = typeof location !== "undefined" ? location.origin : "";
+  return { ...body, ...leadAttribution(referrer, search, origin) };
+}
+
 /** POST público do link permanente (leads ou contact); sem cookies nem token. */
 async function postShare(kind, body) {
   const endpoint = `${permanentShareEndpoint(getCloudBaseUrl() || PUBLISHED_CLOUD_BASE, shareSlug)}/${kind}`;
@@ -357,7 +367,7 @@ function endCard() {
           consentText: step.contact.consentText,
           phoneCountry: leadPhoneCountry(),
           prefill: fixedState.lead || {},
-          onSubmit: (value) => postShare("contact", langState ? { ...value, lang: langState.text } : value),
+          onSubmit: (value) => postShare("contact", leadBody(value)),
           onCancel: () => showFixedCard(endCard()),
         })
       );
@@ -420,7 +430,7 @@ function showStartStep(next) {
     phoneCountry: leadPhoneCountry(),
     onSubmit: async (value) => {
       // RF30: o servidor grava o consentimento no idioma que o visitante viu
-      const res = await postShare("leads", langState ? { ...value, lang: langState.text } : value);
+      const res = await postShare("leads", leadBody(value));
       if (res.ok) {
         // why: o id do lead só existe com consentimento (obrigatório no envio) — o analytics pode usá-lo
         const lead = { leadId: String(res.data?.leadId || ""), name: value.name || "", email: value.email || "", phone: value.phone || "" };

@@ -608,6 +608,7 @@ const fixedStepsEditor = createFixedStepsEditor({
 const leadsDialog = createLeadsDialog({
   getSlug: () => (viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : ""),
   toast,
+  onPaywall: () => openFeatureGate("leads"),
 });
 
 const apiKeysDialog = createApiKeysDialog({ toast, onUpgrade: () => showUpgradeDialog() });

@@ -45,6 +45,16 @@
   }
 }</code></pre>
     </section>
+    <section class="card" id="webhook">
+      <h2>Lead webhook</h2>
+      <p>In the editor, open the contacts for the permanent link. The <strong>Webhook</strong> section (Pro) sends each contact to an https address, signed.</p>
+      <ol>
+        <li>Paste the destination's https URL (Make, n8n, Zapier, LeadPronto, or your own system).</li>
+        <li>Generate a <code>whsec_…</code> secret or paste the one the destination created. You can reveal and rotate it later.</li>
+        <li>Save and use <strong>Send test</strong>. The last delivery shows in the same section.</li>
+      </ol>
+      <p>The contact includes where the visit came from: <code>utm_*</code> parameters and the site the person came from.</p>
+    </section>
     <section class="card">
       <h2>What to ask</h2>
       <p>Examples: “Build a tour from these 4 screenshots and publish it”, “Write the step copy with AI”, “How many people finished the checkout tour this week?”.</p>
