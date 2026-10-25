@@ -6159,6 +6159,107 @@ dialog.fixed-modal[open] {
   vertical-align: middle;
 }
 
+/* Captura: abas no topo, formulário à esquerda e prévia à direita (abaixo no celular). */
+dialog.capture-modal {
+  width: min(980px, calc(100vw - 24px));
+  max-width: 980px;
+}
+
+.capture-modal .capture-tablist {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  position: static;
+  margin: 0;
+  background: transparent;
+}
+
+.capture-modal .capture-tab {
+  flex: 1 1 auto;
+  min-width: min(100%, 9.5rem);
+  white-space: normal;
+}
+
+.capture-tab .pro-badge {
+  flex: 0 0 auto;
+}
+
+.capture-pane {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
+
+.capture-pane[hidden] {
+  display: none !important;
+}
+
+.capture-modal .capture-line {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  color: var(--ns-ink);
+  font-weight: 600;
+}
+
+.capture-modal .capture-stack {
+  display: grid;
+  gap: 4px;
+  color: var(--ns-ink);
+}
+
+.capture-modal .fixed-config textarea {
+  min-height: 44px;
+  max-height: 4.2rem;
+}
+
+.capture-end-split {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+.capture-end-split > .fixed-group {
+  min-width: 0;
+}
+
+.capture-end-split .capture-line {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .capture-end-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.capture-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .capture-btn span { display: none; }
+}
+
+@media (max-width: 720px) {
+  .capture-modal .capture-line {
+    grid-template-columns: 1fr;
+  }
+  .capture-modal .capture-tab {
+    flex: 1 1 calc(50% - 4px);
+    max-width: calc(50% - 2px);
+    min-width: 0;
+  }
+}
+
+body.is-compact-touch .capture-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
 .fixed-preview .fixed-card .fixed-form .fixed-input {
   min-height: 34px;
   padding: 6px 9px;

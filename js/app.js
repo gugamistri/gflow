@@ -599,11 +599,14 @@ const fixedStepsEditor = createFixedStepsEditor({
   viewerIsPro: () => viewerIsPro(),
   openFeatureGate: (feature) => openFeatureGate(feature),
   openLeads: () => leadsDialog.open(),
+  cloudShareEnabled: () => cloudShareEnabled(),
+  notify: (key) => toast(t(key), 4200),
   onSaved: (kind) => {
     onChange();
     editor.refresh();
     paintShareMenu();
-    toast(t(kind === "start" ? "fixed.start.saved" : "fixed.saved"), 4200);
+    const key = kind === "start" ? "fixed.start.saved" : kind === "end" ? "fixed.saved" : "capture.saved";
+    toast(t(key), 4200);
   },
 });
 
@@ -850,12 +853,8 @@ function openAnalytics() {
   analyticsDialog.open();
 }
 
-/** Início = captura de lead (Pro, precisa do link permanente); Fim = livre. */
+/** 📌 Início abre Formulário inicial; 📌 Fim abre Passo final. O Pro trava ao ligar, não ao abrir. */
 function openFixedStep(kind) {
-  if (kind === "start" && !cloudShareEnabled()) {
-    toast(t("fixed.start.needsCloud"), 4200);
-    return;
-  }
   fixedStepsEditor.open(kind);
 }
 
@@ -4015,6 +4014,7 @@ function bindChrome() {
   });
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
+  document.getElementById("btn-capture")?.addEventListener("click", () => openFixedStep("form"));
   document.getElementById("btn-results")?.addEventListener("click", () => openAnalytics());
   document.addEventListener("click", (e) => {
     const tab = e.target.closest?.("[data-results-tab]");

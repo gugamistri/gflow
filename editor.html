@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/154/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/154/css/theme.css" />
-  <link rel="stylesheet" href="a/154/css/shell.css" />
-  <link rel="stylesheet" href="a/154/css/player.css" />
-  <link rel="stylesheet" href="a/154/css/editor.css" />
-  <link rel="stylesheet" href="a/154/css/collab.css" />
-  <link rel="stylesheet" href="a/154/css/comments.css" />
+  <link rel="stylesheet" href="a/155/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/155/css/theme.css" />
+  <link rel="stylesheet" href="a/155/css/shell.css" />
+  <link rel="stylesheet" href="a/155/css/player.css" />
+  <link rel="stylesheet" href="a/155/css/editor.css" />
+  <link rel="stylesheet" href="a/155/css/collab.css" />
+  <link rel="stylesheet" href="a/155/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/154/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/154/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/155/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/155/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -234,6 +234,10 @@
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
+        <button type="button" class="btn btn-ghost capture-btn" id="btn-capture" aria-haspopup="dialog" aria-label="Captura" data-i18n-aria="capture.button" title="Formulário, campos e consentimento" data-i18n-title="capture.title">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-capture"></use></svg>
+          <span data-i18n="capture.button">Captura</span>
+        </button>
         <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
           <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
           <span data-i18n="results.button">Resultados</span>
@@ -461,7 +465,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/154/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/154/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/155/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/155/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1137,7 +1141,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/154/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/155/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1289,51 +1293,126 @@
     </form>
   </dialog>
 
-  <dialog class="studio-modal fixed-modal" id="modal-fixed-start" aria-labelledby="fixed-start-heading">
-    <form class="studio-modal-body fixed-dialog" id="fixed-start-form" novalidate>
+  <dialog class="studio-modal fixed-modal capture-modal" id="modal-capture" aria-labelledby="capture-heading">
+    <form class="studio-modal-body fixed-dialog" id="capture-form" novalidate>
       <div class="account-dialog-head">
-        <h3 id="fixed-start-heading"><span data-i18n="fixed.start.dialogTitle">Passo inicial: captura de contatos</span>
-          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-        </h3>
+        <h3 id="capture-heading" data-i18n="capture.dialogTitle">Captura</h3>
         <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
+      <div class="share-tablist capture-tablist" role="tablist" data-capture-tabs aria-label="Captura" data-i18n-aria="capture.tabsAria">
+        <button type="button" class="share-tab capture-tab" role="tab" id="tab-capture-form" data-capture-tab="form" aria-selected="true" aria-controls="pane-capture-form">
+          <span data-i18n="capture.tab.form">Formulário inicial</span>
+          <span class="pro-badge" id="capture-form-pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab capture-tab" role="tab" id="tab-capture-fields" data-capture-tab="fields" aria-selected="false" tabindex="-1" aria-controls="pane-capture-fields">
+          <span data-i18n="capture.tab.fields">Campos</span>
+        </button>
+        <button type="button" class="share-tab capture-tab" role="tab" id="tab-capture-end" data-capture-tab="end" aria-selected="false" tabindex="-1" aria-controls="pane-capture-end">
+          <span data-i18n="capture.tab.end">Passo final</span>
+        </button>
+        <button type="button" class="share-tab capture-tab" role="tab" id="tab-capture-consent" data-capture-tab="consent" aria-selected="false" tabindex="-1" aria-controls="pane-capture-consent">
+          <span data-i18n="capture.tab.consent">Consentimento</span>
+        </button>
+      </div>
       <div class="fixed-dialog-scroll">
-        <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
-        <div class="fixed-grid">
-          <div class="fixed-fields">
-            <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
-            <div class="fixed-config" id="fixed-start-config">
-              <div class="fixed-row">
-                <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
-                <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
-              </div>
-              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
-              <fieldset class="fixed-group">
-                <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
-                <div class="fixed-fields-table" id="fixed-start-fields">
-                  <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
-                  <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
-                  <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
-                  <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+        <div class="fixed-grid capture-grid">
+          <div class="capture-panes">
+            <div class="capture-pane" role="tabpanel" id="pane-capture-form" aria-labelledby="tab-capture-form">
+              <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
+              <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
+              <div class="fixed-config" id="fixed-start-config">
+                <label class="capture-line"><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
+                <label class="capture-line"><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
+                <label class="capture-line"><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
+                <div class="fixed-row fixed-row-inline">
+                  <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
+                  <label id="fixed-start-skip-label-wrap" class="fixed-inline-field"><span class="visually-hidden" data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
                 </div>
-                <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
-              </fieldset>
-              <div class="fixed-row fixed-row-inline">
-                <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
-                <label id="fixed-start-skip-label-wrap" class="fixed-inline-field"><span class="visually-hidden" data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
               </div>
-              <details class="fixed-more">
-                <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
-                <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
-                <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
-              </details>
+            </div>
+            <div class="capture-pane" role="tabpanel" id="pane-capture-fields" aria-labelledby="tab-capture-fields" hidden>
+              <p class="fixed-hint" id="capture-fields-off" hidden data-i18n="capture.fieldsOff">O formulário inicial está desligado. Ligue na aba Formulário inicial.</p>
+              <div class="fixed-config" id="fixed-start-fields-config">
+                <fieldset class="fixed-group">
+                  <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
+                  <div class="fixed-fields-table" id="fixed-start-fields">
+                    <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
+                    <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
+                    <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
+                    <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+                  </div>
+                  <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
+                </fieldset>
+              </div>
+            </div>
+            <div class="capture-pane" role="tabpanel" id="pane-capture-end" aria-labelledby="tab-capture-end" hidden>
+              <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
+              <div class="fixed-config" id="fixed-end-config">
+                <label class="capture-line"><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
+                <label class="capture-line"><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
+                <div class="capture-end-split">
+                <fieldset class="fixed-group">
+                  <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
+                  <div class="fixed-sub" id="fixed-end-wa-fields">
+                    <div class="wa-phone-field">
+                      <label for="fixed-end-wa-phone" id="fixed-end-wa-phone-label" data-i18n="fixed.end.waPhone">Número do WhatsApp</label>
+                      <div class="wa-phone">
+                        <button type="button" class="wa-cc" id="fixed-end-wa-cc" aria-haspopup="listbox" aria-expanded="false" aria-controls="fixed-end-wa-cc-pop"><span class="wa-cc-flag" id="fixed-end-wa-cc-flag" aria-hidden="true">🇧🇷</span><span class="wa-cc-dial" id="fixed-end-wa-cc-dial">+55</span><svg class="wa-cc-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                        <input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" aria-describedby="fixed-end-wa-error" />
+                      </div>
+                      <div class="wa-cc-pop" id="fixed-end-wa-cc-pop" hidden>
+                        <input type="search" class="wa-cc-search" id="fixed-end-wa-cc-search" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="fixed-end-wa-cc-list" aria-autocomplete="list" data-i18n-placeholder="fixed.end.waCountrySearch" placeholder="Buscar país ou código" data-i18n-aria="fixed.end.waCountrySearch" aria-label="Buscar país ou código" />
+                        <ul class="wa-cc-list" id="fixed-end-wa-cc-list" role="listbox" data-i18n-aria="fixed.end.waCountry" aria-label="País"></ul>
+                        <p class="wa-cc-empty" id="fixed-end-wa-cc-empty" hidden data-i18n="fixed.end.waNoCountry">Nenhum país encontrado.</p>
+                      </div>
+                      <p class="fixed-error" id="fixed-end-wa-error" role="alert" hidden>Número incompleto. Use DDD + número.</p>
+                    </div>
+                    <label class="capture-line"><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
+                    <label class="capture-line"><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500"></textarea></label>
+                    <details class="fixed-more">
+                      <summary data-i18n="stb.more">Mais opções</summary>
+                      <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Escolha o país e digite o número com DDD/código de área.</p>
+                      <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
+                    </details>
+                  </div>
+                </fieldset>
+                <fieldset class="fixed-group">
+                  <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
+                  <div class="fixed-sub" id="fixed-end-contact-fields">
+                    <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
+                      <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
+                      <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
+                        <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                      </label>
+                    </div>
+                    <label class="capture-line"><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
+                    <div id="fixed-end-link-fields">
+                      <label class="capture-line"><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
+                      <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
+                    </div>
+                    <div id="fixed-end-form-fields" hidden>
+                      <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
+                      <p class="fixed-hint" data-i18n="capture.consentEndHint">O texto do consentimento fica na aba Consentimento.</p>
+                    </div>
+                  </div>
+                </fieldset>
+                </div>
+                <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
+              </div>
+            </div>
+            <div class="capture-pane fixed-config" role="tabpanel" id="pane-capture-consent" aria-labelledby="tab-capture-consent" hidden>
+              <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
+              <label class="capture-stack"><span data-i18n="capture.consentStart">Formulário inicial</span><textarea id="fixed-start-consent" rows="2" maxlength="600" data-i18n-placeholder="fixed.consentDefault"></textarea></label>
+              <label class="capture-stack"><span data-i18n="capture.consentEnd">Enviar contato (formulário)</span><textarea id="fixed-end-consent" rows="2" maxlength="600" data-i18n-placeholder="fixed.consentDefault"></textarea></label>
+              <p class="fixed-hint" data-i18n="capture.consentEndHint">Vale quando “Enviar contato” está como formulário, no link permanente.</p>
             </div>
           </div>
           <div class="fixed-preview-wrap">
             <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
             <div class="fixed-preview" id="fixed-start-preview"></div>
+            <div class="fixed-preview" id="fixed-end-preview" hidden></div>
           </div>
         </div>
       </div>
@@ -1344,6 +1423,7 @@
       </div>
     </form>
   </dialog>
+
 
   <dialog class="studio-modal leads-modal" id="modal-leads" aria-labelledby="leads-heading">
     <div class="studio-modal-body leads-dialog">
@@ -1627,89 +1707,7 @@
     </div>
   </dialog>
 
-  <dialog class="studio-modal fixed-modal" id="modal-fixed-end" aria-labelledby="fixed-end-heading">
-    <form class="studio-modal-body fixed-dialog" id="fixed-end-form" novalidate>
-      <div class="account-dialog-head">
-        <h3 id="fixed-end-heading" data-i18n="fixed.end.dialogTitle">Passo final</h3>
-        <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="fixed-dialog-scroll">
-        <p class="fixed-lead" data-i18n="fixed.end.lead">Aparece quando o visitante conclui o tour. É um passo fixo: não entra no vídeo exportado.</p>
-        <div class="fixed-grid">
-          <div class="fixed-fields">
-            <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
-            <div class="fixed-config" id="fixed-end-config">
-              <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
-              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
-              <fieldset class="fixed-group">
-                <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
-                <div class="fixed-sub" id="fixed-end-wa-fields">
-                  <div class="wa-phone-field">
-                    <label for="fixed-end-wa-phone" id="fixed-end-wa-phone-label" data-i18n="fixed.end.waPhone">Número do WhatsApp</label>
-                    <div class="wa-phone">
-                      <button type="button" class="wa-cc" id="fixed-end-wa-cc" aria-haspopup="listbox" aria-expanded="false" aria-controls="fixed-end-wa-cc-pop"><span class="wa-cc-flag" id="fixed-end-wa-cc-flag" aria-hidden="true">🇧🇷</span><span class="wa-cc-dial" id="fixed-end-wa-cc-dial">+55</span><svg class="wa-cc-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      <input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" aria-describedby="fixed-end-wa-error" />
-                    </div>
-                    <div class="wa-cc-pop" id="fixed-end-wa-cc-pop" hidden>
-                      <input type="search" class="wa-cc-search" id="fixed-end-wa-cc-search" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="fixed-end-wa-cc-list" aria-autocomplete="list" data-i18n-placeholder="fixed.end.waCountrySearch" placeholder="Buscar país ou código" data-i18n-aria="fixed.end.waCountrySearch" aria-label="Buscar país ou código" />
-                      <ul class="wa-cc-list" id="fixed-end-wa-cc-list" role="listbox" data-i18n-aria="fixed.end.waCountry" aria-label="País"></ul>
-                      <p class="wa-cc-empty" id="fixed-end-wa-cc-empty" hidden data-i18n="fixed.end.waNoCountry">Nenhum país encontrado.</p>
-                    </div>
-                    <p class="fixed-error" id="fixed-end-wa-error" role="alert" hidden>Número incompleto. Use DDD + número.</p>
-                  </div>
-                  <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
-                  <label><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500"></textarea></label>
-                  <details class="fixed-more">
-                    <summary data-i18n="stb.more">Mais opções</summary>
-                    <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Escolha o país e digite o número com DDD/código de área.</p>
-                    <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
-                  </details>
-                </div>
-              </fieldset>
-              <fieldset class="fixed-group">
-                <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
-                <div class="fixed-sub" id="fixed-end-contact-fields">
-                  <div class="fixed-row fixed-row-seg">
-                    <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
-                      <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
-                      <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
-                        <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-                      </label>
-                    </div>
-                    <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
-                  </div>
-                  <div id="fixed-end-link-fields">
-                    <label><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
-                    <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
-                  </div>
-                  <div id="fixed-end-form-fields" hidden>
-                    <details class="fixed-more">
-                      <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
-                      <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
-                      <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-end-consent" rows="2" maxlength="600"></textarea></label>
-                    </details>
-                  </div>
-                </div>
-              </fieldset>
-              <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
-            </div>
-          </div>
-          <div class="fixed-preview-wrap">
-            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-            <div class="fixed-preview" id="fixed-end-preview"></div>
-          </div>
-        </div>
-      </div>
-      <div class="studio-modal-actions fixed-actions">
-        <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog class="studio-modal subscription-modal" id="modal-subscription" aria-labelledby="subscription-title">
+<dialog class="studio-modal subscription-modal" id="modal-subscription" aria-labelledby="subscription-title">
     <div class="studio-modal-body subscription-dialog">
       <div class="account-dialog-head">
         <h3 id="subscription-title" data-i18n="billing.manage">Gerenciar assinatura</h3>
@@ -2217,6 +2215,7 @@
       <path d="m15 14 5-5-5-5" />
       <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" />
     </symbol>
+    <symbol id="i-capture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h6l4 4v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v4h4M9 13h6M9 17h4"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M20 21a8 8 0 0 0-16 0" />
       <circle cx="12" cy="7" r="4" />
@@ -2229,8 +2228,8 @@
     </symbol>
   </svg>
 
-  <script src="a/154/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/154/js/app.js"></script>
+  <script src="a/155/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/155/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
