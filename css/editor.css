@@ -6409,6 +6409,24 @@ dialog.leads-modal {
   gap: 8px;
 }
 
+.leads-hubspot-token-choice {
+  align-self: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ns-accent, inherit);
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.leads-hubspot-token-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 @media (max-width: 720px), (pointer: coarse) {
   .leads-webhook-field input {
     font-size: 16px;

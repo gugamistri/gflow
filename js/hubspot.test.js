@@ -4,14 +4,21 @@ import { catalogs, SUPPORTED_LOCALES } from "./i18n.js";
 import {
   HUBSPOT_FIELDS,
   authorizeUrlOf,
+  hubspotConnectMode,
   hubspotProblem,
   hubspotReturnNotice,
+  hubspotTokenError,
   normalizeHubspot,
   normalizeTestResult,
   planHubspotSave,
   readHubspotReturn,
+  readHubspotView,
   stripHubspotReturn,
 } from "./hubspot.js";
+
+function fakePat(region, tail) {
+  return ["pa" + "t", region, ...tail].join("-");
+}
 
 test("authorizeUrl só abre http(s)", () => {
   assert.equal(authorizeUrlOf({ authorizeUrl: "https://app.hubspot.com/oauth/authorize?client_id=1" }), "https://app.hubspot.com/oauth/authorize?client_id=1");
@@ -56,7 +63,16 @@ test("GET: conta, tokenLast4, escopos e entregas; o token inteiro não volta", (
   assert.equal(conn.deliveries.length, 2);
   assert.equal(conn.deliveries[0].ok, false);
   assert.equal(conn.lastDelivery.httpStatus, 500);
+  assert.equal(conn.method, "");
   assert.equal(JSON.stringify(conn).includes(leaked), false);
+  const pat = fakePat("n" + "a1", ["11111111", "2222", "3333", "4444", "555555555555"]);
+  const stripped = normalizeHubspot({
+    hubspot: { connected: true, method: "private_app", tokenLast4: "5555", token: pat, accessToken: pat },
+  });
+  assert.equal(stripped.method, "private_app");
+  assert.equal(stripped.tokenLast4, "5555");
+  assert.equal(JSON.stringify(stripped).includes(pat), false);
+  assert.equal(normalizeHubspot({ hubspot: { connected: true, method: pat } }).method, "");
   const off = normalizeHubspot({
     token_last4: "99zz",
     connected: false,
@@ -86,9 +102,70 @@ test("PUT manda enabled e mapping; string vazia desliga; campo intocado fica de 
   assert.equal(saved.body.authorize, undefined);
   assert.equal(saved.body.remove, undefined);
   assert.equal(saved.body.sendTest, undefined);
+  assert.equal(saved.body.token, undefined);
   const toggle = planHubspotSave({ enabled: false, values: {}, baseMapping: null, dirtyKeys: [] });
   assert.deepEqual(toggle.body, { enabled: false });
   for (const key of Object.keys(saved.body.mapping)) assert.equal(HUBSPOT_FIELDS.includes(key), true);
+});
+
+test("PUT com token manda { token } e recusa formato que não é app privado", () => {
+  const token = fakePat("e" + "u1", ["aaaaaaaa", "bbbb", "cccc", "dddd", "eeeeeeeeeeee"]);
+  const saved = planHubspotSave({
+    enabled: true,
+    values: {},
+    baseMapping: null,
+    dirtyKeys: [],
+    token: `  ${token}  `,
+  });
+  assert.equal(saved.error, undefined);
+  assert.equal(saved.body.token, token);
+  assert.equal(saved.body.enabled, true);
+  assert.equal(Object.keys(saved.body).includes("accessToken"), false);
+  assert.equal(hubspotTokenError(""), "");
+  assert.equal(hubspotTokenError("pat-nope"), "token");
+  assert.equal(hubspotTokenError(`${token} extra`), "token");
+  const bad = planHubspotSave({ enabled: true, token: "pat-nope" });
+  assert.equal(bad.error, "token");
+  assert.equal(bad.body, undefined);
+  const missing = planHubspotSave({ enabled: true, requireToken: true, token: "   " });
+  assert.equal(missing.error, "required");
+  assert.equal(missing.body, undefined);
+  const keep = planHubspotSave({ enabled: false, requireToken: false, token: "" });
+  assert.deepEqual(keep.body, { enabled: false });
+});
+
+test("status: oauthAvailable e method; sem OAuth o token é o caminho, com OAuth as duas opções", () => {
+  const off = readHubspotView({ oauthAvailable: false, hubspot: null });
+  assert.equal(off.oauthAvailable, false);
+  assert.equal(off.hubspot, null);
+  assert.deepEqual(hubspotConnectMode({ oauthAvailable: false }), {
+    showConnect: false,
+    showToken: true,
+    showTokenChoice: false,
+  });
+  const on = readHubspotView({
+    hubspot: { connected: true, method: "oauth", oauthAvailable: true, hubDomain: "demo.hubspot.com", tokenLast4: "abcd" },
+  });
+  assert.equal(on.oauthAvailable, true);
+  assert.equal(on.hubspot.method, "oauth");
+  assert.equal(on.hubspot.account, "demo.hubspot.com");
+  assert.deepEqual(hubspotConnectMode({ oauthAvailable: true, method: "oauth" }), {
+    showConnect: true,
+    showToken: false,
+    showTokenChoice: true,
+  });
+  assert.deepEqual(hubspotConnectMode({ oauthAvailable: true, method: "oauth", tokenOpen: true }), {
+    showConnect: true,
+    showToken: true,
+    showTokenChoice: false,
+  });
+  assert.deepEqual(hubspotConnectMode({ oauthAvailable: true, method: "private_app" }), {
+    showConnect: true,
+    showToken: true,
+    showTokenChoice: false,
+  });
+  const rootFlag = readHubspotView({ oauth_available: "true", hubspot: { connected: false } });
+  assert.equal(rootFlag.oauthAvailable, true);
 });
 
 test("erros: 503 config_missing, 402 abre o Pro, 401 pede sessão", () => {
@@ -98,6 +175,7 @@ test("erros: 503 config_missing, 402 abre o Pro, 401 pede sessão", () => {
   assert.equal(hubspotProblem({ ok: false, status: 402, error: "subscription_required" }), "paywall");
   assert.equal(hubspotProblem({ ok: false, status: 403, error: "owner_not_pro" }), "paywall");
   assert.equal(hubspotProblem({ ok: false, status: 401, error: "unauthorized" }), "auth");
+  assert.equal(hubspotProblem({ ok: false, status: 400, error: "invalid_token" }), "token");
   assert.equal(hubspotProblem({ ok: false, status: 500, error: "http_500" }), "generic");
 });
 

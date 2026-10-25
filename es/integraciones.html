@@ -69,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/153/css/theme.css" />
-  <link rel="stylesheet" href="/a/153/css/shell.css" />
-  <link rel="stylesheet" href="/a/153/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/154/css/theme.css" />
+  <link rel="stylesheet" href="/a/154/css/shell.css" />
+  <link rel="stylesheet" href="/a/154/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -90,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/153/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/153/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/154/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/154/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Integraciones</span></span>
     </div>
     <div class="topbar-appearance">
@@ -176,14 +176,19 @@
     </section>
     <section class="card" id="hubspot">
       <h2>HubSpot</h2>
-      <p>En el editor, abre los contactos del enlace permanente. La sección <strong>HubSpot</strong> (Pro) crea o actualiza el contacto por el correo.</p>
+      <p>En el editor, abre los contactos del enlace permanente. La sección <strong>HubSpot</strong> (Pro) crea o actualiza el contacto por el correo. Puedes usar un token de app privada o, cuando esté disponible, OAuth. Conectar por un método sustituye al otro.</p>
+      <p><strong>Token de app privada</strong></p>
       <ol>
-        <li>Haz clic en <strong>Conectar</strong> y autoriza GuiaFlow en la cuenta de HubSpot.</li>
-        <li>En el mapeo, el valor es el nombre interno de la propiedad. Déjalo en blanco para no enviar ese campo.</li>
-        <li>Guarda, activa o desactiva el envío y usa <strong>Enviar prueba</strong>. La sección muestra la cuenta, los 4 últimos caracteres del token, los permisos, los fallos y las últimas entregas.</li>
-        <li><strong>Desconectar</strong> quita la cuenta de este enlace.</li>
+        <li>En HubSpot, abre <strong>Configuración &gt; Integraciones &gt; Aplicaciones privadas</strong> y crea una app.</li>
+        <li>Marca los permisos <code>crm.objects.contacts.read</code>, <code>crm.objects.contacts.write</code>, <code>crm.schemas.contacts.read</code> y <code>crm.schemas.contacts.write</code>.</li>
+        <li>Copia el token <code>pat-…</code>, pégalo en el campo de contraseña y guarda. El token no se queda en el navegador: la sección muestra el método y solo los 4 últimos caracteres.</li>
       </ol>
-      <p>Si la conexión todavía no está disponible, el editor avisa en lugar de abrir HubSpot.</p>
+      <p><strong>OAuth</strong></p>
+      <ol>
+        <li>Cuando OAuth esté disponible, haz clic en <strong>Conectar con HubSpot</strong> y autoriza GuiaFlow.</li>
+        <li>La otra opción en el mismo lugar es <strong>usar token de app privado</strong>.</li>
+      </ol>
+      <p>En el mapeo, el valor es el nombre interno de la propiedad. Déjalo en blanco para no enviar ese campo. Guarda, activa o desactiva el envío y usa <strong>Enviar prueba</strong>. La sección muestra el método (OAuth o token ····1234), la cuenta, los permisos, los fallos y las últimas entregas. <strong>Desconectar</strong> quita la cuenta de este enlace. Si OAuth no está disponible, el botón Conectar queda oculto y el token es el camino.</p>
     </section>
     <section class="card" id="leadpronto">
       <h2>LeadPronto</h2>
@@ -211,7 +216,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/153/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/154/js/i18n.js";
     initLocale();
     applyI18n(document);
     const titles = { pt: "Integrações", es: "Integraciones", en: "Integrations" };
