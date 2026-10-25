@@ -60,5 +60,5 @@ export function readOnlyReason(role, { readOnly = false } = {}) {
 
 /** Seletores que o não-dono não deve ver (publicação/analytics). Novo projeto e cobrança ficam. */
 export const GUEST_HIDDEN_SELECTORS = Object.freeze([
-  "#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-results",
+  "#btn-share-publish", "#btn-share-permanent", "#btn-share-permanent-republish", "#btn-share-revoke", "#btn-share-republish", "#btn-results",
 ]);

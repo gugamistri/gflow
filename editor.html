@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/155/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/155/css/theme.css" />
-  <link rel="stylesheet" href="a/155/css/shell.css" />
-  <link rel="stylesheet" href="a/155/css/player.css" />
-  <link rel="stylesheet" href="a/155/css/editor.css" />
-  <link rel="stylesheet" href="a/155/css/collab.css" />
-  <link rel="stylesheet" href="a/155/css/comments.css" />
+  <link rel="stylesheet" href="a/156/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/156/css/theme.css" />
+  <link rel="stylesheet" href="a/156/css/shell.css" />
+  <link rel="stylesheet" href="a/156/css/player.css" />
+  <link rel="stylesheet" href="a/156/css/editor.css" />
+  <link rel="stylesheet" href="a/156/css/collab.css" />
+  <link rel="stylesheet" href="a/156/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/155/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/155/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/156/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/156/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -234,14 +234,6 @@
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
-          <span data-i18n="results.button">Resultados</span>
-          <span class="pro-badge" id="results-pro-badge" hidden>
-            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-            <span data-i18n="billing.badge">Pro</span>
-          </span>
-        </button>
         <details class="export-panel">
           <summary class="share-menu" aria-label="Compartilhar" title="Link, HTML e vídeo" data-i18n-aria="topbar.share" data-i18n-title="share.menuTitle">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
@@ -259,51 +251,76 @@
                 </span>
               </button>
               <button type="button" class="share-tab" role="tab" id="tab-share-export" data-share-tab="export" aria-selected="false" tabindex="-1" aria-controls="pane-share-export" data-i18n="share.tab.export">Baixar</button>
-              <button type="button" class="share-tab" role="tab" id="tab-share-team" data-share-tab="team" aria-selected="false" tabindex="-1" aria-controls="pane-share-team" hidden>
-                <span data-i18n="share.tab.team">Gerenciar Acessos</span>
-              </button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-link" aria-labelledby="tab-share-link">
-            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
-            <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Link</strong>
-              <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
-            </button>
-            <div class="share-link-actions" id="share-link-actions" hidden>
-              <div class="share-link-meta">
-                <strong>
-                  <span data-i18n="share.linkTitle">Link</span>
-                </strong>
+            <section class="share-kind" id="share-permanent-card" aria-labelledby="share-permanent-title">
+              <div class="share-kind-head">
+                <strong id="share-permanent-title" data-i18n="share.permanent.title">Link permanente</strong>
+                <span class="share-recommended" data-i18n="share.permanent.recommended">Recomendado</span>
+                <span class="pro-badge" id="share-permanent-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
               </div>
-              <div class="share-link-field">
-                <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link" data-i18n-aria="share.linkTitle" />
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                </button>
-              </div>
-              <div class="share-cover" id="share-cover" hidden>
-                <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
-                <div class="share-cover-text">
-                  <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
-                  <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
-                  <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
+              <p class="share-kind-note" data-i18n="share.permanent.never">Não expira.</p>
+              <button type="button" id="cloud-share-block" class="export-option share-kind-action" hidden>
+                <strong data-i18n="share.permanent.publish">Publicar link permanente</strong>
+                <span data-i18n="share.proDesc">Endereço para ver o tour, sem prazo.</span>
+                <span class="pro-badge" id="cloud-share-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
+              </button>
+              <button type="button" class="export-option" id="btn-share-permanent" hidden>
+                <strong data-i18n="share.permanent.publish">Publicar link permanente</strong>
+                <span data-i18n="share.proDesc">Endereço para ver o tour, sem prazo.</span>
+              </button>
+              <div class="share-link-actions" id="share-permanent-actions" hidden>
+                <div class="share-link-field">
+                  <input id="share-permanent-url" class="share-link-url" type="text" readonly value="" aria-label="Link permanente" data-i18n-aria="share.permanent.title" />
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-permanent-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  </button>
+                </div>
+                <div class="share-cover" id="share-cover" hidden>
+                  <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
+                  <div class="share-cover-text">
+                    <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
+                    <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
+                    <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
+                  </div>
+                </div>
+                <div class="share-link-extra" id="share-permanent-extra" hidden>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-share-permanent-republish" hidden data-i18n="share.republish">Republicar</button>
+                  <span class="share-stale" id="share-permanent-stale" hidden data-i18n="share.stale">Desatualizado</span>
                 </div>
               </div>
-              <div class="share-link-extra" id="share-link-extra" hidden>
-                <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
-                <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                </button>
+            </section>
+            <section class="share-kind" id="share-temp-card" aria-labelledby="share-temp-title">
+              <div class="share-kind-head">
+                <strong id="share-temp-title" data-i18n="share.temp.title">Link temporário</strong>
               </div>
-            </div>
-            <button type="button" id="cloud-share-block" class="share-pro-upsell" hidden>
-              <span class="pro-badge" id="cloud-share-badge">
-                <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                <span data-i18n="billing.badge">Pro</span>
-              </span>
-              <span data-i18n="share.upsell">Link que não expira</span>
-            </button>
+              <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
+              <button type="button" class="export-option" id="btn-share-publish">
+                <strong data-i18n="share.temp.title">Link temporário</strong>
+                <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
+              </button>
+              <div class="share-link-actions" id="share-link-actions" hidden>
+                <div class="share-link-field">
+                  <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link temporário" data-i18n-aria="share.temp.title" />
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  </button>
+                </div>
+                <div class="share-link-extra" id="share-link-extra" hidden>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
+                  <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                  </button>
+                </div>
+              </div>
+            </section>
             <label class="share-brand-toggle" id="share-brand-toggle" hidden>
               <input type="checkbox" id="share-remove-brand" checked />
               <span class="share-brand-text">
@@ -349,14 +366,6 @@
             <button type="button" class="btn btn-primary" id="btn-embed-copy" data-i18n="embed.copy">Copiar código</button>
           </div>
         </div>
-            </div>
-            <div class="share-pane" role="tabpanel" id="pane-share-team" aria-labelledby="tab-share-team" hidden>
-              <div class="share-team-off" id="share-team-off">
-                <p class="share-team-lead" data-i18n="share.team.lead">Edite este tour em equipe: as mudanças aparecem para todos em poucos segundos.</p>
-                <button type="button" class="btn btn-primary" id="btn-share-collab" data-i18n="share.team.enable">Ativar e convidar</button>
-              </div>
-              <div class="share-team-host" id="share-team-host"></div>
-              <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-export" aria-labelledby="tab-share-export" hidden>
             <button type="button" class="export-option" id="btn-export-html">
@@ -422,6 +431,29 @@
             </div>
           </div>
         </details>
+        <details class="people-panel" id="people-panel" hidden>
+          <summary class="people-menu" id="btn-people" aria-haspopup="dialog" aria-label="Pessoas" title="Quem edita este projeto" data-i18n-aria="topbar.people" data-i18n-title="topbar.peopleTitle">
+            <span class="people-avatars" id="people-avatars" aria-hidden="true"></span>
+            <svg class="btn-ico people-fallback-ico" aria-hidden="true"><use href="#i-user"></use></svg>
+            <span class="people-label" data-i18n="topbar.people">Pessoas</span>
+          </summary>
+          <div class="export-panel-body people-panel-body" id="people-card">
+            <div class="share-team-off" id="share-team-off">
+              <p class="share-team-lead" data-i18n="share.team.lead">Edite este tour em equipe: as mudanças aparecem para todos em poucos segundos.</p>
+              <button type="button" class="btn btn-primary" id="btn-share-collab" data-i18n="share.team.enable">Ativar e convidar</button>
+            </div>
+            <div class="share-team-host" id="share-team-host"></div>
+            <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
+          </div>
+        </details>
+        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
+          <span data-i18n="results.button">Resultados</span>
+          <span class="pro-badge" id="results-pro-badge" hidden>
+            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+            <span data-i18n="billing.badge">Pro</span>
+          </span>
+        </button>
       </div>
       <div class="topbar-actions" id="topbar-actions-library">
         <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
@@ -461,7 +493,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/155/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/155/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/156/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/156/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1137,7 +1169,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/155/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/156/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1755,7 +1787,7 @@
             <button type="submit" class="btn" id="btn-subscription-seats" data-i18n="billing.seats.apply">Atualizar convidados extras</button>
           </div>
           <p class="subscription-when" id="subscription-seats-note"></p>
-          <p class="subscription-when" data-i18n="billing.seats.manage">Para liberar vagas, remova pessoas em Compartilhar › Colaboração, no tour.</p>
+          <p class="subscription-when" data-i18n="billing.seats.manage">Para liberar vagas, remova pessoas em Pessoas, no tour.</p>
         </form>
         <div class="subscription-actions">
           <button type="button" class="btn btn-danger" id="btn-subscription-cancel" hidden data-i18n="billing.subCancel">Cancelar assinatura</button>
@@ -2241,8 +2273,8 @@
     </symbol>
   </svg>
 
-  <script src="a/155/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/155/js/app.js"></script>
+  <script src="a/156/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/156/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
