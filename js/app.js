@@ -167,6 +167,7 @@ import {
 } from "./paywall.js";
 import { createFixedStepsEditor } from "./fixedStepsEditor.js";
 import { createLeadsDialog } from "./leadsDialog.js";
+import { leadProntoReturnKey, readLeadProntoReturn, stripLeadProntoReturn } from "./leadPronto.js";
 import { hubspotReturnNotice, readHubspotReturn, stripHubspotReturn } from "./hubspot.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
@@ -2097,12 +2098,23 @@ async function consumeBillingReturn() {
   if (found.kind === "portal" && getCloudAccount().signedIn) await refreshEntitlement();
 }
 
+function consumeLeadProntoReturn() {
+  const found = readLeadProntoReturn(location.href);
+  if (!found) return;
+  applyCloudAuthHref(stripLeadProntoReturn(location.href));
+  const key = found.kind === "connected" ? "leads.lp.connectedToast" : leadProntoReturnKey(found.reason);
+  toast(t(key), found.kind === "error" ? 5600 : 4200);
+  leadsDialog.noteLeadProntoReturn(found);
+  const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
+  if (slug) leadsDialog.open();
+}
+
 function consumeHubspotReturn() {
   const found = readHubspotReturn(location.href);
   if (!found) return;
   applyCloudAuthHref(stripHubspotReturn(location.href));
   const notice = hubspotReturnNotice(found);
-  leadsDialog.noteReturn?.(notice);
+  leadsDialog.noteHubspotReturn(notice);
   toast(t(notice.key, notice.vars), notice.error ? 6400 : 5200);
   const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
   if (found.slug && slug && found.slug === slug) leadsDialog.open();
@@ -4801,6 +4813,7 @@ async function boot() {
     void (async () => {
       await consumeBillingReturn();
       if (getCloudAccount().signedIn && billingView.status !== "ready") await refreshEntitlement();
+      consumeLeadProntoReturn();
       consumeHubspotReturn();
       consumeProIntent();
     })();

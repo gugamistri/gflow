@@ -1,7 +1,8 @@
 /**
  * Contatos recebidos no link permanente (passo inicial + formulário do passo final),
- * o webhook e os conectores RD Station Marketing e HubSpot que os enviam para fora (Pro).
- * Só o dono vê (GET /shares/:slug/leads, /webhook, /rd-station e /hubspot com Bearer); CSV no navegador.
+ * o webhook e os conectores RD Station Marketing, HubSpot e LeadPronto (Pro).
+ * Webhook, RD Station e HubSpot são do link. O LeadPronto é da conta
+ * (GET/PUT/DELETE /integrations/leadpronto). CSV no navegador.
  */
 import { t, getLocale } from "./i18n.js";
 import { cloudFetch } from "./cloudConfig.js";
@@ -30,6 +31,15 @@ import {
   normalizeTestResult as normalizeHubspotTest,
   planHubspotSave,
 } from "./hubspot.js";
+import {
+  LP_HELP,
+  leadProntoProblem,
+  leadProntoReturnKey,
+  normalizeLeadPronto,
+  normalizeShareList,
+  planLeadProntoSave,
+  readAuthorizeUrl,
+} from "./leadPronto.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -80,6 +90,14 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let hubspotBusy = false;
   let hubspotDirty = new Set();
   let hubspotReturn = null;
+  let lp = null;
+  let lpShares = [];
+  let lpAll = true;
+  let lpEnabled = false;
+  let lpTourPick = new Set();
+  let lpBusy = false;
+  let lpReady = false;
+  let returnNotice = null;
 
   const els = () => ({
     dialog: $("modal-leads"),
@@ -119,6 +137,18 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     hsTest: $("btn-leads-hubspot-test"),
     hsRemove: $("btn-leads-hubspot-remove"),
     hsHelp: $("leads-hubspot-help"),
+    lpAccount: $("leads-lp-account"),
+    lpControls: $("leads-lp-controls"),
+    lpEnabled: $("leads-lp-enabled"),
+    lpAll: $("leads-lp-all"),
+    lpTours: $("leads-lp-tours"),
+    lpHint: $("leads-lp-hint"),
+    lpHelp: $("leads-lp-help"),
+    lpStatus: $("leads-lp-status"),
+    lpDelivery: $("leads-lp-delivery"),
+    lpConnect: $("btn-leads-lp-connect"),
+    lpSave: $("btn-leads-lp-save"),
+    lpRemove: $("btn-leads-lp-disconnect"),
     map: Object.fromEntries(HUBSPOT_FIELDS.map((key) => [key, document.querySelector(`[data-hubspot-field="${key}"]`)])),
   });
 
@@ -903,6 +933,286 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     toast?.(t("leads.hubspot.removed"), 3000);
   }
 
+  function setLpMessage(text, error = false) {
+    const node = els().lpStatus;
+    if (!node) return;
+    node.textContent = text || "";
+    node.classList.toggle("is-error", Boolean(error && text));
+  }
+
+  function lpLinked() {
+    return lp?.status === "connected" || lp?.status === "disabled";
+  }
+
+  function tourOptions() {
+    const map = new Map();
+    for (const item of lpShares) map.set(item.slug, item.title || item.slug);
+    const current = String(getSlug() || "").trim().toLowerCase();
+    if (current && !map.has(current)) map.set(current, current);
+    if (Array.isArray(lp?.tours)) {
+      for (const slug of lp.tours) if (!map.has(slug)) map.set(slug, slug);
+    }
+    return [...map.entries()].map(([slug, title]) => ({ slug, title }));
+  }
+
+  function paintLpTours() {
+    const node = els().lpTours;
+    if (!node) return;
+    const show = lpLinked() && !lpAll;
+    node.hidden = !show;
+    node.replaceChildren();
+    if (!show) return;
+    for (const tour of tourOptions()) {
+      const label = el("label", "fixed-check");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = tour.slug;
+      input.checked = lpTourPick.has(tour.slug);
+      const span = el("span", "", tour.title && tour.title !== tour.slug ? `${tour.title} (${tour.slug})` : tour.slug);
+      label.append(input, span);
+      node.append(label);
+    }
+  }
+
+  function paintLpAccount() {
+    const node = els().lpAccount;
+    if (!node) return;
+    if (!lp) {
+      node.textContent = "";
+      return;
+    }
+    if (lp.status === "config_missing") {
+      node.textContent = t("leads.lp.configMissing");
+      return;
+    }
+    if (lp.status === "disconnected") {
+      node.textContent = lpReady ? t("leads.lp.disconnected") : "";
+      return;
+    }
+    if (lpLinked()) {
+      const who = lp.tenant ? t("leads.lp.connected", { tenant: lp.tenant }) : t("leads.lp.connectedPlain");
+      node.textContent = lp.status === "disabled" ? `${who}. ${t("leads.lp.disabled")}` : who;
+      return;
+    }
+    node.textContent = "";
+  }
+
+  function paintLpDelivery() {
+    const node = els().lpDelivery;
+    if (!node) return;
+    if (!lpLinked()) {
+      node.textContent = "";
+      return;
+    }
+    const parts = [];
+    const rows = Array.isArray(lp.deliveries) ? lp.deliveries : [];
+    if (!rows.length) parts.push(t("leads.lp.none"));
+    for (const delivery of rows) {
+      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
+      const date = delivery.at ? formatDate(delivery.at) : "—";
+      parts.push(t(delivery.ok ? "leads.lp.lastOk" : "leads.lp.lastFail", { date, status }));
+    }
+    if (lp.consecutiveFailures > 0) parts.push(t("leads.lp.failures", { n: lp.consecutiveFailures }));
+    if (lp.autoDisabled) parts.push(t("leads.lp.autoOff"));
+    node.textContent = parts.join(" ");
+  }
+
+  function paintLp() {
+    const e = els();
+    if (!e.lpConnect) return;
+    const linked = lpLinked();
+    const missing = lp?.status === "config_missing";
+    e.lpConnect.hidden = linked;
+    e.lpConnect.disabled = lpBusy || !lpReady || missing;
+    if (e.lpSave) e.lpSave.hidden = !linked;
+    if (e.lpRemove) e.lpRemove.hidden = !linked;
+    if (e.lpControls) e.lpControls.hidden = !linked;
+    if (e.lpEnabled) {
+      e.lpEnabled.checked = lpEnabled;
+      e.lpEnabled.disabled = lpBusy;
+    }
+    if (e.lpAll) {
+      e.lpAll.checked = lpAll;
+      e.lpAll.disabled = lpBusy;
+    }
+    if (e.lpHelp) e.lpHelp.href = LP_HELP[getLocale()] || LP_HELP.pt;
+    for (const btn of [e.lpSave, e.lpRemove]) {
+      if (btn) btn.disabled = lpBusy;
+    }
+    if (e.lpHint) e.lpHint.hidden = !lpAll || !lpLinked();
+    paintLpTours();
+    paintLpAccount();
+    paintLpDelivery();
+  }
+
+  function handleLpProblem(res, fallbackKey) {
+    const problem = leadProntoProblem(res);
+    if (problem === "paywall") {
+      els().dialog?.close();
+      onPaywall?.();
+      return true;
+    }
+    if (problem === "config") {
+      lp = {
+        status: "config_missing",
+        tenant: "",
+        enabled: false,
+        tours: null,
+        consecutiveFailures: 0,
+        autoDisabled: false,
+        deliveries: [],
+      };
+      lpReady = true;
+      paintLp();
+      setLpMessage(t("leads.lp.configMissing"), true);
+      return true;
+    }
+    const key = problem === "auth" ? "leads.lp.errAuth"
+      : problem === "tours" ? "leads.lp.errTours"
+        : fallbackKey;
+    setLpMessage(t(key), true);
+    return true;
+  }
+
+  function showReturnNotice(notice) {
+    if (!notice) return;
+    if (notice.kind === "connected") setLpMessage(t("leads.lp.connectedToast"));
+    else setLpMessage(t(leadProntoReturnKey(notice.reason)), true);
+    els().lpStatus?.scrollIntoView?.({ block: "nearest" });
+  }
+
+  function applyLp(next) {
+    lp = next;
+    lpReady = true;
+    lpAll = !next || next.tours == null;
+    lpTourPick = new Set(Array.isArray(next?.tours) ? next.tours : []);
+    lpEnabled = Boolean(next?.enabled);
+    paintLp();
+  }
+
+  async function loadLeadPronto() {
+    const e = els();
+    if (!e.lpConnect) return;
+    const notice = returnNotice;
+    const [res, mine] = await Promise.all([
+      cloudFetch("/integrations/leadpronto", { method: "GET", headers: { Accept: "application/json" } }),
+      cloudFetch("/shares/mine", { method: "GET" }),
+    ]);
+    if (mine.ok) lpShares = normalizeShareList(mine.data);
+    if (res.stub) {
+      applyLp({
+        status: "disconnected",
+        tenant: "",
+        enabled: false,
+        tours: null,
+        consecutiveFailures: 0,
+        autoDisabled: false,
+        deliveries: [],
+      });
+      showReturnNotice(notice);
+      returnNotice = null;
+      return;
+    }
+    if (!res.ok) {
+      lpReady = true;
+      paintLp();
+      handleLpProblem(res, "leads.lp.errLoad");
+      showReturnNotice(notice);
+      returnNotice = null;
+      return;
+    }
+    const next = normalizeLeadPronto(res.data);
+    if (!next) {
+      lpReady = true;
+      paintLp();
+      setLpMessage(t("leads.lp.errLoad"), true);
+      showReturnNotice(notice);
+      returnNotice = null;
+      return;
+    }
+    applyLp(next);
+    setLpMessage("");
+    showReturnNotice(notice);
+    returnNotice = null;
+  }
+
+  async function connectLeadPronto() {
+    if (lpBusy || !lpReady || lp?.status === "config_missing") return;
+    lpBusy = true;
+    paintLp();
+    setLpMessage(t("leads.lp.opening"));
+    const res = await cloudFetch("/integrations/leadpronto/start", {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      redirect: "manual",
+    });
+    const url = readAuthorizeUrl(res.data);
+    if (!res.ok || !url) {
+      lpBusy = false;
+      paintLp();
+      if (!handleLpProblem(res, "leads.lp.errConnect")) setLpMessage(t("leads.lp.errConnect"), true);
+      return;
+    }
+    window.location.assign(url);
+  }
+
+  async function submitLp() {
+    if (lpBusy || !lpLinked()) return;
+    const plan = planLeadProntoSave({
+      enabled: lpEnabled,
+      allTours: lpAll,
+      tours: [...lpTourPick],
+    });
+    if (plan.error) {
+      setLpMessage(t("leads.lp.errTours"), true);
+      return;
+    }
+    lpBusy = true;
+    paintLp();
+    setLpMessage(t("leads.lp.saving"));
+    const res = await cloudFetch("/integrations/leadpronto", { method: "PUT", body: JSON.stringify(plan.body) });
+    lpBusy = false;
+    if (!res.ok) {
+      paintLp();
+      handleLpProblem(res, "leads.lp.errSave");
+      return;
+    }
+    const next = normalizeLeadPronto(res.data);
+    if (next) applyLp(next);
+    else await loadLeadPronto();
+    if (!els().lpStatus?.classList.contains("is-error")) setLpMessage(t("leads.lp.saved"));
+    toast?.(t("leads.lp.saved"), 3200);
+  }
+
+  async function removeLp() {
+    if (lpBusy || !lpLinked()) return;
+    if (!window.confirm(t("leads.lp.confirmRemove"))) return;
+    lpBusy = true;
+    paintLp();
+    const res = await cloudFetch("/integrations/leadpronto", { method: "DELETE" });
+    lpBusy = false;
+    if (!res.ok && res.status !== 404) {
+      paintLp();
+      handleLpProblem(res, "leads.lp.errRemove");
+      return;
+    }
+    applyLp({
+      status: "disconnected",
+      tenant: "",
+      enabled: false,
+      tours: null,
+      consecutiveFailures: 0,
+      autoDisabled: false,
+      deliveries: [],
+    });
+    setLpMessage(t("leads.lp.removed"));
+    toast?.(t("leads.lp.removed"), 3000);
+  }
+
+  function noteLeadProntoReturn(found) {
+    if (found?.kind === "connected" || found?.kind === "error") returnNotice = found;
+  }
+
   function bind() {
     if (bound) return;
     bound = true;
@@ -912,6 +1222,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       void load();
       void loadWebhook();
       void loadRd();
+      void loadHubspot();
+      void loadLeadPronto();
     });
     e.csv?.addEventListener("click", downloadCsv);
     e.secret?.addEventListener("input", () => {
@@ -949,6 +1261,26 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.hsSave?.addEventListener("click", () => void submitHubspot());
     e.hsTest?.addEventListener("click", () => void sendHubspotTest());
     e.hsRemove?.addEventListener("click", () => void removeHubspot());
+    e.lpConnect?.addEventListener("click", () => void connectLeadPronto());
+    e.lpSave?.addEventListener("click", () => void submitLp());
+    e.lpRemove?.addEventListener("click", () => void removeLp());
+    e.lpEnabled?.addEventListener("change", () => {
+      lpEnabled = Boolean(e.lpEnabled.checked);
+    });
+    e.lpAll?.addEventListener("change", () => {
+      lpAll = Boolean(e.lpAll.checked);
+      if (!lpAll && lpTourPick.size === 0) {
+        const current = String(getSlug() || "").trim().toLowerCase();
+        if (current) lpTourPick.add(current);
+      }
+      paintLp();
+    });
+    e.lpTours?.addEventListener("change", (ev) => {
+      const input = ev.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== "checkbox") return;
+      if (input.checked) lpTourPick.add(input.value);
+      else lpTourPick.delete(input.value);
+    });
     for (const key of HUBSPOT_FIELDS) {
       e.map?.[key]?.addEventListener("input", () => hubspotDirty.add(key));
     }
@@ -956,6 +1288,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       paintWebhook();
       paintRd();
       paintHubspot();
+      paintLp();
     });
   }
 
@@ -977,6 +1310,13 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     rdKeyDraft = "";
     hubspot = null;
     hubspotDirty = new Set();
+    lp = null;
+    lpShares = [];
+    lpAll = true;
+    lpEnabled = false;
+    lpTourPick = new Set();
+    lpBusy = false;
+    lpReady = false;
     e.status.textContent = "";
     if (e.url) e.url.value = "";
     if (e.enabled) e.enabled.checked = true;
@@ -985,19 +1325,23 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     setWebhookMessage("");
     setRdMessage("");
     setHubspotMessage("");
+    setLpMessage("");
     paintWebhook();
     paintRd();
     paintHubspot();
+    paintLp();
     if (!e.dialog.open) e.dialog.showModal();
     void load();
     void loadWebhook();
     void loadRd();
+    void loadHubspot();
+    void loadLeadPronto();
   }
 
-  function noteReturn(notice) {
+  function noteHubspotReturn(notice) {
     hubspotReturn = notice || null;
   }
 
   bind();
-  return { open, noteReturn };
+  return { open, noteHubspotReturn, noteLeadProntoReturn };
 }

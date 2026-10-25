@@ -6376,6 +6376,18 @@ dialog.leads-modal {
   min-width: 0;
 }
 
+.leads-lp-tours {
+  display: grid;
+  gap: 4px;
+  max-height: 160px;
+  overflow: auto;
+  padding: 2px;
+}
+
+.leads-lp-tours .fixed-check span {
+  overflow-wrap: anywhere;
+}
+
 .leads-hubspot-map {
   margin: 0;
   padding: 0;
