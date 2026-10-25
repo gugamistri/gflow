@@ -4,10 +4,13 @@
  *   GET/PUT/DELETE /shares/:slug/hubspot
  *   GET /shares/:slug/hubspot/authorize  → { authorizeUrl }
  *   POST /shares/:slug/hubspot/test
- * O PUT só manda { enabled, mapping }. A string vazia desliga aquele campo.
+ * O PUT manda { enabled, mapping } e, quando o usuário colou um token novo, { token }.
+ * O token é o de app privado (pat-…). A string vazia no mapping desliga aquele campo.
+ * O GET devolve method (oauth | private_app), tokenLast4 e oauthAvailable.
  * code/state ficam no callback da API, que volta para
  * /editor?hubspot=connected&slug=… ou ?hubspot=error&reason=…
  * 503 config_missing: o app OAuth ainda não está configurado.
+ * oauthAvailable false: o editor não oferece OAuth; o token é o caminho.
  */
 
 import { normalizeDelivery, normalizeTestResult } from "./leadWebhook.js";
@@ -36,6 +39,16 @@ export const HUBSPOT_FIELDS = Object.freeze([
 
 const FIELD_SET = new Set(HUBSPOT_FIELDS);
 const REASON_RE = /^[A-Za-z0-9_-]{1,40}$/;
+/** App privado do HubSpot: pat- + região (na1, eu1, …) + UUID. */
+const PRIVATE_APP_TOKEN_RE = /^pat-[a-z]{2}\d-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+
+/** "" se o valor pode ir no PUT; "token" se não é um app privado. Vazio não é erro aqui. */
+export function hubspotTokenError(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return "";
+  if (value.length > 80 || /\s/.test(value) || !PRIVATE_APP_TOKEN_RE.test(value)) return "token";
+  return "";
+}
 
 export { normalizeTestResult };
 
@@ -61,6 +74,25 @@ function pickString(raw, keys) {
 function tokenLast4Of(raw) {
   const hint = pickString(raw, ["tokenLast4", "token_last4", "accessTokenLast4", "refreshTokenLast4"]);
   return hint.replace(/\s/g, "").slice(-4);
+}
+
+function methodOf(...sources) {
+  for (const raw of sources) {
+    const value = pickString(raw, ["method", "authMethod", "auth_method"]).toLowerCase().replace(/-/g, "_");
+    if (value === "oauth" || value === "private_app") return value;
+  }
+  return "";
+}
+
+function boolField(raw, keys) {
+  if (!raw || typeof raw !== "object") return undefined;
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(raw, key)) continue;
+    const value = raw[key];
+    if (value === true || value === false) return value;
+    if (value === "true" || value === "false") return value === "true";
+  }
+  return undefined;
 }
 
 function scopesOf(raw) {
@@ -139,12 +171,14 @@ export function normalizeHubspot(data) {
   const connected = raw.connected === false
     ? false
     : Boolean(raw.connected === true || tokenLast4 || account);
+  const method = methodOf(raw, data);
   const has = connected || tokenLast4 || account || mapping || scopes.length || failures > 0
-    || deliveries.length > 0 || status || raw.enabled != null || raw.connected != null || autoDisabled;
+    || deliveries.length > 0 || status || raw.enabled != null || raw.connected != null || autoDisabled || method;
   if (!has) return null;
   return {
     connected,
     enabled: raw.enabled !== false && !autoDisabled,
+    method,
     account,
     tokenLast4,
     scopes,
@@ -176,12 +210,50 @@ export function authorizeUrlOf(data) {
 }
 
 /**
+ * method e oauthAvailable do GET/PUT, mesmo quando o link ainda não tem conta.
+ * oauthAvailable só é true quando o status diz true.
+ */
+export function readHubspotView(data) {
+  const root = data && typeof data === "object" ? data : {};
+  const nested = root.hubspot && typeof root.hubspot === "object" ? root.hubspot : null;
+  const oauthAvailable = boolField(nested, ["oauthAvailable", "oauth_available"])
+    ?? boolField(root, ["oauthAvailable", "oauth_available"])
+    ?? false;
+  return { hubspot: normalizeHubspot(data), oauthAvailable };
+}
+
+/**
+ * oauthAvailable false: sem "Conectar"; o token é o caminho principal.
+ * oauthAvailable true: "Conectar com HubSpot" e, se o campo ainda está fechado, "usar token".
+ * tokenOpen: o usuário pediu o token quando as duas opções existem.
+ * method private_app deixa o campo aberto, porque esse já é o método da conta.
+ */
+export function hubspotConnectMode({ oauthAvailable, method, tokenOpen } = {}) {
+  const oauth = oauthAvailable === true;
+  const showToken = !oauth || tokenOpen === true || method === "private_app";
+  return {
+    showConnect: oauth,
+    showToken,
+    showTokenChoice: oauth && !showToken,
+  };
+}
+
+/**
  * Corpo do PUT. mapping só leva chaves do OpenAPI.
  * A chave entra com "" quando o usuário apagou ou a API já tinha devolvido vazio.
  * Campo intocado e ausente na API fica de fora, para não desligar o padrão.
+ * token só entra quando o usuário colou um app privado válido. O vazio não vai no corpo.
+ * requireToken: ainda não há conta e o OAuth não está disponível.
  */
-export function planHubspotSave({ enabled, values, baseMapping, dirtyKeys } = {}) {
+export function planHubspotSave({ enabled, values, baseMapping, dirtyKeys, token, requireToken } = {}) {
+  const rawToken = String(token || "").trim();
+  if (rawToken) {
+    if (hubspotTokenError(rawToken)) return { error: "token" };
+  } else if (requireToken) {
+    return { error: "required" };
+  }
   const body = { enabled: enabled !== false };
+  if (rawToken) body.token = rawToken;
   const dirty = dirtyKeys instanceof Set ? dirtyKeys : new Set(dirtyKeys || []);
   const base = baseMapping && typeof baseMapping === "object" ? baseMapping : {};
   const current = values && typeof values === "object" ? values : {};
@@ -198,13 +270,14 @@ export function planHubspotSave({ enabled, values, baseMapping, dirtyKeys } = {}
   return { body };
 }
 
-/** "paywall" | "auth" | "config" | "generic" | "". */
+/** "paywall" | "auth" | "config" | "token" | "generic" | "". */
 export function hubspotProblem(res) {
   if (!res || res.ok) return "";
   const code = String(res.error || res.data?.code || res.data?.error || "");
   if (res.status === 503 || code === "config_missing") return "config";
   if (res.status === 402 || code === "subscription_required" || code === "owner_not_pro") return "paywall";
   if (res.status === 401 || code === "unauthorized") return "auth";
+  if (res.status === 400 && /token/i.test(code) && code !== "unauthorized") return "token";
   return "generic";
 }
 

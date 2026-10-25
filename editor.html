@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/153/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/153/css/theme.css" />
-  <link rel="stylesheet" href="a/153/css/shell.css" />
-  <link rel="stylesheet" href="a/153/css/player.css" />
-  <link rel="stylesheet" href="a/153/css/editor.css" />
-  <link rel="stylesheet" href="a/153/css/collab.css" />
-  <link rel="stylesheet" href="a/153/css/comments.css" />
+  <link rel="stylesheet" href="a/154/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/154/css/theme.css" />
+  <link rel="stylesheet" href="a/154/css/shell.css" />
+  <link rel="stylesheet" href="a/154/css/player.css" />
+  <link rel="stylesheet" href="a/154/css/editor.css" />
+  <link rel="stylesheet" href="a/154/css/collab.css" />
+  <link rel="stylesheet" href="a/154/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/153/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/153/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/154/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/154/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -461,7 +461,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/153/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/153/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/154/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/154/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1137,7 +1137,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/153/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/154/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1453,10 +1453,18 @@
           </div>
         </fieldset>
         <p class="leads-webhook-delivery" id="leads-hubspot-delivery" role="status"></p>
+        <div id="leads-hubspot-token-block">
+          <label class="leads-webhook-field" for="leads-hubspot-token">
+            <span data-i18n="leads.hubspot.tokenLabel">Token de app privado</span>
+            <input type="password" id="leads-hubspot-token" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="80" placeholder="pat-…" data-i18n-aria="leads.hubspot.tokenLabel" aria-label="Token de app privado" />
+          </label>
+          <p class="fixed-hint" id="leads-hubspot-token-hint" data-i18n="leads.hubspot.tokenHelp">No HubSpot: Configurações &gt; Integrações &gt; Apps privados. Crie um app com os escopos crm.objects.contacts.read, crm.objects.contacts.write, crm.schemas.contacts.read e crm.schemas.contacts.write. O token não fica salvo neste navegador. Salvar um token substitui o OAuth; conectar por OAuth substitui o token.</p>
+        </div>
         <p class="leads-webhook-status" id="leads-hubspot-status" role="status"></p>
         <div class="leads-webhook-actions">
-          <button type="button" class="btn btn-primary" id="btn-leads-hubspot-connect" data-i18n="leads.hubspot.connect">Conectar</button>
-          <button type="button" class="btn" id="btn-leads-hubspot-save" data-i18n="leads.hubspot.save">Salvar</button>
+          <button type="button" class="btn" id="btn-leads-hubspot-connect" data-i18n="leads.hubspot.connect" hidden>Conectar com HubSpot</button>
+          <button type="button" class="leads-hubspot-token-choice" id="btn-leads-hubspot-use-token" data-i18n="leads.hubspot.useToken" hidden>usar token de app privado</button>
+          <button type="button" class="btn btn-primary" id="btn-leads-hubspot-save" data-i18n="leads.hubspot.save">Salvar</button>
           <button type="button" class="btn" id="btn-leads-hubspot-test" data-i18n="leads.hubspot.test">Enviar teste</button>
           <button type="button" class="btn" id="btn-leads-hubspot-remove" data-i18n="leads.hubspot.disconnect" hidden>Desconectar</button>
           <a class="embed-guide" id="leads-hubspot-help" href="/integracoes#hubspot" target="_blank" rel="noopener" data-i18n="leads.hubspot.help">Como conectar</a>
@@ -2221,8 +2229,8 @@
     </symbol>
   </svg>
 
-  <script src="a/153/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/153/js/app.js"></script>
+  <script src="a/154/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/154/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

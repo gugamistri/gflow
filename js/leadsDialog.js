@@ -26,10 +26,12 @@ import {
   HUBSPOT_FIELDS,
   HUBSPOT_HELP,
   authorizeUrlOf,
+  hubspotConnectMode,
   hubspotProblem,
   normalizeHubspot,
   normalizeTestResult as normalizeHubspotTest,
   planHubspotSave,
+  readHubspotView,
 } from "./hubspot.js";
 import {
   LP_HELP,
@@ -90,6 +92,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let hubspotBusy = false;
   let hubspotDirty = new Set();
   let hubspotReturn = null;
+  let hubspotOauth = false;
+  let hubspotTokenOpen = false;
   let lp = null;
   let lpShares = [];
   let lpAll = true;
@@ -133,6 +137,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     hsDelivery: $("leads-hubspot-delivery"),
     hsStatus: $("leads-hubspot-status"),
     hsConnect: $("btn-leads-hubspot-connect"),
+    hsUseToken: $("btn-leads-hubspot-use-token"),
+    hsToken: $("leads-hubspot-token"),
+    hsTokenBlock: $("leads-hubspot-token-block"),
     hsSave: $("btn-leads-hubspot-save"),
     hsTest: $("btn-leads-hubspot-test"),
     hsRemove: $("btn-leads-hubspot-remove"),
@@ -731,16 +738,31 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
 
   function paintHubspot() {
     const e = els();
-    if (!e.hsConnect) return;
+    if (!e.hsConnect && !e.hsToken) return;
     for (const key of HUBSPOT_FIELDS) {
       const input = e.map?.[key];
       if (!input || hubspotDirty.has(key)) continue;
       input.value = hubspot?.mapping?.[key] ?? "";
     }
-    e.hsConnect.textContent = t(hubspot?.connected ? "leads.hubspot.reconnect" : "leads.hubspot.connect");
+    const mode = hubspotConnectMode({
+      oauthAvailable: hubspotOauth,
+      method: hubspot?.method || "",
+      tokenOpen: hubspotTokenOpen,
+    });
+    if (e.hsConnect) {
+      e.hsConnect.hidden = !mode.showConnect;
+      e.hsConnect.textContent = t(hubspot?.connected && hubspot?.method === "oauth" ? "leads.hubspot.reconnect" : "leads.hubspot.connect");
+      e.hsConnect.classList.toggle("btn-primary", mode.showConnect && !mode.showToken);
+    }
+    if (e.hsUseToken) {
+      e.hsUseToken.hidden = !mode.showTokenChoice;
+      e.hsUseToken.textContent = t("leads.hubspot.useToken");
+    }
+    if (e.hsTokenBlock) e.hsTokenBlock.hidden = !mode.showToken;
+    if (e.hsSave) e.hsSave.classList.toggle("btn-primary", !mode.showConnect || mode.showToken);
     if (e.hsRemove) e.hsRemove.hidden = !hubspot?.connected;
     if (e.hsHelp) e.hsHelp.href = HUBSPOT_HELP[getLocale()] || HUBSPOT_HELP.pt;
-    for (const btn of [e.hsConnect, e.hsSave, e.hsTest, e.hsRemove]) {
+    for (const btn of [e.hsConnect, e.hsUseToken, e.hsSave, e.hsTest, e.hsRemove]) {
       if (btn) btn.disabled = hubspotBusy;
     }
     paintHubspotAccount();
@@ -754,8 +776,12 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       node.textContent = t("leads.hubspot.disconnected");
       return;
     }
-    const parts = [hubspot.account ? t("leads.hubspot.account", { account: hubspot.account }) : t("leads.hubspot.connected")];
-    if (hubspot.tokenLast4) parts.push(t("leads.hubspot.token", { last4: hubspot.tokenLast4 }));
+    const parts = [];
+    if (hubspot.method === "oauth") parts.push(t("leads.hubspot.methodOAuth"));
+    else if (hubspot.tokenLast4 || hubspot.method === "private_app") {
+      parts.push(t("leads.hubspot.token", { last4: hubspot.tokenLast4 || "····" }));
+    } else parts.push(t("leads.hubspot.connected"));
+    if (hubspot.account) parts.push(t("leads.hubspot.account", { account: hubspot.account }));
     if (hubspot.scopes?.length) parts.push(t("leads.hubspot.scopes", { scopes: hubspot.scopes.join(", ") }));
     node.textContent = parts.join(" ");
   }
@@ -798,21 +824,30 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     }
     const key = problem === "auth" ? "leads.hubspot.errAuth"
       : problem === "config" ? "leads.hubspot.errConfig"
-        : fallbackKey;
+        : problem === "token" ? "leads.hubspot.errToken"
+          : fallbackKey;
     setHubspotMessage(t(key), true);
     return true;
   }
 
+  function clearHubspotToken() {
+    const input = els().hsToken;
+    if (input) input.value = "";
+  }
+
   async function loadHubspot() {
-    if (!getSlug() || !els().hsConnect) return;
+    if (!getSlug() || (!els().hsConnect && !els().hsToken)) return;
     const res = await cloudFetch(hubspotPath(), { method: "GET" });
     if (!res.ok && res.status !== 404) {
       if (!hubspotReturn) handleHubspotProblem(res, "leads.hubspot.errLoad");
       else showHubspotReturn();
       return;
     }
-    hubspot = res.ok ? normalizeHubspot(res.data) : null;
+    const view = readHubspotView(res.data);
+    hubspot = res.ok ? view.hubspot : null;
+    hubspotOauth = view.oauthAvailable;
     hubspotDirty = new Set();
+    clearHubspotToken();
     const enabled = els().hsEnabled;
     if (enabled) enabled.checked = hubspot ? hubspot.enabled : true;
     paintHubspot();
@@ -846,12 +881,20 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   async function submitHubspot() {
     if (hubspotBusy) return;
     if (!guardSlug(setHubspotMessage)) return;
+    const typed = String(els().hsToken?.value || "");
     const plan = planHubspotSave({
       enabled: Boolean(els().hsEnabled?.checked),
       values: mappingValues(),
       baseMapping: hubspot?.mapping,
       dirtyKeys: hubspotDirty,
+      token: typed,
+      requireToken: !hubspot?.connected && hubspotOauth !== true,
     });
+    if (plan.error) {
+      setHubspotMessage(t(plan.error === "token" ? "leads.hubspot.errToken" : "leads.hubspot.errTokenRequired"), true);
+      return;
+    }
+    const sentLast4 = plan.body.token ? plan.body.token.slice(-4) : "";
     hubspotBusy = true;
     paintHubspot();
     setHubspotMessage(t("leads.hubspot.saving"));
@@ -862,15 +905,27 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       handleHubspotProblem(res, "leads.hubspot.errSave");
       return;
     }
-    const next = normalizeHubspot(res.data) || {
+    const view = readHubspotView(res.data);
+    if (view.oauthAvailable || Object.prototype.hasOwnProperty.call(res.data || {}, "oauthAvailable")
+      || (res.data?.hubspot && Object.prototype.hasOwnProperty.call(res.data.hubspot, "oauthAvailable"))) {
+      hubspotOauth = view.oauthAvailable;
+    }
+    const next = view.hubspot || {
       ...(hubspot || {}),
       connected: Boolean(hubspot?.connected),
       enabled: plan.body.enabled,
       mapping: plan.body.mapping ? { ...(hubspot?.mapping || {}), ...plan.body.mapping } : hubspot?.mapping || null,
       autoDisabled: false,
     };
+    if (sentLast4) {
+      next.method = next.method || "private_app";
+      next.connected = true;
+      if (!next.tokenLast4) next.tokenLast4 = sentLast4;
+    }
     hubspot = next;
     hubspotDirty = new Set();
+    if (sentLast4) hubspotTokenOpen = true;
+    clearHubspotToken();
     const enabled = els().hsEnabled;
     if (enabled) enabled.checked = next.enabled;
     paintHubspot();
@@ -928,6 +983,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     }
     hubspot = null;
     hubspotDirty = new Set();
+    hubspotTokenOpen = false;
+    clearHubspotToken();
     paintHubspot();
     setHubspotMessage(t("leads.hubspot.removed"));
     toast?.(t("leads.hubspot.removed"), 3000);
@@ -1258,6 +1315,11 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.rdTest?.addEventListener("click", () => void sendRdTest());
     e.rdRemove?.addEventListener("click", () => void removeRd());
     e.hsConnect?.addEventListener("click", () => void connectHubspot());
+    e.hsUseToken?.addEventListener("click", () => {
+      hubspotTokenOpen = true;
+      paintHubspot();
+      els().hsToken?.focus?.();
+    });
     e.hsSave?.addEventListener("click", () => void submitHubspot());
     e.hsTest?.addEventListener("click", () => void sendHubspotTest());
     e.hsRemove?.addEventListener("click", () => void removeHubspot());
@@ -1310,6 +1372,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     rdKeyDraft = "";
     hubspot = null;
     hubspotDirty = new Set();
+    hubspotOauth = false;
+    hubspotTokenOpen = false;
+    clearHubspotToken();
     lp = null;
     lpShares = [];
     lpAll = true;

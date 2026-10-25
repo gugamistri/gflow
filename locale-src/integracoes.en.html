@@ -68,14 +68,19 @@
     </section>
     <section class="card" id="hubspot">
       <h2>HubSpot</h2>
-      <p>In the editor, open the contacts for the permanent link. The <strong>HubSpot</strong> section (Pro) creates or updates the contact by email.</p>
+      <p>In the editor, open the contacts for the permanent link. The <strong>HubSpot</strong> section (Pro) creates or updates the contact by email. You can use a private app token or, when it is available, OAuth. Connecting with one method replaces the other.</p>
+      <p><strong>Private app token</strong></p>
       <ol>
-        <li>Click <strong>Connect</strong> and authorize GuiaFlow in the HubSpot account.</li>
-        <li>In the mapping, the value is the internal property name. Leave it blank to skip that field.</li>
-        <li>Save, turn sending on or off, and use <strong>Send test</strong>. The section shows the account, the last 4 characters of the token, the scopes, failures and recent deliveries.</li>
-        <li><strong>Disconnect</strong> removes the account from this link.</li>
+        <li>In HubSpot, open <strong>Settings &gt; Integrations &gt; Private Apps</strong> and create an app.</li>
+        <li>Enable the scopes <code>crm.objects.contacts.read</code>, <code>crm.objects.contacts.write</code>, <code>crm.schemas.contacts.read</code> and <code>crm.schemas.contacts.write</code>.</li>
+        <li>Copy the <code>pat-…</code> token, paste it into the password field and save. The token is not kept in the browser: the section shows the method and only the last 4 characters.</li>
       </ol>
-      <p>If the connection is not available yet, the editor says so instead of opening HubSpot.</p>
+      <p><strong>OAuth</strong></p>
+      <ol>
+        <li>When OAuth is available, click <strong>Connect with HubSpot</strong> and authorize GuiaFlow.</li>
+        <li>The other option in the same place is <strong>use a private app token</strong>.</li>
+      </ol>
+      <p>In the mapping, the value is the internal property name. Leave it blank to skip that field. Save, turn sending on or off, and use <strong>Send test</strong>. The section shows the method (OAuth or token ····1234), the account, the scopes, failures and recent deliveries. <strong>Disconnect</strong> removes the account from this link. If OAuth is not available, the Connect button stays hidden and the token is the path.</p>
     </section>
     <section class="card" id="leadpronto">
       <h2>LeadPronto</h2>
