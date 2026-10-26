@@ -20,7 +20,8 @@ API, na raiz de `guiaflow-cloud`:
    - `SUPERADMIN_EMAILS` com o e-mail que entra como Team sem Stripe
    - `GUIAFLOW_DEV_TOKEN=1` e `RESEND_API_KEY` vazio. O `POST /auth/magic-link` devolve `devToken` e `delivered: false`
    - `COLLAB_ENABLED=1`. Com `0`, as rotas `/collab` respondem 404
-3. Subir com `node --env-file=.env --watch apps/api/src/index.js`. O script `npm run dev:api` não lê o `.env`.
+3. Subir com `node --env-file=.env --watch apps/api/src/index.js`. O script `npm run dev:api` não lê o `.env`. Se o watch ficar preso em «Waiting for graceful termination…» (a API continua com o código antigo), mate o processo na :4000 e suba sem `--watch`.
+4. O seed de dev cria o admin do banco em memória na subida e anuncia a senha no log (`guiaflow-cloud seed admin: … · senha "…"`), que por padrão é `guiaflow-dev-local` no primeiro e-mail de `SUPERADMIN_EMAILS`. Serve para entrar por senha no editor, já que o magic link não tem SMTP local.
 
 Editor, na raiz de `gflow`:
 
