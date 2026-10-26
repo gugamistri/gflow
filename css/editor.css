@@ -4720,6 +4720,11 @@ body.is-presenting .editor-popover {
   font-variant-numeric: tabular-nums;
 }
 
+/* O passo atual aparece no topo do painel; na barra do canvas só quando o painel está recolhido. */
+.view-editor:not(.is-props-collapsed) .canvas-toolbar .toolbar-pos {
+  display: none;
+}
+
 .canvas-toolbar .btn-danger-hover:hover:not(:disabled) {
   color: var(--ns-danger);
   border-color: color-mix(in srgb, var(--ns-danger) 45%, var(--ns-border));
@@ -8524,7 +8529,7 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .results-btn { display: inline-flex; align-items: center; gap: 6px; 
 }
 
-.capture-btn { display: inline-flex; align-items: center; gap: 6px; 
+.capture-btn { display: inline-flex; align-items: center; gap: 6px; }
 
 .results-tablist { position: static; padding: 0; margin: 0; flex-wrap: wrap; 
 }
