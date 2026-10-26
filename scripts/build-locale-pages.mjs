@@ -109,6 +109,14 @@ export const PAGES = [
   },
 ];
 
+/**
+ * Páginas públicas PT sem par EN/ES: não passam pelo gerador de locales, mas
+ * entram no sitemap. `/cortesia` é linkada no rodapé de todas as páginas.
+ */
+export const EXTRA_PAGES = [
+  { path: "/cortesia", lastmod: "2026-10-26" },
+];
+
 /** Caminho público (forma canônica: sem barra final; a raiz PT é "/"). */
 export function localePath(page, loc) {
   if (loc === "pt") return page.path || "/";
@@ -419,6 +427,9 @@ export function renderSitemap() {
       alts.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${absUrl(localePath(page, "pt"))}" />`);
       urls.push(`  <url>\n    <loc>${absUrl(localePath(page, loc))}</loc>\n    <lastmod>${page.lastmod}</lastmod>\n${alts.join("\n")}\n  </url>`);
     }
+  }
+  for (const page of EXTRA_PAGES) {
+    urls.push(`  <url>\n    <loc>${absUrl(page.path)}</loc>\n    <lastmod>${page.lastmod}</lastmod>\n  </url>`);
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join("\n")}\n</urlset>\n`;
 }
