@@ -115,6 +115,7 @@ export const PAGES = [
  */
 export const EXTRA_PAGES = [
   { path: "/cortesia", lastmod: "2026-10-26" },
+  { path: "/integracoes/leadpronto", lastmod: "2026-10-26" },
 ];
 
 /** Caminho público (forma canônica: sem barra final; a raiz PT é "/"). */
@@ -319,6 +320,7 @@ function withLandingJsonLd(html, page, loc) {
   const site = { "@type": "WebSite", "@id": `${ORIGIN}/#website`, name: "GuiaFlow", url: `${ORIGIN}/`, inLanguage: ["pt-BR", "en", "es"], publisher: { "@id": `${ORIGIN}/#organization` } };
   const app = {
     "@type": "SoftwareApplication",
+    "@id": `${ORIGIN}/#software`,
     name: "GuiaFlow",
     url,
     applicationCategory: "BusinessApplication",
