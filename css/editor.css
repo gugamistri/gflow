@@ -6169,6 +6169,43 @@ dialog.fixed-modal[open] {
   vertical-align: middle;
 }
 
+.capture-tablist {
+  flex-wrap: wrap;
+  position: static;
+  margin: 0;
+  background: var(--ns-panel);
+}
+
+.capture-tablist .share-tab {
+  flex: 1 1 8.2rem;
+}
+
+.capture-tablist .pro-badge {
+  flex: none;
+}
+
+.capture-pane[hidden] {
+  display: none !important;
+}
+
+@media (max-height: 820px) {
+dialog.capture-modal .fixed-dialog {
+  gap: 6px;
+  padding: 10px 14px 8px;
+}
+dialog.capture-modal .fixed-lead {
+  font-size: 0.75rem;
+}
+dialog.capture-modal .fixed-group {
+  padding: 6px 8px;
+  gap: 6px;
+}
+dialog.capture-modal textarea {
+  min-height: 48px;
+  max-height: 72px;
+}
+}
+
 .fixed-preview .fixed-card .fixed-form .fixed-input {
   min-height: 34px;
   padding: 6px 9px;
@@ -8487,6 +8524,8 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .results-btn { display: inline-flex; align-items: center; gap: 6px; 
 }
 
+.capture-btn { display: inline-flex; align-items: center; gap: 6px; 
+
 .results-tablist { position: static; padding: 0; margin: 0; flex-wrap: wrap; 
 }
 
@@ -8502,6 +8541,8 @@ body.is-compact-touch dialog.results-modal[open] {
 
 @media (max-width: 760px) {
 .results-btn span:not(.pro-badge):not(.pro-badge *) { display: none; 
+}
+.capture-btn > span { display: none; 
 }
 }
 
@@ -8556,6 +8597,16 @@ body.is-compact-touch .share-pane { padding: 8px 12px;
 }
 
 body.is-compact-touch .results-btn { min-width: 44px; min-height: 44px; 
+}
+
+body.is-compact-touch .capture-btn { min-width: 44px; min-height: 44px; 
+}
+
+/* Captura: cabeçalho, abas e Salvar ficam fixos; só o miolo da aba rola */
+body.is-compact-touch dialog.studio-modal.fixed-modal[open] {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 body.is-compact-touch .topbar details[open] > .account-chip-menu,
