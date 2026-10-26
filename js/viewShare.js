@@ -27,6 +27,15 @@ export function permanentShareEndpoint(base, slug) {
   return `${root}/api/shares/${encodeURIComponent(slug)}`;
 }
 
+/** Destino do selo: a landing, medida pela campanha. O apex só serve o editor. */
+export const BRAND_BADGE_HREF = "https://guiaflow.pro/?utm_source=selo&utm_medium=tour&utm_campaign=feito-com";
+
+/** Contador do selo no Cloud; sem nuvem configurada não há clique a contar. */
+export function brandClickEndpoint(base) {
+  const root = String(base || "").replace(/\/$/, "");
+  return root ? `${root}/api/brand-clicks` : "";
+}
+
 /**
  * O GET /api/shares/:slug devolve o mesmo objeto que o editor envia em `tour`.
  */
@@ -123,6 +132,22 @@ export function sharePageTitle(name, fallback = "GuiaFlow — Tour", { branded =
 export function shareBranding(kind, tour, server = null) {
   if (kind !== "permanent" || server === "shown") return "full";
   return tour && typeof tour === "object" && tour.removeBranding === false ? "credit" : "none";
+}
+
+/**
+ * Selo «Feito com GuiaFlow» do player. Todo tour de quem não é Pro leva o selo:
+ * - "temporary" (/v, preview de 7 dias) é sempre de conta gratuita → selo e clique contado.
+ * - "permanent" com `server === "shown"` (o dono perdeu o Pro) → selo e clique contado.
+ * - "permanent" com crédito pedido pelo autor Pro (`removeBranding: false`) → selo visível,
+ *   mas fora da contagem de aquisição: o dono é Pro.
+ * - "permanent" sem marca → nada.
+ * why: o selo é o loop de aquisição; a contagem ignora Pro para não inflar o número.
+ */
+export function brandBadge(kind, tour, server = null) {
+  const mode = shareBranding(kind, tour, server);
+  if (kind === "temporary") return { shown: true, kind: "temporary", measured: true };
+  if (server === "shown") return { shown: true, kind: "permanent", measured: true };
+  return { shown: mode === "credit", kind: "permanent", measured: false };
 }
 
 /** Cartão do passo (slide ou popover) e o destaque da tela. */
