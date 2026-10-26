@@ -36,10 +36,10 @@ export const PAGES = [
     lastmod: "2026-10-26",
     meta: {
       en: {
-        description: "Free interactive demo maker, open source (MIT): turn screenshots of your product into an interactive, narrated product tour in minutes. Free in the browser.",
+        description: "Turn your client's product into an interactive demo from screenshots. Free in the browser, open source, with leads in LeadPronto, RD Station or HubSpot.",
       },
       es: {
-        description: "Crea gratis un demo interactivo de tu producto: tour interactivo y narrado a partir de capturas, gratis en el navegador y open source (código abierto, MIT).",
+        description: "Demo interactivo del producto de tu cliente, a partir de capturas. Gratis en el navegador, open source, con leads en LeadPronto, RD Station o HubSpot.",
       },
     },
     heroOg: true,
