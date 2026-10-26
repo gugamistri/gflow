@@ -27,6 +27,13 @@ import {
 } from "./canvasEdit.js";
 import { isCompactLandscape, isCompactTouch } from "./compact.js";
 import {
+  TOUCH_DRAG_HOLD_MS,
+  TOUCH_DRAG_SLOP,
+  dropTargetAt,
+  edgeScrollSpeed,
+  insertBeforeFor,
+} from "./filmDrag.js";
+import {
   isPropsPanelShortcut,
   planToolbarOverflow,
   readPropsPanelOpen,
@@ -346,6 +353,10 @@ export function createEditor(ctx) {
   let filmDragFrom = null;
   let filmDragIndices = null;
   let filmDragKind = "step";
+  /** Arraste por toque no celular: substitui as setas ← → que gastavam uma linha do cartão. */
+  let touchDrag = null;
+  let touchDragRaf = 0;
+  let ignoreFilmClickTimer = 0;
   let pickMode = "replace"; // replace | createSteps
   let clickPointDragging = false;
   let previewDriver = null;
@@ -574,6 +585,7 @@ export function createEditor(ctx) {
     const upGlyph = horizontalStrip ? "←" : "↑";
     const downGlyph = horizontalStrip ? "→" : "↓";
     const removeLabel = escapeAttr(t("filmstrip.remove"));
+    const menuLabel = escapeAttr(t("filmstrip.menu"));
 
     demo.steps.forEach((step, index) => {
       if (step.scene !== lastScene) {
@@ -624,6 +636,7 @@ export function createEditor(ctx) {
             <button type="button" class="film-action-move" data-action="up" ${index === 0 ? "disabled" : ""} title="${upLabel}" aria-label="${upLabel}">${upGlyph}</button>
             <button type="button" class="film-action-move" data-action="down" ${index === lastIndex ? "disabled" : ""} title="${downLabel}" aria-label="${downLabel}">${downGlyph}</button>
             <button type="button" class="film-action-close" data-action="delete" title="${removeLabel}" aria-label="${removeLabel}">×</button>
+            <button type="button" class="film-action-menu" data-action="menu" title="${menuLabel}" aria-label="${menuLabel}">⋯</button>
           </div>
         </div>`;
     });
@@ -3074,6 +3087,8 @@ export function createEditor(ctx) {
       return;
     }
     if (action === "delete") {
+      // why: o × do cartão saiu do celular (virou o menu ⋯); a confirmação vem junto.
+      if (isCompactTouch() && !window.confirm(t("filmstrip.confirmRemove"))) return;
       guardedDelete();
       return;
     }
@@ -3104,6 +3119,8 @@ export function createEditor(ctx) {
     const demo = getDemo();
     syncSelectionFromPrimary();
     const indices = selectedIndices;
+    // why: em pé a filmstrip rola na horizontal — "para cima/baixo" ali vira "para a esquerda/direita".
+    const horizontalStrip = isCompactTouch() && !isCompactLandscape();
     const captionState = captionVisibilityState(demo.steps, indices);
     const checked = captionState === "on" ? "true" : captionState === "mixed" ? "mixed" : "false";
     const menu = document.createElement("div");
@@ -3141,10 +3158,10 @@ export function createEditor(ctx) {
       }),
       filmMenuButton("delete", t("filmstrip.remove"), { danger: true }),
       `<div class="film-context-sep" role="separator"></div>`,
-      filmMenuButton("up", t("filmstrip.moveUp"), {
+      filmMenuButton("up", t(horizontalStrip ? "filmstrip.moveLeft" : "filmstrip.moveUp"), {
         disabled: nudgeBlockInsert(indices, -1, demo.steps.length) == null,
       }),
-      filmMenuButton("down", t("filmstrip.moveDown"), {
+      filmMenuButton("down", t(horizontalStrip ? "filmstrip.moveRight" : "filmstrip.moveDown"), {
         disabled: nudgeBlockInsert(indices, 1, demo.steps.length) == null,
       }),
       `<div class="film-context-sep" role="separator"></div>`,
@@ -3156,7 +3173,10 @@ export function createEditor(ctx) {
     ].join("");
     document.body.appendChild(menu);
     filmMenuEl = menu;
-    placeFilmMenu(menu, x, y);
+    // why: no celular o menu vira folha colada na barra de baixo — cabe os 44px de toque e o
+    // polegar alcança; no desktop continua sendo o menu de contexto no ponto do clique.
+    if (isCompactTouch()) menu.classList.add("is-sheet");
+    else placeFilmMenu(menu, x, y);
     menu.querySelector("button:not(:disabled)")?.focus();
     document.addEventListener("pointerdown", onFilmMenuPointerDown, true);
     document.addEventListener("keydown", onFilmMenuKeydown, true);
@@ -3359,6 +3379,8 @@ export function createEditor(ctx) {
       const item = e.target.closest(".film-item");
       if (!item) return;
       e.preventDefault();
+      // why: o toque longo do celular começa o arraste antes; o menu do sistema não entra no meio.
+      if (touchDrag?.held) return;
       e.stopPropagation();
       ignoreNextFilmClick = true;
       window.setTimeout(() => {
@@ -3417,7 +3439,13 @@ export function createEditor(ctx) {
         const action = actionBtn.dataset.action;
         if (action === "up") reorderStepGroup([index], index - 1);
         else if (action === "down") reorderStepGroup([index], index + 2);
-        else if (action === "delete") {
+        else if (action === "menu") {
+          // why: no celular o ⋯ do cartão é a porta para mover, duplicar e excluir — as setas
+          // e o × saíram do cartão para a filmstrip não gastar uma linha por passo.
+          const anchor = actionBtn.getBoundingClientRect();
+          if (!selectedIndices.includes(index)) selectStep(index);
+          void openFilmContextMenu(anchor.left, anchor.bottom + 6, index);
+        } else if (action === "delete") {
           if (!selectedIndices.includes(index) || selectedIndices.length <= 1) {
             applySelection([index], index);
           }
@@ -3448,6 +3476,169 @@ export function createEditor(ctx) {
         range: e.shiftKey && !(e.metaKey || e.ctrlKey),
       });
     });
+
+    // ── Reordenar arrastando no toque ─────────────────────────────────────────
+    // why: no celular não existe dragstart/drop; segurar o cartão e arrastar faz o mesmo que
+    // as setas ← → faziam, sem gastar uma linha do cartão. Toque curto continua selecionando e
+    // o deslize continua rolando a faixa: o arraste só arma depois de TOUCH_DRAG_HOLD_MS parado.
+
+    function filmstripIsHorizontal() {
+      return isCompactTouch() && !isCompactLandscape();
+    }
+
+    function touchDragCards() {
+      const demo = getDemo();
+      return [...els.filmstrip.querySelectorAll(".film-item")].map((el) => {
+        const rect = el.getBoundingClientRect();
+        const index = Number(el.dataset.index);
+        return {
+          index,
+          scene: Number(demo.steps[index]?.scene) || 1,
+          rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+        };
+      });
+    }
+
+    function paintTouchDragTarget() {
+      if (!touchDrag) return;
+      clearFilmDropMarks();
+      touchDrag.target = dropTargetAt({
+        x: touchDrag.x,
+        y: touchDrag.y,
+        horizontal: filmstripIsHorizontal(),
+        cards: touchDragCards(),
+      });
+      const target = touchDrag.target;
+      if (!target || target.index === touchDrag.from) return;
+      els.filmstrip
+        .querySelector(`.film-item[data-index="${target.index}"]`)
+        ?.classList.add(target.before ? "drop-before" : "drop-after");
+    }
+
+    function markTouchDrag(from) {
+      els.filmstrip
+        .querySelectorAll(".film-item.is-touch-dragging")
+        .forEach((el) => el.classList.remove("is-touch-dragging"));
+      els.filmstrip.querySelector(`.film-item[data-index="${from}"]`)?.classList.add("is-touch-dragging");
+    }
+
+    function touchDragLoop() {
+      const drag = touchDrag;
+      if (!drag?.held) {
+        touchDragRaf = 0;
+        return;
+      }
+      const box = els.filmstrip.getBoundingClientRect();
+      const horizontal = filmstripIsHorizontal();
+      const step = edgeScrollSpeed({
+        pos: horizontal ? drag.x : drag.y,
+        min: horizontal ? box.left : box.top,
+        max: horizontal ? box.right : box.bottom,
+      });
+      if (step) {
+        if (horizontal) els.filmstrip.scrollLeft += step;
+        else els.filmstrip.scrollTop += step;
+        paintTouchDragTarget();
+      }
+      touchDragRaf = requestAnimationFrame(touchDragLoop);
+    }
+
+    function beginTouchDrag() {
+      const drag = touchDrag;
+      if (!drag) return;
+      drag.held = true;
+      try {
+        els.filmstrip.setPointerCapture(drag.pointerId);
+      } catch {
+        /* o arraste segue enquanto o dedo estiver sobre a faixa */
+      }
+      document.body.classList.add("is-film-dragging");
+      markTouchDrag(drag.from);
+      paintTouchDragTarget();
+      touchDragRaf = requestAnimationFrame(touchDragLoop);
+    }
+
+    function stopTouchDrag(commit) {
+      const drag = touchDrag;
+      if (!drag) return;
+      touchDrag = null;
+      window.clearTimeout(drag.timer);
+      if (touchDragRaf) {
+        cancelAnimationFrame(touchDragRaf);
+        touchDragRaf = 0;
+      }
+      if (!drag.held) return; // toque curto: o clique segue o caminho normal
+      document.body.classList.remove("is-film-dragging");
+      clearFilmDropMarks();
+      els.filmstrip
+        .querySelectorAll(".film-item.is-touch-dragging")
+        .forEach((el) => el.classList.remove("is-touch-dragging"));
+      if (!commit) return;
+      const insertBefore = insertBeforeFor(drag.target);
+      if (insertBefore == null) return;
+      // soltou no mesmo lugar (ou só segurou sem arrastar): deixa o clique selecionar como sempre
+      if (insertBefore === drag.from || insertBefore === drag.from + 1) return;
+      // why: o clique que vem depois do pointerup não deve re-selecionar o cartão nem abrir nada
+      ignoreNextFilmClick = true;
+      window.clearTimeout(ignoreFilmClickTimer);
+      ignoreFilmClickTimer = window.setTimeout(() => {
+        ignoreNextFilmClick = false;
+      }, 400);
+      reorderStepGroup([drag.from], insertBefore, drag.target.scene);
+    }
+
+    els.filmstrip.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" || !isCompactTouch() || touchDrag) return;
+      const item = e.target.closest?.(".film-item");
+      if (!item || e.target.closest("button, .inline-edit")) return;
+      touchDrag = {
+        from: Number(item.dataset.index),
+        pointerId: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        held: false,
+        target: null,
+        timer: window.setTimeout(beginTouchDrag, TOUCH_DRAG_HOLD_MS),
+      };
+    });
+
+    els.filmstrip.addEventListener("pointermove", (e) => {
+      const drag = touchDrag;
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      if (!drag.held) {
+        if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > TOUCH_DRAG_SLOP) {
+          window.clearTimeout(drag.timer);
+          touchDrag = null; // o dedo andou logo: é rolagem da faixa, não arraste
+        }
+        return;
+      }
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+      paintTouchDragTarget();
+    });
+
+    for (const type of ["pointerup", "pointercancel"]) {
+      els.filmstrip.addEventListener(type, (e) => {
+        if (!touchDrag || e.pointerId !== touchDrag.pointerId) return;
+        stopTouchDrag(type === "pointerup");
+      });
+    }
+
+    // why: sem captura ainda, sair da faixa cancela o toque longo (senão o arraste armaria com o dedo fora)
+    els.filmstrip.addEventListener("pointerleave", () => {
+      if (touchDrag && !touchDrag.held) {
+        window.clearTimeout(touchDrag.timer);
+        touchDrag = null;
+      }
+    });
+
+    els.filmstrip.addEventListener(
+      "touchmove",
+      (e) => {
+        if (touchDrag?.held) e.preventDefault();
+      },
+      { passive: false }
+    );
   }
 
   function bindHotspotDrag() {
