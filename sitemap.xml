@@ -168,4 +168,8 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/terminos" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/termos" />
   </url>
+  <url>
+    <loc>https://guiaflow.pro/cortesia</loc>
+    <lastmod>2026-10-26</lastmod>
+  </url>
 </urlset>

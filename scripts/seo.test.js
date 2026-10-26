@@ -26,6 +26,7 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/ajuda<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/privacidade<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/termos<\/loc>/);
+  assert.match(text, /<loc>https:\/\/guiaflow\.pro\/cortesia<\/loc>/);
   assert.match(text, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   assert.equal(text.includes(".html"), false);
   assert.equal(text.includes("/view"), false);
@@ -58,6 +59,7 @@ test("editor em /editor: canônico próprio e fora do índice", () => {
   assert.match(editor, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/editor"/);
   assert.match(editor, /<meta name="robots" content="noindex, follow"/);
   assert.match(editor, /<meta property="og:url" content="https:\/\/guiaflow\.pro\/editor"/);
+  assert.equal(editor.includes('href="ajuda.html'), false);
   const sitemap = read("sitemap.xml");
   assert.equal(sitemap.includes("/editor"), false);
 });
@@ -76,7 +78,7 @@ test("home e ajuda têm título, descrição, canônico e Open Graph", () => {
   assert.match(ajuda, /<title[^>]*>[^<]*GuiaFlow[^<]*<\/title>/);
   assert.match(ajuda, /<meta name="description" content="Como gravar um demo no GuiaFlow:[^"]+"/);
   assert.match(ajuda, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/ajuda"/);
-  assert.match(ajuda, /<meta property="og:title" content="Como usar — GuiaFlow"/);
+  assert.match(ajuda, /<meta property="og:title" content="Como gravar um demo interativo \(passo a passo\) — GuiaFlow"/);
   assert.match(ajuda, /<meta property="og:description" content="Como gravar um demo no GuiaFlow:[^"]+"/);
   assert.match(ajuda, /<meta property="og:url" content="https:\/\/guiaflow\.pro\/ajuda"/);
   assert.equal(/nuvem/i.test(ajuda.slice(0, ajuda.indexOf("</head>"))), false);
