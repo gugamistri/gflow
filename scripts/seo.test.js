@@ -27,6 +27,7 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/privacidade<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/termos<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/cortesia<\/loc>/);
+  assert.match(text, /<loc>https:\/\/guiaflow\.pro\/integracoes\/leadpronto<\/loc>/);
   assert.match(text, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   assert.equal(text.includes(".html"), false);
   assert.equal(text.includes("/view"), false);
@@ -34,8 +35,19 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.equal(/nuvem/i.test(text), false);
 });
 
-test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {
-  const config = JSON.parse(read("vercel.json"));
+test("página do LeadPronto: canônica, hreflang PT e schema", () => {
+  const html = read("integracoes/leadpronto.html");
+  assert.match(html, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/integracoes\/leadpronto"/);
+  assert.match(html, /<link rel="alternate" hreflang="pt-BR" href="https:\/\/guiaflow\.pro\/integracoes\/leadpronto"/);
+  assert.equal(/<link rel="alternate" hreflang="en"/.test(html), false);
+  assert.match(html, /"@type": "FAQPage"/);
+  assert.equal((html.match(/"@type": "Question"/g) || []).length, 6);
+  assert.match(html, /<h1>Integração GuiaFlow e LeadPronto:/);
+  assert.match(read("integracoes.html"), /href="\/integracoes\/leadpronto"/);
+  assert.match(read("sitemap.xml"), /<loc>https:\/\/guiaflow\.pro\/integracoes\/leadpronto<\/loc>/);
+});
+
+test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {  const config = JSON.parse(read("vercel.json"));
   const headers = config.headers || [];
   const robots = headers.find((entry) => entry.source === "/robots.txt");
   const sitemap = headers.find((entry) => entry.source === "/sitemap.xml");
