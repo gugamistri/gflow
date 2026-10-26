@@ -1,6 +1,10 @@
 .DS_Store
 .cursor
 .tlc
+.agents
+.mailmap
+skills-lock.json
+scripts/switch-gh-user.sh
 offline
 **/playwright-video*
 **/*.webm
