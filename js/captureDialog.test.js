@@ -38,8 +38,8 @@ test("Captura fica antes de Resultados e Compartilhar, com abas acessíveis", ()
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const editor = readFileSync(new URL("./editor.js", import.meta.url), "utf8");
   const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  assert.ok(html.indexOf('id="btn-capture"') < html.indexOf('class="export-panel"'));
   assert.ok(html.indexOf('id="btn-capture"') < html.indexOf('id="btn-results"'));
-  assert.ok(html.indexOf('id="btn-results"') < html.indexOf('class="export-panel"'));
   assert.match(html, /id="btn-capture"[^>]*aria-controls="modal-capture"/);
   const dialog = html.slice(html.indexOf('id="modal-capture"'), html.indexOf("</dialog>", html.indexOf('id="modal-capture"')));
   assert.match(dialog, /role="tablist"/);
