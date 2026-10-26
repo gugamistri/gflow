@@ -539,6 +539,7 @@ section {
 .cases,
 .how,
 .features,
+.integrations,
 .pricing,
 .testers,
 .faq {
@@ -550,6 +551,7 @@ section {
   .cases,
   .how,
   .features,
+  .integrations,
   .pricing,
   .testers,
   .faq {
@@ -1191,3 +1193,14 @@ section {
 .locale-menu .locale-links a[aria-current="page"] { background: transparent; color: #fff; font-weight: 700; }
 .locale-menu .locale-links a[aria-current="page"]::after { content: "✓"; margin-left: auto; color: var(--accent, #2a9d8f); }
 @media (prefers-reduced-motion: reduce) { .locale-menu-caret { transition: none; } }
+
+/* Faixa de integrações e nota de agência */
+.int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.int-card { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; text-decoration: none; color: var(--ink); transition: border-color .15s ease, transform .15s ease; }
+.int-card:hover { border-color: var(--teal); transform: translateY(-1px); }
+.int-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.int-card strong { font-size: 0.95rem; }
+.int-card span { color: var(--muted); font-size: 0.84rem; line-height: 1.4; }
+.int-all { margin: 18px 0 0; text-align: center; font-weight: 600; }
+.agency-note { max-width: 760px; margin: 18px auto 0; color: var(--muted); font-size: 0.9rem; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .int-card { transition: none; } .int-card:hover { transform: none; } }
