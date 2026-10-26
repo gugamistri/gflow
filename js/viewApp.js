@@ -12,6 +12,9 @@ import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBL
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
 import { resolveShareMedia } from "./shareMedia.js";
 import {
+  BRAND_BADGE_HREF,
+  brandBadge,
+  brandClickEndpoint,
   decideEscape,
   embedShowsCover,
   parseEmbedOptions,
@@ -196,8 +199,29 @@ let branding = document.documentElement.classList.contains("is-unbranded") ? "no
 function applyBranding(mode) {
   branding = mode;
   document.documentElement.classList.toggle("is-unbranded", mode !== "full");
+}
+
+/** Selo «Feito com GuiaFlow»: visível no tour de quem não é Pro, com clique contado. */
+let brandClickSent = false;
+
+function sendBrandClick(kind) {
+  if (brandClickSent) return;
+  const endpoint = brandClickEndpoint(getCloudBaseUrl());
+  // why: instância sem nuvem própria não pode contar na nuvem de outra pessoa
+  if (!endpoint) return;
+  brandClickSent = true;
+  defaultSender(endpoint)(JSON.stringify({ v: 1, kind }), { beacon: true });
+}
+
+function applyBrandBadge(route) {
   const credit = document.getElementById("view-credit");
-  if (credit) credit.hidden = mode !== "credit";
+  if (!credit) return;
+  const badge = brandBadge(route?.kind, demo, shareServerBranding);
+  credit.hidden = !badge.shown;
+  if (!badge.shown) return;
+  credit.href = BRAND_BADGE_HREF;
+  if (!badge.measured) return;
+  credit.addEventListener("click", () => sendBrandClick(badge.kind), { once: true });
 }
 
 // why: ?embed=1 = iframe no site do cliente; a classe também vem do <head> para não piscar
@@ -692,7 +716,10 @@ async function boot() {
 
   if (route.kind === "permanent") shareSlug = route.id;
   // why: no /p mantém o que o shell decidiu até o tour chegar (sem piscar o logo)
-  if (route.kind !== "permanent") applyBranding("full");
+  if (route.kind !== "permanent") {
+    applyBranding("full");
+    applyBrandBadge(route);
+  }
   try {
     demo = await loadDemo(route);
   } catch (err) {
@@ -713,6 +740,7 @@ async function boot() {
   setupLanguages(route);
 
   applyBranding(shareBranding(route.kind, demo, shareServerBranding));
+  applyBrandBadge(route);
   applyShareTitle(demo.name || shareBoot?.name || "");
 
   // why: o índice do editor no storage não pode abrir o link no passo 2
