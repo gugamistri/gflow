@@ -97,7 +97,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 1[123] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/159\/css\/ajuda\.css/);
+    assert.match(html, /a\/160\/css\/ajuda\.css/);
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -134,6 +134,23 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(llms, /^# GuiaFlow$/m);
   assert.match(llms, /https:\/\/app\.guiaflow\.pro\/mcp/);
   assert.match(llms, /https:\/\/app\.guiaflow\.pro\/v1\/openapi\.json/);
+  // why: o editor MIT roda sem conta; só os serviços hospedados são Pro (GUI-13)
+  assert.equal(llms.includes("Pro plan only"), false);
+  assert.match(llms, /open source \(MIT\)/);
+  assert.match(llms, /no account/);
+  assert.match(llms, /Pro plan/);
+});
+
+test("a landing mostra o demo real do LeadPronto no lugar do «em breve» (GUI-13)", () => {
+  const slug = read("js/landing.js").match(/LANDING_DEMO_SLUG = "([A-Za-z0-9][A-Za-z0-9_-]{0,80})"/);
+  assert.ok(slug, "LANDING_DEMO_SLUG não encontrado em js/landing.js");
+  for (const page of ["index.html", "en.html", "es.html"]) {
+    const html = read(page);
+    assert.equal(html.includes("chega em breve"), false, page);
+    assert.equal(html.includes("coming soon"), false, page);
+    assert.equal(html.includes("llega pronto"), false, page);
+    assert.match(html, new RegExp(`<a[^>]*class="btn btn-primary"[^>]*href="/p/${slug[1]}"`), page);
+  }
 });
 
 test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos absolutos", () => {
@@ -145,7 +162,7 @@ test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos 
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
   assert.equal(/data-doc-locale="(es|en)"/.test(html), false);
   assert.equal(/(href|src)="a\//.test(html), false);
-  assert.match(html, /a\/159\/css\/ajuda\.css/);
+  assert.match(html, /a\/160\/css\/ajuda\.css/);
   assert.match(read("sitemap.xml"), /guiaflow\.pro\/integracoes/);
   assert.match(read("index.html"), /href="\/integracoes"/);
 });
