@@ -81,14 +81,14 @@ test("caixa de consentimento: sem preenchimento escuro nativo; desmarcada como o
   assert.equal(prop(rule(".fixed-card"), "color-scheme"), "var(--demo-color-scheme, light)");
 });
 
-test("diálogos dos passos fixos: só o miolo rola e as ações ficam sempre visíveis", () => {
+test("diálogo da captura: só o miolo rola e as ações ficam sempre visíveis", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
-  for (const id of ["modal-fixed-start", "modal-fixed-end"]) {
-    const start = html.indexOf(`id="${id}"`);
-    const dialog = html.slice(start, html.indexOf("</dialog>", start));
-    const scroll = dialog.indexOf('class="fixed-dialog-scroll"');
-    const actions = dialog.indexOf("studio-modal-actions fixed-actions");
-    assert.ok(scroll > 0 && actions > scroll, id);
-    assert.match(dialog, /<details class="fixed-more">/);
-  }
+  const start = html.indexOf('id="modal-capture"');
+  const dialog = html.slice(start, html.indexOf("</dialog>", start));
+  const scroll = dialog.indexOf('class="fixed-dialog-scroll"');
+  const actions = dialog.indexOf("studio-modal-actions fixed-actions");
+  assert.ok(scroll > 0 && actions > scroll);
+  assert.match(dialog, /<details class="fixed-more">/);
+  assert.equal(html.includes('id="modal-fixed-start"'), false);
+  assert.equal(html.includes('id="modal-fixed-end"'), false);
 });

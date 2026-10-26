@@ -1,6 +1,7 @@
 /**
- * Diálogos dos passos fixos no editor (cartões 📌 Início/Fim da filmstrip).
+ * Diálogo Captura (ENTRADA): abas Formulário inicial, Campos, Passo final e Consentimento.
  * O rascunho só vai para o projeto em "Salvar" — um passo de histórico por edição.
+ * Os cartões 📌 da filmstrip abrem a aba correspondente.
  */
 import { getLocale, t } from "./i18n.js";
 import {
@@ -19,22 +20,81 @@ import { createPhoneField, phoneErrorText as sharedPhoneErrorText } from "./phon
 
 const $ = (id) => document.getElementById(id);
 
+export const CAPTURE_TABS = ["form", "fields", "end", "consent"];
+
+const SHORTCUT_TAB = {
+  start: "form",
+  form: "form",
+  fields: "fields",
+  end: "end",
+  consent: "consent",
+};
+
+/** Atalho da filmstrip (start/end) ou nome da aba → aba do diálogo. */
+export function captureTabForShortcut(kind) {
+  return SHORTCUT_TAB[kind] || "form";
+}
+
+/** Próxima aba com setas, Home e End. A lista vem dos botões visíveis. */
+export function nextCaptureTab(current, key, tabs = CAPTURE_TABS) {
+  const list = tabs?.length ? tabs : CAPTURE_TABS;
+  let i = list.indexOf(current);
+  if (i < 0) i = 0;
+  if (key === "ArrowRight" || key === "ArrowDown") return list[(i + 1) % list.length];
+  if (key === "ArrowLeft" || key === "ArrowUp") return list[(i - 1 + list.length) % list.length];
+  if (key === "Home") return list[0];
+  if (key === "End") return list[list.length - 1];
+  return list[i];
+}
+
+/** Um save, um tipo: start, end ou both. Vazio = nada mudou. */
+export function captureSaveKind(startChanged, endChanged) {
+  if (startChanged && endChanged) return "both";
+  if (startChanged) return "start";
+  if (endChanged) return "end";
+  return "";
+}
+
 function phoneErrorText(result, countryName) {
   return sharedPhoneErrorText(result, countryName, t);
 }
 
-export function createFixedStepsEditor(ctx) {
-  const { getProject, onSaved, viewerIsPro, openFeatureGate, openLeads } = ctx;
-  let bound = false;
+function tabName(tab) {
+  return tab?.dataset?.captureTab || "";
+}
 
-  function endEls() {
+export function createFixedStepsEditor(ctx) {
+  const { getProject, onSaved, viewerIsPro, openFeatureGate, openLeads, permanentShare, onNeedsCloud } = ctx;
+  const canPermanent = permanentShare || (() => true);
+  let bound = false;
+  let phoneField = null;
+  let baseline = { start: "", end: "" };
+
+  function els() {
     return {
-      dialog: $("modal-fixed-end"),
-      form: $("fixed-end-form"),
-      enabled: $("fixed-end-enabled"),
-      config: $("fixed-end-config"),
-      title: $("fixed-end-title"),
-      body: $("fixed-end-body"),
+      dialog: $("modal-capture"),
+      form: $("capture-form"),
+      tablist: $("capture-tabs"),
+      startEnabled: $("fixed-start-enabled"),
+      startConfig: $("fixed-start-config"),
+      fieldsConfig: $("fixed-fields-config"),
+      startTitle: $("fixed-start-title"),
+      startBody: $("fixed-start-body"),
+      fields: $("fixed-start-fields"),
+      fieldsError: $("fixed-start-fields-error"),
+      startConsent: $("fixed-start-consent"),
+      submitLabel: $("fixed-start-submit"),
+      skip: $("fixed-start-skip"),
+      skipLabelWrap: $("fixed-start-skip-label-wrap"),
+      skipLabel: $("fixed-start-skip-label"),
+      leads: $("btn-fixed-start-leads"),
+      previewStart: $("fixed-start-preview"),
+      previewFields: $("fixed-fields-preview"),
+      previewConsent: $("fixed-consent-preview"),
+      endEnabled: $("fixed-end-enabled"),
+      endConfig: $("fixed-end-config"),
+      endTitle: $("fixed-end-title"),
+      endBody: $("fixed-end-body"),
       wa: $("fixed-end-wa"),
       waFields: $("fixed-end-wa-fields"),
       waPhone: $("fixed-end-wa-phone"),
@@ -55,64 +115,132 @@ export function createFixedStepsEditor(ctx) {
       formFields: $("fixed-end-form-fields"),
       url: $("fixed-end-url"),
       urlError: $("fixed-end-url-error"),
-      consent: $("fixed-end-consent"),
+      endConsent: $("fixed-end-consent"),
       contactLabel: $("fixed-end-contact-label"),
       replay: $("fixed-end-replay"),
-      preview: $("fixed-end-preview"),
+      previewEnd: $("fixed-end-preview"),
     };
   }
 
-  function selectedMode(els) {
-    const checked = els.form.querySelector('input[name="fixed-end-mode"]:checked');
-    return checked?.value === "form" && !els.mode.hidden ? "form" : "link";
+  function tabsOf(ui) {
+    return [...(ui.tablist?.querySelectorAll("[data-capture-tab]") || [])];
   }
 
-  /** Lê o formulário; errors marca campos inválidos (não salva com erro). */
-  function readEnd(els) {
+  function selectTab(name, { focus = false } = {}) {
+    const ui = els();
+    const tabs = tabsOf(ui);
+    const target = tabs.find((tab) => tabName(tab) === name) || tabs[0];
+    if (!target) return "";
+    for (const tab of tabs) {
+      const on = tab === target;
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+      const pane = document.getElementById(tab.getAttribute("aria-controls"));
+      if (pane) pane.hidden = !on;
+    }
+    if (focus) target.focus();
+    return tabName(target);
+  }
+
+  function selectedMode(ui) {
+    const checked = ui.form.querySelector('input[name="fixed-end-mode"]:checked');
+    return checked?.value === "form" && !ui.mode.hidden ? "form" : "link";
+  }
+
+  function fieldBox(ui, key, prop) {
+    return ui.fields.querySelector(`input[data-field="${key}"][data-prop="${prop}"]`);
+  }
+
+  function readStart(ui) {
+    const fields = {};
+    for (const key of LEAD_FIELDS) {
+      const show = fieldBox(ui, key, "show").checked;
+      fields[key] = { show, required: show && fieldBox(ui, key, "required").checked };
+    }
+    const step = normalizeStartStep({
+      enabled: ui.startEnabled.checked,
+      title: ui.startTitle.value,
+      body: ui.startBody.value,
+      fields,
+      consentText: ui.startConsent.value.trim(),
+      allowSkip: ui.skip.checked,
+      submitLabel: ui.submitLabel.value,
+      skipLabel: ui.skipLabel.value,
+      i18n: getProject()?.startStep?.i18n,
+    });
+    return { step, errors: { fields: !LEAD_FIELDS.some((key) => step.fields[key].show) } };
+  }
+
+  function readEnd(ui) {
     const phoneResult = phoneField.read();
     const phone = phoneResult.ok ? phoneResult.digits : "";
-    const rawUrl = els.url.value.trim();
-    const mode = selectedMode(els);
+    const rawUrl = ui.url.value.trim();
+    const mode = selectedMode(ui);
     const step = normalizeEndStep({
-      enabled: els.enabled.checked,
-      title: els.title.value,
-      body: els.body.value,
+      enabled: ui.endEnabled.checked,
+      title: ui.endTitle.value,
+      body: ui.endBody.value,
       whatsapp: {
-        enabled: els.wa.checked,
+        enabled: ui.wa.checked,
         phone,
-        message: els.waMessage.value,
-        label: els.waLabel.value,
+        message: ui.waMessage.value,
+        label: ui.waLabel.value,
       },
       contact: {
-        enabled: els.contact.checked,
+        enabled: ui.contact.checked,
         mode,
         url: rawUrl,
-        label: els.contactLabel.value,
-        consentText: els.consent?.value || "",
+        label: ui.contactLabel.value,
+        consentText: ui.endConsent?.value || "",
       },
-      showReplay: els.replay.checked,
+      showReplay: ui.replay.checked,
+      i18n: getProject()?.endStep?.i18n,
     });
-    // why: o botão de WhatsApp só pode ser ligado/salvo com um número válido do país escolhido
     const errors = {
-      phone: els.wa.checked && !phoneResult.ok ? phoneErrorText(phoneResult, phoneField.countryName()) : "",
-      url: els.contact.checked && mode === "link" && !safeContactHref(rawUrl),
+      phone: ui.wa.checked && !phoneResult.ok ? phoneErrorText(phoneResult, phoneField.countryName()) : "",
+      url: ui.contact.checked && mode === "link" && !safeContactHref(rawUrl),
     };
     return { step, errors };
   }
 
-  function paintEnd(els, { showErrors = false } = {}) {
-    const { step, errors } = readEnd(els);
-    els.config.classList.toggle("is-off", !els.enabled.checked);
-    els.waFields.hidden = !els.wa.checked;
-    els.contactFields.hidden = !els.contact.checked;
-    const mode = selectedMode(els);
-    els.linkFields.hidden = mode !== "link";
-    els.formFields.hidden = mode !== "form";
-    const showPhone = Boolean(errors.phone) && Boolean(showErrors || els.waPhone.dataset.touched);
-    els.waError.hidden = !showPhone;
-    if (errors.phone) els.waError.textContent = errors.phone;
-    els.waPhone.setAttribute("aria-invalid", String(showPhone));
-    els.urlError.hidden = !(showErrors || els.url.dataset.touched) || !errors.url;
+  function paintStart(ui, { showErrors = false } = {}) {
+    const { step, errors } = readStart(ui);
+    ui.startConfig.classList.toggle("is-off", !ui.startEnabled.checked);
+    ui.fieldsConfig?.classList.toggle("is-off", !ui.startEnabled.checked);
+    for (const key of LEAD_FIELDS) {
+      const req = fieldBox(ui, key, "required");
+      req.disabled = !fieldBox(ui, key, "show").checked;
+      if (req.disabled) req.checked = false;
+    }
+    ui.fieldsError.hidden = !(showErrors && step.enabled && errors.fields);
+    ui.skipLabelWrap.hidden = !ui.skip.checked;
+    const nav = globalThis.navigator;
+    const cardOpts = {
+      preview: true,
+      consentText: step.consentText || t("fixed.consentDefault"),
+      phoneCountry: leadPhoneDefaultIso(getProject()?.endStep, getLocale(), nav?.languages || [nav?.language]),
+    };
+    for (const preview of [ui.previewStart, ui.previewFields, ui.previewConsent]) {
+      if (!preview) continue;
+      preview.replaceChildren(renderStartCard(step, cardOpts));
+      preview.classList.toggle("is-off", !step.enabled);
+    }
+    return { step, errors };
+  }
+
+  function paintEnd(ui, { showErrors = false } = {}) {
+    const { step, errors } = readEnd(ui);
+    ui.endConfig.classList.toggle("is-off", !ui.endEnabled.checked);
+    ui.waFields.hidden = !ui.wa.checked;
+    ui.contactFields.hidden = !ui.contact.checked;
+    const mode = selectedMode(ui);
+    ui.linkFields.hidden = mode !== "link";
+    ui.formFields.hidden = mode !== "form";
+    const showPhone = Boolean(errors.phone) && Boolean(showErrors || ui.waPhone.dataset.touched);
+    ui.waError.hidden = !showPhone;
+    if (errors.phone) ui.waError.textContent = errors.phone;
+    ui.waPhone.setAttribute("aria-invalid", String(showPhone));
+    ui.urlError.hidden = !(showErrors || ui.url.dataset.touched) || !errors.url;
     const project = getProject();
     const card = renderEndCard(step, {
       preview: true,
@@ -120,233 +248,205 @@ export function createFixedStepsEditor(ctx) {
       link: "https://guiaflow.pro/p/…",
       contactForm: mode === "form",
     });
-    els.preview.replaceChildren(card);
-    els.preview.classList.toggle("is-off", !step.enabled);
+    ui.previewEnd.replaceChildren(card);
+    ui.previewEnd.classList.toggle("is-off", !step.enabled);
     return { step, errors };
   }
 
-  function fillEnd(els, raw) {
-    const base = raw ? normalizeEndStep(raw) : defaultEndStep();
-    els.enabled.checked = raw ? base.enabled : true;
-    els.title.value = base.title;
-    els.body.value = base.body;
-    const parsed = splitWhatsAppNumber(base.whatsapp.phone);
-    const savedRaw = String(raw?.whatsapp?.phone ?? "").trim();
-    // why: ligado sem número (padrão antigo) vira desligado; número salvo inválido aparece com o erro
-    els.wa.checked = base.whatsapp.enabled && Boolean(parsed || savedRaw);
-    phoneField.fill(parsed);
-    if (!parsed && savedRaw) els.waPhone.value = savedRaw;
-    els.waMessage.value = base.whatsapp.message || t("fixed.end.waDefaultMessage");
-    els.waLabel.value = base.whatsapp.label;
-    els.contact.checked = base.contact.enabled;
-    const mode = base.contact.mode === "form" && !els.mode.hidden ? "form" : "link";
-    for (const radio of els.form.querySelectorAll('input[name="fixed-end-mode"]')) radio.checked = radio.value === mode;
-    els.url.value = base.contact.url.replace(/^mailto:/, "");
-    if (els.consent) els.consent.value = base.contact.consentText || t("fixed.consentDefault");
-    els.contactLabel.value = base.contact.label;
-    els.replay.checked = base.showReplay;
-    if (parsed || !savedRaw) delete els.waPhone.dataset.touched;
-    else els.waPhone.dataset.touched = "1";
-    delete els.url.dataset.touched;
+  function paint(ui, opts) {
+    return { start: paintStart(ui, opts), end: paintEnd(ui, opts) };
   }
 
-  let phoneField = null;
+  function fillEnd(ui, raw) {
+    const base = raw ? normalizeEndStep(raw) : defaultEndStep();
+    ui.endEnabled.checked = Boolean(raw) && base.enabled;
+    ui.endTitle.value = base.title;
+    ui.endBody.value = base.body;
+    const parsed = splitWhatsAppNumber(base.whatsapp.phone);
+    const savedRaw = String(raw?.whatsapp?.phone ?? "").trim();
+    ui.wa.checked = base.whatsapp.enabled && Boolean(parsed || savedRaw);
+    phoneField.fill(parsed);
+    if (!parsed && savedRaw) ui.waPhone.value = savedRaw;
+    ui.waMessage.value = base.whatsapp.message || t("fixed.end.waDefaultMessage");
+    ui.waLabel.value = base.whatsapp.label;
+    ui.contact.checked = base.contact.enabled;
+    const mode = base.contact.mode === "form" && !ui.mode.hidden ? "form" : "link";
+    for (const radio of ui.form.querySelectorAll('input[name="fixed-end-mode"]')) radio.checked = radio.value === mode;
+    ui.url.value = base.contact.url.replace(/^mailto:/, "");
+    if (ui.endConsent) ui.endConsent.value = base.contact.consentText || t("fixed.consentDefault");
+    ui.contactLabel.value = base.contact.label;
+    ui.replay.checked = base.showReplay;
+    if (parsed || !savedRaw) delete ui.waPhone.dataset.touched;
+    else ui.waPhone.dataset.touched = "1";
+    delete ui.url.dataset.touched;
+  }
+
+  function fillStart(ui, raw) {
+    const base = raw ? normalizeStartStep(raw) : defaultStartStep();
+    ui.startEnabled.checked = Boolean(raw) && base.enabled;
+    ui.startTitle.value = base.title;
+    ui.startBody.value = base.body;
+    for (const key of LEAD_FIELDS) {
+      fieldBox(ui, key, "show").checked = base.fields[key].show;
+      fieldBox(ui, key, "required").checked = base.fields[key].required;
+    }
+    ui.startConsent.value = base.consentText || t("fixed.consentDefault");
+    ui.submitLabel.value = base.submitLabel;
+    ui.skip.checked = base.allowSkip;
+    ui.skipLabel.value = base.skipLabel;
+  }
 
   function bind() {
     if (bound) return;
     bound = true;
-    const els = endEls();
-    if (!els.dialog) return;
+    const ui = els();
+    if (!ui.dialog || !ui.form) return;
     phoneField = createPhoneField(
       {
-        button: els.waCc,
-        flag: els.waCcFlag,
-        dial: els.waCcDial,
-        input: els.waPhone,
-        pop: els.waCcPop,
-        search: els.waCcSearch,
-        list: els.waCcList,
-        empty: els.waCcEmpty,
+        button: ui.waCc,
+        flag: ui.waCcFlag,
+        dial: ui.waCcDial,
+        input: ui.waPhone,
+        pop: ui.waCcPop,
+        search: ui.waCcSearch,
+        list: ui.waCcList,
+        empty: ui.waCcEmpty,
       },
       {
         locale: getLocale,
         defaultIso: () => defaultCountry(getLocale(), globalThis.navigator?.languages || [globalThis.navigator?.language]),
-        onChange: () => paintEnd(els),
+        onChange: () => paintEnd(ui),
         t,
       }
     );
-    els.form.addEventListener("input", (e) => {
-      if (e.target === els.waPhone || e.target === els.waCcSearch) return; // o campo repinta sozinho
-      paintEnd(els);
+    ui.form.addEventListener("input", (e) => {
+      if (e.target === ui.waPhone || e.target === ui.waCcSearch) return;
+      paint(ui);
     });
-    els.form.addEventListener("change", (e) => {
+    ui.form.addEventListener("change", (e) => {
       if (e.target?.name === "fixed-end-mode" && e.target.value === "form" && !viewerIsPro()) {
-        for (const radio of els.form.querySelectorAll('input[name="fixed-end-mode"]')) radio.checked = radio.value === "link";
-        paintEnd(els);
-        els.dialog.close();
+        for (const radio of ui.form.querySelectorAll('input[name="fixed-end-mode"]')) radio.checked = radio.value === "link";
+        paint(ui);
         openFeatureGate("contactForm");
         return;
       }
-      paintEnd(els);
-    });
-    for (const input of [els.waPhone, els.url]) {
-      input.addEventListener("blur", () => {
-        input.dataset.touched = "1";
-        paintEnd(els);
-      });
-    }
-    els.dialog.querySelectorAll("[data-fixed-close]").forEach((btn) =>
-      btn.addEventListener("click", () => els.dialog.close())
-    );
-    els.form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const { step, errors } = paintEnd(els, { showErrors: true });
-      if (step.enabled && (errors.phone || errors.url)) {
-        if (errors.phone) els.waPhone.dataset.touched = "1";
-        (errors.phone ? els.waPhone : els.url).focus();
+      if (e.target === ui.startEnabled && ui.startEnabled.checked && !viewerIsPro()) {
+        ui.startEnabled.checked = false;
+        paint(ui);
+        openFeatureGate("leads");
         return;
       }
-      const project = getProject();
-      if (!project) return;
-      if (step.contact.mode === "form" && !step.contact.consentText) step.contact.consentText = t("fixed.consentDefault");
-      project.endStep = step;
-      els.dialog.close();
-      onSaved("end");
+      if (e.target === ui.startEnabled && ui.startEnabled.checked && !canPermanent()) {
+        ui.startEnabled.checked = false;
+        paint(ui);
+        onNeedsCloud?.();
+        return;
+      }
+      paint(ui);
     });
-  }
-
-  function startEls() {
-    return {
-      dialog: $("modal-fixed-start"),
-      form: $("fixed-start-form"),
-      enabled: $("fixed-start-enabled"),
-      config: $("fixed-start-config"),
-      title: $("fixed-start-title"),
-      body: $("fixed-start-body"),
-      fields: $("fixed-start-fields"),
-      fieldsError: $("fixed-start-fields-error"),
-      consent: $("fixed-start-consent"),
-      submit: $("fixed-start-submit"),
-      skip: $("fixed-start-skip"),
-      skipLabelWrap: $("fixed-start-skip-label-wrap"),
-      skipLabel: $("fixed-start-skip-label"),
-      leads: $("btn-fixed-start-leads"),
-      preview: $("fixed-start-preview"),
-    };
-  }
-
-  function fieldBox(els, key, prop) {
-    return els.fields.querySelector(`input[data-field="${key}"][data-prop="${prop}"]`);
-  }
-
-  function readStart(els) {
-    const fields = {};
-    for (const key of LEAD_FIELDS) {
-      const show = fieldBox(els, key, "show").checked;
-      fields[key] = { show, required: show && fieldBox(els, key, "required").checked };
+    for (const input of [ui.waPhone, ui.url]) {
+      input.addEventListener("blur", () => {
+        input.dataset.touched = "1";
+        paintEnd(ui);
+      });
     }
-    const step = normalizeStartStep({
-      enabled: els.enabled.checked,
-      title: els.title.value,
-      body: els.body.value,
-      fields,
-      consentText: els.consent.value.trim(),
-      allowSkip: els.skip.checked,
-      submitLabel: els.submit.value,
-      skipLabel: els.skipLabel.value,
+    ui.tablist?.addEventListener("click", (e) => {
+      const tab = e.target.closest?.("[data-capture-tab]");
+      if (!tab || tab.hidden) return;
+      selectTab(tabName(tab));
     });
-    const errors = { fields: !LEAD_FIELDS.some((key) => step.fields[key].show) };
-    return { step, errors };
-  }
-
-  function paintStart(els, { showErrors = false } = {}) {
-    const { step, errors } = readStart(els);
-    els.config.classList.toggle("is-off", !els.enabled.checked);
-    for (const key of LEAD_FIELDS) {
-      const req = fieldBox(els, key, "required");
-      req.disabled = !fieldBox(els, key, "show").checked;
-      if (req.disabled) req.checked = false;
-    }
-    els.fieldsError.hidden = !(showErrors && step.enabled && errors.fields);
-    els.skipLabelWrap.hidden = !els.skip.checked;
-    const nav = globalThis.navigator;
-    const card = renderStartCard(step, {
-      preview: true,
-      consentText: step.consentText || t("fixed.consentDefault"),
-      phoneCountry: leadPhoneDefaultIso(getProject()?.endStep, getLocale(), nav?.languages || [nav?.language]),
+    ui.tablist?.addEventListener("keydown", (e) => {
+      if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) return;
+      const tabs = tabsOf(ui).filter((tab) => !tab.hidden);
+      const names = tabs.map(tabName);
+      const current = tabs.find((tab) => tab.getAttribute("aria-selected") === "true");
+      const name = nextCaptureTab(tabName(current), e.key, names);
+      e.preventDefault();
+      selectTab(name, { focus: true });
     });
-    els.preview.replaceChildren(card);
-    els.preview.classList.toggle("is-off", !step.enabled);
-    return { step, errors };
-  }
-
-  function fillStart(els, raw) {
-    const base = raw ? normalizeStartStep(raw) : defaultStartStep();
-    els.enabled.checked = raw ? base.enabled : true;
-    els.title.value = base.title;
-    els.body.value = base.body;
-    for (const key of LEAD_FIELDS) {
-      fieldBox(els, key, "show").checked = base.fields[key].show;
-      fieldBox(els, key, "required").checked = base.fields[key].required;
-    }
-    els.consent.value = base.consentText || t("fixed.consentDefault");
-    els.submit.value = base.submitLabel;
-    els.skip.checked = base.allowSkip;
-    els.skipLabel.value = base.skipLabel;
-  }
-
-  let startBound = false;
-  function bindStart() {
-    if (startBound) return;
-    startBound = true;
-    const els = startEls();
-    if (!els.dialog) return;
-    els.form.addEventListener("input", () => paintStart(els));
-    els.form.addEventListener("change", () => paintStart(els));
-    els.dialog.querySelectorAll("[data-fixed-close]").forEach((btn) =>
-      btn.addEventListener("click", () => els.dialog.close())
+    ui.dialog.querySelectorAll("[data-fixed-close]").forEach((btn) =>
+      btn.addEventListener("click", () => ui.dialog.close())
     );
-    els.leads?.addEventListener("click", () => {
-      els.dialog.close();
+    ui.leads?.addEventListener("click", () => {
+      ui.dialog.close();
       openLeads?.();
     });
-    els.form.addEventListener("submit", (e) => {
+    ui.form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const { step, errors } = paintStart(els, { showErrors: true });
-      if (step.enabled && errors.fields) return;
       const project = getProject();
       if (!project) return;
-      // why: o servidor grava o texto publicado como prova do aceite — nunca deixar vazio
-      if (!step.consentText) step.consentText = t("fixed.consentDefault");
-      project.startStep = step;
-      els.dialog.close();
-      onSaved("start");
+      const painted = paint(ui, { showErrors: true });
+      const startChanged = JSON.stringify(painted.start.step) !== baseline.start;
+      const endChanged = JSON.stringify(painted.end.step) !== baseline.end;
+      if (!startChanged && !endChanged) {
+        ui.dialog.close();
+        return;
+      }
+      const current = tabName(tabsOf(ui).find((tab) => tab.getAttribute("aria-selected") === "true"));
+      const startBad = startChanged && painted.start.step.enabled && painted.start.errors.fields;
+      const endBad = endChanged && painted.end.step.enabled && (painted.end.errors.phone || painted.end.errors.url);
+      if (startBad || endBad) {
+        const tab = current === "end" && endBad ? "end" : startBad ? "fields" : "end";
+        selectTab(tab, { focus: true });
+        if (tab === "end") {
+          if (painted.end.errors.phone) ui.waPhone.dataset.touched = "1";
+          (painted.end.errors.phone ? ui.waPhone : ui.url).focus();
+        }
+        paint(ui, { showErrors: true });
+        return;
+      }
+      if (startChanged && painted.start.step.enabled && !viewerIsPro() && project.startStep?.enabled !== true) {
+        ui.startEnabled.checked = false;
+        paint(ui);
+        selectTab("form", { focus: true });
+        openFeatureGate("leads");
+        return;
+      }
+      if (startChanged && painted.start.step.enabled && !canPermanent() && project.startStep?.enabled !== true) {
+        ui.startEnabled.checked = false;
+        paint(ui);
+        selectTab("form", { focus: true });
+        onNeedsCloud?.();
+        return;
+      }
+      if (startChanged) {
+        if (painted.start.step.enabled && !painted.start.step.consentText) {
+          painted.start.step.consentText = t("fixed.consentDefault");
+        }
+        project.startStep = painted.start.step;
+      }
+      if (endChanged) {
+        if (painted.end.step.contact.mode === "form" && !painted.end.step.contact.consentText) {
+          painted.end.step.contact.consentText = t("fixed.consentDefault");
+        }
+        project.endStep = painted.end.step;
+      }
+      ui.dialog.close();
+      onSaved(captureSaveKind(startChanged, endChanged));
     });
   }
 
   function open(kind) {
     bind();
-    if (kind === "start") {
-      if (!viewerIsPro()) {
-        openFeatureGate("leads");
-        return false;
-      }
-      bindStart();
-      const els = startEls();
-      if (!els.dialog) return false;
-      fillStart(els, getProject()?.startStep || null);
-      paintStart(els);
-      els.dialog.showModal();
-      return true;
-    }
-    if (kind !== "end") return false;
-    const els = endEls();
-    if (!els.dialog) return false;
-    fillEnd(els, getProject()?.endStep || null);
-    paintEnd(els);
-    els.dialog.showModal();
+    const ui = els();
+    if (!ui.dialog) return false;
+    const project = getProject();
+    if (!project) return false;
+    fillStart(ui, project.startStep || null);
+    fillEnd(ui, project.endStep || null);
+    baseline = {
+      start: JSON.stringify(readStart(ui).step),
+      end: JSON.stringify(readEnd(ui).step),
+    };
+    // why: o cartão 📌 abre o diálogo já com o passo ligado, como o diálogo antigo fazia ao criar
+    if (kind === "start" && !project.startStep && viewerIsPro() && canPermanent()) ui.startEnabled.checked = true;
+    if (kind === "end" && !project.endStep) ui.endEnabled.checked = true;
+    paint(ui);
+    const tab = selectTab(captureTabForShortcut(kind), { focus: true });
+    ui.dialog.showModal();
+    tabsOf(ui).find((item) => tabName(item) === tab)?.focus();
     return true;
   }
 
-  return { open };
+  return { open, selectTab };
 }
