@@ -6501,9 +6501,248 @@ dialog.results-modal .results-tablist {
   display: none;
 }
 
-#results-pane-delivery .leads-webhook:first-child {
+#results-pane-delivery .delivery-list {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+/* Envio automático: um cartão por destino. O cartão inteiro é o botão que
+   abre a sub-tela de detalhe; o Testar fica por cima dele (z-index). */
+#results-pane-delivery .delivery-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--ns-border);
+  border-radius: 12px;
+  background: var(--ns-panel);
+}
+
+#results-pane-delivery .delivery-card:hover {
+  border-color: color-mix(in srgb, var(--ns-accent) 45%, var(--ns-border));
+}
+
+/* LeadPronto fica no topo mesmo desconectado. */
+#results-pane-delivery .delivery-card.is-featured {
+  border-color: color-mix(in srgb, var(--ns-accent) 60%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-accent) 10%, var(--ns-panel));
+}
+
+#results-pane-delivery .delivery-card-open {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#results-pane-delivery .delivery-card-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+}
+
+#results-pane-delivery .delivery-card-open:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+#results-pane-delivery .delivery-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#results-pane-delivery .delivery-card-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+#results-pane-delivery .delivery-card-name .pro-badge {
+  margin-left: 0;
+}
+
+#results-pane-delivery .delivery-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+#results-pane-delivery .delivery-card-tag {
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--ns-accent) 45%, var(--ns-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-accent) 18%, var(--ns-panel));
+  color: var(--ns-accent-dark);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-card-chev {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--ns-muted);
+}
+
+#results-pane-delivery .delivery-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+
+#results-pane-delivery .delivery-card-level {
+  padding: 1px 7px;
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  color: var(--ns-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  color: var(--ns-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+#results-pane-delivery .delivery-state.is-on {
+  border-color: color-mix(in srgb, var(--ns-success) 45%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-success) 14%, transparent);
+  color: var(--ns-success-ink);
+}
+
+#results-pane-delivery .delivery-state.is-fail {
+  border-color: color-mix(in srgb, var(--ns-danger) 45%, var(--ns-border));
+  background: var(--ns-danger-bg);
+  color: var(--ns-danger);
+}
+
+#results-pane-delivery .delivery-card-delivery {
+  flex: 1 1 160px;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ns-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-card-status {
+  margin: 0;
+  color: var(--ns-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+#results-pane-delivery .delivery-card-status.is-error {
+  color: var(--ns-danger);
+  font-weight: 650;
+}
+
+#results-pane-delivery .delivery-card-level:empty,
+#results-pane-delivery .delivery-card-delivery:empty,
+#results-pane-delivery .delivery-card-status:empty {
+  display: none;
+}
+
+#results-pane-delivery .delivery-card-test {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sub-tela de detalhe: uma seção por vez, com Voltar no lugar das seções empilhadas. */
+#results-pane-delivery .delivery-detail {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+#results-pane-delivery .delivery-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#results-pane-delivery .delivery-list[hidden],
+#results-pane-delivery .delivery-detail[hidden],
+#results-pane-delivery .leads-webhook[hidden] {
+  display: none;
+}
+
+#results-pane-delivery .delivery-detail .leads-webhook {
   border-top: 0;
   padding-top: 0;
+}
+
+/* No celular o detalhe cobre o diálogo inteiro (cartão → tela cheia). */
+@media (max-width: 720px), (pointer: coarse) {
+  #results-pane-delivery .delivery-card-delivery {
+    flex-basis: 100%;
+  }
+
+  #results-pane-delivery .delivery-card-test {
+    min-height: 40px;
+  }
+
+  #results-pane-delivery .delivery-detail:not([hidden]) {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    box-sizing: border-box;
+    padding: 14px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: 12px;
+    background: var(--ns-panel);
+  }
+
+  #results-pane-delivery .delivery-back {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--ns-panel);
+  }
 }
 
 .analytics-toolbar {

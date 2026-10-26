@@ -75,6 +75,42 @@ export function csvFileName(slug, now = new Date()) {
   return `contatos-${String(slug || "tour").replace(/[^a-z0-9-]/gi, "")}-${day}.csv`;
 }
 
+/** Ordem fixa dos cartões de Envio automático: LeadPronto primeiro, depois os do link. */
+export const DELIVERY_ORDER = ["lp", "webhook", "rd", "hubspot"];
+
+/** Destinos com rota de teste própria. O LeadPronto não tem (só GET/PUT/DELETE). */
+export const DELIVERY_TESTABLE = ["webhook", "rd", "hubspot"];
+
+/** Qual <section> cada destino abre na sub-tela de detalhe. */
+const DELIVERY_SECTION = {
+  lp: "leads-lp",
+  webhook: "leads-webhook",
+  rd: "leads-rd",
+  hubspot: "leads-hubspot",
+};
+
+const DELIVERY_COPY = Object.fromEntries(DELIVERY_ORDER.map((id) => [id, {
+  ok: `leads.${id}.lastOk`,
+  fail: `leads.${id}.lastFail`,
+  failures: `leads.${id}.failures`,
+  autoOff: `leads.${id}.autoOff`,
+}]));
+
+const DELIVERY_STATE_KEYS = {
+  on: "leads.delivery.stateOn",
+  off: "leads.delivery.stateOff",
+  fail: "leads.delivery.stateFail",
+};
+
+/**
+ * Estado do cartão. "fail" (falhando) vence "on" (conectado);
+ * "off" (desligado) cobre também o destino ainda não configurado.
+ */
+export function deliveryState({ configured, enabled, failures = 0, autoDisabled = false } = {}) {
+  if (autoDisabled || failures > 0) return "fail";
+  return configured && enabled ? "on" : "off";
+}
+
 export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let leads = [];
   let title = "";
@@ -156,8 +192,120 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     lpConnect: $("btn-leads-lp-connect"),
     lpSave: $("btn-leads-lp-save"),
     lpRemove: $("btn-leads-lp-disconnect"),
+    deliveryList: $("delivery-list"),
+    deliveryDetail: $("delivery-detail"),
+    deliveryBack: $("btn-delivery-back"),
     map: Object.fromEntries(HUBSPOT_FIELDS.map((key) => [key, document.querySelector(`[data-hubspot-field="${key}"]`)])),
   });
+
+  /** Nó de um cartão: `delivery-<parte>-<destino>` (state, level, delivery, status). */
+  function cardNode(id, part) {
+    return $(`delivery-${part}-${id}`);
+  }
+
+  /** LeadPronto é conexão da conta; webhook, RD Station e HubSpot são deste link. */
+  function cardLevelKey(id) {
+    return id === "lp" ? "leads.delivery.levelAccount" : "leads.delivery.levelLink";
+  }
+
+  /** Estado do servidor de cada destino — a mesma fonte de verdade das seções de detalhe. */
+  function deliverySnapshot(id) {
+    if (id === "lp") {
+      return {
+        configured: lpLinked(),
+        enabled: Boolean(lpEnabled),
+        failures: lp?.consecutiveFailures || 0,
+        autoDisabled: Boolean(lp?.autoDisabled),
+        busy: lpBusy,
+      };
+    }
+    if (id === "webhook") {
+      return {
+        configured: Boolean(webhook?.url),
+        enabled: Boolean(webhook?.enabled),
+        failures: webhook?.consecutiveFailures || 0,
+        autoDisabled: Boolean(webhook?.autoDisabled),
+        busy: webhookBusy,
+      };
+    }
+    if (id === "rd") {
+      return {
+        configured: Boolean(rd?.hasKey),
+        enabled: Boolean(rd?.enabled),
+        failures: rd?.consecutiveFailures || 0,
+        autoDisabled: Boolean(rd?.autoDisabled),
+        busy: rdBusy,
+      };
+    }
+    return {
+      configured: Boolean(hubspot?.connected),
+      enabled: Boolean(hubspot?.enabled),
+      failures: hubspot?.consecutiveFailures || 0,
+      autoDisabled: Boolean(hubspot?.autoDisabled),
+      busy: hubspotBusy,
+    };
+  }
+
+  /** Repinta os cartões: estado, nível de conexão e últimas entregas. */
+  function paintCards() {
+    for (const id of DELIVERY_ORDER) {
+      const snapshot = deliverySnapshot(id);
+      const state = deliveryState(snapshot);
+      const stateNode = cardNode(id, "state");
+      if (stateNode) {
+        stateNode.textContent = t(DELIVERY_STATE_KEYS[state]);
+        stateNode.classList.toggle("is-on", state === "on");
+        stateNode.classList.toggle("is-off", state === "off");
+        stateNode.classList.toggle("is-fail", state === "fail");
+      }
+      const levelNode = cardNode(id, "level");
+      if (levelNode) levelNode.textContent = t(cardLevelKey(id));
+      const deliveryNode = cardNode(id, "delivery");
+      if (deliveryNode) deliveryNode.textContent = deliveryParts(id).slice(0, 2).join(" ");
+      const testBtn = $(`btn-delivery-test-${id}`);
+      if (testBtn) testBtn.disabled = snapshot.busy;
+    }
+  }
+
+  /** Espelha a mensagem da seção no rodapé do cartão (visível na lista). */
+  function setCardStatus(id, text, error = false) {
+    const node = cardNode(id, "status");
+    if (!node) return;
+    node.textContent = text || "";
+    node.classList.toggle("is-error", Boolean(error && text));
+  }
+
+  let deliveryView = "list";
+  let deliveryDetailId = "";
+
+  /** Lista de cartões x sub-tela de detalhe com uma seção (e só uma) visível. */
+  function paintDeliveryView() {
+    const e = els();
+    const inDetail = deliveryView === "detail";
+    if (e.deliveryList) e.deliveryList.hidden = inDetail;
+    if (e.deliveryDetail) e.deliveryDetail.hidden = !inDetail;
+    for (const id of DELIVERY_ORDER) {
+      const section = $(DELIVERY_SECTION[id]);
+      if (section) section.hidden = !(inDetail && id === deliveryDetailId);
+      const open = $(`btn-delivery-open-${id}`);
+      if (open) open.setAttribute("aria-expanded", String(inDetail && id === deliveryDetailId));
+    }
+  }
+
+  function showDeliveryDetail(id) {
+    if (!DELIVERY_SECTION[id] || !els().deliveryDetail) return;
+    deliveryView = "detail";
+    deliveryDetailId = id;
+    paintDeliveryView();
+    els().deliveryBack?.focus?.();
+  }
+
+  function backToDeliveryList() {
+    const from = deliveryDetailId;
+    deliveryView = "list";
+    paintDeliveryView();
+    $(`btn-delivery-open-${from}`)?.focus?.();
+  }
 
   function sourceLabel(source) {
     return source === "contact" ? t("leads.sourceContact") : t("leads.sourceStart");
@@ -211,9 +359,11 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
 
   function setWebhookMessage(text, error = false) {
     const node = els().whStatus;
-    if (!node) return;
-    node.textContent = text || "";
-    node.classList.toggle("is-error", Boolean(error && text));
+    if (node) {
+      node.textContent = text || "";
+      node.classList.toggle("is-error", Boolean(error && text));
+    }
+    setCardStatus("webhook", text, error);
   }
 
   function paintWebhook() {
@@ -230,26 +380,60 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       if (btn) btn.disabled = webhookBusy;
     }
     paintDelivery();
+    paintCards();
+  }
+
+  /** Linhas de "últimas entregas" de um destino ([] quando ainda não há nada a mostrar). */
+  function deliveryParts(id) {
+    const copy = DELIVERY_COPY[id];
+    if (id === "webhook") {
+      if (!webhook) return [];
+      const parts = [];
+      const delivery = webhook.lastDelivery;
+      if (!delivery) parts.push(t("leads.webhook.none"));
+      else parts.push(t(delivery.ok ? copy.ok : copy.fail, deliveryLine(delivery)));
+      if (webhook.consecutiveFailures > 0) parts.push(t(copy.failures, { n: webhook.consecutiveFailures }));
+      if (webhook.autoDisabled) parts.push(t(copy.autoOff));
+      return parts;
+    }
+    if (id === "rd") {
+      if (!rd) return [];
+      const parts = [];
+      const delivery = rd.lastDelivery;
+      if (delivery) parts.push(t(delivery.ok ? copy.ok : copy.fail, deliveryLine(delivery)));
+      if (rd.consecutiveFailures > 0) parts.push(t(copy.failures, { n: rd.consecutiveFailures }));
+      if (rd.autoDisabled) parts.push(t(copy.autoOff));
+      return parts;
+    }
+    if (id === "hubspot") {
+      if (!hubspot) return [];
+      const parts = [];
+      for (const delivery of (hubspot.deliveries || []).slice(0, 3)) {
+        parts.push(t(delivery.ok ? copy.ok : copy.fail, deliveryLine(delivery)));
+      }
+      if (hubspot.consecutiveFailures > 0) parts.push(t(copy.failures, { n: hubspot.consecutiveFailures }));
+      if (hubspot.autoDisabled) parts.push(t(copy.autoOff));
+      return parts;
+    }
+    if (!lpLinked()) return [];
+    const parts = [];
+    const rows = Array.isArray(lp.deliveries) ? lp.deliveries : [];
+    if (!rows.length) parts.push(t("leads.lp.none"));
+    for (const delivery of rows) parts.push(t(delivery.ok ? copy.ok : copy.fail, deliveryLine(delivery)));
+    if (lp.consecutiveFailures > 0) parts.push(t(copy.failures, { n: lp.consecutiveFailures }));
+    if (lp.autoDisabled) parts.push(t(copy.autoOff));
+    return parts;
+  }
+
+  function deliveryLine(delivery) {
+    const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
+    return { date: delivery.at ? formatDate(delivery.at) : "—", status };
   }
 
   function paintDelivery() {
     const node = els().delivery;
     if (!node) return;
-    if (!webhook) {
-      node.textContent = "";
-      return;
-    }
-    const parts = [];
-    const delivery = webhook.lastDelivery;
-    if (!delivery) parts.push(t("leads.webhook.none"));
-    else {
-      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
-      const date = delivery.at ? formatDate(delivery.at) : "—";
-      parts.push(t(delivery.ok ? "leads.webhook.lastOk" : "leads.webhook.lastFail", { date, status }));
-    }
-    if (webhook.consecutiveFailures > 0) parts.push(t("leads.webhook.failures", { n: webhook.consecutiveFailures }));
-    if (webhook.autoDisabled) parts.push(t("leads.webhook.autoOff"));
-    node.textContent = parts.join(" ");
+    node.textContent = deliveryParts("webhook").join(" ");
   }
 
   function applyWebhook(next, { secret } = {}) {
@@ -489,6 +673,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       consecutiveFailures: result.ok ? 0 : (webhook?.consecutiveFailures || 0) + 1,
     };
     paintDelivery();
+    paintCards();
     const status = result.httpStatus ? String(result.httpStatus) : result.error || "—";
     setWebhookMessage(t(result.ok ? "leads.webhook.testOk" : "leads.webhook.testFail", { status }), !result.ok);
   }
@@ -548,9 +733,11 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
 
   function setRdMessage(text, error = false) {
     const node = els().rdStatus;
-    if (!node) return;
-    node.textContent = text || "";
-    node.classList.toggle("is-error", Boolean(error && text));
+    if (node) {
+      node.textContent = text || "";
+      node.classList.toggle("is-error", Boolean(error && text));
+    }
+    setCardStatus("rd", text, error);
   }
 
   function paintRd() {
@@ -569,25 +756,13 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       if (btn) btn.disabled = rdBusy;
     }
     paintRdDelivery();
+    paintCards();
   }
 
   function paintRdDelivery() {
     const node = els().rdDelivery;
     if (!node) return;
-    if (!rd) {
-      node.textContent = "";
-      return;
-    }
-    const parts = [];
-    const delivery = rd.lastDelivery;
-    if (delivery) {
-      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
-      const date = delivery.at ? formatDate(delivery.at) : "—";
-      parts.push(t(delivery.ok ? "leads.rd.lastOk" : "leads.rd.lastFail", { date, status }));
-    }
-    if (rd.consecutiveFailures > 0) parts.push(t("leads.rd.failures", { n: rd.consecutiveFailures }));
-    if (rd.autoDisabled) parts.push(t("leads.rd.autoOff"));
-    node.textContent = parts.join(" ");
+    node.textContent = deliveryParts("rd").join(" ");
   }
 
   function rdPath(extra = "") {
@@ -724,9 +899,11 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
 
   function setHubspotMessage(text, error = false) {
     const node = els().hsStatus;
-    if (!node) return;
-    node.textContent = text || "";
-    node.classList.toggle("is-error", Boolean(error && text));
+    if (node) {
+      node.textContent = text || "";
+      node.classList.toggle("is-error", Boolean(error && text));
+    }
+    setCardStatus("hubspot", text, error);
   }
 
   function mappingValues() {
@@ -767,6 +944,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     }
     paintHubspotAccount();
     paintHubspotDelivery();
+    paintCards();
   }
 
   function paintHubspotAccount() {
@@ -789,19 +967,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   function paintHubspotDelivery() {
     const node = els().hsDelivery;
     if (!node) return;
-    if (!hubspot) {
-      node.textContent = "";
-      return;
-    }
-    const parts = [];
-    for (const delivery of (hubspot.deliveries || []).slice(0, 3)) {
-      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
-      const date = delivery.at ? formatDate(delivery.at) : "—";
-      parts.push(t(delivery.ok ? "leads.hubspot.lastOk" : "leads.hubspot.lastFail", { date, status }));
-    }
-    if (hubspot.consecutiveFailures > 0) parts.push(t("leads.hubspot.failures", { n: hubspot.consecutiveFailures }));
-    if (hubspot.autoDisabled) parts.push(t("leads.hubspot.autoOff"));
-    node.textContent = parts.join(" ");
+    node.textContent = deliveryParts("hubspot").join(" ");
   }
 
   function hubspotPath(extra = "") {
@@ -992,9 +1158,11 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
 
   function setLpMessage(text, error = false) {
     const node = els().lpStatus;
-    if (!node) return;
-    node.textContent = text || "";
-    node.classList.toggle("is-error", Boolean(error && text));
+    if (node) {
+      node.textContent = text || "";
+      node.classList.toggle("is-error", Boolean(error && text));
+    }
+    setCardStatus("lp", text, error);
   }
 
   function lpLinked() {
@@ -1057,21 +1225,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   function paintLpDelivery() {
     const node = els().lpDelivery;
     if (!node) return;
-    if (!lpLinked()) {
-      node.textContent = "";
-      return;
-    }
-    const parts = [];
-    const rows = Array.isArray(lp.deliveries) ? lp.deliveries : [];
-    if (!rows.length) parts.push(t("leads.lp.none"));
-    for (const delivery of rows) {
-      const status = delivery.httpStatus ? String(delivery.httpStatus) : delivery.error || "—";
-      const date = delivery.at ? formatDate(delivery.at) : "—";
-      parts.push(t(delivery.ok ? "leads.lp.lastOk" : "leads.lp.lastFail", { date, status }));
-    }
-    if (lp.consecutiveFailures > 0) parts.push(t("leads.lp.failures", { n: lp.consecutiveFailures }));
-    if (lp.autoDisabled) parts.push(t("leads.lp.autoOff"));
-    node.textContent = parts.join(" ");
+    node.textContent = deliveryParts("lp").join(" ");
   }
 
   function paintLp() {
@@ -1100,6 +1254,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     paintLpTours();
     paintLpAccount();
     paintLpDelivery();
+    paintCards();
   }
 
   function handleLpProblem(res, fallbackKey) {
@@ -1346,6 +1501,14 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     for (const key of HUBSPOT_FIELDS) {
       e.map?.[key]?.addEventListener("input", () => hubspotDirty.add(key));
     }
+    for (const id of DELIVERY_ORDER) {
+      $(`btn-delivery-open-${id}`)?.addEventListener("click", () => showDeliveryDetail(id));
+    }
+    e.deliveryBack?.addEventListener("click", backToDeliveryList);
+    const cardTests = { webhook: sendTest, rd: sendRdTest, hubspot: sendHubspotTest };
+    for (const id of DELIVERY_TESTABLE) {
+      $(`btn-delivery-test-${id}`)?.addEventListener("click", () => void cardTests[id]());
+    }
     window.addEventListener("ns-locale-change", () => {
       paintWebhook();
       paintRd();
@@ -1391,6 +1554,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     setRdMessage("");
     setHubspotMessage("");
     setLpMessage("");
+    deliveryView = "list";
+    deliveryDetailId = "";
+    paintDeliveryView();
     paintWebhook();
     paintRd();
     paintHubspot();

@@ -73,13 +73,13 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/156/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/156/css/theme.css" />
-  <link rel="stylesheet" href="a/156/css/shell.css" />
-  <link rel="stylesheet" href="a/156/css/player.css" />
-  <link rel="stylesheet" href="a/156/css/editor.css" />
-  <link rel="stylesheet" href="a/156/css/collab.css" />
-  <link rel="stylesheet" href="a/156/css/comments.css" />
+  <link rel="stylesheet" href="a/157/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/157/css/theme.css" />
+  <link rel="stylesheet" href="a/157/css/shell.css" />
+  <link rel="stylesheet" href="a/157/css/player.css" />
+  <link rel="stylesheet" href="a/157/css/editor.css" />
+  <link rel="stylesheet" href="a/157/css/collab.css" />
+  <link rel="stylesheet" href="a/157/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +174,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/156/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/156/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/157/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/157/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -493,7 +493,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/156/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/156/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/157/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/157/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1169,7 +1169,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/156/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/157/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1415,7 +1415,86 @@
       </div>
       </div>
       <div class="results-pane" role="tabpanel" id="results-pane-delivery" aria-labelledby="results-tab-delivery" hidden>
-      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading">
+      <div class="delivery-list" id="delivery-list" role="list">
+        <div class="delivery-card is-featured" role="listitem" data-delivery-card="lp">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-lp" data-delivery-open="lp" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.lp.title">LeadPronto</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                <span class="delivery-card-tag" data-i18n="leads.delivery.maker">do mesmo fabricante · recomendado</span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-lp"></span>
+              <span class="delivery-state" id="delivery-state-lp"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-lp"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-lp" role="status"></span>
+          </button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="webhook">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-webhook" data-delivery-open="webhook" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.webhook.title">Webhook</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-webhook"></span>
+              <span class="delivery-state" id="delivery-state-webhook"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-webhook"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-webhook" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-webhook" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="rd">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-rd" data-delivery-open="rd" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.rd.title">RD Station Marketing</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-rd"></span>
+              <span class="delivery-state" id="delivery-state-rd"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-rd"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-rd" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-rd" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="hubspot">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-hubspot" data-delivery-open="hubspot" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.hubspot.title">HubSpot</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-hubspot"></span>
+              <span class="delivery-state" id="delivery-state-hubspot"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-hubspot"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-hubspot" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-hubspot" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+      </div>
+      <div class="delivery-detail" id="delivery-detail" hidden>
+        <button type="button" class="btn delivery-back" id="btn-delivery-back">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+          <span data-i18n="leads.delivery.back">Voltar</span>
+        </button>
+      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading" hidden>
         <h4 id="leads-webhook-heading">
           <span data-i18n="leads.webhook.title">Webhook</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1452,7 +1531,7 @@
           <a class="embed-guide" id="leads-webhook-help" href="/integracoes/leads" target="_blank" rel="noopener" data-i18n="leads.webhook.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading">
+      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading" hidden>
         <h4 id="leads-rd-heading">
           <span data-i18n="leads.rd.title">RD Station Marketing</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1477,7 +1556,7 @@
           <a class="embed-guide" id="leads-rd-help" href="/integracoes#rd-station" target="_blank" rel="noopener" data-i18n="leads.rd.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading">
+      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading" hidden>
         <h4 id="leads-hubspot-heading">
           <span data-i18n="leads.hubspot.title">HubSpot</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1524,7 +1603,7 @@
           <a class="embed-guide" id="leads-hubspot-help" href="/integracoes#hubspot" target="_blank" rel="noopener" data-i18n="leads.hubspot.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-lp" aria-labelledby="leads-lp-heading">
+      <section class="leads-webhook" id="leads-lp" aria-labelledby="leads-lp-heading" hidden>
         <h4 id="leads-lp-heading">
           <span data-i18n="leads.lp.title">LeadPronto</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1552,6 +1631,7 @@
           <a class="embed-guide" id="leads-lp-help" href="/integracoes#leadpronto" target="_blank" rel="noopener" data-i18n="leads.lp.help">Como conectar</a>
         </div>
       </section>
+      </div>
       </div>
       <div class="results-pane" role="tabpanel" id="results-pane-analytics" aria-labelledby="results-tab-analytics">
       <div class="analytics-toolbar">
@@ -2078,6 +2158,12 @@
     <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m6 9 6 6 6-6"/>
     </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 6 6 6-6 6"/>
+    </symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 6-6 6 6 6"/>
+    </symbol>
     <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
     </symbol>
@@ -2273,8 +2359,8 @@
     </symbol>
   </svg>
 
-  <script src="a/156/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/156/js/app.js"></script>
+  <script src="a/157/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/157/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

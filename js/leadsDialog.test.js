@@ -1,7 +1,18 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { CLOUD_GLOBAL_KEY } from "./cloudConfig.js";
-import { csvDate, csvFileName, createLeadsDialog } from "./leadsDialog.js";
+import {
+  csvDate,
+  csvFileName,
+  createLeadsDialog,
+  DELIVERY_ORDER,
+  DELIVERY_TESTABLE,
+  deliveryState,
+} from "./leadsDialog.js";
+import { catalogs, SUPPORTED_LOCALES, t } from "./i18n.js";
+
+const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
 
 function fakePat() {
   return ["pa" + "t", "n" + "a1", "11111111", "2222", "3333", "4444", "555555555555"].join("-");
@@ -10,6 +21,7 @@ function fakePat() {
 function node() {
   const listeners = {};
   const classes = new Set();
+  const attrs = {};
   return {
     hidden: false,
     value: "",
@@ -37,22 +49,12 @@ function node() {
     replaceChildren() {},
     append() {},
     focus() {},
-    setAttribute() {},
-    getAttribute() { return null; },
+    setAttribute(name, value) { attrs[name] = String(value); },
+    getAttribute(name) { return Object.hasOwn(attrs, name) ? attrs[name] : null; },
   };
 }
 
-function hubspotDom() {
-  const ids = [
-    "modal-results", "leads-meta", "leads-status", "leads-list",
-    "btn-leads-csv", "btn-leads-refresh", "btn-results-close",
-    "leads-hubspot-account", "leads-hubspot-enabled", "leads-hubspot-delivery", "leads-hubspot-status",
-    "btn-leads-hubspot-connect", "btn-leads-hubspot-use-token", "leads-hubspot-token", "leads-hubspot-token-block",
-    "btn-leads-hubspot-save", "btn-leads-hubspot-test", "btn-leads-hubspot-remove", "leads-hubspot-help",
-  ];
-  const nodes = Object.fromEntries(ids.map((id) => [id, node()]));
-  nodes["btn-leads-hubspot-connect"].hidden = true;
-  nodes["btn-leads-hubspot-use-token"].hidden = true;
+function installDom(nodes) {
   const prev = {
     document: globalThis.document,
     window: globalThis.window,
@@ -86,7 +88,6 @@ function hubspotDom() {
   };
   globalThis[CLOUD_GLOBAL_KEY] = "https://cloud.test";
   return {
-    nodes,
     writes,
     restore() {
       if (prev.document === undefined) delete globalThis.document;
@@ -103,6 +104,20 @@ function hubspotDom() {
       else globalThis[CLOUD_GLOBAL_KEY] = prev.cloud;
     },
   };
+}
+
+function hubspotDom() {
+  const ids = [
+    "modal-results", "leads-meta", "leads-status", "leads-list",
+    "btn-leads-csv", "btn-leads-refresh", "btn-results-close",
+    "leads-hubspot-account", "leads-hubspot-enabled", "leads-hubspot-delivery", "leads-hubspot-status",
+    "btn-leads-hubspot-connect", "btn-leads-hubspot-use-token", "leads-hubspot-token", "leads-hubspot-token-block",
+    "btn-leads-hubspot-save", "btn-leads-hubspot-test", "btn-leads-hubspot-remove", "leads-hubspot-help",
+  ];
+  const nodes = Object.fromEntries(ids.map((id) => [id, node()]));
+  nodes["btn-leads-hubspot-connect"].hidden = true;
+  nodes["btn-leads-hubspot-use-token"].hidden = true;
+  return { nodes, ...installDom(nodes) };
 }
 
 function json(data, status = 200) {
@@ -232,6 +247,144 @@ test("HubSpot: PUT com token e a UI com oauthAvailable true e false", async () =
     assert.equal(ui["btn-leads-hubspot-connect"].hidden, false);
     assert.equal(calls.every((call) => !call.href.includes(token)), true);
     assert.equal(dom.writes.every((value) => !value.includes(token)), true);
+  } finally {
+    dom.restore();
+  }
+});
+
+/** DOM falso com todos os ids do editor.html real — a lista de cartões vem do markup. */
+function deliveryDom() {
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
+  const nodes = {};
+  for (const id of ids) if (!nodes[id]) nodes[id] = node();
+  nodes["delivery-list"].hidden = false;
+  nodes["delivery-detail"].hidden = true;
+  for (const id of DELIVERY_ORDER) nodes[`leads-${id}`].hidden = true;
+  return { nodes, ...installDom(nodes) };
+}
+
+test("Envio automático: cartões fixos LeadPronto → Webhook → RD Station → HubSpot", () => {
+  const start = html.indexOf('id="results-pane-delivery"');
+  const end = html.indexOf('id="results-pane-analytics"');
+  assert.ok(start > 0 && end > start, "painel de Envio automático encontrado");
+  const pane = html.slice(start, end);
+
+  const order = [...pane.matchAll(/data-delivery-card="([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(order, ["lp", "webhook", "rd", "hubspot"]);
+  assert.deepEqual(order, DELIVERY_ORDER);
+
+  // LeadPronto em destaque no topo, mesmo sem conexão, com a etiqueta do fabricante.
+  const lpCard = pane.slice(pane.indexOf('data-delivery-card="lp"'), pane.indexOf('data-delivery-card="webhook"'));
+  assert.match(pane, /class="delivery-card is-featured" role="listitem" data-delivery-card="lp"/);
+  assert.match(lpCard, /data-i18n="leads\.delivery\.maker"/);
+
+  // Testar só nos destinos que têm rota de teste; LeadPronto é GET/PUT/DELETE.
+  const testIds = [...pane.matchAll(/id="btn-delivery-test-([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual([...testIds].sort(), [...DELIVERY_TESTABLE].sort());
+  assert.equal(testIds.includes("lp"), false);
+  assert.equal(DELIVERY_TESTABLE.includes("lp"), false);
+
+  // Cada cartão tem nível, estado e status; o detalhe tem Voltar e uma seção por destino.
+  for (const id of DELIVERY_ORDER) {
+    assert.match(pane, new RegExp(`id="delivery-level-${id}"`));
+    assert.match(pane, new RegExp(`id="delivery-state-${id}"`));
+    assert.match(pane, new RegExp(`id="delivery-status-${id}"`));
+    assert.match(pane, new RegExp(`id="leads-${id}"[^>]*hidden`));
+  }
+  assert.match(pane, /id="delivery-detail"[^>]*hidden/);
+  assert.match(pane, /id="btn-delivery-back"[\s\S]{0,200}data-i18n="leads\.delivery\.back"/);
+  for (const key of ["stateOn", "stateOff", "stateFail", "levelAccount", "levelLink"]) {
+    for (const locale of SUPPORTED_LOCALES) {
+      assert.ok(String(catalogs[locale][`leads.delivery.${key}`]).trim(), `${locale} leads.delivery.${key}`);
+    }
+  }
+});
+
+test("Estado do cartão: falha vence conectado e desligado cobre o não configurado", () => {
+  assert.equal(deliveryState({ configured: false, enabled: true }), "off");
+  assert.equal(deliveryState({ configured: true, enabled: false }), "off");
+  assert.equal(deliveryState(), "off");
+  assert.equal(deliveryState({ configured: true, enabled: true }), "on");
+  assert.equal(deliveryState({ configured: true, enabled: true, failures: 1 }), "fail");
+  assert.equal(deliveryState({ configured: true, enabled: true, autoDisabled: true }), "fail");
+  assert.equal(deliveryState({ configured: false, enabled: false, autoDisabled: true }), "fail");
+});
+
+test("Cartões: estado, nível, abrir detalhe, Voltar e Testar pelo cartão", async () => {
+  const dom = deliveryDom();
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    const path = new URL(String(url)).pathname;
+    const method = init.method || "GET";
+    calls.push({ path, method });
+    if (path.endsWith("/leads")) return json({ leads: [], title: "" });
+    if (path.endsWith("/webhook/test")) return json({ ok: true, httpStatus: 200, at: new Date().toISOString(), error: "" });
+    if (path.endsWith("/webhook")) {
+      return json({
+        url: "https://hook.test/leads",
+        enabled: true,
+        hasSecret: true,
+        secretLast4: "abcd",
+        lastDelivery: null,
+        consecutiveFailures: 0,
+        autoDisabled: false,
+      });
+    }
+    if (path === "/integrations/leadpronto") return json({ status: "disconnected" });
+    if (path.endsWith("/shares/mine")) return json({ shares: [] });
+    return json({}, 404);
+  };
+  try {
+    const dialog = createLeadsDialog({ getSlug: () => "tour", toast() {} });
+    const ui = dom.nodes;
+    dialog.open();
+    await flush();
+
+    assert.equal(ui["delivery-list"].hidden, false);
+    assert.equal(ui["delivery-detail"].hidden, true);
+    for (const id of DELIVERY_ORDER) assert.equal(ui[`leads-${id}`].hidden, true);
+
+    // LeadPronto: conexão da conta e desligado (ainda não conectado).
+    assert.equal(ui["delivery-level-lp"].textContent, t("leads.delivery.levelAccount"));
+    assert.equal(ui["delivery-state-lp"].textContent, t("leads.delivery.stateOff"));
+    assert.equal(ui["delivery-state-lp"].classList.contains("is-off"), true);
+
+    // Webhook: conexão deste link e conectado.
+    assert.equal(ui["delivery-level-webhook"].textContent, t("leads.delivery.levelLink"));
+    assert.equal(ui["delivery-state-webhook"].textContent, t("leads.delivery.stateOn"));
+    assert.equal(ui["delivery-state-webhook"].classList.contains("is-on"), true);
+    assert.equal(ui["delivery-state-hubspot"].textContent, t("leads.delivery.stateOff"));
+
+    ui["btn-delivery-open-rd"].click();
+    assert.equal(ui["delivery-list"].hidden, true);
+    assert.equal(ui["delivery-detail"].hidden, false);
+    assert.equal(ui["leads-rd"].hidden, false);
+    for (const id of DELIVERY_ORDER.filter((item) => item !== "rd")) assert.equal(ui[`leads-${id}`].hidden, true);
+    assert.equal(ui["btn-delivery-open-rd"].getAttribute("aria-expanded"), "true");
+    assert.equal(ui["btn-delivery-open-hubspot"].getAttribute("aria-expanded"), "false");
+
+    ui["btn-delivery-back"].click();
+    assert.equal(ui["delivery-list"].hidden, false);
+    assert.equal(ui["delivery-detail"].hidden, true);
+    for (const id of DELIVERY_ORDER) assert.equal(ui[`leads-${id}`].hidden, true);
+    assert.equal(ui["btn-delivery-open-rd"].getAttribute("aria-expanded"), "false");
+
+    // Testar pelo cartão: mesma rota do botão da seção e a mensagem nos dois lugares.
+    ui["btn-delivery-test-webhook"].click();
+    await flush();
+    assert.equal(calls.some((call) => call.method === "POST" && call.path.endsWith("/webhook/test")), true);
+    const expected = t("leads.webhook.testOk", { status: "200" });
+    assert.equal(ui["delivery-status-webhook"].textContent, expected);
+    assert.equal(ui["leads-webhook-status"].textContent, expected);
+
+    // Abrir um detalhe e reabrir o diálogo volta para a lista de cartões.
+    ui["btn-delivery-open-hubspot"].click();
+    assert.equal(ui["delivery-detail"].hidden, false);
+    dialog.open();
+    assert.equal(ui["delivery-list"].hidden, false);
+    assert.equal(ui["delivery-detail"].hidden, true);
+    for (const id of DELIVERY_ORDER) assert.equal(ui[`leads-${id}`].hidden, true);
+    await flush();
   } finally {
     dom.restore();
   }
