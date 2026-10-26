@@ -21,7 +21,8 @@
 .collab-stack { appearance: none; background: transparent; border: 1px solid transparent; border-radius: 999px; padding: 2px 4px; display: inline-flex; align-items: center; cursor: pointer; }
 .collab-stack:hover { border-color: var(--ns-border, rgba(127, 127, 127, .35)); }
 .collab-stack:focus-visible { outline: 2px solid var(--ns-accent, #2a9d8f); outline-offset: 2px; }
-.collab-stack .collab-avatar + .collab-avatar { margin-inline-start: -8px; }
+.collab-stack .collab-avatar + .collab-avatar,
+.people-avatars .collab-avatar + .collab-avatar { margin-inline-start: -8px; }
 .collab-status { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--ns-surface, #f4f4f5); color: var(--ns-ink, #18181b); border: 1px solid var(--ns-border, rgba(127, 127, 127, .35)); }
 .collab-status[data-kind="offline"] { background: #fff4d6; border-color: #e0b040; color: #5c3d00; }
 

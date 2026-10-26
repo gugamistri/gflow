@@ -46,15 +46,17 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     live = el("div", { class: "collab-sr-only", id: "collab-live", "aria-live": "polite", "aria-atomic": "true", role: "status" });
     toasts = el("div", { class: "collab-toasts", id: "collab-toasts", "aria-live": "polite" });
     statusEl = el("span", { class: "collab-status", id: "collab-status", hidden: true });
-    stack = el("button", { type: "button", class: "collab-stack", id: "collab-stack", "aria-haspopup": "dialog", hidden: true });
+    stack = el("span", { class: "collab-stack", id: "collab-stack", hidden: true });
     banner = el("div", { class: "collab-banner", id: "collab-banner", role: "status", hidden: true });
     root.append(live, toasts);
     document.body.append(root);
     const actions = document.getElementById("topbar-actions-editor");
+    const people = document.getElementById("people-panel");
     const share = actions?.querySelector(".export-panel");
     if (actions) {
-      const bar = el("div", { class: "collab-topbar", id: "collab-topbar" }, statusEl, stack);
-      if (share && share.parentNode === actions) actions.insertBefore(bar, share);
+      const bar = el("div", { class: "collab-topbar", id: "collab-topbar" }, statusEl);
+      const anchor = people && people.parentNode === actions ? people : share;
+      if (anchor && anchor.parentNode === actions) actions.insertBefore(bar, anchor);
       else actions.prepend(bar);
     }
     // fora do grid do editor (senão vira uma célula): logo acima da área de edição
@@ -72,6 +74,10 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     filmObserver?.disconnect();
     filmObserver = null;
     document.getElementById("collab-topbar")?.remove();
+    const avatars = document.getElementById("people-avatars");
+    if (avatars) avatars.replaceChildren();
+    const fallback = document.querySelector(".people-fallback-ico");
+    if (fallback) fallback.hidden = false;
     root?.remove();
     banner?.remove();
     lockBanner?.remove();
@@ -107,18 +113,25 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
   }
 
   function paintStack(selfName) {
-    if (!stack) return;
-    stack.hidden = false;
-    stack.replaceChildren();
-    const { shown, more } = visibleAvatars(people, 4);
+    const host = document.getElementById("people-avatars") || stack;
+    if (!host) return;
+    host.hidden = false;
+    host.replaceChildren();
+    const { shown, more } = visibleAvatars(people, 3);
+    const summary = document.getElementById("btn-people");
     const label = people.length
-      ? `${t("collab.presence.aria")}: ${people.map((p) => p.name).join(", ")}`
-      : `${t("collab.presence.aria")}: ${t("collab.presence.none")}`;
-    stack.setAttribute("aria-label", label);
-    stack.title = label;
-    stack.append(el("span", { class: "collab-avatar collab-avatar-md collab-avatar-self", "aria-hidden": "true", title: t("collab.you") }, (selfName || t("collab.you")).slice(0, 1).toUpperCase()));
-    for (const p of shown) stack.append(avatar(p));
-    if (more) stack.append(el("span", { class: "collab-avatar collab-avatar-md collab-avatar-more", "aria-hidden": "true" }, `+${more}`));
+      ? `${t("topbar.people")}: ${people.map((p) => p.name).join(", ")}`
+      : t("topbar.people");
+    if (summary) {
+      summary.setAttribute("aria-label", label);
+      summary.title = label;
+    }
+    host.append(el("span", { class: "collab-avatar collab-avatar-md collab-avatar-self", "aria-hidden": "true", title: t("collab.you") }, (selfName || t("collab.you")).slice(0, 1).toUpperCase()));
+    for (const p of shown) host.append(avatar(p));
+    if (more) host.append(el("span", { class: "collab-avatar collab-avatar-md collab-avatar-more", "aria-hidden": "true" }, `+${more}`));
+    const fallback = document.querySelector(".people-fallback-ico");
+    if (fallback) fallback.hidden = true;
+    if (stack && stack !== host) stack.hidden = true;
   }
 
   function paintFilmstrip() {
@@ -238,7 +251,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
       banner.hidden = !readOnlyText;
       banner.textContent = readOnlyText || "";
     }
-    for (const sel of ["#btn-share-publish", "#btn-share-revoke", "#btn-share-republish", "#btn-results", "#btn-share-embed"]) {
+    for (const sel of ["#btn-share-publish", "#btn-share-permanent", "#btn-share-permanent-republish", "#btn-share-revoke", "#btn-share-republish", "#btn-results", "#btn-share-embed"]) {
       document.querySelectorAll(sel).forEach((n) => {
         n.toggleAttribute("data-collab-hidden", !perms.canPublish);
       });
@@ -506,7 +519,7 @@ export function createCollabUi({ t, announceTarget = null, getStepIdAt = () => n
     applyPermissions, setStatus, toast, flashField, showInlineConflict, showConflictDialog, showStepRemoved, showMessage,
     openMembers, showJoin, renderShared,
     isMounted: () => mounted,
-    stackButton: () => stack,
+    stackButton: () => (document.getElementById("people-panel") ? null : stack),
     isCompact,
   };
 }

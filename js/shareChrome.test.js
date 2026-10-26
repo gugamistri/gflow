@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { catalogs, SUPPORTED_LOCALES } from "./i18n.js";
 
 const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
 const theme = readFileSync(new URL("../css/theme.css", import.meta.url), "utf8");
@@ -16,14 +17,16 @@ test("a seta anterior do cartão tem contorno visível e não usa a cor da barra
 });
 
 test("o link do painel tem Copiar no campo e não mostra hora", () => {
-  const start = html.indexOf('id="share-link-actions"');
-  const end = html.indexOf('id="cloud-share-block"');
-  const block = html.slice(start, end);
-  assert.equal(block.includes("share-link-status"), false);
-  assert.equal(block.includes("Atualizado agora"), false);
-  assert.match(block, /class="share-link-field"[\s\S]*id="share-link-url"[\s\S]*id="btn-share-copy"/);
-  assert.match(block, /id="btn-share-republish"/);
-  assert.match(block, /id="share-stale"/);
+  const temp = html.slice(html.indexOf('id="share-link-actions"'), html.indexOf('id="share-brand-toggle"'));
+  const perm = html.slice(html.indexOf('id="share-permanent-actions"'), html.indexOf('id="share-temp-card"'));
+  assert.equal(temp.includes("share-link-status"), false);
+  assert.equal(temp.includes("Atualizado agora"), false);
+  assert.match(temp, /class="share-link-field"[\s\S]*id="share-link-url"[\s\S]*id="btn-share-copy"/);
+  assert.match(temp, /id="btn-share-republish"/);
+  assert.match(temp, /id="share-stale"/);
+  assert.match(perm, /id="share-permanent-url"[\s\S]*id="btn-share-permanent-copy"/);
+  assert.match(perm, /id="btn-share-permanent-republish"/);
+  assert.match(perm, /id="share-cover"/);
 });
 
 test("o ponto de desatualizado fica na borda do botão, não por cima do ícone", () => {
@@ -60,25 +63,67 @@ test("Compartilhar em abas: Link, No site e Baixar, com ids e ARIA de abas", () 
   assert.ok(exportPane.indexOf('id="btn-export-video"') < exportPane.indexOf('id="btn-export-vtt"'));
   assert.match(exportPane, /id="export-quality-presets" hidden/);
   assert.match(html, /id="modal-link-copied"/);
-  assert.match(html, /data-i18n="share\.tab\.team">Gerenciar Acessos/);
+  assert.equal(card.includes('data-share-tab="team"'), false);
+  assert.equal(card.includes("Gerenciar Acessos"), false);
 });
 
-test("aba Equipe: botões, painel e host presentes; ativar/gerenciar preservam ids", () => {
+test("aba Equipe saiu do Compartilhar e vive no botão Pessoas, com os mesmos ids", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
-  assert.match(html, /data-share-tab="team"[^>]*aria-controls="pane-share-team"/);
-  assert.match(html, /role="tabpanel" id="pane-share-team"/);
-  for (const id of ["share-team-host", "share-team-off", "btn-share-collab", "btn-team-seats"]) assert.ok(html.includes(`id="${id}"`), id);
-  const pane = html.slice(html.indexOf('id="pane-share-link"'), html.indexOf('id="pane-share-team"'));
-  assert.ok(!pane.includes('id="btn-share-collab"'), "ativar colaboração saiu da aba Link");
+  const card = html.slice(html.indexOf('id="share-card"'), html.indexOf('id="people-panel"'));
+  assert.equal(card.includes('id="share-team-host"'), false);
+  assert.equal(card.includes('id="btn-share-collab"'), false);
+  const people = html.slice(html.indexOf('id="people-panel"'), html.indexOf('id="btn-results"'));
+  for (const id of ["share-team-host", "share-team-off", "btn-share-collab", "btn-team-seats", "people-avatars", "btn-people"]) {
+    assert.ok(people.includes(`id="${id}"`), id);
+  }
+  assert.match(people, /data-i18n="topbar\.people">Pessoas/);
+  assert.match(people, /aria-haspopup="dialog"/);
 });
 
-test("Resultados: botão fixo no cabeçalho e abas Análise/Contatos nos dois diálogos; saiu da aba Link", () => {
+test("Resultados: um diálogo com abas Contatos, Envio automático, Análise e Campanhas", () => {
   const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const js = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../css/editor.css", import.meta.url), "utf8");
   assert.match(h, /id="btn-results"[^>]*aria-label="Resultados"/);
-  assert.ok(h.indexOf('id="btn-results"') < h.indexOf('class="export-panel"'), "Resultados vem antes de Compartilhar");
-  assert.equal((h.match(/data-results-tab="analytics"/g) || []).length, 2);
-  assert.equal((h.match(/data-results-tab="leads"/g) || []).length, 2);
+  assert.ok(h.indexOf('class="export-panel"') < h.indexOf('id="people-panel"'), "Pessoas vem depois de Compartilhar");
+  assert.ok(h.indexOf('id="people-panel"') < h.indexOf('id="btn-results"'), "Resultados vem depois de Pessoas");
+  assert.match(h, /id="btn-menu-results"[\s\S]*data-i18n="results\.menuItem">Resultados: análise e contatos/);
+  assert.equal((h.match(/<dialog\b[^>]*id="modal-results"/g) || []).length, 1);
+  assert.ok(!h.includes('id="modal-leads"') && !h.includes('id="modal-analytics"'));
   assert.ok(!h.includes('id="btn-share-analytics"') && !h.includes('id="btn-share-leads"'));
+  const order = ["leads", "delivery", "analytics", "campaigns"];
+  let cursor = 0;
+  for (const name of order) {
+    const tabAt = h.indexOf(`data-results-tab="${name}"`, cursor);
+    assert.ok(tabAt > cursor, name);
+    assert.match(h.slice(tabAt, tabAt + 500), new RegExp(`aria-controls="results-pane-${name}"`));
+    assert.match(h, new RegExp(`role="tabpanel" id="results-pane-${name}"`));
+    assert.equal((h.match(new RegExp(`data-results-tab="${name}"`, "g")) || []).length, 1);
+    cursor = tabAt + 1;
+  }
+  const tablist = h.slice(h.indexOf('class="share-tablist results-tablist"'), h.indexOf('class="results-panes"'));
+  assert.equal((tablist.match(/class="pro-badge"/g) || []).length, 4);
+  assert.match(tablist, /role="tablist"/);
+  const contacts = h.slice(h.indexOf('id="results-pane-leads"'), h.indexOf('id="results-pane-delivery"'));
+  assert.ok(!contacts.includes('id="leads-webhook"') && !contacts.includes('id="leads-hubspot"'));
+  const delivery = h.slice(h.indexOf('id="results-pane-delivery"'), h.indexOf('id="results-pane-analytics"'));
+  for (const id of ["leads-webhook", "leads-rd", "leads-hubspot", "leads-lp"]) {
+    assert.ok(delivery.includes(`id="${id}"`), id);
+  }
+  assert.ok(delivery.indexOf('id="leads-webhook"') < delivery.indexOf('id="leads-rd"'));
+  assert.ok(delivery.indexOf('id="leads-rd"') < delivery.indexOf('id="leads-hubspot"'));
+  assert.ok(delivery.indexOf('id="leads-hubspot"') < delivery.indexOf('id="leads-lp"'));
+  const campaigns = h.slice(h.indexOf('id="results-pane-campaigns"'), h.indexOf("</dialog>", h.indexOf('id="results-pane-campaigns"')));
+  assert.ok(campaigns.includes('id="analytics-sources"'));
+  assert.ok(campaigns.includes("analytics.sourcesTitle"));
+  assert.ok(!h.slice(h.indexOf('id="results-pane-analytics"'), h.indexOf('id="results-pane-campaigns"')).includes('id="analytics-sources"'));
+  assert.match(js, /consumeLeadProntoReturn\(\) \{[\s\S]*?openResults\("delivery"\)/);
+  assert.match(js, /consumeHubspotReturn\(\) \{[\s\S]*?openResults\("delivery"\)/);
+  assert.match(js, /ArrowRight[\s\S]*ArrowLeft[\s\S]*Home[\s\S]*End/);
+  assert.match(js, /setAttribute\("aria-selected"/);
+  assert.match(css, /dialog\.results-modal\[open\][\s\S]*max-height:\s*calc\(100dvh - 32px\)/);
+  assert.match(css, /\.results-panes\s*\{[^}]*overflow:\s*auto/);
+  assert.match(css, /\.results-pane\[hidden\]\s*\{[^}]*display:\s*none/);
 });
 
 test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado do refazer, Ajuda/Modo/Idioma no menu da Conta", () => {
@@ -102,7 +147,37 @@ test("Sem marca unificado: um só project.removeBranding para link e vídeo; aba
   assert.match(js, /const watermark = billingWatermark \|\| project\.removeBranding === false/);
   assert.match(js, /pro: !billingWatermark/);
   assert.match(css, /is-compact-touch \.share-tab \{ min-height: 48px/);
+  assert.match(css, /\.share-tablist \{ display: flex; flex-wrap: wrap/);
+  assert.match(css, /\.share-tab \{ flex: 1 1 auto; min-width: min-content/);
   for (const role of ["tablist", "tab", "tabpanel"]) assert.ok(h.includes(`role="${role}"`));
+});
+
+test("Link: permanente recomendado vem antes do temporário de 7 dias; No site segue com coroa", () => {
+  const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const js = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const link = h.slice(h.indexOf('id="pane-share-link"'), h.indexOf('id="pane-share-embed"'));
+  assert.ok(link.indexOf('id="share-permanent-card"') < link.indexOf('id="share-temp-card"'));
+  assert.match(link, /data-i18n="share\.permanent\.recommended">Recomendado/);
+  assert.match(link, /data-i18n="share\.permanent\.never">Não expira\./);
+  assert.match(link, /id="share-permanent-badge"/);
+  assert.match(link, /id="share-remove-brand"/);
+  assert.match(link, /id="btn-share-revoke"/);
+  assert.match(h, /id="btn-share-embed"[\s\S]*id="embed-pro-badge"/);
+  assert.match(js, /showUpgradeDialog\(\{ feature: "embed" \}\)/);
+  assert.match(js, /showUpgradeDialog\(\{ feature: "permanentShare" \}\)/);
+  assert.match(js, /getElementById\("people-panel"\)\?\.addEventListener\("toggle"/);
+  assert.match(js, /ensureCollab\(\)\?\.openMembers/);
+  assert.match(h, /data-i18n="billing\.seats\.manage">Para liberar vagas, remova pessoas em Pessoas, no tour\./);
+  const keys = ["share.permanent.title", "share.permanent.recommended", "share.permanent.never", "share.permanent.publish", "share.temp.title", "topbar.people", "topbar.peopleTitle", "billing.seats.manage"];
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const key of keys) assert.equal(typeof catalogs[loc][key], "string", `${loc} ${key}`);
+    assert.equal(/Compartilhar ›|Share ›|Compartir ›/.test(catalogs[loc]["billing.seats.manage"]), false, loc);
+  }
+  assert.equal(catalogs.pt["topbar.people"], "Pessoas");
+  assert.equal(catalogs.en["topbar.people"], "People");
+  assert.equal(catalogs.es["topbar.people"], "Personas");
+  assert.equal(catalogs.en["share.permanent.never"], "Never expires.");
+  assert.equal(catalogs.es["share.temp.title"], "Enlace temporal");
 });
 
 test("⚙ e Preview ficam na barra de botões, depois de desfazer/refazer e Editando em; celular os devolve ao cabeçalho", () => {

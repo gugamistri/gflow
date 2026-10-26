@@ -238,14 +238,6 @@
           <svg class="btn-ico" aria-hidden="true"><use href="#i-form"></use></svg>
           <span data-i18n="fixed.capture.button">Captura</span>
         </button>
-        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
-          <span data-i18n="results.button">Resultados</span>
-          <span class="pro-badge" id="results-pro-badge" hidden>
-            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-            <span data-i18n="billing.badge">Pro</span>
-          </span>
-        </button>
         <details class="export-panel">
           <summary class="share-menu" aria-label="Compartilhar" title="Link, HTML e vídeo" data-i18n-aria="topbar.share" data-i18n-title="share.menuTitle">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
@@ -263,51 +255,76 @@
                 </span>
               </button>
               <button type="button" class="share-tab" role="tab" id="tab-share-export" data-share-tab="export" aria-selected="false" tabindex="-1" aria-controls="pane-share-export" data-i18n="share.tab.export">Baixar</button>
-              <button type="button" class="share-tab" role="tab" id="tab-share-team" data-share-tab="team" aria-selected="false" tabindex="-1" aria-controls="pane-share-team" hidden>
-                <span data-i18n="share.tab.team">Gerenciar Acessos</span>
-              </button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-link" aria-labelledby="tab-share-link">
-            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
-            <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Link</strong>
-              <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
-            </button>
-            <div class="share-link-actions" id="share-link-actions" hidden>
-              <div class="share-link-meta">
-                <strong>
-                  <span data-i18n="share.linkTitle">Link</span>
-                </strong>
+            <section class="share-kind" id="share-permanent-card" aria-labelledby="share-permanent-title">
+              <div class="share-kind-head">
+                <strong id="share-permanent-title" data-i18n="share.permanent.title">Link permanente</strong>
+                <span class="share-recommended" data-i18n="share.permanent.recommended">Recomendado</span>
+                <span class="pro-badge" id="share-permanent-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
               </div>
-              <div class="share-link-field">
-                <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link" data-i18n-aria="share.linkTitle" />
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                </button>
-              </div>
-              <div class="share-cover" id="share-cover" hidden>
-                <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
-                <div class="share-cover-text">
-                  <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
-                  <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
-                  <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
+              <p class="share-kind-note" data-i18n="share.permanent.never">Não expira.</p>
+              <button type="button" id="cloud-share-block" class="export-option share-kind-action" hidden>
+                <strong data-i18n="share.permanent.publish">Publicar link permanente</strong>
+                <span data-i18n="share.proDesc">Endereço para ver o tour, sem prazo.</span>
+                <span class="pro-badge" id="cloud-share-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
+              </button>
+              <button type="button" class="export-option" id="btn-share-permanent" hidden>
+                <strong data-i18n="share.permanent.publish">Publicar link permanente</strong>
+                <span data-i18n="share.proDesc">Endereço para ver o tour, sem prazo.</span>
+              </button>
+              <div class="share-link-actions" id="share-permanent-actions" hidden>
+                <div class="share-link-field">
+                  <input id="share-permanent-url" class="share-link-url" type="text" readonly value="" aria-label="Link permanente" data-i18n-aria="share.permanent.title" />
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-permanent-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  </button>
+                </div>
+                <div class="share-cover" id="share-cover" hidden>
+                  <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
+                  <div class="share-cover-text">
+                    <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
+                    <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
+                    <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
+                  </div>
+                </div>
+                <div class="share-link-extra" id="share-permanent-extra" hidden>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-share-permanent-republish" hidden data-i18n="share.republish">Republicar</button>
+                  <span class="share-stale" id="share-permanent-stale" hidden data-i18n="share.stale">Desatualizado</span>
                 </div>
               </div>
-              <div class="share-link-extra" id="share-link-extra" hidden>
-                <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
-                <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                </button>
+            </section>
+            <section class="share-kind" id="share-temp-card" aria-labelledby="share-temp-title">
+              <div class="share-kind-head">
+                <strong id="share-temp-title" data-i18n="share.temp.title">Link temporário</strong>
               </div>
-            </div>
-            <button type="button" id="cloud-share-block" class="share-pro-upsell" hidden>
-              <span class="pro-badge" id="cloud-share-badge">
-                <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                <span data-i18n="billing.badge">Pro</span>
-              </span>
-              <span data-i18n="share.upsell">Link que não expira</span>
-            </button>
+              <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
+              <button type="button" class="export-option" id="btn-share-publish">
+                <strong data-i18n="share.temp.title">Link temporário</strong>
+                <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
+              </button>
+              <div class="share-link-actions" id="share-link-actions" hidden>
+                <div class="share-link-field">
+                  <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link temporário" data-i18n-aria="share.temp.title" />
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  </button>
+                </div>
+                <div class="share-link-extra" id="share-link-extra" hidden>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
+                  <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                  </button>
+                </div>
+              </div>
+            </section>
             <label class="share-brand-toggle" id="share-brand-toggle" hidden>
               <input type="checkbox" id="share-remove-brand" checked />
               <span class="share-brand-text">
@@ -353,14 +370,6 @@
             <button type="button" class="btn btn-primary" id="btn-embed-copy" data-i18n="embed.copy">Copiar código</button>
           </div>
         </div>
-            </div>
-            <div class="share-pane" role="tabpanel" id="pane-share-team" aria-labelledby="tab-share-team" hidden>
-              <div class="share-team-off" id="share-team-off">
-                <p class="share-team-lead" data-i18n="share.team.lead">Edite este tour em equipe: as mudanças aparecem para todos em poucos segundos.</p>
-                <button type="button" class="btn btn-primary" id="btn-share-collab" data-i18n="share.team.enable">Ativar e convidar</button>
-              </div>
-              <div class="share-team-host" id="share-team-host"></div>
-              <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-export" aria-labelledby="tab-share-export" hidden>
             <button type="button" class="export-option" id="btn-export-html">
@@ -426,6 +435,29 @@
             </div>
           </div>
         </details>
+        <details class="people-panel" id="people-panel" hidden>
+          <summary class="people-menu" id="btn-people" aria-haspopup="dialog" aria-label="Pessoas" title="Quem edita este projeto" data-i18n-aria="topbar.people" data-i18n-title="topbar.peopleTitle">
+            <span class="people-avatars" id="people-avatars" aria-hidden="true"></span>
+            <svg class="btn-ico people-fallback-ico" aria-hidden="true"><use href="#i-user"></use></svg>
+            <span class="people-label" data-i18n="topbar.people">Pessoas</span>
+          </summary>
+          <div class="export-panel-body people-panel-body" id="people-card">
+            <div class="share-team-off" id="share-team-off">
+              <p class="share-team-lead" data-i18n="share.team.lead">Edite este tour em equipe: as mudanças aparecem para todos em poucos segundos.</p>
+              <button type="button" class="btn btn-primary" id="btn-share-collab" data-i18n="share.team.enable">Ativar e convidar</button>
+            </div>
+            <div class="share-team-host" id="share-team-host"></div>
+            <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
+          </div>
+        </details>
+        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
+          <span data-i18n="results.button">Resultados</span>
+          <span class="pro-badge" id="results-pro-badge" hidden>
+            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+            <span data-i18n="billing.badge">Pro</span>
+          </span>
+        </button>
       </div>
       <div class="topbar-actions" id="topbar-actions-library">
         <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
@@ -1456,23 +1488,124 @@
     </form>
   </dialog>
 
-  <dialog class="studio-modal leads-modal" id="modal-leads" aria-labelledby="leads-heading">
-    <div class="studio-modal-body leads-dialog">
+  <dialog class="studio-modal results-modal" id="modal-results" aria-labelledby="results-heading">
+    <div class="studio-modal-body results-dialog">
       <div class="account-dialog-head">
-        <h3 id="leads-heading" data-i18n="leads.title">Contatos recebidos</h3>
-        <button type="button" class="btn btn-icon" id="btn-leads-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+        <h3 id="results-heading" data-i18n="results.button">Resultados</h3>
+        <button type="button" class="btn btn-icon" id="btn-results-close" aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
       <div class="share-tablist results-tablist" role="tablist" aria-label="Resultados" data-i18n-aria="results.button">
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="analytics" aria-selected="false" tabindex="-1" data-i18n="results.tab.analytics">Análise</button>
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="leads" aria-selected="true" data-i18n="results.tab.leads">Contatos</button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-leads" data-results-tab="leads" aria-selected="false" tabindex="-1" aria-controls="results-pane-leads">
+          <span data-i18n="results.tab.leads">Contatos</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-delivery" data-results-tab="delivery" aria-selected="false" tabindex="-1" aria-controls="results-pane-delivery">
+          <span data-i18n="results.tab.delivery">Envio automático</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-analytics" data-results-tab="analytics" aria-selected="true" aria-controls="results-pane-analytics">
+          <span data-i18n="results.tab.analytics">Análise</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-campaigns" data-results-tab="campaigns" aria-selected="false" tabindex="-1" aria-controls="results-pane-campaigns">
+          <span data-i18n="results.tab.campaigns">Campanhas</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
       </div>
+      <div class="results-panes">
+      <div class="results-pane" role="tabpanel" id="results-pane-leads" aria-labelledby="results-tab-leads" hidden>
       <p class="leads-meta" id="leads-meta"></p>
       <p class="leads-status" id="leads-status" role="status"></p>
       <div class="leads-list" id="leads-list" role="list"></div>
       <p class="fixed-hint" data-i18n="leads.controllerNote">Você controla estes dados (LGPD). Use só para a finalidade informada e exclua quando o titular pedir.</p>
-      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading">
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
+        <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
+      </div>
+      </div>
+      <div class="results-pane" role="tabpanel" id="results-pane-delivery" aria-labelledby="results-tab-delivery" hidden>
+      <div class="delivery-list" id="delivery-list" role="list">
+        <div class="delivery-card is-featured" role="listitem" data-delivery-card="lp">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-lp" data-delivery-open="lp" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.lp.title">LeadPronto</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                <span class="delivery-card-tag" data-i18n="leads.delivery.maker">do mesmo fabricante · recomendado</span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-lp"></span>
+              <span class="delivery-state" id="delivery-state-lp"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-lp"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-lp" role="status"></span>
+          </button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="webhook">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-webhook" data-delivery-open="webhook" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.webhook.title">Webhook</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-webhook"></span>
+              <span class="delivery-state" id="delivery-state-webhook"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-webhook"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-webhook" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-webhook" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="rd">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-rd" data-delivery-open="rd" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.rd.title">RD Station Marketing</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-rd"></span>
+              <span class="delivery-state" id="delivery-state-rd"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-rd"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-rd" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-rd" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="hubspot">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-hubspot" data-delivery-open="hubspot" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.hubspot.title">HubSpot</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-hubspot"></span>
+              <span class="delivery-state" id="delivery-state-hubspot"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-hubspot"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-hubspot" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-hubspot" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+      </div>
+      <div class="delivery-detail" id="delivery-detail" hidden>
+        <button type="button" class="btn delivery-back" id="btn-delivery-back">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+          <span data-i18n="leads.delivery.back">Voltar</span>
+        </button>
+      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading" hidden>
         <h4 id="leads-webhook-heading">
           <span data-i18n="leads.webhook.title">Webhook</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1509,7 +1642,7 @@
           <a class="embed-guide" id="leads-webhook-help" href="/integracoes/leads" target="_blank" rel="noopener" data-i18n="leads.webhook.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading">
+      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading" hidden>
         <h4 id="leads-rd-heading">
           <span data-i18n="leads.rd.title">RD Station Marketing</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1534,7 +1667,7 @@
           <a class="embed-guide" id="leads-rd-help" href="/integracoes#rd-station" target="_blank" rel="noopener" data-i18n="leads.rd.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading">
+      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading" hidden>
         <h4 id="leads-hubspot-heading">
           <span data-i18n="leads.hubspot.title">HubSpot</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1581,7 +1714,7 @@
           <a class="embed-guide" id="leads-hubspot-help" href="/integracoes#hubspot" target="_blank" rel="noopener" data-i18n="leads.hubspot.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-lp" aria-labelledby="leads-lp-heading">
+      <section class="leads-webhook" id="leads-lp" aria-labelledby="leads-lp-heading" hidden>
         <h4 id="leads-lp-heading">
           <span data-i18n="leads.lp.title">LeadPronto</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1609,9 +1742,47 @@
           <a class="embed-guide" id="leads-lp-help" href="/integracoes#leadpronto" target="_blank" rel="noopener" data-i18n="leads.lp.help">Como conectar</a>
         </div>
       </section>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
-        <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
+      </div>
+      </div>
+      <div class="results-pane" role="tabpanel" id="results-pane-analytics" aria-labelledby="results-tab-analytics">
+      <div class="analytics-toolbar">
+        <p class="analytics-tour" id="analytics-tour"></p>
+        <div class="analytics-range" id="analytics-range" role="group" aria-label="Período" data-i18n-aria="analytics.rangeAria">
+          <button type="button" class="analytics-range-btn" data-days="7" data-i18n="analytics.range7">7 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="30" data-i18n="analytics.range30">30 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="90" data-i18n="analytics.range90">90 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="365" data-i18n="analytics.range365">12 meses</button>
+        </div>
+      </div>
+      <p class="analytics-status" id="analytics-status" role="status"></p>
+      <div class="analytics-empty" id="analytics-empty" hidden>
+        <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
+      </div>
+      <div class="analytics-body" id="analytics-body" hidden>
+        <div class="analytics-cards" id="analytics-cards"></div>
+        <p class="analytics-split" id="analytics-split"></p>
+        <div class="analytics-chart" id="analytics-chart"></div>
+        <h4 class="analytics-h" data-i18n="analytics.stepsTitle">Onde as pessoas param</h4>
+        <p class="analytics-note" data-i18n="analytics.stepsNote">Os passos fixos de início e fim não entram nesta conta.</p>
+        <div class="analytics-steps" id="analytics-steps" role="table"></div>
+        <div id="analytics-langs-wrap" hidden>
+          <h4 class="analytics-h" data-i18n="analytics.langsTitle">Por idioma</h4>
+          <div class="analytics-sources" id="analytics-langs"></div>
+          <p class="analytics-note" id="analytics-langs-note"></p>
+        </div>
+      </div>
+      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Sem cookies nem dados pessoais. “Não rastrear” não conta; únicos são aproximados.</p>
+      <div class="studio-modal-actions analytics-actions">
+        <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
+      </div>
+      </div>
+      <div class="results-pane" role="tabpanel" id="results-pane-campaigns" aria-labelledby="results-tab-campaigns" tabindex="0" hidden>
+        <h4 class="analytics-h" data-i18n="analytics.sourcesTitle">De onde vieram</h4>
+        <div class="analytics-empty" id="results-campaigns-empty" hidden>
+          <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
+        </div>
+        <div class="analytics-sources" id="analytics-sources"></div>
+      </div>
       </div>
     </div>
   </dialog>
@@ -1691,52 +1862,6 @@
     </div>
   </dialog>
 
-  <dialog class="studio-modal analytics-modal" id="modal-analytics" aria-labelledby="analytics-heading">
-    <div class="studio-modal-body analytics-dialog">
-      <div class="account-dialog-head">
-        <h3 id="analytics-heading" data-i18n="analytics.title">Análise do tour</h3>
-        <button type="button" class="btn btn-icon" id="btn-analytics-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="share-tablist results-tablist" role="tablist" aria-label="Resultados" data-i18n-aria="results.button">
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="analytics" aria-selected="true" data-i18n="results.tab.analytics">Análise</button>
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="leads" aria-selected="false" tabindex="-1" data-i18n="results.tab.leads">Contatos</button>
-      </div>
-      <div class="analytics-toolbar">
-        <p class="analytics-tour" id="analytics-tour"></p>
-        <div class="analytics-range" id="analytics-range" role="group" aria-label="Período" data-i18n-aria="analytics.rangeAria">
-          <button type="button" class="analytics-range-btn" data-days="7" data-i18n="analytics.range7">7 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="30" data-i18n="analytics.range30">30 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="90" data-i18n="analytics.range90">90 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="365" data-i18n="analytics.range365">12 meses</button>
-        </div>
-      </div>
-      <p class="analytics-status" id="analytics-status" role="status"></p>
-      <div class="analytics-empty" id="analytics-empty" hidden>
-        <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
-      </div>
-      <div class="analytics-body" id="analytics-body" hidden>
-        <div class="analytics-cards" id="analytics-cards"></div>
-        <p class="analytics-split" id="analytics-split"></p>
-        <div class="analytics-chart" id="analytics-chart"></div>
-        <h4 class="analytics-h" data-i18n="analytics.stepsTitle">Onde as pessoas param</h4>
-        <p class="analytics-note" data-i18n="analytics.stepsNote">Os passos fixos de início e fim não entram nesta conta.</p>
-        <div class="analytics-steps" id="analytics-steps" role="table"></div>
-        <h4 class="analytics-h" data-i18n="analytics.sourcesTitle">De onde vieram</h4>
-        <div class="analytics-sources" id="analytics-sources"></div>
-        <div id="analytics-langs-wrap" hidden>
-          <h4 class="analytics-h" data-i18n="analytics.langsTitle">Por idioma</h4>
-          <div class="analytics-sources" id="analytics-langs"></div>
-          <p class="analytics-note" id="analytics-langs-note"></p>
-        </div>
-      </div>
-      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Sem cookies nem dados pessoais. “Não rastrear” não conta; únicos são aproximados.</p>
-      <div class="studio-modal-actions analytics-actions">
-        <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
-      </div>
-    </div>
-  </dialog>
 
   <dialog class="studio-modal subscription-modal" id="modal-subscription" aria-labelledby="subscription-title">
     <div class="studio-modal-body subscription-dialog">
@@ -1772,7 +1897,7 @@
             <button type="submit" class="btn" id="btn-subscription-seats" data-i18n="billing.seats.apply">Atualizar convidados extras</button>
           </div>
           <p class="subscription-when" id="subscription-seats-note"></p>
-          <p class="subscription-when" data-i18n="billing.seats.manage">Para liberar vagas, remova pessoas em Compartilhar › Colaboração, no tour.</p>
+          <p class="subscription-when" data-i18n="billing.seats.manage">Para liberar vagas, remova pessoas em Pessoas, no tour.</p>
         </form>
         <div class="subscription-actions">
           <button type="button" class="btn btn-danger" id="btn-subscription-cancel" hidden data-i18n="billing.subCancel">Cancelar assinatura</button>
@@ -2062,6 +2187,12 @@
     </symbol>
     <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m6 9 6 6 6-6"/>
+    </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 6 6 6-6 6"/>
+    </symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 6-6 6 6 6"/>
     </symbol>
     <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
