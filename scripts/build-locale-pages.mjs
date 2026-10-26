@@ -33,7 +33,7 @@ export const PAGES = [
   {
     src: "index.html",
     path: "",
-    lastmod: "2026-10-12",
+    lastmod: "2026-10-26",
     meta: {
       en: {
         description: "Free interactive demo maker, open source (MIT): turn screenshots of your product into an interactive, narrated product tour in minutes. Free in the browser.",
