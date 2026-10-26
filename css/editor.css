@@ -2605,6 +2605,11 @@ body.is-presenting #topbar-actions-editor {
   display: none;
 }
 
+/* Só o celular usa o ⋯ do cartão; no desktop o menu abre com o botão direito. */
+.film-actions .film-action-menu {
+  display: none;
+}
+
 .film-scene.is-drop-target .film-scene-label {
   background: var(--ns-hover);
   color: var(--ns-ink);
@@ -7993,11 +7998,18 @@ body.has-mobile-bar .toast-host,
 /* A barra de cima só tinha desfazer/refazer: foi para a barra de baixo */
 body.has-mobile-bar .view-editor:not(.is-presenting) .canvas-toolbar { display: none; 
 }
-/* Filmstrip compacta: faixa horizontal de miniaturas; ↑ ↓ × só no passo ativo */
+/* Filmstrip compacta: faixa horizontal de miniaturas; ações no ⋯ do cartão */
 body.has-mobile-bar .view-editor:not(.is-presenting) #filmstrip-panel { max-height: none; 
 }
 body.has-mobile-bar .filmstrip-header,
   body.has-mobile-bar .filmstrip-footer { display: none; 
+}
+/* why: no celular o aviso "Sincronizado" tomava uma faixa inteira da filmstrip sem dizer nada
+   de útil. Em repouso (sincronizado) e durante a sincronização automática a faixa some; ela
+   só aparece quando precisa de atenção (offline/erro) ou para o aviso de "salvo só neste
+   navegador". Os dois avisos nunca aparecem juntos (ver paintLocalSave). */
+body.has-mobile-bar .filmstrip-notices:has(> .sync-status[data-phase="synced"]:not([hidden])),
+  body.has-mobile-bar .filmstrip-notices:has(> .sync-status[data-phase="syncing"]:not([hidden])) { display: none; 
 }
 body.has-mobile-bar .filmstrip {
     display: flex;
@@ -8048,11 +8060,70 @@ body.has-mobile-bar .film-meta strong {
     text-overflow: ellipsis;
   
 }
-body.has-mobile-bar .film-item:not(.is-active) .film-actions { display: none; 
+/* why: as setas ← → e o × gastavam uma linha inteira do cartão ativo. Agora só o ⋯ fica
+   sobre a miniatura, e o menu (folha de baixo) traz mover, duplicar e excluir. Reordenar
+   também dá para fazer segurando o cartão e arrastando (toque longo). */
+body.has-mobile-bar .film-item .film-actions {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+    pointer-events: none;
+  
 }
-body.has-mobile-bar .film-item.is-active .film-actions { display: flex; justify-content: space-between; gap: 2px; margin: 0; 
+body.has-mobile-bar .film-item .film-action-move,
+  body.has-mobile-bar .film-item .film-action-close { display: none; 
 }
-body.has-mobile-bar .film-item.is-active .film-actions button { width: 30px; min-width: 30px; height: 44px; flex: 1 1 0; 
+/* Só o cartão do passo atual mostra o ⋯: a faixa fica limpa como antes, sem três botões por cartão. */
+body.has-mobile-bar .film-item:not(.is-active) .film-action-menu { display: none; 
+}
+body.has-mobile-bar .film-action-menu {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ns-panel) 74%, transparent);
+    color: var(--ns-ink);
+    font-size: 1rem;
+    line-height: 1;
+    pointer-events: auto;
+  
+}
+body.has-mobile-bar .film-item { -webkit-touch-callout: none; 
+}
+body.has-mobile-bar .film-item.is-touch-dragging {
+    opacity: 0.92;
+    transform: scale(1.04);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+    z-index: 2;
+  
+}
+body.is-film-dragging,
+  body.is-film-dragging .filmstrip { user-select: none; -webkit-user-select: none; 
+}
+body.is-film-dragging .filmstrip { scroll-snap-type: none; 
+}
+/* Em pé a faixa rola na horizontal: o marcador de "solta aqui" vira uma barra em pé. */
+body.has-mobile-bar .film-item.drop-before::before,
+  body.has-mobile-bar .film-item.drop-after::after {
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    height: auto;
+    left: auto;
+    right: auto;
+  
+}
+body.has-mobile-bar .film-item.drop-before::before { left: -5px; 
+}
+body.has-mobile-bar .film-item.drop-after::after { right: -5px; 
 }
 /* Folha "Editar passo": o próprio painel de propriedades, só texto e narração */
 .mobile-sheet-backdrop { position: fixed; inset: 0; z-index: 240; background: rgba(0, 0, 0, 0.45); 
@@ -8114,7 +8185,26 @@ body.is-props-sheet .mobile-sheet-audio:not([hidden]) { display: flex; gap: 8px;
 }
 body.is-props-sheet #props-panel #prop-caption { min-height: 120px; 
 }
+/* Menu do cartão (⋯) no celular: folha colada na barra de baixo, com linhas de 44px */
+.film-context-menu.is-sheet {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: calc(var(--mbar-h, 0px) + 8px + env(safe-area-inset-bottom, 0px));
+    min-width: 0;
+    max-width: none;
+    max-height: 60dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  
 }
+.film-context-menu.is-sheet button { min-height: 44px; font-size: 0.95rem; 
+}
+/* no celular não há teclado: as dicas de atalho só ocupam espaço */
+.film-context-menu.is-sheet .film-context-kbd { display: none; 
+}
+}
+
 
 @media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
 /* Deitado: filmstrip vira coluna estreita à esquerda; barra com rótulos menores */
@@ -8150,6 +8240,21 @@ body.has-mobile-bar .film-scene { writing-mode: horizontal-tb; transform: none; 
 }
 body.has-mobile-bar .film-item,
   body.has-mobile-bar .film-fixed { width: 100%; 
+}
+/* Deitado a faixa é uma coluna: o marcador de "solta aqui" volta a ser uma barra deitada. */
+body.has-mobile-bar .film-item.drop-before::before,
+  body.has-mobile-bar .film-item.drop-after::after {
+    left: 4px;
+    right: 4px;
+    width: auto;
+    height: 3px;
+    top: auto;
+    bottom: auto;
+  
+}
+body.has-mobile-bar .film-item.drop-before::before { top: -5px; 
+}
+body.has-mobile-bar .film-item.drop-after::after { bottom: -5px; 
 }
 body.is-props-sheet .view-editor:not(.is-presenting) #props-panel {
     inset: 8px 8px calc(var(--mbar-h) + 4px) auto;
