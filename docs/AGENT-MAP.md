@@ -39,7 +39,7 @@ Assets e cópias. Lógica nova não mora aqui.
 | Colaboração | `js/collabController.js`, `js/collabModel.js`, `js/collabUi.js`, `js/collabClient.js`, `css/collab.css` | `apps/api/src/routes/collab.js`, `apps/api/src/lib/collab.js`, `apps/api/src/lib/collab-ops.js` |
 | IA e voz com chave do usuário | `js/llm.js`, `js/llm-store.js`, `js/cartesia.js`, `js/cartesia-store.js` | — |
 | IA e voz hospedadas | `js/hosted.js` | `apps/api/src/routes/ai.js`, `apps/api/src/routes/tts.js`, `apps/api/src/lib/ai.js`, `apps/api/src/lib/tts.js` |
-| Chaves de API, MCP, REST `/v1` | `js/apiKeysDialog.js`, `llms.txt`, `ajuda/api.html` | `apps/api/src/routes/mcp.js`, `apps/api/src/routes/v1.js`, `apps/api/src/routes/oauth.js`, `apps/api/src/routes/api-keys.js`, `apps/api/src/lib/mcp-tools.js` |
+| Chaves de API, MCP, REST `/v1` | `js/apiKeysDialog.js`, `llms.txt`, `ajuda/api.html`, `.well-known/integrations.json` | `apps/api/src/routes/mcp.js`, `apps/api/src/routes/v1.js`, `apps/api/src/routes/oauth.js`, `apps/api/src/routes/api-keys.js`, `apps/api/src/lib/mcp-tools.js` |
 | Analytics do link | `js/analyticsDialog.js`, `js/viewAnalytics.js` | `apps/api/src/routes/analytics.js`, `apps/api/src/routes/share-analytics.js` |
 | Comentários | `js/comments.js`, `js/commentsUi.js` | `apps/api/src/routes/comments.js` |
 | Leads e passos de abertura/fim | `js/leadsDialog.js`, `js/fixedSteps.js`, `js/fixedStepsEditor.js` | `apps/api/src/routes/leads.js` |

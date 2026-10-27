@@ -155,6 +155,34 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(llms, /Pro plan/);
 });
 
+test("/.well-known/integrations.json declara o MCP e a API do plano Pro", () => {
+  const doc = JSON.parse(read(".well-known/integrations.json"));
+  assert.equal(doc.version, 3);
+  assert.match(doc.summary, /MCP server/);
+  // why: o registro integrations.sh lê este arquivo no domínio; um slug repetido ou uma
+  // superfície sem auth declarada some da página sem erro
+  const surfaces = doc.surfaces || [];
+  const slugs = surfaces.map((surface) => surface.slug);
+  assert.equal(new Set(slugs).size, slugs.length);
+  const mcp = surfaces.find((surface) => surface.type === "mcp");
+  assert.equal(mcp.url, "https://app.guiaflow.pro/mcp");
+  assert.deepEqual(mcp.transports, ["streamable-http"]);
+  assert.equal(mcp.auth.status, "required");
+  const http = surfaces.find((surface) => surface.type === "http");
+  assert.equal(http.url, "https://app.guiaflow.pro/v1");
+  assert.match(http.spec, /openapi\.json$/);
+  // toda credencial citada por uma superfície existe no mapa de credenciais
+  for (const surface of surfaces) {
+    for (const entry of surface.auth.entries) {
+      for (const use of entry.use) {
+        assert.ok(doc.credentials[use.id], `credencial ${use.id} não declarada`);
+      }
+    }
+  }
+  // o mesmo servidor MCP anunciado em llms.txt: as duas fontes não podem divergir
+  assert.match(read("llms.txt"), new RegExp(mcp.url));
+});
+
 test("a landing mostra o demo real do LeadPronto no lugar do «em breve» (GUI-13)", () => {
   const slug = read("js/landing.js").match(/LANDING_DEMO_SLUG = "([A-Za-z0-9][A-Za-z0-9_-]{0,80})"/);
   assert.ok(slug, "LANDING_DEMO_SLUG não encontrado em js/landing.js");
