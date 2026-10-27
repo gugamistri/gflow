@@ -195,6 +195,14 @@ test("/.well-known/api-catalog e /openapi.json apontam para a API sem copiar o s
   //      aqui uma cópia do spec que muda no outro repo (drift)
   const spec = config.rewrites.find((rule) => rule.source === "/openapi.json");
   assert.equal(spec.destination, "https://app.guiaflow.pro/v1/openapi.json");
+  // why: cartão e PRM moram no host do MCP; o apex só espelha, para o registro achar os dois
+  for (const [source, destination] of [
+    ["/.well-known/mcp/server-card.json", "https://app.guiaflow.pro/.well-known/mcp/server-card.json"],
+    ["/.well-known/oauth-protected-resource", "https://app.guiaflow.pro/.well-known/oauth-protected-resource"],
+  ]) {
+    const rule = config.rewrites.find((entry) => entry.source === source);
+    assert.equal(rule?.destination, destination);
+  }
   const header = config.headers.find((entry) => entry.source === "/.well-known/api-catalog");
   assert.equal(header.headers.find((item) => item.key === "Content-Type").value, "application/linkset+json");
 });
