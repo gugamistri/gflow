@@ -1,0 +1,25 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://app.guiaflow.pro/v1",
+      "service-desc": [
+        {
+          "href": "https://app.guiaflow.pro/v1/openapi.json",
+          "type": "application/vnd.oai.openapi+json;version=3.1"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://guiaflow.pro/ajuda/api",
+          "type": "text/html"
+        }
+      ],
+      "item": [
+        {
+          "href": "https://app.guiaflow.pro/mcp",
+          "title": "GuiaFlow MCP server (Streamable HTTP)"
+        }
+      ]
+    }
+  ]
+}

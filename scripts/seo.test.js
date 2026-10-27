@@ -183,8 +183,23 @@ test("/.well-known/integrations.json declara o MCP e a API do plano Pro", () => 
   assert.match(read("llms.txt"), new RegExp(mcp.url));
 });
 
-test("a landing mostra o demo real do LeadPronto no lugar do «em breve» (GUI-13)", () => {
-  const slug = read("js/landing.js").match(/LANDING_DEMO_SLUG = "([A-Za-z0-9][A-Za-z0-9_-]{0,80})"/);
+test("/.well-known/api-catalog e /openapi.json apontam para a API sem copiar o spec", () => {
+  const doc = JSON.parse(read(".well-known/api-catalog"));
+  assert.equal(doc.linkset.length, 1);
+  const [link] = doc.linkset;
+  assert.equal(link.anchor, "https://app.guiaflow.pro/v1");
+  assert.equal(link["service-desc"][0].href, "https://app.guiaflow.pro/v1/openapi.json");
+  assert.ok(link.item.some((item) => item.href === "https://app.guiaflow.pro/mcp"));
+  const config = JSON.parse(read("vercel.json"));
+  // why: o registro sonda /openapi.json no domínio listado; o rewrite evita manter
+  //      aqui uma cópia do spec que muda no outro repo (drift)
+  const spec = config.rewrites.find((rule) => rule.source === "/openapi.json");
+  assert.equal(spec.destination, "https://app.guiaflow.pro/v1/openapi.json");
+  const header = config.headers.find((entry) => entry.source === "/.well-known/api-catalog");
+  assert.equal(header.headers.find((item) => item.key === "Content-Type").value, "application/linkset+json");
+});
+
+test("a landing mostra o demo real do LeadPronto no lugar do «em breve» (GUI-13)", () => {  const slug = read("js/landing.js").match(/LANDING_DEMO_SLUG = "([A-Za-z0-9][A-Za-z0-9_-]{0,80})"/);
   assert.ok(slug, "LANDING_DEMO_SLUG não encontrado em js/landing.js");
   for (const page of ["index.html", "en.html", "es.html"]) {
     const html = read(page);
