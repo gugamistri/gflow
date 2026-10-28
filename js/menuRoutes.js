@@ -8,7 +8,7 @@
 /** Cada ação aparece em um menu só. As chaves batem com `data-menu` / `data-menu-action` no editor.html. */
 export const MENU_HOME = Object.freeze({
   app: Object.freeze(["projects", "new", "import", "signin", "help", "shortcuts", "feedback", "about", "theme", "locale"]),
-  project: Object.freeze(["rename", "export", "optimize", "restore", "capture-desktop", "delete"]),
+  project: Object.freeze(["rename", "move-client", "export", "optimize", "restore", "capture-desktop", "delete"]),
   account: Object.freeze(["settings", "signout"]),
   publish: Object.freeze(["capture", "share", "results"]),
 });

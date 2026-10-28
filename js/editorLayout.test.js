@@ -318,7 +318,7 @@ test("GUI-32: nenhuma ação aparece em dois menus (☰, projeto, conta e Public
   assert.deepEqual(duplicateActions(found), []);
   // ☰ na ordem da proposta: Projetos, Novo, Importar, (Entrar no celular), Ajuda, Atalhos, Feedback, Sobre, Modo, Idioma
   assert.deepEqual(found.app, ["projects", "new", "import", "signin", "help", "shortcuts", "feedback", "about", "theme", "locale"]);
-  assert.deepEqual(found.project, ["rename", "export", "optimize", "restore", "capture-desktop", "delete"]);
+  assert.deepEqual(found.project, ["rename", "move-client", "export", "optimize", "restore", "capture-desktop", "delete"]);
   // o chip da Conta não recebe mais Ajuda/Modo/Idioma
   assert.equal(html.includes('id="account-help-slot"'), false);
   const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");

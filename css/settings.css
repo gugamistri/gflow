@@ -257,3 +257,192 @@ body.is-compact-touch dialog.settings-modal.studio-modal[open]::before {
 body.is-compact-touch dialog.settings-modal.studio-modal[open] .settings-dialog {
   min-height: 100%;
 }
+
+/* Clientes/marcas (GUI-33): formulário numa linha e lista com rolagem própria, sem esticar o diálogo. */
+.settings-clients-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.settings-clients-form[hidden],
+.settings-clients-pro[hidden] {
+  display: none;
+}
+
+.settings-clients-field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--ns-muted);
+}
+
+.settings-clients-field input,
+.settings-clients-field select {
+  width: 100%;
+  min-width: 0;
+}
+
+.settings-clients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  max-height: 280px;
+  overflow: auto;
+  border-top: 1px solid var(--ns-border);
+}
+
+.settings-client,
+.settings-clients-empty {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--ns-border);
+  font-size: 0.9rem;
+}
+
+.settings-clients-empty {
+  color: var(--ns-muted);
+}
+
+.settings-client-mark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--ns-surface);
+  border: 1px solid var(--ns-border);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ns-muted);
+}
+
+.settings-client-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.settings-client-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+
+.settings-client-text strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-client-count {
+  color: var(--ns-muted);
+  font-size: 0.8rem;
+}
+
+.settings-client-actions {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.settings-client-rename {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn.btn-danger-ghost {
+  color: var(--ns-danger);
+}
+
+.settings-clients-pro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  color: var(--ns-muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 560px) {
+  .settings-clients-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Biblioteca: filtro por cliente numa faixa que rola na horizontal. */
+.library-clients {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 10px;
+  scrollbar-width: thin;
+}
+
+.library-clients[hidden] {
+  display: none;
+}
+
+.library-client-chip {
+  appearance: none;
+  flex: none;
+  border: 1px solid var(--ns-border);
+  background: var(--ns-panel);
+  color: var(--ns-ink);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.library-client-chip.is-active {
+  background: var(--ns-ink);
+  border-color: var(--ns-ink);
+  color: var(--ns-panel);
+}
+
+.library-client-chip:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.library-client-count {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.project-card-body .project-card-client {
+  color: var(--ns-ink);
+  font-weight: 600;
+}
+
+.project-card-actions .project-card-move {
+  flex: none;
+  width: 26px;
+  padding: 0;
+  margin-left: auto;
+}
+
+.project-card-actions .project-card-move + .project-card-optimize {
+  margin-left: 0;
+}
+
+#modal-move-client .studio-modal-body {
+  display: grid;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+}
+
+#btn-move-client-manage {
+  margin-right: auto;
+}

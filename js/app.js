@@ -25,6 +25,7 @@ import {
   projectToDemoPayload,
   duplicateProject,
   renameProject,
+  setProjectClient,
   getCustomThemes,
   saveCustomThemes,
   writeIndex,
@@ -171,6 +172,15 @@ import { leadProntoReturnKey, readLeadProntoReturn, stripLeadProntoReturn } from
 import { hubspotReturnNotice, readHubspotReturn, stripHubspotReturn } from "./hubspot.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
 import { createSettingsDialog, takeSettingsReturn } from "./settingsDialog.js";
+import {
+  ALL_CLIENTS,
+  NO_CLIENT,
+  clientOf,
+  createClientsStore,
+  filterChips,
+  filterProjects,
+  resolveFilter,
+} from "./workspaceClients.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
@@ -619,8 +629,21 @@ const leadsDialog = createLeadsDialog({
 
 const apiKeysDialog = createApiKeysDialog({ toast, onUpgrade: () => showUpgradeDialog() });
 
+// GUI-33: clientes/marcas do workspace. Sem login a lista é vazia e nada muda no editor.
+const clientsStore = createClientsStore({
+  fetch: cloudFetch,
+  account: () => (isCloudEnabled() && getCloudAccount().signedIn ? getCloudAccount().email || "conta" : ""),
+});
+let libraryClientFilter = ALL_CLIENTS;
+let clientsLoadedFor = "";
+
 const settingsDialog = createSettingsDialog({
   toast,
+  clients: clientsStore,
+  isPro: () => viewerIsPro(),
+  onClientsChanged: () => {
+    if (chromeView === "library") renderLibrary();
+  },
   getAccount: () => {
     const account = isCloudEnabled() ? getCloudAccount() : { signedIn: false, email: "" };
     return { signedIn: Boolean(account.signedIn), email: account.email || "" };
@@ -1717,6 +1740,126 @@ function paintAccount() {
   paintLocalSave();
   paintByokSettings();
   paintHostedUsage();
+  paintClientsChrome();
+}
+
+/** Item «Mover para cliente» e carga dos clientes quando a conta muda. */
+function paintClientsChrome() {
+  const signedIn = Boolean(isCloudEnabled() && getCloudAccount().signedIn);
+  const item = document.getElementById("btn-file-move-client");
+  if (item) item.hidden = !signedIn;
+  const who = signedIn ? getCloudAccount().email || "conta" : "";
+  if (who === clientsLoadedFor) return;
+  clientsLoadedFor = who;
+  libraryClientFilter = ALL_CLIENTS;
+  if (!who) {
+    clientsStore.reset();
+    if (chromeView === "library") renderLibrary();
+    return;
+  }
+  void clientsStore.refresh().then(() => {
+    if (chromeView === "library") renderLibrary();
+  });
+}
+
+function clientName(id) {
+  return clientsStore.list().find((c) => c.id === id)?.name || "";
+}
+
+function renderLibraryClients(projects) {
+  const bar = document.getElementById("library-clients");
+  if (!bar) return;
+  const clients = clientsStore.list();
+  const chips = filterChips(projects, clients);
+  bar.hidden = !chips.length;
+  if (!chips.length) {
+    bar.innerHTML = "";
+    return;
+  }
+  const active = resolveFilter(libraryClientFilter, clients);
+  bar.innerHTML = chips
+    .map((chip) => {
+      const label = chip.id === ALL_CLIENTS ? t("clients.all") : chip.id === NO_CLIENT ? t("clients.none") : chip.name;
+      const on = chip.id === active;
+      return `<button type="button" class="library-client-chip${on ? " is-active" : ""}" data-client-filter="${escapeAttr(chip.id)}" aria-pressed="${on ? "true" : "false"}">${escapeHtml(label)} <span class="library-client-count">${chip.count}</span></button>`;
+    })
+    .join("");
+}
+
+async function openMoveClient(id) {
+  if (!id) return;
+  if (!viewerIsPro()) {
+    openFeatureGate("clients");
+    return;
+  }
+  if (!clientsStore.list().length) await clientsStore.refresh();
+  if (!clientsStore.list().length) {
+    settingsDialog.open("clients");
+    return;
+  }
+  const isOpen = project?.id === id;
+  const record = isOpen ? project : readIndex().projects.find((p) => p.id === id);
+  if (!record) return;
+  const dialog = document.getElementById("modal-move-client");
+  const select = document.getElementById("move-client-select");
+  const lead = document.getElementById("move-client-lead");
+  if (!dialog || !select) return;
+  if (lead) lead.textContent = t("clients.moveLead", { name: record.name || "" });
+  select.replaceChildren();
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = t("clients.none");
+  select.append(none);
+  for (const c of clientsStore.list()) {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    select.append(opt);
+  }
+  select.value = clientOf(record, clientsStore.list()) || "";
+  dialog.dataset.projectId = id;
+  dialog.showModal();
+  select.focus();
+}
+
+async function saveMoveClient() {
+  const dialog = document.getElementById("modal-move-client");
+  const id = dialog?.dataset.projectId || "";
+  const clientId = document.getElementById("move-client-select")?.value || "";
+  dialog?.close();
+  if (!id) return;
+  if (project?.id === id) {
+    if (clientId) project.workspaceClientId = clientId;
+    else delete project.workspaceClientId;
+    onChange();
+  } else {
+    await setProjectClient(id, clientId || null);
+  }
+  if (chromeView === "library") renderLibrary();
+  toast(t("clients.moved", { name: clientId ? clientName(clientId) : t("clients.none") }));
+}
+
+function bindClientsUi() {
+  document.getElementById("library-clients")?.addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-client-filter]");
+    if (!chip) return;
+    libraryClientFilter = chip.dataset.clientFilter;
+    renderLibraryGrid();
+  });
+  document.getElementById("btn-file-move-client")?.addEventListener("click", () => {
+    if (project?.id) void openMoveClient(project.id);
+  });
+  document.getElementById("form-move-client")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    void saveMoveClient();
+  });
+  document.getElementById("btn-move-client-cancel")?.addEventListener("click", () => {
+    document.getElementById("modal-move-client")?.close();
+  });
+  document.getElementById("btn-move-client-manage")?.addEventListener("click", () => {
+    document.getElementById("modal-move-client")?.close();
+    settingsDialog.open("clients");
+  });
 }
 
 function resetBillingView() {
@@ -2834,14 +2977,18 @@ function renderLibraryGrid() {
   const grid = document.getElementById("library-grid");
   const empty = document.getElementById("library-empty");
   if (!grid || !empty) return;
-  const projects = index.projects || [];
+  const allProjects = index.projects || [];
+  renderLibraryClients(allProjects);
+  const clients = clientsStore.list();
+  const projects = filterProjects(allProjects, libraryClientFilter, clients);
+  const canMove = Boolean(clients.length && getCloudAccount().signedIn);
 
   const hint = document.getElementById("library-import-hint");
   const compact = isCompactTouch();
   if (!projects.length) {
     grid.innerHTML = "";
     empty.hidden = compact;
-    if (!compact) empty.textContent = t("library.empty");
+    if (!compact) empty.textContent = allProjects.length ? t("clients.emptyFilter") : t("library.empty");
     if (hint) hint.hidden = !compact;
     return;
   }
@@ -2866,6 +3013,7 @@ function renderLibraryGrid() {
           <div class="project-card-body">
             <h3 class="project-card-title" data-action="rename-inline" title="${escapeAttr(t("library.renameTitle"))}">${escapeHtml(p.name)}</h3>
             <p>${p.stepCount || 0} passo(s) · ${escapeHtml(formatDate(p.updatedAt))}</p>
+            ${clientName(clientOf(p, clients)) ? `<p class="project-card-client">${escapeHtml(clientName(clientOf(p, clients)))}</p>` : ""}
             <div class="project-card-dots">${dots}${p.agent ? `<span class="agent-tag" title="${escapeAttr(t("agent.tagTitle", { client: p.agentClient ? ` (${p.agentClient})` : "" }))}">${escapeHtml(t("agent.tag"))}</span>` : ""}${p.sizeBytes ? `<span class="project-card-size" title="${escapeAttr(t("file.sizeTitle"))}">${escapeHtml(formatBytes(p.sizeBytes, getLocale()))}</span>` : ""}</div>
             <div class="project-card-actions">
               <button type="button" class="btn btn-sm" data-action="export">
@@ -2876,6 +3024,9 @@ function renderLibraryGrid() {
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
                 Duplicar
               </button>
+              ${canMove ? `<button type="button" class="btn btn-sm btn-icon project-card-move" data-action="move-client" title="${escapeAttr(t("clients.moveTitle"))}" aria-label="${escapeAttr(t("clients.moveTitle"))}">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+              </button>` : ""}
               <button type="button" class="btn btn-sm btn-icon project-card-optimize" data-action="optimize" title="${escapeAttr(t("library.optimizeTitle"))}" aria-label="${escapeAttr(t("library.optimize"))}">
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-compress"></use></svg>
               </button>
@@ -3473,6 +3624,12 @@ function bindChrome() {
         await openOptimizeProject(id);
         return;
       }
+      if (action === "move-client") {
+        e.preventDefault();
+        e.stopPropagation();
+        await openMoveClient(id);
+        return;
+      }
       if (action === "duplicate") {
         const copy = await duplicateProject(id);
         renderLibrary();
@@ -3499,6 +3656,7 @@ function bindChrome() {
   });
 
   bindDeleteProjectModal();
+  bindClientsUi();
 
   // Theme panel
   document.querySelectorAll("[data-theme-key]").forEach((input) => {

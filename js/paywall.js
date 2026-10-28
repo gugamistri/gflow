@@ -53,6 +53,8 @@ const FEATURE_ALIASES = {
   audio: "tts",
   branding: "branding",
   watermark: "branding",
+  // GUI-33: clientes moram na conta Pro (mesmo grupo de salvar na conta)
+  clients: "account",
 };
 
 export function normalizePaywallFeature(feature) {

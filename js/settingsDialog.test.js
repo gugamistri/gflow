@@ -7,6 +7,8 @@ import {
   RESERVED_SETTINGS_TABS,
   SETTINGS_TAB_ORDER,
   apiSubtabFor,
+  clientCountText,
+  clientProblemKey,
   connectionCards,
   leadProntoCardText,
   maskLast4,
@@ -17,21 +19,46 @@ import {
 const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../css/settings.css", import.meta.url), "utf8");
 
-test("a aba Clientes fica reservada e Administração só entra para a equipe", () => {
+test("Clientes fica entre Equipe e Conexões e Administração só entra para a equipe", () => {
   assert.deepEqual(SETTINGS_TAB_ORDER, ["account", "plan", "team", "clients", "connections", "api", "admin"]);
-  assert.deepEqual(RESERVED_SETTINGS_TABS, ["clients"]);
-  assert.deepEqual(visibleSettingsTabs(), ["account", "plan", "team", "connections", "api"]);
+  assert.deepEqual(RESERVED_SETTINGS_TABS, []);
+  assert.deepEqual(visibleSettingsTabs(), ["account", "plan", "team", "clients", "connections", "api"]);
   const staff = visibleSettingsTabs({ staff: true });
   assert.equal(staff.at(-1), "admin");
-  assert.equal(staff.includes("clients"), false);
-  assert.equal(staff.indexOf("team") + 1, staff.indexOf("connections"));
+  assert.equal(staff.indexOf("team") + 1, staff.indexOf("clients"));
+  assert.equal(staff.indexOf("clients") + 1, staff.indexOf("connections"));
+});
+
+test("a aba Clientes: Pro, formulário numa linha, lista com rolagem própria e textos em 3 idiomas", () => {
+  const start = html.indexOf('id="settings-panel-clients"');
+  const panel = html.slice(start, html.indexOf('id="settings-panel-connections"'));
+  assert.ok(start > 0);
+  assert.match(panel, /id="settings-clients-form"/);
+  assert.match(panel, /id="settings-client-name"/);
+  assert.match(panel, /id="settings-client-logo"/);
+  assert.match(panel, /id="settings-clients"/);
+  assert.match(panel, /data-settings-signed-out/);
+  const tab = html.slice(html.indexOf('id="settings-tab-clients"'), html.indexOf('id="settings-tab-connections"'));
+  assert.match(tab, /pro-badge/);
+  assert.match(css, /\.settings-clients \{[^}]*max-height:[^}]*overflow: auto/);
+  for (const loc of ["pt", "en", "es"]) {
+    for (const key of ["settings.tab.clients", "clients.lead", "clients.none", "clients.move", "clients.confirmDelete", "clients.pro", "clients.emptyFilter"]) {
+      assert.ok(catalogs[loc][key], `${loc} ${key}`);
+    }
+  }
+  assert.match(catalogs.pt["clients.confirmDelete"], /Nenhum projeto é apagado/);
+  assert.equal(clientCountText(1, (k, v) => catalogs.pt[k].replace("{n}", v?.n)), "1 projeto");
+  assert.equal(clientCountText(3, (k, v) => catalogs.en[k].replace("{n}", v?.n)), "3 projects");
+  assert.equal(clientProblemKey("taken"), "clients.err.taken");
+  assert.equal(clientProblemKey("weird"), "clients.err.load");
 });
 
 test("as setas circulam só nas abas visíveis", () => {
   const tabs = visibleSettingsTabs();
   assert.equal(stepSettingsTab(tabs, "account", -1), "api");
   assert.equal(stepSettingsTab(tabs, "api", 1), "account");
-  assert.equal(stepSettingsTab(tabs, "team", 1), "connections");
+  assert.equal(stepSettingsTab(tabs, "team", 1), "clients");
+  assert.equal(stepSettingsTab(tabs, "clients", 1), "connections");
   const staff = visibleSettingsTabs({ staff: true });
   assert.equal(stepSettingsTab(staff, "api", 1), "admin");
   assert.equal(stepSettingsTab(staff, "admin", 1), "account");
@@ -80,11 +107,9 @@ test("o chip abre um diálogo com as abas e as ações antigas continuam no HTML
   const dialog = html.slice(start, end);
   assert.ok(start > 0 && end > start);
   assert.match(dialog, /role="tablist"/);
-  for (const tab of ["account", "plan", "team", "connections", "api", "admin"]) {
+  for (const tab of ["account", "plan", "team", "clients", "connections", "api", "admin"]) {
     assert.match(dialog, new RegExp(`data-settings-tab="${tab}"`));
   }
-  assert.equal(/data-settings-tab="clients"/.test(dialog), false);
-  assert.match(dialog, /data-settings-reserved="clients"/);
   assert.match(dialog, /id="settings-tab-select"/);
   for (const sub of API_SUBTABS) assert.match(dialog, new RegExp(`data-settings-subtab="${sub}"`));
   assert.match(dialog, /id="llm-key"/);
