@@ -1,14 +1,14 @@
 /**
  * Configurações do workspace: um diálogo com abas.
- * Conta, Plano, Equipe, Conexões, API e MCP e Administração (staff).
- * A aba Clientes fica reservada e não é construída.
+ * Conta, Plano, Equipe, Clientes, Conexões, API e MCP e Administração (staff).
  */
 import { cloudFetch } from "./cloudConfig.js";
 import { t } from "./i18n.js";
 import { leadProntoProblem, normalizeLeadPronto, readAuthorizeUrl } from "./leadPronto.js";
+import { cleanClientName } from "./workspaceClients.js";
 
 export const SETTINGS_TAB_ORDER = ["account", "plan", "team", "clients", "connections", "api", "admin"];
-export const RESERVED_SETTINGS_TABS = ["clients"];
+export const RESERVED_SETTINGS_TABS = [];
 export const API_SUBTABS = ["connect", "keys", "apps"];
 export const SETTINGS_RETURN_KEY = "gf-settings-return";
 
@@ -69,6 +69,21 @@ export function leadProntoCardText(lp, translate = t) {
   return translate("leads.lp.disconnected");
 }
 
+/** "1 projeto" / "{n} projetos". */
+export function clientCountText(n, translate = t) {
+  const count = Number(n) || 0;
+  return count === 1 ? translate("clients.count.one") : translate("clients.count.other", { n: count });
+}
+
+export function clientProblemKey(problem) {
+  if (problem === "taken") return "clients.err.taken";
+  if (problem === "limit") return "clients.err.limit";
+  if (problem === "invalid") return "clients.err.invalid";
+  if (problem === "auth") return "clients.err.auth";
+  if (problem === "paywall") return "clients.pro";
+  return "clients.err.load";
+}
+
 export function takeSettingsReturn() {
   try {
     const value = sessionStorage.getItem(SETTINGS_RETURN_KEY);
@@ -103,6 +118,8 @@ export function createSettingsDialog(deps = {}) {
   let planOpened = false;
   let apiOpened = false;
   let lp = null;
+  let editingClient = "";
+  let clientsBusy = false;
 
   const account = () => deps.getAccount?.() || { signedIn: false, email: "" };
 
@@ -352,6 +369,165 @@ export function createSettingsDialog(deps = {}) {
     adoptApi();
   }
 
+  function clientsStatus(text) {
+    const status = document.getElementById("settings-clients-status");
+    if (status) status.textContent = text || "";
+  }
+
+  function paintClients() {
+    const store = deps.clients;
+    const list = document.getElementById("settings-clients");
+    const form = document.getElementById("settings-clients-form");
+    const pro = document.getElementById("settings-clients-pro");
+    if (!list || !store) return;
+    const signed = Boolean(account().signedIn);
+    const canEdit = signed && Boolean(deps.isPro?.() || store.canEdit());
+    if (form) form.hidden = !canEdit;
+    if (pro) pro.hidden = !signed || canEdit;
+    list.replaceChildren();
+    if (!signed) return;
+    const clients = store.list();
+    if (!clients.length) {
+      list.append(el("li", "settings-clients-empty", t("clients.empty")));
+      return;
+    }
+    for (const client of clients) {
+      const li = el("li", "settings-client");
+      li.dataset.clientId = client.id;
+      if (editingClient === client.id) {
+        const input = el("input", "settings-client-rename");
+        input.type = "text";
+        input.maxLength = 80;
+        input.value = client.name;
+        input.setAttribute("aria-label", t("clients.rename"));
+        const save = el("button", "btn btn-sm btn-primary", t("clients.save"));
+        save.type = "button";
+        save.dataset.clientAction = "save";
+        const cancel = el("button", "btn btn-sm", t("clients.cancel"));
+        cancel.type = "button";
+        cancel.dataset.clientAction = "cancel";
+        li.append(input, save, cancel);
+        list.append(li);
+        queueMicrotask(() => input.focus());
+        continue;
+      }
+      const mark = el("span", "settings-client-mark");
+      if (client.logoUrl) {
+        const img = document.createElement("img");
+        img.src = client.logoUrl;
+        img.alt = "";
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+        mark.append(img);
+      } else {
+        mark.textContent = client.name.slice(0, 1).toUpperCase();
+      }
+      const text = el("span", "settings-client-text");
+      text.append(el("strong", "", client.name), el("span", "settings-client-count", clientCountText(client.projectCount)));
+      li.append(mark, text);
+      if (canEdit) {
+        const actions = el("span", "settings-client-actions");
+        const rename = el("button", "btn btn-sm", t("clients.rename"));
+        rename.type = "button";
+        rename.dataset.clientAction = "rename";
+        const remove = el("button", "btn btn-sm btn-danger-ghost", t("clients.delete"));
+        remove.type = "button";
+        remove.dataset.clientAction = "delete";
+        actions.append(rename, remove);
+        li.append(actions);
+      }
+      list.append(li);
+    }
+  }
+
+  async function loadClients() {
+    if (!deps.clients) return;
+    paintClients();
+    if (!account().signedIn) return;
+    if (!deps.clients.list().length) clientsStatus(t("clients.loading"));
+    const res = await deps.clients.refresh();
+    clientsStatus(res.ok ? "" : t(clientProblemKey(res.problem)));
+    paintClients();
+  }
+
+  async function runClient(fn, okKey) {
+    if (clientsBusy) return false;
+    clientsBusy = true;
+    try {
+      const res = await fn();
+      if (!res.ok) {
+        clientsStatus(t(clientProblemKey(res.problem)));
+        if (res.problem === "paywall") deps.onUpgrade?.();
+        return false;
+      }
+      clientsStatus("");
+      if (okKey) deps.toast?.(t(okKey));
+      deps.onClientsChanged?.();
+      return true;
+    } finally {
+      clientsBusy = false;
+      paintClients();
+    }
+  }
+
+  async function addClient(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("settings-client-name");
+    const logoInput = document.getElementById("settings-client-logo");
+    const name = cleanClientName(nameInput?.value);
+    if (!name) {
+      clientsStatus(t("clients.err.invalid"));
+      nameInput?.focus();
+      return;
+    }
+    const logoUrl = String(logoInput?.value || "").trim();
+    const ok = await runClient(() => deps.clients.create({ name, logoUrl }), "clients.added");
+    if (ok) {
+      if (nameInput) nameInput.value = "";
+      if (logoInput) logoInput.value = "";
+      nameInput?.focus();
+    }
+  }
+
+  async function onClientAction(event) {
+    const btn = event.target.closest("[data-client-action]");
+    const row = btn?.closest("[data-client-id]");
+    if (!btn || !row) return;
+    const id = row.dataset.clientId;
+    const client = deps.clients.list().find((c) => c.id === id);
+    const action = btn.dataset.clientAction;
+    if (action === "rename") {
+      editingClient = id;
+      paintClients();
+      return;
+    }
+    if (action === "cancel") {
+      editingClient = "";
+      paintClients();
+      return;
+    }
+    if (action === "save") {
+      const name = cleanClientName(row.querySelector("input")?.value);
+      if (!name) {
+        clientsStatus(t("clients.err.invalid"));
+        return;
+      }
+      if (client && name === client.name) {
+        editingClient = "";
+        paintClients();
+        return;
+      }
+      const ok = await runClient(() => deps.clients.update(id, { name }), "clients.renamed");
+      if (ok) editingClient = "";
+      paintClients();
+      return;
+    }
+    if (action === "delete" && client) {
+      if (!window.confirm(t("clients.confirmDelete", { name: client.name }))) return;
+      await runClient(() => deps.clients.remove(id), "clients.deleted");
+    }
+  }
+
   function activate(tab, { focus = "", focusTab = false } = {}) {
     show(tab);
     paintPeople();
@@ -365,6 +541,7 @@ export function createSettingsDialog(deps = {}) {
       deps.onOpenApi?.();
     }
     if (current === "connections") void loadConnections();
+    if (current === "clients") void loadClients();
     if (focusTab) document.getElementById(`settings-tab-${current}`)?.focus();
     if (focus) {
       const fold = document.getElementById(focus === "cartesia-key" ? "settings-tts" : "settings-llm");
@@ -458,6 +635,22 @@ export function createSettingsDialog(deps = {}) {
     document.getElementById("btn-settings-admin")?.addEventListener("click", () => deps.onAdmin?.());
     document.getElementById("btn-settings-lp-connect")?.addEventListener("click", () => void connectLp());
     document.getElementById("btn-settings-lp-disconnect")?.addEventListener("click", () => void disconnectLp());
+    document.getElementById("settings-clients-form")?.addEventListener("submit", (event) => void addClient(event));
+    const clientList = document.getElementById("settings-clients");
+    clientList?.addEventListener("click", (event) => void onClientAction(event));
+    clientList?.addEventListener("keydown", (event) => {
+      if (!event.target.matches?.(".settings-client-rename")) return;
+      if (event.key === "Enter") {
+        event.preventDefault();
+        event.target.closest("li")?.querySelector("[data-client-action='save']")?.click();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        editingClient = "";
+        paintClients();
+      }
+    });
+    document.getElementById("btn-settings-clients-upgrade")?.addEventListener("click", () => deps.onUpgrade?.());
     document.querySelectorAll("#modal-settings [data-settings-signin]").forEach((btn) => {
       btn.addEventListener("click", () => {
         close();
@@ -477,6 +670,7 @@ export function createSettingsDialog(deps = {}) {
       rebuildSelect();
       paintAccount();
       paintLp();
+      paintClients();
     });
     rebuildSelect();
     showSub("connect");
