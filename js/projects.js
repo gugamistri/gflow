@@ -444,6 +444,10 @@ async function summarizeProject(project, previous) {
     themePreview: themePreviewDots(project.theme),
     // why: a / só manda para o editor quem tem projeto próprio — o exemplo intocado não conta
     stock: isUntouchedStockDemo(project),
+    // GUI-33: cliente/marca do projeto (opcional). Ausente = «Sem cliente».
+    ...(typeof project.workspaceClientId === "string" && project.workspaceClientId
+      ? { workspaceClientId: project.workspaceClientId }
+      : {}),
     ...(project.createdBy?.kind === "agent"
       ? { agent: true, agentClient: String(project.createdBy.client || "").slice(0, 60) }
       : {}),
@@ -681,6 +685,15 @@ export async function duplicateProject(id) {
   delete copy.cloudShare;
   await putProject(copy);
   return copy;
+}
+
+/** Coloca o projeto num cliente (ou tira, com null). O vínculo sobe no sync do Pro. */
+export async function setProjectClient(id, clientId) {
+  const project = await getProjectRecord(id);
+  if (!project) throw new Error(t("err.projectNotFound"));
+  if (clientId) project.workspaceClientId = String(clientId);
+  else delete project.workspaceClientId;
+  return putProject(project);
 }
 
 export async function renameProject(id, name) {

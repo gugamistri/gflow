@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/168/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/168/css/theme.css" />
-  <link rel="stylesheet" href="a/168/css/shell.css" />
-  <link rel="stylesheet" href="a/168/css/player.css" />
-  <link rel="stylesheet" href="a/168/css/editor.css" />
-  <link rel="stylesheet" href="a/168/css/settings.css" />
-  <link rel="stylesheet" href="a/168/css/collab.css" />
-  <link rel="stylesheet" href="a/168/css/comments.css" />
+  <link rel="stylesheet" href="a/170/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/170/css/theme.css" />
+  <link rel="stylesheet" href="a/170/css/shell.css" />
+  <link rel="stylesheet" href="a/170/css/player.css" />
+  <link rel="stylesheet" href="a/170/css/editor.css" />
+  <link rel="stylesheet" href="a/170/css/settings.css" />
+  <link rel="stylesheet" href="a/170/css/collab.css" />
+  <link rel="stylesheet" href="a/170/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -165,7 +165,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/168/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/168/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/170/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/170/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -177,6 +177,11 @@
             <button type="button" class="more-item" role="menuitem" id="btn-file-rename" data-menu-action="rename">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
               <span data-i18n="file.rename">Renomear</span>
+            </button>
+            <button type="button" class="more-item" role="menuitem" id="btn-file-move-client" data-menu-action="move-client" hidden>
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+              <span data-i18n="clients.move">Mover para cliente…</span>
+              <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
             </button>
             <button type="button" class="more-item" role="menuitem" id="btn-export-json" data-menu-action="export">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
@@ -475,7 +480,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/168/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/168/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/170/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/170/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -553,6 +558,7 @@
       </div>
       <button type="button" class="btn btn-sm" id="release-notes-dismiss" data-i18n="releaseNotes.dismiss">Entendi</button>
     </aside>
+    <div class="library-clients" id="library-clients" role="group" aria-label="Filtrar por cliente" data-i18n-aria="clients.filter" hidden></div>
     <div class="library-grid" id="library-board" tabindex="-1">
       <button type="button" class="library-action-card library-create-card" id="btn-new-project">
         <span class="library-action-icon" aria-hidden="true">
@@ -1079,7 +1085,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/168/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/170/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1782,6 +1788,21 @@
   </dialog>
 
 
+  <dialog class="studio-modal" id="modal-move-client" aria-labelledby="move-client-title">
+    <form method="dialog" class="studio-modal-body" id="form-move-client">
+      <h3 id="move-client-title" data-i18n="clients.moveTitle">Mover para cliente</h3>
+      <p class="settings-note" id="move-client-lead"></p>
+      <label class="settings-clients-field">
+        <span class="visually-hidden" data-i18n="clients.moveTitle">Mover para cliente</span>
+        <select id="move-client-select"></select>
+      </label>
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-move-client-manage" data-i18n="clients.manage">Gerenciar clientes</button>
+        <button type="button" class="btn" id="btn-move-client-cancel" data-i18n="clients.cancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="btn-move-client-save" value="save" data-i18n="clients.moveSave">Mover</button>
+      </div>
+    </form>
+  </dialog>
   <dialog class="studio-modal settings-modal" id="modal-settings" aria-labelledby="settings-title">
     <div class="studio-modal-body settings-dialog">
       <div class="account-dialog-head">
@@ -1802,7 +1823,10 @@
             <span data-i18n="settings.tab.team">Equipe</span>
             <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
           </button>
-          <span id="settings-tab-slot-clients" class="settings-tab-slot" data-settings-reserved="clients" hidden></span>
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-clients" data-settings-tab="clients" aria-selected="false" aria-controls="settings-panel-clients" tabindex="-1">
+            <span data-i18n="settings.tab.clients">Clientes</span>
+            <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+          </button>
           <button type="button" class="settings-tab" role="tab" id="settings-tab-connections" data-settings-tab="connections" aria-selected="false" aria-controls="settings-panel-connections" tabindex="-1">
             <span data-i18n="settings.tab.connections">Conexões</span>
             <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1964,6 +1988,32 @@
           </div>
           <p class="settings-signed-out" data-settings-signed-out hidden>
             <span data-i18n="settings.team.signIn">Entre para ver vagas e pessoas.</span>
+            <button type="button" class="btn" data-settings-signin data-i18n="account.signIn">Entrar</button>
+          </p>
+        </div>
+        <div role="tabpanel" id="settings-panel-clients" aria-labelledby="settings-tab-clients" hidden>
+          <div data-settings-account>
+            <p class="settings-note" data-i18n="clients.lead">Separe os projetos por cliente ou marca. Se você trabalha com uma marca só, não precisa criar nada.</p>
+            <form class="settings-clients-form" id="settings-clients-form" novalidate>
+              <label class="settings-clients-field">
+                <span data-i18n="clients.nameLabel">Nome do cliente ou marca</span>
+                <input type="text" id="settings-client-name" maxlength="80" autocomplete="off" required data-i18n-placeholder="clients.namePlaceholder" placeholder="Ex.: Padaria Central" />
+              </label>
+              <label class="settings-clients-field settings-clients-logo">
+                <span data-i18n="clients.logoLabel">Logo (link https, opcional)</span>
+                <input type="url" id="settings-client-logo" maxlength="2048" autocomplete="off" inputmode="url" placeholder="https://" />
+              </label>
+              <button type="submit" class="btn btn-primary" id="btn-settings-client-add" data-i18n="clients.add">Adicionar</button>
+            </form>
+            <p class="settings-conn-status" id="settings-clients-status" role="status"></p>
+            <ul class="settings-clients" id="settings-clients" aria-label="Clientes da conta" data-i18n-aria="clients.listLabel"></ul>
+            <p class="settings-clients-pro" id="settings-clients-pro" hidden>
+              <span data-i18n="clients.pro">Clientes fazem parte do GuiaFlow Pro. Seus projetos continuam todos aqui.</span>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-settings-clients-upgrade" data-i18n="clients.upgrade">Conhecer o Pro</button>
+            </p>
+          </div>
+          <p class="settings-signed-out" data-settings-signed-out hidden>
+            <span data-i18n="clients.signIn">Entre para separar projetos por cliente.</span>
             <button type="button" class="btn" data-settings-signin data-i18n="account.signIn">Entrar</button>
           </p>
         </div>
@@ -2557,8 +2607,8 @@
     </symbol>
   </svg>
 
-  <script src="a/168/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/168/js/app.js"></script>
+  <script src="a/170/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/170/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
