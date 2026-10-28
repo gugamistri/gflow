@@ -5,6 +5,24 @@
  * com os mesmos campos e a mesma regra de Pro dos botões de IA/áudio.
  */
 
+/**
+ * Publicar (GUI-32): no celular, Captura, Compartilhar e Resultados saem do cabeçalho e ficam
+ * numa folha só, aberta pela barra de baixo. Cada item aciona o mesmo botão/painel do desktop.
+ */
+export const PUBLISH_ITEMS = Object.freeze(["capture", "share", "results"]);
+
+/**
+ * Estado de cada item de Publicar a partir dos botões originais do cabeçalho.
+ * @param {{ capture?: any, share?: any, results?: any, resultsBadge?: any, staleDot?: any }} src
+ */
+export function publishState({ capture, share, results, resultsBadge, staleDot } = {}) {
+  return {
+    capture: { hidden: !capture, disabled: Boolean(capture?.disabled) },
+    share: { hidden: !share, disabled: false, stale: Boolean(staleDot && !staleDot.hidden) },
+    results: { hidden: !results || Boolean(results.hidden), disabled: Boolean(results?.disabled), pro: Boolean(resultsBadge && !resultsBadge.hidden) },
+  };
+}
+
 /** Seção do painel que cada botão abre. */
 export const SHEET_SECTIONS = { text: "texts", narration: "narration" };
 
@@ -29,7 +47,7 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
   const bar = doc.getElementById("mobile-bar");
   const backdrop = doc.getElementById("mobile-sheet-backdrop");
   const panel = doc.getElementById("props-panel");
-  if (!bar || !panel) return { paint() {}, close() {} };
+  if (!bar || !panel) return { paint() {}, close() {}, openPublish() {}, closePublish() {}, paintPublish() {} };
   const body = doc.body;
   const byAct = (a) => bar.querySelector(`[data-mbar="${a}"]`);
 
@@ -40,6 +58,65 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
   panel.prepend(head);
   const title = head.querySelector(".mobile-sheet-title");
   const done = head.querySelector(".mobile-sheet-done");
+
+  // Folha Publicar: Captura, Compartilhar e Resultados
+  const publish = doc.getElementById("mobile-publish");
+  const publishBtn = () => byAct("publish");
+  const publishItem = (k) => publish?.querySelector(`[data-publish="${k}"]`);
+  const shareDetails = () => doc.querySelector("details.export-panel");
+  function publishSources() {
+    return {
+      capture: doc.getElementById("btn-capture"),
+      share: shareDetails(),
+      results: doc.getElementById("btn-results"),
+      resultsBadge: doc.getElementById("results-pro-badge"),
+      staleDot: doc.getElementById("share-stale-dot"),
+    };
+  }
+  function paintPublish() {
+    if (!publish) return;
+    const st = publishState(publishSources());
+    for (const k of PUBLISH_ITEMS) {
+      const item = publishItem(k);
+      if (!item) continue;
+      item.hidden = st[k].hidden;
+      item.disabled = st[k].disabled;
+    }
+    const badge = publishItem("results")?.querySelector(".pro-badge");
+    if (badge) badge.hidden = !st.results.pro;
+    const shareDot = doc.getElementById("mobile-publish-share-dot");
+    if (shareDot) shareDot.hidden = !st.share.stale;
+    const barDot = doc.getElementById("mobile-publish-dot");
+    if (barDot) barDot.hidden = !st.share.stale;
+  }
+  function openPublish() {
+    if (!publish) return;
+    close();
+    paintPublish();
+    publish.hidden = false;
+    publishBtn()?.setAttribute("aria-expanded", "true");
+    publish.querySelector("[data-publish]:not([hidden]):not(:disabled)")?.focus();
+  }
+  function closePublish() {
+    if (!publish || publish.hidden) return;
+    publish.hidden = true;
+    publishBtn()?.setAttribute("aria-expanded", "false");
+  }
+  publish?.addEventListener("click", (e) => {
+    const item = e.target.closest("[data-publish]");
+    if (!item || item.disabled) return;
+    const src = publishSources();
+    closePublish();
+    if (item.dataset.publish === "capture") src.capture?.click();
+    else if (item.dataset.publish === "results") src.results?.click();
+    else if (item.dataset.publish === "share" && src.share) src.share.open = true;
+  });
+  // fecha ao tocar fora (a barra cuida do próprio botão)
+  doc.addEventListener("pointerdown", (e) => {
+    if (!publish || publish.hidden) return;
+    if (publish.contains(e.target) || publishBtn()?.contains(e.target)) return;
+    closePublish();
+  });
 
   const narrBody = panel.querySelector('[data-sec="narration"] .props-section-body');
   const audioRow = doc.createElement("div");
@@ -100,7 +177,13 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
     if (!btn || btn.disabled) return;
     const act = btn.dataset.mbar;
     if (act === "undo" || act === "redo") doc.getElementById(`btn-${act}`)?.click();
-    else if (act === "add") { close(); doc.getElementById("btn-add-step")?.click(); }
+    else if (act === "publish") {
+      if (publish && !publish.hidden) closePublish();
+      else openPublish();
+      return;
+    }
+    closePublish();
+    if (act === "add") { close(); doc.getElementById("btn-add-step")?.click(); }
     else if (act === "text" || act === "narration") {
       if (openSec === SHEET_SECTIONS[act]) close();
       else open(act);
@@ -108,10 +191,22 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
   });
   done.addEventListener("click", close);
   backdrop?.addEventListener("click", close);
-  doc.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  doc.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (publish && !publish.hidden) {
+      closePublish();
+      publishBtn()?.focus();
+    }
+    close();
+  });
 
   // Mantém a barra em dia com desfazer/refazer e o botão de áudio do passo
   const mo = new MutationObserver(() => { paintHistory(); if (openSec) paintAudio(); });
+  const moPublish = new MutationObserver(() => paintPublish());
+  for (const id of ["btn-capture", "btn-results", "results-pro-badge", "share-stale-dot"]) {
+    const el = doc.getElementById(id);
+    if (el) moPublish.observe(el, { attributes: true, attributeFilter: ["disabled", "hidden"] });
+  }
   for (const id of ["btn-undo", "btn-redo", "btn-generate-caption", "btn-upload-caption"]) {
     const el = doc.getElementById(id);
     if (el) mo.observe(el, { attributes: true, subtree: true, attributeFilter: ["disabled", "hidden"] });
@@ -121,8 +216,9 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
     const show = mobileBarVisible(state);
     bar.hidden = !show;
     body.classList.toggle("has-mobile-bar", show);
-    if (!show) close();
+    if (!show) { close(); closePublish(); }
     paintHistory();
+    paintPublish();
   }
-  return { paint, close, open };
+  return { paint, close, open, openPublish, closePublish, paintPublish };
 }

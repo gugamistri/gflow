@@ -175,6 +175,7 @@ import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
 import { createMobileBar } from "./mobileBar.js";
+import { movedHintsActive } from "./menuRoutes.js";
 import { enhanceLangSelect } from "./langPicker.js";
 import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
 import { setCaptions } from "./playerControls.js";
@@ -1018,7 +1019,6 @@ function paintChrome() {
   const actionsEditor = document.getElementById("topbar-actions-editor");
   const actionsLibrary = document.getElementById("topbar-actions-library");
   const navEditor = document.getElementById("topbar-nav-editor");
-  const moreEditorOnly = document.getElementById("more-editor-only");
   const projectLabel = document.getElementById("topbar-project");
   const title = document.getElementById("topbar-title");
   const presentChrome = document.getElementById("present-chrome");
@@ -1036,21 +1036,12 @@ function paintChrome() {
   actionsLibrary.hidden = view !== "library";
   if (navEditor) navEditor.hidden = view !== "editor" || presenting;
   const inEditor = view === "editor" && !presenting;
-  if (moreEditorOnly) moreEditorOnly.hidden = !inEditor;
-  // why: com o menu da Conta (nuvem ligada) o ☰ sai do editor desktop; Projetos agora está no menu do tour
-  const morePanel = document.getElementById("more-panel");
-  if (morePanel) morePanel.hidden = Boolean(inEditor && !compact && isCloudEnabled());
+  // why (GUI-32): o ☰ é o menu do app e fica em todas as telas; o menu do nome do projeto só tem o projeto.
   document.querySelectorAll(".more-editor-pref").forEach((el) => {
     const hidePrefs = !inEditor;
     el.hidden = hidePrefs;
     if (hidePrefs) el.open = false;
   });
-  // why: no editor (desktop) Novo/Abrir/Importar ficam no menu Arquivo; o ☰ fica só com o app.
-  const fileInEditor = inEditor && !compact;
-  for (const id of ["more-file-group", "more-file-divider"]) {
-    const el = document.getElementById(id);
-    if (el) el.hidden = fileInEditor;
-  }
   document.querySelectorAll("details.menu-panel").forEach((el) => {
     if (!inEditor) el.open = false;
   });
@@ -1267,11 +1258,8 @@ function paintShareMenu() {
   if (resultsBtn) resultsBtn.hidden = !showAnalytics;
   const resultsBadge = document.getElementById("results-pro-badge");
   if (resultsBadge) resultsBadge.hidden = pro;
-  // no celular o Resultados sai do cabeçalho e fica no menu ☰ (o mesmo diálogo)
-  const menuResults = document.getElementById("btn-menu-results");
-  if (menuResults) menuResults.hidden = !showAnalytics;
-  const menuResultsBadge = document.getElementById("menu-results-pro-badge");
-  if (menuResultsBadge) menuResultsBadge.hidden = pro;
+  // no celular o Resultados sai do cabeçalho e fica em Publicar, na barra de baixo (o mesmo diálogo)
+  mobileBar?.paintPublish?.();
   for (const badge of document.querySelectorAll("#modal-results .results-tab .pro-badge")) badge.hidden = pro;
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
   const brandToggle = document.getElementById("share-brand-toggle");
@@ -1649,21 +1637,6 @@ function accountInitial(email) {
 }
 
 /** Ajuda + Modo/Idioma moram no menu da Conta quando ele existe; senão ficam no ☰. */
-function placeHelpGroups(inAccount) {
-  const slot = document.getElementById("account-help-slot");
-  const body = document.getElementById("more-panel-body");
-  const help = document.getElementById("help-group");
-  const prefs = document.querySelector(".more-group-prefs");
-  if (!slot || !body || !help || !prefs) return;
-  if (inAccount) {
-    if (help.parentElement !== slot) slot.append(help, prefs);
-  } else if (help.parentElement === slot) {
-    const actions = body.querySelector(".more-group-actions");
-    actions?.append(help);
-    body.append(prefs);
-  }
-}
-
 /**
  * Selos Pro (coroa) só para quem não assina: deslogado ou sem Pro/Team. Assinante Pro/Team, ou convidado numa
  * sessão colaborativa do Team (onde o recurso já vem liberado pelo dono), não vê coroa nem "(Pro)" nas opções.
@@ -1696,14 +1669,14 @@ function paintAccount() {
   const menuSignIn = document.getElementById("btn-menu-account");
   if (menuSignIn) menuSignIn.hidden = !enabled || signedIn;
   if (chip) {
-    // Conta + Ajuda: um só menu (logado ou não); com a nuvem desligada o ☰ continua dono de Ajuda/Tema/Idioma
-    chip.hidden = !enabled;
+    // why (GUI-32): o chip da Conta só tem a conta (Configurações e Sair); Ajuda, Modo e Idioma ficam no ☰.
+    // Sem login, entra pelo botão Assinar / Entrar (no celular, pelo ☰).
+    chip.hidden = !enabled || !signedIn;
     chip.classList.toggle("is-anon", !signedIn);
     const block = document.getElementById("account-signed-in");
     if (block) block.hidden = !signedIn;
     const signout = document.getElementById("btn-account-signout");
     if (signout) signout.hidden = !signedIn;
-    placeHelpGroups(enabled);
   }
   if (emailEl) emailEl.textContent = label;
   if (avatar) avatar.textContent = signedIn ? accountInitial(account.email) : "";
@@ -3073,34 +3046,50 @@ function escapeAttr(str) {
   return escapeHtml(str);
 }
 
+/**
+ * Avisos "mudou de lugar" nos menus antigos (GUI-32): por duas versões, tocar no aviso abre o lugar novo.
+ * why: quem procurava Novo/Abrir no nome do projeto, Ajuda no chip da Conta ou Resultados no ☰ do celular
+ *      precisa achar o caminho sem ler o aviso de novidades.
+ */
+function bindMovedHints() {
+  const active = movedHintsActive(RELEASE_NOTES_VERSION);
+  for (const el of document.querySelectorAll("[data-moved-group]")) el.hidden = !active;
+  if (!active) return;
+  for (const btn of document.querySelectorAll("[data-moved-to]")) {
+    btn.addEventListener("click", () => {
+      btn.closest("details")?.removeAttribute("open");
+      const to = btn.dataset.movedTo;
+      // why: o pointerdown fora já fechou os outros painéis; abrir no próximo quadro evita fechar o novo
+      requestAnimationFrame(() => {
+        if (to === "publish") {
+          getMobileBar().openPublish?.();
+          return;
+        }
+        const more = document.getElementById("more-panel");
+        if (!more) return;
+        more.hidden = false;
+        more.open = true;
+        document.getElementById("btn-menu-projects")?.focus();
+      });
+    });
+  }
+}
+
 function bindChrome() {
-  document.getElementById("btn-file-projects")?.addEventListener("click", () => {
-    document.getElementById("file-panel")?.removeAttribute("open");
-    closeProject();
-  });
-  document.getElementById("btn-menu-results")?.addEventListener("click", () => {
-    const more = document.getElementById("more-panel");
-    if (more) more.open = false;
-    openAnalytics();
-  });
   document.getElementById("btn-menu-projects")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
     if (more) more.open = false;
-    closeProject();
-  });
-  document.getElementById("btn-menu-new")?.addEventListener("click", () => {
-    const more = document.getElementById("more-panel");
-    if (more) more.open = false;
-    openNewProjectDialog();
-  });
-  document.getElementById("btn-menu-open")?.addEventListener("click", () => {
-    const more = document.getElementById("more-panel");
-    if (more) more.open = false;
+    // Projetos também cobre o antigo "Abrir": na lista, só leva o foco para os projetos
     if (chromeView === "library") {
       document.getElementById("library-board")?.focus();
       return;
     }
     void closeProject();
+  });
+  document.getElementById("btn-menu-new")?.addEventListener("click", () => {
+    const more = document.getElementById("more-panel");
+    if (more) more.open = false;
+    openNewProjectDialog();
   });
   document.getElementById("btn-menu-import")?.addEventListener("click", () => {
     const more = document.getElementById("more-panel");
@@ -3108,16 +3097,8 @@ function bindChrome() {
     document.getElementById("import-file")?.click();
   });
 
-  // Menu Arquivo (ao lado do nome do projeto)
-  document.getElementById("btn-file-new")?.addEventListener("click", () => {
-    openNewProjectDialog();
-  });
-  document.getElementById("btn-file-open")?.addEventListener("click", () => {
-    void closeProject();
-  });
-  document.getElementById("btn-file-import")?.addEventListener("click", () => {
-    document.getElementById("import-file")?.click();
-  });
+  // Menu do projeto (no nome do projeto): só ações do projeto aberto
+  bindMovedHints();
   document.getElementById("btn-file-rename")?.addEventListener("click", () => {
     const host = document.getElementById("topbar-project");
     if (!project || !host) return;

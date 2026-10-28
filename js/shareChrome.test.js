@@ -87,7 +87,7 @@ test("Resultados: um diálogo com abas Contatos, Envio automático, Análise e C
   assert.match(h, /id="btn-results"[^>]*aria-label="Resultados"/);
   assert.ok(h.indexOf('class="export-panel"') < h.indexOf('id="people-panel"'), "Pessoas vem depois de Compartilhar");
   assert.ok(h.indexOf('id="people-panel"') < h.indexOf('id="btn-results"'), "Resultados vem depois de Pessoas");
-  assert.match(h, /id="btn-menu-results"[\s\S]*data-i18n="results\.menuItem">Resultados: análise e contatos/);
+  assert.match(h, /data-publish="results"[\s\S]*data-i18n="results\.button">Resultados/);
   assert.equal((h.match(/<dialog\b[^>]*id="modal-results"/g) || []).length, 1);
   assert.ok(!h.includes('id="modal-leads"') && !h.includes('id="modal-analytics"'));
   assert.ok(!h.includes('id="btn-share-analytics"') && !h.includes('id="btn-share-leads"'));
@@ -126,7 +126,7 @@ test("Resultados: um diálogo com abas Contatos, Envio automático, Análise e C
   assert.match(css, /\.results-pane\[hidden\]\s*\{[^}]*display:\s*none/);
 });
 
-test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado do refazer, Ajuda/Modo/Idioma no menu da Conta", () => {
+test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado do refazer, Ajuda/Modo/Idioma no ☰", () => {
   const h = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const summary = h.slice(h.indexOf('id="btn-file-menu"'), h.indexOf("</summary>", h.indexOf('id="btn-file-menu"')));
   assert.ok(summary.includes('id="topbar-project"'));
@@ -134,8 +134,11 @@ test("cabeçalho: nome do tour é o botão do menu, Editando em na barra ao lado
   assert.ok(h.indexOf('id="btn-redo"') < h.indexOf('id="edit-lang-wrap"'), "Editando em depois de refazer");
   assert.ok(h.indexOf('id="edit-lang-wrap"') < h.indexOf('id="toolbar-pos"'), "dentro da barra de botões");
   assert.ok(!h.slice(0, h.indexOf('id="topbar-actions-editor"') + 400).includes('id="edit-lang-wrap"'));
-  assert.ok(h.includes('id="btn-file-projects"'));
-  assert.ok(h.includes('id="account-help-slot"') && h.includes('id="help-group"'));
+  // GUI-32: Projetos fica só no ☰; Ajuda/Modo/Idioma voltam para o ☰ (o chip da Conta só tem a conta)
+  assert.ok(!h.includes('id="btn-file-projects"') && h.includes('id="btn-menu-projects"'));
+  const more = h.slice(h.indexOf('id="more-panel-body"'), h.indexOf("</details>", h.indexOf('id="more-panel-body"')));
+  assert.ok(more.includes('id="help-group"') && more.includes('id="locale-select"') && more.includes('id="appearance-segment"'));
+  assert.ok(!h.includes('id="account-help-slot"'));
 });
 
 test("Sem marca unificado: um só project.removeBranding para link e vídeo; abas com alvos de 44px no celular", () => {
