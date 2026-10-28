@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://guiaflow.pro/</loc>
-    <lastmod>2026-10-12</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en" />
     <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es" />
@@ -10,7 +10,7 @@
   </url>
   <url>
     <loc>https://guiaflow.pro/en</loc>
-    <lastmod>2026-10-12</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en" />
     <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es" />
@@ -18,7 +18,7 @@
   </url>
   <url>
     <loc>https://guiaflow.pro/es</loc>
-    <lastmod>2026-10-12</lastmod>
+    <lastmod>2026-10-26</lastmod>
     <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en" />
     <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es" />
@@ -167,5 +167,13 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/terms" />
     <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/es/terminos" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/termos" />
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/cortesia</loc>
+    <lastmod>2026-10-26</lastmod>
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/integracoes/leadpronto</loc>
+    <lastmod>2026-10-26</lastmod>
   </url>
 </urlset>

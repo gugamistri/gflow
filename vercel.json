@@ -106,6 +106,18 @@
     {
       "source": "/oembed",
       "destination": "/api/oembed"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://app.guiaflow.pro/v1/openapi.json"
+    },
+    {
+      "source": "/.well-known/mcp/server-card.json",
+      "destination": "https://app.guiaflow.pro/.well-known/mcp/server-card.json"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "https://app.guiaflow.pro/.well-known/oauth-protected-resource"
     }
   ],
   "crons": [
@@ -162,6 +174,15 @@
         {
           "key": "Content-Type",
           "value": "application/xml; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/.well-known/api-catalog",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/linkset+json"
         }
       ]
     }

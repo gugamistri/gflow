@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { ASSET_PREFIX_RE } from "./asset-version.mjs";
 
 const root = new URL("../", import.meta.url);
 
@@ -26,6 +27,8 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/ajuda<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/privacidade<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/termos<\/loc>/);
+  assert.match(text, /<loc>https:\/\/guiaflow\.pro\/cortesia<\/loc>/);
+  assert.match(text, /<loc>https:\/\/guiaflow\.pro\/integracoes\/leadpronto<\/loc>/);
   assert.match(text, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   assert.equal(text.includes(".html"), false);
   assert.equal(text.includes("/view"), false);
@@ -33,8 +36,19 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.equal(/nuvem/i.test(text), false);
 });
 
-test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {
-  const config = JSON.parse(read("vercel.json"));
+test("página do LeadPronto: canônica, hreflang PT e schema", () => {
+  const html = read("integracoes/leadpronto.html");
+  assert.match(html, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/integracoes\/leadpronto"/);
+  assert.match(html, /<link rel="alternate" hreflang="pt-BR" href="https:\/\/guiaflow\.pro\/integracoes\/leadpronto"/);
+  assert.equal(/<link rel="alternate" hreflang="en"/.test(html), false);
+  assert.match(html, /"@type": "FAQPage"/);
+  assert.equal((html.match(/"@type": "Question"/g) || []).length, 6);
+  assert.match(html, /<h1>Integração GuiaFlow e LeadPronto:/);
+  assert.match(read("integracoes.html"), /href="\/integracoes\/leadpronto"/);
+  assert.match(read("sitemap.xml"), /<loc>https:\/\/guiaflow\.pro\/integracoes\/leadpronto<\/loc>/);
+});
+
+test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {  const config = JSON.parse(read("vercel.json"));
   const headers = config.headers || [];
   const robots = headers.find((entry) => entry.source === "/robots.txt");
   const sitemap = headers.find((entry) => entry.source === "/sitemap.xml");
@@ -58,6 +72,7 @@ test("editor em /editor: canônico próprio e fora do índice", () => {
   assert.match(editor, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/editor"/);
   assert.match(editor, /<meta name="robots" content="noindex, follow"/);
   assert.match(editor, /<meta property="og:url" content="https:\/\/guiaflow\.pro\/editor"/);
+  assert.equal(editor.includes('href="ajuda.html'), false);
   const sitemap = read("sitemap.xml");
   assert.equal(sitemap.includes("/editor"), false);
 });
@@ -76,7 +91,7 @@ test("home e ajuda têm título, descrição, canônico e Open Graph", () => {
   assert.match(ajuda, /<title[^>]*>[^<]*GuiaFlow[^<]*<\/title>/);
   assert.match(ajuda, /<meta name="description" content="Como gravar um demo no GuiaFlow:[^"]+"/);
   assert.match(ajuda, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/ajuda"/);
-  assert.match(ajuda, /<meta property="og:title" content="Como usar — GuiaFlow"/);
+  assert.match(ajuda, /<meta property="og:title" content="Como gravar um demo interativo \(passo a passo\) — GuiaFlow"/);
   assert.match(ajuda, /<meta property="og:description" content="Como gravar um demo no GuiaFlow:[^"]+"/);
   assert.match(ajuda, /<meta property="og:url" content="https:\/\/guiaflow\.pro\/ajuda"/);
   assert.equal(/nuvem/i.test(ajuda.slice(0, ajuda.indexOf("</head>"))), false);
@@ -97,7 +112,7 @@ test("privacidade e termos têm metadados, data, rodapé e não falam em nuvem",
     assert.match(html, /Última atualização: 1[123] de outubro de 2026/);
     assert.match(html, /href="\/privacidade"/);
     assert.match(html, /href="\/termos"/);
-    assert.match(html, /a\/154\/css\/ajuda\.css/);
+    assert.match(html, new RegExp(`${ASSET_PREFIX_RE}css\\/ajuda\\.css`));
     assert.equal(/nuvem/i.test(html), false);
     assert.equal(html.includes("{{"), false);
     assert.match(html, /mailto:contato@guiaflow\.pro/);
@@ -134,6 +149,74 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(llms, /^# GuiaFlow$/m);
   assert.match(llms, /https:\/\/app\.guiaflow\.pro\/mcp/);
   assert.match(llms, /https:\/\/app\.guiaflow\.pro\/v1\/openapi\.json/);
+  // why: o editor MIT roda sem conta; só os serviços hospedados são Pro (GUI-13)
+  assert.equal(llms.includes("Pro plan only"), false);
+  assert.match(llms, /open source \(MIT\)/);
+  assert.match(llms, /no account/);
+  assert.match(llms, /Pro plan/);
+});
+
+test("/.well-known/integrations.json declara o MCP e a API do plano Pro", () => {
+  const doc = JSON.parse(read(".well-known/integrations.json"));
+  assert.equal(doc.version, 3);
+  assert.match(doc.summary, /MCP server/);
+  // why: o registro integrations.sh lê este arquivo no domínio; um slug repetido ou uma
+  // superfície sem auth declarada some da página sem erro
+  const surfaces = doc.surfaces || [];
+  const slugs = surfaces.map((surface) => surface.slug);
+  assert.equal(new Set(slugs).size, slugs.length);
+  const mcp = surfaces.find((surface) => surface.type === "mcp");
+  assert.equal(mcp.url, "https://app.guiaflow.pro/mcp");
+  assert.deepEqual(mcp.transports, ["streamable-http"]);
+  assert.equal(mcp.auth.status, "required");
+  const http = surfaces.find((surface) => surface.type === "http");
+  assert.equal(http.url, "https://app.guiaflow.pro/v1");
+  assert.match(http.spec, /openapi\.json$/);
+  // toda credencial citada por uma superfície existe no mapa de credenciais
+  for (const surface of surfaces) {
+    for (const entry of surface.auth.entries) {
+      for (const use of entry.use) {
+        assert.ok(doc.credentials[use.id], `credencial ${use.id} não declarada`);
+      }
+    }
+  }
+  // o mesmo servidor MCP anunciado em llms.txt: as duas fontes não podem divergir
+  assert.match(read("llms.txt"), new RegExp(mcp.url));
+});
+
+test("/.well-known/api-catalog e /openapi.json apontam para a API sem copiar o spec", () => {
+  const doc = JSON.parse(read(".well-known/api-catalog"));
+  assert.equal(doc.linkset.length, 1);
+  const [link] = doc.linkset;
+  assert.equal(link.anchor, "https://app.guiaflow.pro/v1");
+  assert.equal(link["service-desc"][0].href, "https://app.guiaflow.pro/v1/openapi.json");
+  assert.ok(link.item.some((item) => item.href === "https://app.guiaflow.pro/mcp"));
+  const config = JSON.parse(read("vercel.json"));
+  // why: o registro sonda /openapi.json no domínio listado; o rewrite evita manter
+  //      aqui uma cópia do spec que muda no outro repo (drift)
+  const spec = config.rewrites.find((rule) => rule.source === "/openapi.json");
+  assert.equal(spec.destination, "https://app.guiaflow.pro/v1/openapi.json");
+  // why: cartão e PRM moram no host do MCP; o apex só espelha, para o registro achar os dois
+  for (const [source, destination] of [
+    ["/.well-known/mcp/server-card.json", "https://app.guiaflow.pro/.well-known/mcp/server-card.json"],
+    ["/.well-known/oauth-protected-resource", "https://app.guiaflow.pro/.well-known/oauth-protected-resource"],
+  ]) {
+    const rule = config.rewrites.find((entry) => entry.source === source);
+    assert.equal(rule?.destination, destination);
+  }
+  const header = config.headers.find((entry) => entry.source === "/.well-known/api-catalog");
+  assert.equal(header.headers.find((item) => item.key === "Content-Type").value, "application/linkset+json");
+});
+
+test("a landing mostra o demo real do LeadPronto no lugar do «em breve» (GUI-13)", () => {  const slug = read("js/landing.js").match(/LANDING_DEMO_SLUG = "([A-Za-z0-9][A-Za-z0-9_-]{0,80})"/);
+  assert.ok(slug, "LANDING_DEMO_SLUG não encontrado em js/landing.js");
+  for (const page of ["index.html", "en.html", "es.html"]) {
+    const html = read(page);
+    assert.equal(html.includes("chega em breve"), false, page);
+    assert.equal(html.includes("coming soon"), false, page);
+    assert.equal(html.includes("llega pronto"), false, page);
+    assert.match(html, new RegExp(`<a[^>]*class="btn btn-primary"[^>]*href="/p/${slug[1]}"`), page);
+  }
 });
 
 test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos absolutos", () => {
@@ -145,7 +228,7 @@ test("/integracoes tem deeplinks do Cursor e VS Code, três línguas e caminhos 
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
   assert.equal(/data-doc-locale="(es|en)"/.test(html), false);
   assert.equal(/(href|src)="a\//.test(html), false);
-  assert.match(html, /a\/154\/css\/ajuda\.css/);
+  assert.match(html, new RegExp(`${ASSET_PREFIX_RE}css\\/ajuda\\.css`));
   assert.match(read("sitemap.xml"), /guiaflow\.pro\/integracoes/);
   assert.match(read("index.html"), /href="\/integracoes"/);
 });

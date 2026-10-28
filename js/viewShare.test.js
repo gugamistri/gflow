@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
+import { ASSET_PREFIX_RE } from "../scripts/asset-version.mjs";
 import {
+  BRAND_BADGE_HREF,
+  brandBadge,
+  brandClickEndpoint,
   decideEscape,
   embedShowsCover,
   parseEmbedOptions,
@@ -116,13 +120,34 @@ test("marca GuiaFlow: /v com logo; /p sem marca por padrão e crédito só quand
   assert.equal(shareBranding("permanent", { removeBranding: false }), "credit");
 });
 
-test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mantêm a marca", () => {
-  const permanent = renderViewPage({ id: "slug", name: "Tour fixo", origin: "https://guiaflow.pro", kind: "permanent" });
+test("selo Feito com GuiaFlow: visível no tour sem Pro, fora da contagem no crédito do Pro", () => {
+  // /v é sempre conta gratuita: selo e clique contado
+  assert.deepEqual(brandBadge("temporary", {}), { shown: true, kind: "temporary", measured: true });
+  assert.deepEqual(brandBadge("temporary", { removeBranding: true }), { shown: true, kind: "temporary", measured: true });
+  // /p de dono que perdeu o Pro: o Cloud manda "shown" e o selo volta, medido
+  assert.deepEqual(brandBadge("permanent", {}, "shown"), { shown: true, kind: "permanent", measured: true });
+  // /p de dono Pro que pediu o crédito: selo visível, mas não é aquisição
+  assert.deepEqual(brandBadge("permanent", { removeBranding: false }), { shown: true, kind: "permanent", measured: false });
+  // /p Pro sem crédito: nenhum selo
+  assert.deepEqual(brandBadge("permanent", {}), { shown: false, kind: "permanent", measured: false });
+  assert.deepEqual(brandBadge("permanent", null, "hidden"), { shown: false, kind: "permanent", measured: false });
+});
+
+test("selo Feito com GuiaFlow: destino com utm e contador no Cloud", () => {
+  assert.match(BRAND_BADGE_HREF, /^https:\/\/guiaflow\.pro\/\?utm_source=selo&utm_medium=tour&utm_campaign=feito-com$/);
+  assert.equal(brandClickEndpoint("https://app.guiaflow.pro/"), "https://app.guiaflow.pro/api/brand-clicks");
+  // why: instância sem nuvem não manda o clique para a nuvem de outra pessoa
+  assert.equal(brandClickEndpoint(""), "");
+  assert.equal(brandClickEndpoint(null), "");
+});
+
+test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mantêm a marca", () => {  const permanent = renderViewPage({ id: "slug", name: "Tour fixo", origin: "https://guiaflow.pro", kind: "permanent" });
   assert.match(permanent, /<html lang="pt-BR" class="is-unbranded">/);
   assert.match(permanent, /<title>Tour fixo<\/title>/);
   assert.equal(permanent.includes("og:site_name"), false);
   assert.match(permanent, /id="view-credit"[^>]*hidden/);
   assert.match(permanent, /data-i18n="view\.credit">Feito com GuiaFlow</);
+  assert.match(permanent, /id="view-credit"[^>]*href="https:\/\/guiaflow\.pro\/\?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com"/);
   const temporary = renderViewPage({ id: "tmp123", name: "Tour", origin: "https://guiaflow.pro", kind: "temporary" });
   assert.equal(temporary.includes("is-unbranded"), false);
   assert.match(temporary, /<title>Tour — GuiaFlow<\/title>/);
@@ -131,6 +156,7 @@ test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mant�
   const viewHtml = readFileSync(new URL("../view.html", import.meta.url), "utf8");
   assert.match(viewHtml, /\/\^\\\/p\\\/\/\.test\(location\.pathname\)\) document\.documentElement\.classList\.add\("is-unbranded"\)/);
   assert.match(viewHtml, /id="view-credit"[^>]*hidden/);
+  assert.match(viewHtml, /id="view-credit"[^>]*utm_source=selo/);
 });
 
 test("o endpoint do link permanente aponta para /api/shares", () => {
@@ -183,7 +209,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/154\/js\/viewApp\.js/);
+  assert.match(html, new RegExp(`${ASSET_PREFIX_RE}js\\/viewApp\\.js`));
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);

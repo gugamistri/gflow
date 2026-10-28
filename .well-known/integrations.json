@@ -1,0 +1,117 @@
+{
+  "version": 3,
+  "summary": "GuiaFlow turns product screenshots into interactive guided tours (highlight, click, text and optional narrated audio), published as a permanent link or embedded on a site. Agents build and publish tours through a hosted MCP server and a REST API, both part of the paid Pro plan.",
+  "credentials": {
+    "guiaflow_oauth": {
+      "type": "oauth2",
+      "label": "GuiaFlow OAuth",
+      "setup": "The hosted MCP server is OAuth 2.1 protected, with PKCE, dynamic client registration and Client ID Metadata Documents. RFC 9728 metadata: https://app.guiaflow.pro/.well-known/oauth-protected-resource/mcp. The MCP client opens the GuiaFlow sign-in page and the user picks the scopes: tours:read, tours:write, publish, ai, analytics:read."
+    },
+    "guiaflow_api_key": {
+      "type": "api_key",
+      "label": "GuiaFlow API key",
+      "generateUrl": "https://guiaflow.pro/editor",
+      "setup": "In the editor open the account menu and choose API keys: name the key, pick the scopes and an expiry (30, 90 or 365 days). The key starts with gf_live_ and is shown once; revoke it in the same place. Send it as `Authorization: Bearer gf_live_...`. A Pro plan is required (402 otherwise)."
+    }
+  },
+  "surfaces": [
+    {
+      "type": "mcp",
+      "slug": "guiaflow-mcp",
+      "name": "GuiaFlow MCP server",
+      "url": "https://app.guiaflow.pro/mcp",
+      "transports": ["streamable-http"],
+      "docs": "https://guiaflow.pro/ajuda/api",
+      "basis": {
+        "via": "declared",
+        "source": "https://guiaflow.pro/.well-known/integrations.json"
+      },
+      "auth": {
+        "status": "required",
+        "entries": [
+          {
+            "use": [
+              {
+                "id": "guiaflow_oauth",
+                "mechanics": {
+                  "source": "well-known"
+                }
+              }
+            ],
+            "basis": {
+              "via": "detected",
+              "signal": "oauth-protected-resource"
+            }
+          },
+          {
+            "use": [
+              {
+                "id": "guiaflow_api_key",
+                "mechanics": {
+                  "source": "http",
+                  "in": "header",
+                  "headerName": "Authorization",
+                  "scheme": "Bearer"
+                }
+              }
+            ],
+            "basis": {
+              "via": "declared",
+              "source": "https://guiaflow.pro/.well-known/integrations.json"
+            }
+          }
+        ]
+      },
+      "notes": "Tools: create_tour, list_tours, get_tour, add_step, update_step, reorder_steps, delete_step, upload_media, set_theme, set_lead_capture, set_end_cta, generate_step_text, generate_narration (scope ai), publish, unpublish, get_analytics (scope analytics:read). Stateless Streamable HTTP: answer POST only, no SSE stream."
+    },
+    {
+      "type": "http",
+      "slug": "guiaflow-api",
+      "name": "GuiaFlow REST API",
+      "url": "https://app.guiaflow.pro/v1",
+      "spec": "https://app.guiaflow.pro/v1/openapi.json",
+      "docs": "https://guiaflow.pro/ajuda/api",
+      "basis": {
+        "via": "declared",
+        "source": "https://guiaflow.pro/.well-known/integrations.json"
+      },
+      "auth": {
+        "status": "required",
+        "entries": [
+          {
+            "use": [
+              {
+                "id": "guiaflow_oauth",
+                "mechanics": {
+                  "source": "well-known"
+                }
+              }
+            ],
+            "basis": {
+              "via": "detected",
+              "signal": "oauth-protected-resource"
+            }
+          },
+          {
+            "use": [
+              {
+                "id": "guiaflow_api_key",
+                "mechanics": {
+                  "source": "http",
+                  "in": "header",
+                  "headerName": "Authorization",
+                  "scheme": "Bearer"
+                }
+              }
+            ],
+            "basis": {
+              "via": "declared",
+              "source": "https://guiaflow.pro/.well-known/integrations.json"
+            }
+          }
+        ]
+      },
+      "notes": "OpenAPI 3.1. Same scopes and auth as the MCP server. Send Idempotency-Key on POST to retry safely."
+    }
+  ]
+}

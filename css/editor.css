@@ -320,6 +320,7 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
 
 .theme-panel summary,
 .export-panel summary,
+.people-panel summary,
 .more-panel > summary {
   list-style: none;
   cursor: pointer;
@@ -339,6 +340,7 @@ html[data-appearance="social"] .boot-splash-brand .brand-on-dark {
 
 .theme-panel summary::-webkit-details-marker,
 .export-panel summary::-webkit-details-marker,
+.people-panel summary::-webkit-details-marker,
 .more-panel > summary::-webkit-details-marker {
   display: none;
 }
@@ -2603,6 +2605,11 @@ body.is-presenting #topbar-actions-editor {
   display: none;
 }
 
+/* Só o celular usa o ⋯ do cartão; no desktop o menu abre com o botão direito. */
+.film-actions .film-action-menu {
+  display: none;
+}
+
 .film-scene.is-drop-target .film-scene-label {
   background: var(--ns-hover);
   color: var(--ns-ink);
@@ -4718,6 +4725,11 @@ body.is-presenting .editor-popover {
   font-variant-numeric: tabular-nums;
 }
 
+/* O passo atual aparece no topo do painel; na barra do canvas só quando o painel está recolhido. */
+.view-editor:not(.is-props-collapsed) .canvas-toolbar .toolbar-pos {
+  display: none;
+}
+
 .canvas-toolbar .btn-danger-hover:hover:not(:disabled) {
   color: var(--ns-danger);
   border-color: color-mix(in srgb, var(--ns-danger) 45%, var(--ns-border));
@@ -5306,6 +5318,13 @@ body.is-presenting .editor-popover {
     height: 44px;
   
 }
+.people-panel > summary.people-menu {
+    min-width: 44px;
+    min-height: 44px;
+    height: 44px;
+    justify-content: center;
+  
+}
 .export-option {
     min-height: 44px;
   
@@ -5450,7 +5469,8 @@ body.is-presenting .rotate-hint:not([hidden]) {
   .toolbar-pos,
   .split-caret,
   .split-btn .split-label,
-  .share-label {
+  .share-label,
+  .people-label {
     display: none !important;
   
 }
@@ -6159,6 +6179,43 @@ dialog.fixed-modal[open] {
   vertical-align: middle;
 }
 
+.capture-tablist {
+  flex-wrap: wrap;
+  position: static;
+  margin: 0;
+  background: var(--ns-panel);
+}
+
+.capture-tablist .share-tab {
+  flex: 1 1 8.2rem;
+}
+
+.capture-tablist .pro-badge {
+  flex: none;
+}
+
+.capture-pane[hidden] {
+  display: none !important;
+}
+
+@media (max-height: 820px) {
+dialog.capture-modal .fixed-dialog {
+  gap: 6px;
+  padding: 10px 14px 8px;
+}
+dialog.capture-modal .fixed-lead {
+  font-size: 0.75rem;
+}
+dialog.capture-modal .fixed-group {
+  padding: 6px 8px;
+  gap: 6px;
+}
+dialog.capture-modal textarea {
+  min-height: 48px;
+  max-height: 72px;
+}
+}
+
 .fixed-preview .fixed-card .fixed-form .fixed-input {
   min-height: 34px;
   padding: 6px 9px;
@@ -6445,6 +6502,294 @@ dialog.analytics-modal {
   margin: auto;
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+/* Resultados: um diálogo. O cabeçalho e as abas ficam fixos; a aba rola por dentro. */
+dialog.results-modal[open] {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 24px));
+  max-width: 760px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  overflow: hidden;
+}
+
+dialog.results-modal[open] .results-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+dialog.results-modal .account-dialog-head,
+dialog.results-modal .results-tablist {
+  flex: none;
+}
+
+.results-panes {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+}
+
+.results-pane {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.results-pane[hidden] {
+  display: none;
+}
+
+#results-pane-delivery .delivery-list {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+/* Envio automático: um cartão por destino. O cartão inteiro é o botão que
+   abre a sub-tela de detalhe; o Testar fica por cima dele (z-index). */
+#results-pane-delivery .delivery-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--ns-border);
+  border-radius: 12px;
+  background: var(--ns-panel);
+}
+
+#results-pane-delivery .delivery-card:hover {
+  border-color: color-mix(in srgb, var(--ns-accent) 45%, var(--ns-border));
+}
+
+/* LeadPronto fica no topo mesmo desconectado. */
+#results-pane-delivery .delivery-card.is-featured {
+  border-color: color-mix(in srgb, var(--ns-accent) 60%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-accent) 10%, var(--ns-panel));
+}
+
+#results-pane-delivery .delivery-card-open {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#results-pane-delivery .delivery-card-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 11px;
+}
+
+#results-pane-delivery .delivery-card-open:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+#results-pane-delivery .delivery-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#results-pane-delivery .delivery-card-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+#results-pane-delivery .delivery-card-name .pro-badge {
+  margin-left: 0;
+}
+
+#results-pane-delivery .delivery-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+#results-pane-delivery .delivery-card-tag {
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--ns-accent) 45%, var(--ns-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-accent) 18%, var(--ns-panel));
+  color: var(--ns-accent-dark);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-card-chev {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--ns-muted);
+}
+
+#results-pane-delivery .delivery-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+
+#results-pane-delivery .delivery-card-level {
+  padding: 1px 7px;
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  color: var(--ns-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border: 1px solid var(--ns-border);
+  border-radius: 999px;
+  color: var(--ns-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+#results-pane-delivery .delivery-state.is-on {
+  border-color: color-mix(in srgb, var(--ns-success) 45%, var(--ns-border));
+  background: color-mix(in srgb, var(--ns-success) 14%, transparent);
+  color: var(--ns-success-ink);
+}
+
+#results-pane-delivery .delivery-state.is-fail {
+  border-color: color-mix(in srgb, var(--ns-danger) 45%, var(--ns-border));
+  background: var(--ns-danger-bg);
+  color: var(--ns-danger);
+}
+
+#results-pane-delivery .delivery-card-delivery {
+  flex: 1 1 160px;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ns-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#results-pane-delivery .delivery-card-status {
+  margin: 0;
+  color: var(--ns-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+#results-pane-delivery .delivery-card-status.is-error {
+  color: var(--ns-danger);
+  font-weight: 650;
+}
+
+#results-pane-delivery .delivery-card-level:empty,
+#results-pane-delivery .delivery-card-delivery:empty,
+#results-pane-delivery .delivery-card-status:empty {
+  display: none;
+}
+
+#results-pane-delivery .delivery-card-test {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sub-tela de detalhe: uma seção por vez, com Voltar no lugar das seções empilhadas. */
+#results-pane-delivery .delivery-detail {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+#results-pane-delivery .delivery-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#results-pane-delivery .delivery-list[hidden],
+#results-pane-delivery .delivery-detail[hidden],
+#results-pane-delivery .leads-webhook[hidden] {
+  display: none;
+}
+
+#results-pane-delivery .delivery-detail .leads-webhook {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* No celular o detalhe cobre o diálogo inteiro (cartão → tela cheia). */
+@media (max-width: 720px), (pointer: coarse) {
+  #results-pane-delivery .delivery-card-delivery {
+    flex-basis: 100%;
+  }
+
+  #results-pane-delivery .delivery-card-test {
+    min-height: 40px;
+  }
+
+  #results-pane-delivery .delivery-detail:not([hidden]) {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    box-sizing: border-box;
+    padding: 14px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: 12px;
+    background: var(--ns-panel);
+  }
+
+  #results-pane-delivery .delivery-back {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--ns-panel);
+  }
 }
 
 .analytics-toolbar {
@@ -7653,11 +7998,18 @@ body.has-mobile-bar .toast-host,
 /* A barra de cima só tinha desfazer/refazer: foi para a barra de baixo */
 body.has-mobile-bar .view-editor:not(.is-presenting) .canvas-toolbar { display: none; 
 }
-/* Filmstrip compacta: faixa horizontal de miniaturas; ↑ ↓ × só no passo ativo */
+/* Filmstrip compacta: faixa horizontal de miniaturas; ações no ⋯ do cartão */
 body.has-mobile-bar .view-editor:not(.is-presenting) #filmstrip-panel { max-height: none; 
 }
 body.has-mobile-bar .filmstrip-header,
   body.has-mobile-bar .filmstrip-footer { display: none; 
+}
+/* why: no celular o aviso "Sincronizado" tomava uma faixa inteira da filmstrip sem dizer nada
+   de útil. Em repouso (sincronizado) e durante a sincronização automática a faixa some; ela
+   só aparece quando precisa de atenção (offline/erro) ou para o aviso de "salvo só neste
+   navegador". Os dois avisos nunca aparecem juntos (ver paintLocalSave). */
+body.has-mobile-bar .filmstrip-notices:has(> .sync-status[data-phase="synced"]:not([hidden])),
+  body.has-mobile-bar .filmstrip-notices:has(> .sync-status[data-phase="syncing"]:not([hidden])) { display: none; 
 }
 body.has-mobile-bar .filmstrip {
     display: flex;
@@ -7708,11 +8060,70 @@ body.has-mobile-bar .film-meta strong {
     text-overflow: ellipsis;
   
 }
-body.has-mobile-bar .film-item:not(.is-active) .film-actions { display: none; 
+/* why: as setas ← → e o × gastavam uma linha inteira do cartão ativo. Agora só o ⋯ fica
+   sobre a miniatura, e o menu (folha de baixo) traz mover, duplicar e excluir. Reordenar
+   também dá para fazer segurando o cartão e arrastando (toque longo). */
+body.has-mobile-bar .film-item .film-actions {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+    pointer-events: none;
+  
 }
-body.has-mobile-bar .film-item.is-active .film-actions { display: flex; justify-content: space-between; gap: 2px; margin: 0; 
+body.has-mobile-bar .film-item .film-action-move,
+  body.has-mobile-bar .film-item .film-action-close { display: none; 
 }
-body.has-mobile-bar .film-item.is-active .film-actions button { width: 30px; min-width: 30px; height: 44px; flex: 1 1 0; 
+/* Só o cartão do passo atual mostra o ⋯: a faixa fica limpa como antes, sem três botões por cartão. */
+body.has-mobile-bar .film-item:not(.is-active) .film-action-menu { display: none; 
+}
+body.has-mobile-bar .film-action-menu {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ns-panel) 74%, transparent);
+    color: var(--ns-ink);
+    font-size: 1rem;
+    line-height: 1;
+    pointer-events: auto;
+  
+}
+body.has-mobile-bar .film-item { -webkit-touch-callout: none; 
+}
+body.has-mobile-bar .film-item.is-touch-dragging {
+    opacity: 0.92;
+    transform: scale(1.04);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+    z-index: 2;
+  
+}
+body.is-film-dragging,
+  body.is-film-dragging .filmstrip { user-select: none; -webkit-user-select: none; 
+}
+body.is-film-dragging .filmstrip { scroll-snap-type: none; 
+}
+/* Em pé a faixa rola na horizontal: o marcador de "solta aqui" vira uma barra em pé. */
+body.has-mobile-bar .film-item.drop-before::before,
+  body.has-mobile-bar .film-item.drop-after::after {
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    height: auto;
+    left: auto;
+    right: auto;
+  
+}
+body.has-mobile-bar .film-item.drop-before::before { left: -5px; 
+}
+body.has-mobile-bar .film-item.drop-after::after { right: -5px; 
 }
 /* Folha "Editar passo": o próprio painel de propriedades, só texto e narração */
 .mobile-sheet-backdrop { position: fixed; inset: 0; z-index: 240; background: rgba(0, 0, 0, 0.45); 
@@ -7774,7 +8185,26 @@ body.is-props-sheet .mobile-sheet-audio:not([hidden]) { display: flex; gap: 8px;
 }
 body.is-props-sheet #props-panel #prop-caption { min-height: 120px; 
 }
+/* Menu do cartão (⋯) no celular: folha colada na barra de baixo, com linhas de 44px */
+.film-context-menu.is-sheet {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: calc(var(--mbar-h, 0px) + 8px + env(safe-area-inset-bottom, 0px));
+    min-width: 0;
+    max-width: none;
+    max-height: 60dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  
 }
+.film-context-menu.is-sheet button { min-height: 44px; font-size: 0.95rem; 
+}
+/* no celular não há teclado: as dicas de atalho só ocupam espaço */
+.film-context-menu.is-sheet .film-context-kbd { display: none; 
+}
+}
+
 
 @media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
 /* Deitado: filmstrip vira coluna estreita à esquerda; barra com rótulos menores */
@@ -7810,6 +8240,21 @@ body.has-mobile-bar .film-scene { writing-mode: horizontal-tb; transform: none; 
 }
 body.has-mobile-bar .film-item,
   body.has-mobile-bar .film-fixed { width: 100%; 
+}
+/* Deitado a faixa é uma coluna: o marcador de "solta aqui" volta a ser uma barra deitada. */
+body.has-mobile-bar .film-item.drop-before::before,
+  body.has-mobile-bar .film-item.drop-after::after {
+    left: 4px;
+    right: 4px;
+    width: auto;
+    height: 3px;
+    top: auto;
+    bottom: auto;
+  
+}
+body.has-mobile-bar .film-item.drop-before::before { top: -5px; 
+}
+body.has-mobile-bar .film-item.drop-after::after { bottom: -5px; 
 }
 body.is-props-sheet .view-editor:not(.is-presenting) #props-panel {
     inset: 8px 8px calc(var(--mbar-h) + 4px) auto;
@@ -8027,10 +8472,10 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .export-panel-body.share-card { width: min(420px, 94vw); min-width: 0; padding: 0; gap: 0; max-height: min(78vh, 640px); font-family: var(--ns-font); font-size: 14px; line-height: 1.35; letter-spacing: 0; text-transform: none; 
 }
 
-.share-tablist { display: flex; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; 
+.share-tablist { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 8px 0; border-bottom: 1px solid var(--ns-border); position: sticky; top: 0; background: var(--ns-panel); z-index: 1; overflow: visible; 
 }
 
-.share-tab { flex: 1 1 0; min-width: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 4px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.15 var(--ns-font); letter-spacing: 0; text-transform: none; text-wrap: balance; white-space: normal; cursor: pointer; 
+.share-tab { flex: 1 1 auto; min-width: min-content; max-width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 8px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--ns-muted); font: 600 13px/1.15 var(--ns-font); letter-spacing: 0; text-transform: none; text-wrap: balance; white-space: normal; cursor: pointer; overflow: visible; 
 }
 
 .share-tab[hidden] { display: none; 
@@ -8045,7 +8490,55 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .share-tab:focus-visible { outline: 2px solid color-mix(in srgb, var(--ns-accent) 55%, transparent); outline-offset: -2px; border-radius: 6px; 
 }
 
-.share-pane { display: grid; gap: 4px; padding: 8px; align-content: start; 
+.share-pane { display: grid; gap: 4px; padding: 8px; align-content: start; min-width: 0; 
+}
+
+.share-kind { display: grid; gap: 6px; margin: 4px 0; padding: 10px 12px; border: 1px solid var(--ns-border); border-radius: 10px; background: color-mix(in srgb, var(--ns-accent) 6%, var(--ns-panel)); min-width: 0; 
+}
+
+#share-permanent-card { border-color: color-mix(in srgb, var(--ns-accent) 55%, var(--ns-border)); 
+}
+
+.share-kind-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; 
+}
+
+.share-kind-head strong { font-size: 0.9rem; color: var(--ns-ink); 
+}
+
+.share-recommended { font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 999px; background: color-mix(in srgb, var(--ns-accent) 22%, transparent); color: var(--ns-ink); 
+}
+
+.share-kind-note { margin: 0; color: var(--ns-muted); font-size: 0.75rem; 
+}
+
+.share-kind .share-expiry-note { margin: 0; 
+}
+
+.share-kind .export-option { padding: 8px 0; 
+}
+
+.share-kind .share-link-actions { border-bottom: 0; margin: 0; padding: 0; 
+}
+
+.people-panel { position: relative; 
+}
+
+.people-panel[hidden] { display: none; 
+}
+
+.people-panel > summary.people-menu { position: relative; width: auto; min-height: 32px; height: 32px; padding: 0 12px; gap: 6px; border-radius: 8px; background: transparent; color: var(--ns-ink); font-weight: 650; 
+}
+
+.people-panel[open] > summary.people-menu { background: color-mix(in srgb, var(--ns-accent) 12%, transparent); 
+}
+
+.people-avatars { display: inline-flex; align-items: center; 
+}
+
+.people-avatars:empty { display: none; 
+}
+
+.people-panel-body { width: min(420px, 94vw); padding: 8px; 
 }
 
 .share-pane[hidden] { display: none; 
@@ -8141,14 +8634,25 @@ dialog.upgrade-modal { width: calc(100vw - 16px);
 .results-btn { display: inline-flex; align-items: center; gap: 6px; 
 }
 
-.results-tablist { position: static; padding: 0; margin: 0 0 12px; 
+.capture-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+.results-tablist { position: static; padding: 0; margin: 0; flex-wrap: wrap; 
 }
 
-.results-tablist .results-tab { flex: 0 1 auto; padding: 0 16px; 
+.results-tablist .results-tab { flex: 1 1 auto; padding: 6px 12px; 
+}
+
+.results-tab .pro-badge { margin-left: 4px; 
+}
+
+body.is-compact-touch dialog.results-modal[open] {
+  overflow: hidden;
 }
 
 @media (max-width: 760px) {
 .results-btn span:not(.pro-badge):not(.pro-badge *) { display: none; 
+}
+.capture-btn > span { display: none; 
 }
 }
 
@@ -8203,6 +8707,16 @@ body.is-compact-touch .share-pane { padding: 8px 12px;
 }
 
 body.is-compact-touch .results-btn { min-width: 44px; min-height: 44px; 
+}
+
+body.is-compact-touch .capture-btn { min-width: 44px; min-height: 44px; 
+}
+
+/* Captura: cabeçalho, abas e Salvar ficam fixos; só o miolo da aba rola */
+body.is-compact-touch dialog.studio-modal.fixed-modal[open] {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 body.is-compact-touch .topbar details[open] > .account-chip-menu,

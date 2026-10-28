@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/155/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/155/css/theme.css" />
-  <link rel="stylesheet" href="a/155/css/shell.css" />
-  <link rel="stylesheet" href="a/155/css/player.css" />
-  <link rel="stylesheet" href="a/155/css/editor.css" />
-  <link rel="stylesheet" href="a/155/css/settings.css" />
-  <link rel="stylesheet" href="a/155/css/collab.css" />
-  <link rel="stylesheet" href="a/155/css/comments.css" />
+  <link rel="stylesheet" href="a/164/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/164/css/theme.css" />
+  <link rel="stylesheet" href="a/164/css/shell.css" />
+  <link rel="stylesheet" href="a/164/css/player.css" />
+  <link rel="stylesheet" href="a/164/css/editor.css" />
+  <link rel="stylesheet" href="a/164/css/settings.css" />
+  <link rel="stylesheet" href="a/164/css/collab.css" />
+  <link rel="stylesheet" href="a/164/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -136,7 +136,7 @@
               <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
               <span data-i18n="menu.about">Sobre o GuiaFlow</span>
             </a>
-            <a class="more-item" id="btn-help" href="ajuda.html" target="_blank" rel="noopener noreferrer">
+            <a class="more-item" id="btn-help" href="/ajuda" target="_blank" rel="noopener noreferrer">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
               <span data-i18n="topbar.help">Ajuda</span>
             </a>
@@ -175,7 +175,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/155/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/155/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/164/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/164/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -235,13 +235,9 @@
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
-        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
-          <span data-i18n="results.button">Resultados</span>
-          <span class="pro-badge" id="results-pro-badge" hidden>
-            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-            <span data-i18n="billing.badge">Pro</span>
-          </span>
+        <button type="button" class="btn btn-ghost capture-btn" id="btn-capture" aria-haspopup="dialog" aria-controls="modal-capture" aria-label="Captura" data-i18n-aria="fixed.capture.button" title="Formulário inicial, campos, passo final e consentimento" data-i18n-title="fixed.capture.title">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-form"></use></svg>
+          <span data-i18n="fixed.capture.button">Captura</span>
         </button>
         <details class="export-panel">
           <summary class="share-menu" aria-label="Compartilhar" title="Link, HTML e vídeo" data-i18n-aria="topbar.share" data-i18n-title="share.menuTitle">
@@ -260,51 +256,76 @@
                 </span>
               </button>
               <button type="button" class="share-tab" role="tab" id="tab-share-export" data-share-tab="export" aria-selected="false" tabindex="-1" aria-controls="pane-share-export" data-i18n="share.tab.export">Baixar</button>
-              <button type="button" class="share-tab" role="tab" id="tab-share-team" data-share-tab="team" aria-selected="false" tabindex="-1" aria-controls="pane-share-team" hidden>
-                <span data-i18n="share.tab.team">Gerenciar Acessos</span>
-              </button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-link" aria-labelledby="tab-share-link">
-            <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
-            <button type="button" class="export-option" id="btn-share-publish">
-              <strong data-i18n="share.linkTitle">Link</strong>
-              <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
-            </button>
-            <div class="share-link-actions" id="share-link-actions" hidden>
-              <div class="share-link-meta">
-                <strong>
-                  <span data-i18n="share.linkTitle">Link</span>
-                </strong>
+            <section class="share-kind" id="share-permanent-card" aria-labelledby="share-permanent-title">
+              <div class="share-kind-head">
+                <strong id="share-permanent-title" data-i18n="share.permanent.title">Link permanente</strong>
+                <span class="share-recommended" data-i18n="share.permanent.recommended">Recomendado</span>
+                <span class="pro-badge" id="share-permanent-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
               </div>
-              <div class="share-link-field">
-                <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link" data-i18n-aria="share.linkTitle" />
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
-                </button>
-              </div>
-              <div class="share-cover" id="share-cover" hidden>
-                <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
-                <div class="share-cover-text">
-                  <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
-                  <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
-                  <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
+              <p class="share-kind-note" data-i18n="share.permanent.never">Não expira.</p>
+              <button type="button" id="cloud-share-block" class="export-option share-kind-action" hidden>
+                <strong data-i18n="share.permanent.publish">Publicar link permanente</strong>
+                <span data-i18n="share.proDesc">Endereço para ver o tour, sem prazo.</span>
+                <span class="pro-badge" id="cloud-share-badge">
+                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+                  <span data-i18n="billing.badge">Pro</span>
+                </span>
+              </button>
+              <button type="button" class="export-option" id="btn-share-permanent" hidden>
+                <strong data-i18n="share.permanent.publish">Publicar link permanente</strong>
+                <span data-i18n="share.proDesc">Endereço para ver o tour, sem prazo.</span>
+              </button>
+              <div class="share-link-actions" id="share-permanent-actions" hidden>
+                <div class="share-link-field">
+                  <input id="share-permanent-url" class="share-link-url" type="text" readonly value="" aria-label="Link permanente" data-i18n-aria="share.permanent.title" />
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-permanent-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  </button>
+                </div>
+                <div class="share-cover" id="share-cover" hidden>
+                  <img class="share-cover-img" id="share-cover-img" alt="Capa do link" data-i18n-alt="share.cover.alt" width="120" height="63" loading="lazy" decoding="async" />
+                  <div class="share-cover-text">
+                    <span class="share-cover-label" data-i18n="share.cover.preview">Prévia ao compartilhar</span>
+                    <button type="button" class="share-cover-change" id="btn-share-cover-change" data-i18n="share.cover.change">Trocar capa</button>
+                    <small class="share-cover-note" data-i18n="share.cover.publicNote">A capa é pública com o link.</small>
+                  </div>
+                </div>
+                <div class="share-link-extra" id="share-permanent-extra" hidden>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-share-permanent-republish" hidden data-i18n="share.republish">Republicar</button>
+                  <span class="share-stale" id="share-permanent-stale" hidden data-i18n="share.stale">Desatualizado</span>
                 </div>
               </div>
-              <div class="share-link-extra" id="share-link-extra" hidden>
-                <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
-                <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
-                <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
-                  <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                </button>
+            </section>
+            <section class="share-kind" id="share-temp-card" aria-labelledby="share-temp-title">
+              <div class="share-kind-head">
+                <strong id="share-temp-title" data-i18n="share.temp.title">Link temporário</strong>
               </div>
-            </div>
-            <button type="button" id="cloud-share-block" class="share-pro-upsell" hidden>
-              <span class="pro-badge" id="cloud-share-badge">
-                <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                <span data-i18n="billing.badge">Pro</span>
-              </span>
-              <span data-i18n="share.upsell">Link que não expira</span>
-            </button>
+              <p class="share-expiry-note" id="share-expiry-note" data-i18n="share.expiresNote">Válido por 7 dias a partir da publicação.</p>
+              <button type="button" class="export-option" id="btn-share-publish">
+                <strong data-i18n="share.temp.title">Link temporário</strong>
+                <span id="share-publish-desc" data-i18n="share.linkDesc">Só para ver, por 7 dias.</span>
+              </button>
+              <div class="share-link-actions" id="share-link-actions" hidden>
+                <div class="share-link-field">
+                  <input id="share-link-url" class="share-link-url" type="text" readonly value="" aria-label="Link temporário" data-i18n-aria="share.temp.title" />
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-copy" title="Copiar" aria-label="Copiar" data-i18n-title="share.copy" data-i18n-aria="share.copy">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-copy"></use></svg>
+                  </button>
+                </div>
+                <div class="share-link-extra" id="share-link-extra" hidden>
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-share-republish" hidden data-i18n="share.republish">Republicar</button>
+                  <span class="share-stale" id="share-stale" hidden data-i18n="share.stale">Desatualizado</span>
+                  <button type="button" class="btn btn-sm btn-icon" id="btn-share-revoke" title="Revogar" aria-label="Revogar" data-i18n-title="share.revoke" data-i18n-aria="share.revoke">
+                    <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                  </button>
+                </div>
+              </div>
+            </section>
             <label class="share-brand-toggle" id="share-brand-toggle" hidden>
               <input type="checkbox" id="share-remove-brand" checked />
               <span class="share-brand-text">
@@ -350,14 +371,6 @@
             <button type="button" class="btn btn-primary" id="btn-embed-copy" data-i18n="embed.copy">Copiar código</button>
           </div>
         </div>
-            </div>
-            <div class="share-pane" role="tabpanel" id="pane-share-team" aria-labelledby="tab-share-team" hidden>
-              <div class="share-team-off" id="share-team-off">
-                <p class="share-team-lead" data-i18n="share.team.lead">Edite este tour em equipe: as mudanças aparecem para todos em poucos segundos.</p>
-                <button type="button" class="btn btn-primary" id="btn-share-collab" data-i18n="share.team.enable">Ativar e convidar</button>
-              </div>
-              <div class="share-team-host" id="share-team-host"></div>
-              <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
             </div>
             <div class="share-pane" role="tabpanel" id="pane-share-export" aria-labelledby="tab-share-export" hidden>
             <button type="button" class="export-option" id="btn-export-html">
@@ -423,6 +436,29 @@
             </div>
           </div>
         </details>
+        <details class="people-panel" id="people-panel" hidden>
+          <summary class="people-menu" id="btn-people" aria-haspopup="dialog" aria-label="Pessoas" title="Quem edita este projeto" data-i18n-aria="topbar.people" data-i18n-title="topbar.peopleTitle">
+            <span class="people-avatars" id="people-avatars" aria-hidden="true"></span>
+            <svg class="btn-ico people-fallback-ico" aria-hidden="true"><use href="#i-user"></use></svg>
+            <span class="people-label" data-i18n="topbar.people">Pessoas</span>
+          </summary>
+          <div class="export-panel-body people-panel-body" id="people-card">
+            <div class="share-team-off" id="share-team-off">
+              <p class="share-team-lead" data-i18n="share.team.lead">Edite este tour em equipe: as mudanças aparecem para todos em poucos segundos.</p>
+              <button type="button" class="btn btn-primary" id="btn-share-collab" data-i18n="share.team.enable">Ativar e convidar</button>
+            </div>
+            <div class="share-team-host" id="share-team-host"></div>
+            <button type="button" class="btn btn-sm btn-ghost share-team-seats" id="btn-team-seats" data-i18n="share.team.seats">Gerenciar vagas da equipe</button>
+          </div>
+        </details>
+        <button type="button" class="btn btn-ghost results-btn" id="btn-results" aria-haspopup="dialog" aria-label="Resultados" data-i18n-aria="results.button" title="Visitas, onde as pessoas param e contatos" data-i18n-title="results.title" hidden>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
+          <span data-i18n="results.button">Resultados</span>
+          <span class="pro-badge" id="results-pro-badge" hidden>
+            <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+            <span data-i18n="billing.badge">Pro</span>
+          </span>
+        </button>
       </div>
       <div class="topbar-actions" id="topbar-actions-library">
         <button type="button" class="btn btn-ghost" id="btn-capture-desktop-lib" hidden>
@@ -460,7 +496,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/155/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/155/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/164/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/164/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -483,7 +519,7 @@
       <a class="btn btn-sm btn-primary" href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener noreferrer">
         <span data-i18n="extBanner.install">Instalar no Chrome</span>
       </a>
-      <a class="btn btn-sm" href="ajuda.html#gravar">
+      <a class="btn btn-sm" href="/ajuda#gravar">
         <span data-i18n="extBanner.help">Como capturar</span>
       </a>
       <button type="button" class="btn btn-sm" id="ext-banner-dismiss" data-i18n="extBanner.dismiss">Não mostrar de novo</button>
@@ -1046,7 +1082,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/155/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/164/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1198,51 +1234,158 @@
     </form>
   </dialog>
 
-  <dialog class="studio-modal fixed-modal" id="modal-fixed-start" aria-labelledby="fixed-start-heading">
-    <form class="studio-modal-body fixed-dialog" id="fixed-start-form" novalidate>
+  <dialog class="studio-modal fixed-modal capture-modal" id="modal-capture" aria-labelledby="capture-heading">
+    <form class="studio-modal-body fixed-dialog" id="capture-form" novalidate>
       <div class="account-dialog-head">
-        <h3 id="fixed-start-heading"><span data-i18n="fixed.start.dialogTitle">Passo inicial: captura de contatos</span>
-          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-        </h3>
+        <h3 id="capture-heading" data-i18n="fixed.capture.dialogTitle">Captura</h3>
         <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
+      <div class="share-tablist capture-tablist" id="capture-tabs" role="tablist" aria-label="Captura" data-i18n-aria="fixed.capture.tabs">
+        <button type="button" class="share-tab" role="tab" id="tab-capture-form" data-capture-tab="form" aria-selected="true" aria-controls="pane-capture-form">
+          <span data-i18n="fixed.capture.tab.form">Formulário inicial</span>
+          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab" role="tab" id="tab-capture-fields" data-capture-tab="fields" aria-selected="false" tabindex="-1" aria-controls="pane-capture-fields">
+          <span data-i18n="fixed.capture.tab.fields">Campos</span>
+          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab" role="tab" id="tab-capture-end" data-capture-tab="end" aria-selected="false" tabindex="-1" aria-controls="pane-capture-end">
+          <span data-i18n="fixed.capture.tab.end">Passo final</span>
+        </button>
+        <button type="button" class="share-tab" role="tab" id="tab-capture-consent" data-capture-tab="consent" aria-selected="false" tabindex="-1" aria-controls="pane-capture-consent">
+          <span data-i18n="fixed.capture.tab.consent">Consentimento</span>
+        </button>
+      </div>
       <div class="fixed-dialog-scroll">
-        <p class="fixed-lead" data-i18n="fixed.start.lead">Antes do tour, o visitante deixa nome, e-mail ou telefone. Os contatos ficam no link permanente e só você vê. É um passo fixo: não entra no vídeo exportado.</p>
-        <div class="fixed-grid">
-          <div class="fixed-fields">
-            <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
-            <div class="fixed-config" id="fixed-start-config">
-              <div class="fixed-row">
-                <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
-                <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
-              </div>
-              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
-              <fieldset class="fixed-group">
-                <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
-                <div class="fixed-fields-table" id="fixed-start-fields">
-                  <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
-                  <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
-                  <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
-                  <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+        <div class="capture-pane" role="tabpanel" id="pane-capture-form" aria-labelledby="tab-capture-form">
+          <p class="fixed-lead" data-i18n="fixed.capture.formLead">Antes do tour, no link permanente, o visitante deixa o contato. Não entra no vídeo.</p>
+          <div class="fixed-grid">
+            <div class="fixed-fields">
+              <label class="fixed-check"><input type="checkbox" id="fixed-start-enabled" /><span data-i18n="fixed.start.enable">Pedir contato antes do tour (link permanente)</span></label>
+              <div class="fixed-config" id="fixed-start-config">
+                <div class="fixed-row">
+                  <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-start-title" maxlength="80" data-i18n-placeholder="fixed.start.defaultTitle" placeholder="Antes de começar" /></label>
+                  <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-start-submit" maxlength="40" data-i18n-placeholder="fixed.start.submit" placeholder="Começar o tour" /></label>
                 </div>
-                <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
-              </fieldset>
-              <div class="fixed-row fixed-row-inline">
-                <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
-                <label id="fixed-start-skip-label-wrap" class="fixed-inline-field"><span class="visually-hidden" data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
+                <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-start-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.start.defaultBody" placeholder="Deixe seu contato para assistir ao tour."></textarea></label>
+                <div class="fixed-row fixed-row-inline">
+                  <label class="fixed-check"><input type="checkbox" id="fixed-start-skip" /><span data-i18n="fixed.start.allowSkip">Permitir pular (o tour abre sem deixar contato)</span></label>
+                  <label id="fixed-start-skip-label-wrap" class="fixed-inline-field"><span class="visually-hidden" data-i18n="fixed.start.skipLabel">Texto do “pular”</span><input type="text" id="fixed-start-skip-label" maxlength="40" data-i18n-placeholder="fixed.start.skip" placeholder="Pular" /></label>
+                </div>
               </div>
-              <details class="fixed-more">
-                <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
-                <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
-                <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
-              </details>
+            </div>
+            <div class="fixed-preview-wrap">
+              <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+              <div class="fixed-preview" id="fixed-start-preview"></div>
             </div>
           </div>
-          <div class="fixed-preview-wrap">
-            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-            <div class="fixed-preview" id="fixed-start-preview"></div>
+        </div>
+        <div class="capture-pane" role="tabpanel" id="pane-capture-fields" aria-labelledby="tab-capture-fields" hidden>
+          <p class="fixed-lead" data-i18n="fixed.capture.fieldsLead">Escolha o que o visitante preenche. Pelo menos um campo fica visível.</p>
+          <div class="fixed-grid">
+            <div class="fixed-fields">
+              <div class="fixed-config" id="fixed-fields-config">
+                <fieldset class="fixed-group">
+                  <legend class="fixed-legend" data-i18n="fixed.start.fields">Campos</legend>
+                  <div class="fixed-fields-table" id="fixed-start-fields">
+                    <span></span><span class="fixed-th" data-i18n="fixed.start.show">Mostrar</span><span class="fixed-th" data-i18n="fixed.start.required">Obrigatório</span>
+                    <span data-i18n="fixed.lead.name">Nome</span><input type="checkbox" data-field="name" data-prop="show" /><input type="checkbox" data-field="name" data-prop="required" />
+                    <span data-i18n="fixed.lead.email">E-mail</span><input type="checkbox" data-field="email" data-prop="show" /><input type="checkbox" data-field="email" data-prop="required" />
+                    <span data-i18n="fixed.lead.phone">Telefone (WhatsApp)</span><input type="checkbox" data-field="phone" data-prop="show" /><input type="checkbox" data-field="phone" data-prop="required" />
+                  </div>
+                  <p class="fixed-error" id="fixed-start-fields-error" hidden data-i18n="fixed.start.errFields">Mostre pelo menos um campo.</p>
+                </fieldset>
+              </div>
+            </div>
+            <div class="fixed-preview-wrap">
+              <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+              <div class="fixed-preview" id="fixed-fields-preview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="capture-pane" role="tabpanel" id="pane-capture-end" aria-labelledby="tab-capture-end" hidden>
+          <p class="fixed-lead" data-i18n="fixed.capture.endLead">Aparece quando o tour termina. Não entra no vídeo.</p>
+          <div class="fixed-grid">
+            <div class="fixed-fields">
+              <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
+              <div class="fixed-config" id="fixed-end-config">
+                <div class="fixed-row">
+                  <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
+                  <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
+                </div>
+                <fieldset class="fixed-group">
+                  <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
+                  <div class="fixed-sub" id="fixed-end-wa-fields">
+                    <div class="wa-phone-field">
+                      <label for="fixed-end-wa-phone" id="fixed-end-wa-phone-label" data-i18n="fixed.end.waPhone">Número do WhatsApp</label>
+                      <div class="wa-phone">
+                        <button type="button" class="wa-cc" id="fixed-end-wa-cc" aria-haspopup="listbox" aria-expanded="false" aria-controls="fixed-end-wa-cc-pop"><span class="wa-cc-flag" id="fixed-end-wa-cc-flag" aria-hidden="true">🇧🇷</span><span class="wa-cc-dial" id="fixed-end-wa-cc-dial">+55</span><svg class="wa-cc-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                        <input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" aria-describedby="fixed-end-wa-error" />
+                      </div>
+                      <div class="wa-cc-pop" id="fixed-end-wa-cc-pop" hidden>
+                        <input type="search" class="wa-cc-search" id="fixed-end-wa-cc-search" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="fixed-end-wa-cc-list" aria-autocomplete="list" data-i18n-placeholder="fixed.end.waCountrySearch" placeholder="Buscar país ou código" data-i18n-aria="fixed.end.waCountrySearch" aria-label="Buscar país ou código" />
+                        <ul class="wa-cc-list" id="fixed-end-wa-cc-list" role="listbox" data-i18n-aria="fixed.end.waCountry" aria-label="País"></ul>
+                        <p class="wa-cc-empty" id="fixed-end-wa-cc-empty" hidden data-i18n="fixed.end.waNoCountry">Nenhum país encontrado.</p>
+                      </div>
+                      <p class="fixed-error" id="fixed-end-wa-error" role="alert" hidden>Número incompleto. Use DDD + número.</p>
+                    </div>
+                    <div class="fixed-row">
+                      <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
+                      <label><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500" data-i18n-placeholder="fixed.end.waDefaultMessage" placeholder="Oi! Vi o tour &quot;{tour}&quot; e quero saber mais."></textarea></label>
+                    </div>
+                    <details class="fixed-more">
+                      <summary data-i18n="stb.more">Mais opções</summary>
+                      <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Escolha o país e digite o número com DDD/código de área.</p>
+                      <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
+                    </details>
+                  </div>
+                </fieldset>
+                <fieldset class="fixed-group">
+                  <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
+                  <div class="fixed-sub" id="fixed-end-contact-fields">
+                    <div class="fixed-row fixed-row-seg">
+                      <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
+                        <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
+                        <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
+                          <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                        </label>
+                      </div>
+                      <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
+                    </div>
+                    <div id="fixed-end-link-fields">
+                      <label><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
+                      <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
+                    </div>
+                    <div id="fixed-end-form-fields" hidden>
+                      <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
+                    </div>
+                  </div>
+                </fieldset>
+                <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
+              </div>
+            </div>
+            <div class="fixed-preview-wrap">
+              <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+              <div class="fixed-preview" id="fixed-end-preview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="capture-pane" role="tabpanel" id="pane-capture-consent" aria-labelledby="tab-capture-consent" hidden>
+          <p class="fixed-lead" data-i18n="fixed.capture.consentLead">O visitante marca a caixa para enviar. Você é o controlador desses dados; o GuiaFlow só guarda o texto, a data e a hora.</p>
+          <div class="fixed-grid">
+            <div class="fixed-fields">
+              <div class="fixed-config">
+                <label><span data-i18n="fixed.capture.consentStart">Texto do formulário inicial</span><textarea id="fixed-start-consent" rows="3" maxlength="600"></textarea></label>
+                <label><span data-i18n="fixed.capture.consentEnd">Texto do formulário “Enviar contato”</span><textarea id="fixed-end-consent" rows="3" maxlength="600"></textarea></label>
+                <p class="fixed-hint" data-i18n="fixed.consentHint">O visitante precisa marcar a caixa para enviar. Guardamos o texto, a data e a hora do aceite. Você é o controlador desses dados; o GuiaFlow só os guarda por você.</p>
+              </div>
+            </div>
+            <div class="fixed-preview-wrap">
+              <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
+              <div class="fixed-preview" id="fixed-consent-preview"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1254,23 +1397,124 @@
     </form>
   </dialog>
 
-  <dialog class="studio-modal leads-modal" id="modal-leads" aria-labelledby="leads-heading">
-    <div class="studio-modal-body leads-dialog">
+  <dialog class="studio-modal results-modal" id="modal-results" aria-labelledby="results-heading">
+    <div class="studio-modal-body results-dialog">
       <div class="account-dialog-head">
-        <h3 id="leads-heading" data-i18n="leads.title">Contatos recebidos</h3>
-        <button type="button" class="btn btn-icon" id="btn-leads-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+        <h3 id="results-heading" data-i18n="results.button">Resultados</h3>
+        <button type="button" class="btn btn-icon" id="btn-results-close" aria-label="Fechar" data-i18n-aria="canvas.close">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
         </button>
       </div>
       <div class="share-tablist results-tablist" role="tablist" aria-label="Resultados" data-i18n-aria="results.button">
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="analytics" aria-selected="false" tabindex="-1" data-i18n="results.tab.analytics">Análise</button>
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="leads" aria-selected="true" data-i18n="results.tab.leads">Contatos</button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-leads" data-results-tab="leads" aria-selected="false" tabindex="-1" aria-controls="results-pane-leads">
+          <span data-i18n="results.tab.leads">Contatos</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-delivery" data-results-tab="delivery" aria-selected="false" tabindex="-1" aria-controls="results-pane-delivery">
+          <span data-i18n="results.tab.delivery">Envio automático</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-analytics" data-results-tab="analytics" aria-selected="true" aria-controls="results-pane-analytics">
+          <span data-i18n="results.tab.analytics">Análise</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
+        <button type="button" class="share-tab results-tab" role="tab" id="results-tab-campaigns" data-results-tab="campaigns" aria-selected="false" tabindex="-1" aria-controls="results-pane-campaigns">
+          <span data-i18n="results.tab.campaigns">Campanhas</span>
+          <span class="pro-badge" hidden><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+        </button>
       </div>
+      <div class="results-panes">
+      <div class="results-pane" role="tabpanel" id="results-pane-leads" aria-labelledby="results-tab-leads" hidden>
       <p class="leads-meta" id="leads-meta"></p>
       <p class="leads-status" id="leads-status" role="status"></p>
       <div class="leads-list" id="leads-list" role="list"></div>
       <p class="fixed-hint" data-i18n="leads.controllerNote">Você controla estes dados (LGPD). Use só para a finalidade informada e exclua quando o titular pedir.</p>
-      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading">
+      <div class="studio-modal-actions">
+        <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
+        <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
+      </div>
+      </div>
+      <div class="results-pane" role="tabpanel" id="results-pane-delivery" aria-labelledby="results-tab-delivery" hidden>
+      <div class="delivery-list" id="delivery-list" role="list">
+        <div class="delivery-card is-featured" role="listitem" data-delivery-card="lp">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-lp" data-delivery-open="lp" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.lp.title">LeadPronto</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                <span class="delivery-card-tag" data-i18n="leads.delivery.maker">do mesmo fabricante · recomendado</span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-lp"></span>
+              <span class="delivery-state" id="delivery-state-lp"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-lp"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-lp" role="status"></span>
+          </button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="webhook">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-webhook" data-delivery-open="webhook" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.webhook.title">Webhook</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-webhook"></span>
+              <span class="delivery-state" id="delivery-state-webhook"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-webhook"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-webhook" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-webhook" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="rd">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-rd" data-delivery-open="rd" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.rd.title">RD Station Marketing</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-rd"></span>
+              <span class="delivery-state" id="delivery-state-rd"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-rd"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-rd" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-rd" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+        <div class="delivery-card" role="listitem" data-delivery-card="hubspot">
+          <button type="button" class="delivery-card-open" id="btn-delivery-open-hubspot" data-delivery-open="hubspot" aria-expanded="false" aria-controls="delivery-detail">
+            <span class="delivery-card-row">
+              <span class="delivery-card-name">
+                <span class="delivery-card-title" data-i18n="leads.hubspot.title">HubSpot</span>
+                <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+              </span>
+              <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
+            </span>
+            <span class="delivery-card-meta">
+              <span class="delivery-card-level" id="delivery-level-hubspot"></span>
+              <span class="delivery-state" id="delivery-state-hubspot"></span>
+              <span class="delivery-card-delivery" id="delivery-delivery-hubspot"></span>
+            </span>
+            <span class="delivery-card-status" id="delivery-status-hubspot" role="status"></span>
+          </button>
+          <button type="button" class="btn delivery-card-test" id="btn-delivery-test-hubspot" data-i18n="leads.delivery.test">Testar</button>
+        </div>
+      </div>
+      <div class="delivery-detail" id="delivery-detail" hidden>
+        <button type="button" class="btn delivery-back" id="btn-delivery-back">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+          <span data-i18n="leads.delivery.back">Voltar</span>
+        </button>
+      <section class="leads-webhook" id="leads-webhook" aria-labelledby="leads-webhook-heading" hidden>
         <h4 id="leads-webhook-heading">
           <span data-i18n="leads.webhook.title">Webhook</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1307,7 +1551,7 @@
           <a class="embed-guide" id="leads-webhook-help" href="/integracoes/leads" target="_blank" rel="noopener" data-i18n="leads.webhook.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading">
+      <section class="leads-webhook" id="leads-rd" aria-labelledby="leads-rd-heading" hidden>
         <h4 id="leads-rd-heading">
           <span data-i18n="leads.rd.title">RD Station Marketing</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1332,7 +1576,7 @@
           <a class="embed-guide" id="leads-rd-help" href="/integracoes#rd-station" target="_blank" rel="noopener" data-i18n="leads.rd.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading">
+      <section class="leads-webhook" id="leads-hubspot" aria-labelledby="leads-hubspot-heading" hidden>
         <h4 id="leads-hubspot-heading">
           <span data-i18n="leads.hubspot.title">HubSpot</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1379,7 +1623,7 @@
           <a class="embed-guide" id="leads-hubspot-help" href="/integracoes#hubspot" target="_blank" rel="noopener" data-i18n="leads.hubspot.help">Como conectar</a>
         </div>
       </section>
-      <section class="leads-webhook" id="leads-lp" aria-labelledby="leads-lp-heading">
+      <section class="leads-webhook" id="leads-lp" aria-labelledby="leads-lp-heading" hidden>
         <h4 id="leads-lp-heading">
           <span data-i18n="leads.lp.title">LeadPronto</span>
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
@@ -1407,9 +1651,47 @@
           <a class="embed-guide" id="leads-lp-help" href="/integracoes#leadpronto" target="_blank" rel="noopener" data-i18n="leads.lp.help">Como conectar</a>
         </div>
       </section>
-      <div class="studio-modal-actions">
-        <button type="button" class="btn" id="btn-leads-refresh" data-i18n="leads.refresh">Atualizar</button>
-        <button type="button" class="btn btn-primary" id="btn-leads-csv" data-i18n="leads.csv">Baixar CSV</button>
+      </div>
+      </div>
+      <div class="results-pane" role="tabpanel" id="results-pane-analytics" aria-labelledby="results-tab-analytics">
+      <div class="analytics-toolbar">
+        <p class="analytics-tour" id="analytics-tour"></p>
+        <div class="analytics-range" id="analytics-range" role="group" aria-label="Período" data-i18n-aria="analytics.rangeAria">
+          <button type="button" class="analytics-range-btn" data-days="7" data-i18n="analytics.range7">7 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="30" data-i18n="analytics.range30">30 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="90" data-i18n="analytics.range90">90 dias</button>
+          <button type="button" class="analytics-range-btn" data-days="365" data-i18n="analytics.range365">12 meses</button>
+        </div>
+      </div>
+      <p class="analytics-status" id="analytics-status" role="status"></p>
+      <div class="analytics-empty" id="analytics-empty" hidden>
+        <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
+      </div>
+      <div class="analytics-body" id="analytics-body" hidden>
+        <div class="analytics-cards" id="analytics-cards"></div>
+        <p class="analytics-split" id="analytics-split"></p>
+        <div class="analytics-chart" id="analytics-chart"></div>
+        <h4 class="analytics-h" data-i18n="analytics.stepsTitle">Onde as pessoas param</h4>
+        <p class="analytics-note" data-i18n="analytics.stepsNote">Os passos fixos de início e fim não entram nesta conta.</p>
+        <div class="analytics-steps" id="analytics-steps" role="table"></div>
+        <div id="analytics-langs-wrap" hidden>
+          <h4 class="analytics-h" data-i18n="analytics.langsTitle">Por idioma</h4>
+          <div class="analytics-sources" id="analytics-langs"></div>
+          <p class="analytics-note" id="analytics-langs-note"></p>
+        </div>
+      </div>
+      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Sem cookies nem dados pessoais. “Não rastrear” não conta; únicos são aproximados.</p>
+      <div class="studio-modal-actions analytics-actions">
+        <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
+      </div>
+      </div>
+      <div class="results-pane" role="tabpanel" id="results-pane-campaigns" aria-labelledby="results-tab-campaigns" tabindex="0" hidden>
+        <h4 class="analytics-h" data-i18n="analytics.sourcesTitle">De onde vieram</h4>
+        <div class="analytics-empty" id="results-campaigns-empty" hidden>
+          <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
+        </div>
+        <div class="analytics-sources" id="analytics-sources"></div>
+      </div>
       </div>
     </div>
   </dialog>
@@ -1489,134 +1771,6 @@
     </div>
   </dialog>
 
-  <dialog class="studio-modal analytics-modal" id="modal-analytics" aria-labelledby="analytics-heading">
-    <div class="studio-modal-body analytics-dialog">
-      <div class="account-dialog-head">
-        <h3 id="analytics-heading" data-i18n="analytics.title">Análise do tour</h3>
-        <button type="button" class="btn btn-icon" id="btn-analytics-close" aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="share-tablist results-tablist" role="tablist" aria-label="Resultados" data-i18n-aria="results.button">
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="analytics" aria-selected="true" data-i18n="results.tab.analytics">Análise</button>
-        <button type="button" class="share-tab results-tab" role="tab" data-results-tab="leads" aria-selected="false" tabindex="-1" data-i18n="results.tab.leads">Contatos</button>
-      </div>
-      <div class="analytics-toolbar">
-        <p class="analytics-tour" id="analytics-tour"></p>
-        <div class="analytics-range" id="analytics-range" role="group" aria-label="Período" data-i18n-aria="analytics.rangeAria">
-          <button type="button" class="analytics-range-btn" data-days="7" data-i18n="analytics.range7">7 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="30" data-i18n="analytics.range30">30 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="90" data-i18n="analytics.range90">90 dias</button>
-          <button type="button" class="analytics-range-btn" data-days="365" data-i18n="analytics.range365">12 meses</button>
-        </div>
-      </div>
-      <p class="analytics-status" id="analytics-status" role="status"></p>
-      <div class="analytics-empty" id="analytics-empty" hidden>
-        <p data-i18n="analytics.empty">Ainda não há visitas neste período. Compartilhe o link ou incorpore no seu site.</p>
-      </div>
-      <div class="analytics-body" id="analytics-body" hidden>
-        <div class="analytics-cards" id="analytics-cards"></div>
-        <p class="analytics-split" id="analytics-split"></p>
-        <div class="analytics-chart" id="analytics-chart"></div>
-        <h4 class="analytics-h" data-i18n="analytics.stepsTitle">Onde as pessoas param</h4>
-        <p class="analytics-note" data-i18n="analytics.stepsNote">Os passos fixos de início e fim não entram nesta conta.</p>
-        <div class="analytics-steps" id="analytics-steps" role="table"></div>
-        <h4 class="analytics-h" data-i18n="analytics.sourcesTitle">De onde vieram</h4>
-        <div class="analytics-sources" id="analytics-sources"></div>
-        <div id="analytics-langs-wrap" hidden>
-          <h4 class="analytics-h" data-i18n="analytics.langsTitle">Por idioma</h4>
-          <div class="analytics-sources" id="analytics-langs"></div>
-          <p class="analytics-note" id="analytics-langs-note"></p>
-        </div>
-      </div>
-      <p class="fixed-hint analytics-privacy" data-i18n="analytics.privacy">Sem cookies nem dados pessoais. “Não rastrear” não conta; únicos são aproximados.</p>
-      <div class="studio-modal-actions analytics-actions">
-        <a class="analytics-preview-link" id="analytics-preview-link" href="#" target="_blank" rel="noopener" data-i18n="analytics.previewLink">Abrir o link sem contar a visita</a>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog class="studio-modal fixed-modal" id="modal-fixed-end" aria-labelledby="fixed-end-heading">
-    <form class="studio-modal-body fixed-dialog" id="fixed-end-form" novalidate>
-      <div class="account-dialog-head">
-        <h3 id="fixed-end-heading" data-i18n="fixed.end.dialogTitle">Passo final</h3>
-        <button type="button" class="btn btn-icon" data-fixed-close aria-label="Fechar" data-i18n-aria="canvas.close">
-          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
-        </button>
-      </div>
-      <div class="fixed-dialog-scroll">
-        <p class="fixed-lead" data-i18n="fixed.end.lead">Aparece quando o visitante conclui o tour. É um passo fixo: não entra no vídeo exportado.</p>
-        <div class="fixed-grid">
-          <div class="fixed-fields">
-            <label class="fixed-check"><input type="checkbox" id="fixed-end-enabled" /><span data-i18n="fixed.end.enable">Mostrar o passo final quando o tour terminar</span></label>
-            <div class="fixed-config" id="fixed-end-config">
-              <label><span data-i18n="fixed.title">Título</span><input type="text" id="fixed-end-title" maxlength="80" data-i18n-placeholder="fixed.end.defaultTitle" placeholder="Gostou do que viu?" /></label>
-              <label><span data-i18n="fixed.body">Texto</span><textarea id="fixed-end-body" maxlength="280" rows="2" data-i18n-placeholder="fixed.end.defaultBody" placeholder="Fale com a gente e tire suas dúvidas."></textarea></label>
-              <fieldset class="fixed-group">
-                <label class="fixed-check"><input type="checkbox" id="fixed-end-wa" /><span data-i18n="fixed.end.waEnable">Botão “Chamar no WhatsApp”</span></label>
-                <div class="fixed-sub" id="fixed-end-wa-fields">
-                  <div class="wa-phone-field">
-                    <label for="fixed-end-wa-phone" id="fixed-end-wa-phone-label" data-i18n="fixed.end.waPhone">Número do WhatsApp</label>
-                    <div class="wa-phone">
-                      <button type="button" class="wa-cc" id="fixed-end-wa-cc" aria-haspopup="listbox" aria-expanded="false" aria-controls="fixed-end-wa-cc-pop"><span class="wa-cc-flag" id="fixed-end-wa-cc-flag" aria-hidden="true">🇧🇷</span><span class="wa-cc-dial" id="fixed-end-wa-cc-dial">+55</span><svg class="wa-cc-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      <input type="tel" id="fixed-end-wa-phone" inputmode="tel" autocomplete="off" placeholder="(11) 99999-8888" aria-describedby="fixed-end-wa-error" />
-                    </div>
-                    <div class="wa-cc-pop" id="fixed-end-wa-cc-pop" hidden>
-                      <input type="search" class="wa-cc-search" id="fixed-end-wa-cc-search" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="fixed-end-wa-cc-list" aria-autocomplete="list" data-i18n-placeholder="fixed.end.waCountrySearch" placeholder="Buscar país ou código" data-i18n-aria="fixed.end.waCountrySearch" aria-label="Buscar país ou código" />
-                      <ul class="wa-cc-list" id="fixed-end-wa-cc-list" role="listbox" data-i18n-aria="fixed.end.waCountry" aria-label="País"></ul>
-                      <p class="wa-cc-empty" id="fixed-end-wa-cc-empty" hidden data-i18n="fixed.end.waNoCountry">Nenhum país encontrado.</p>
-                    </div>
-                    <p class="fixed-error" id="fixed-end-wa-error" role="alert" hidden>Número incompleto. Use DDD + número.</p>
-                  </div>
-                  <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-wa-label" maxlength="40" data-i18n-placeholder="fixed.end.waLabel" placeholder="Chamar no WhatsApp" /></label>
-                  <label><span data-i18n="fixed.end.waMessage">Mensagem</span><textarea id="fixed-end-wa-message" rows="2" maxlength="500"></textarea></label>
-                  <details class="fixed-more">
-                    <summary data-i18n="stb.more">Mais opções</summary>
-                    <p class="fixed-hint" data-i18n="fixed.end.waPhoneHint">Este número fica visível para quem abrir o tour. Escolha o país e digite o número com DDD/código de área.</p>
-                    <p class="fixed-hint" data-i18n="fixed.end.varsHint">Use {tour} (nome do tour), {link} (endereço do tour) e {nome} (nome de quem deixou o contato no início).</p>
-                  </details>
-                </div>
-              </fieldset>
-              <fieldset class="fixed-group">
-                <label class="fixed-check"><input type="checkbox" id="fixed-end-contact" /><span data-i18n="fixed.end.contactEnable">Botão “Enviar contato”</span></label>
-                <div class="fixed-sub" id="fixed-end-contact-fields">
-                  <div class="fixed-row fixed-row-seg">
-                    <div class="fixed-seg" id="fixed-end-mode" role="radiogroup" aria-label="Tipo" data-i18n-aria="fixed.end.modeAria">
-                      <label><input type="radio" name="fixed-end-mode" value="link" checked /><span data-i18n="fixed.end.modeLink">Link ou e-mail</span></label>
-                      <label id="fixed-end-mode-form-wrap"><input type="radio" name="fixed-end-mode" value="form" /><span data-i18n="fixed.end.modeForm">Formulário</span>
-                        <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
-                      </label>
-                    </div>
-                    <label><span data-i18n="fixed.buttonText">Texto do botão</span><input type="text" id="fixed-end-contact-label" maxlength="40" data-i18n-placeholder="fixed.end.contactLabel" placeholder="Enviar contato" /></label>
-                  </div>
-                  <div id="fixed-end-link-fields">
-                    <label><span data-i18n="fixed.end.url">Endereço (https://…) ou e-mail</span><input type="text" id="fixed-end-url" inputmode="url" autocomplete="off" maxlength="2000" placeholder="https://" /></label>
-                    <p class="fixed-error" id="fixed-end-url-error" hidden data-i18n="fixed.errUrl">Use um endereço que comece com https:// ou um e-mail válido.</p>
-                  </div>
-                  <div id="fixed-end-form-fields" hidden>
-                    <details class="fixed-more">
-                      <summary data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</summary>
-                      <p class="fixed-hint" data-i18n="fixed.end.formHint">O visitante preenche nome, e-mail e mensagem; o contato chega no e-mail da sua conta GuiaFlow e fica na lista de contatos do link. Só no link permanente.</p>
-                      <label><span class="visually-hidden" data-i18n="fixed.consentLabel">Texto do consentimento (LGPD)</span><textarea id="fixed-end-consent" rows="2" maxlength="600"></textarea></label>
-                    </details>
-                  </div>
-                </div>
-              </fieldset>
-              <label class="fixed-check"><input type="checkbox" id="fixed-end-replay" /><span data-i18n="fixed.end.showReplay">Mostrar “Ver tour novamente”</span></label>
-            </div>
-          </div>
-          <div class="fixed-preview-wrap">
-            <p class="fixed-preview-label" data-i18n="fixed.preview">Prévia</p>
-            <div class="fixed-preview" id="fixed-end-preview"></div>
-          </div>
-        </div>
-      </div>
-      <div class="studio-modal-actions fixed-actions">
-        <button type="button" class="btn" data-fixed-close data-i18n="fixed.cancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary" data-i18n="fixed.save">Salvar</button>
-      </div>
-    </form>
-  </dialog>
 
   <dialog class="studio-modal settings-modal" id="modal-settings" aria-labelledby="settings-title">
     <div class="studio-modal-body settings-dialog">
@@ -1900,7 +2054,7 @@
             <button type="submit" class="btn" id="btn-subscription-seats" data-i18n="billing.seats.apply">Atualizar convidados extras</button>
           </div>
           <p class="subscription-when" id="subscription-seats-note"></p>
-          <p class="subscription-when" data-i18n="billing.seats.manage">Para liberar vagas, remova pessoas em Compartilhar › Colaboração, no tour.</p>
+          <p class="subscription-when" data-i18n="billing.seats.manage">Para liberar vagas, remova pessoas em Pessoas, no tour.</p>
         </form>
         <div class="subscription-actions">
           <button type="button" class="btn btn-danger" id="btn-subscription-cancel" hidden data-i18n="billing.subCancel">Cancelar assinatura</button>
@@ -2191,6 +2345,12 @@
     <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m6 9 6 6 6-6"/>
     </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 6 6 6-6 6"/>
+    </symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 6-6 6 6 6"/>
+    </symbol>
     <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
     </symbol>
@@ -2207,6 +2367,7 @@
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>
     </symbol>
     <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></symbol>
+    <symbol id="i-form" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/>
     </symbol>
@@ -2386,8 +2547,8 @@
     </symbol>
   </svg>
 
-  <script src="a/155/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/155/js/app.js"></script>
+  <script src="a/164/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/164/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

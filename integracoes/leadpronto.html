@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integração GuiaFlow e LeadPronto: lead do demo no WhatsApp</title>
+  <meta name="description" content="Conecte o GuiaFlow ao LeadPronto por OAuth: cada lead do demo cai no funil do WhatsApp com o tour, a origem e as UTMs. Recurso do Pro, com passo a passo." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/integracoes/leadpronto" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/integracoes/leadpronto" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/integracoes/leadpronto" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Integração GuiaFlow e LeadPronto: lead do demo no WhatsApp" />
+  <meta property="og:description" content="Conecte o GuiaFlow ao LeadPronto por OAuth: cada lead do demo cai no funil do WhatsApp com o tour, a origem e as UTMs. Recurso do Pro." />
+  <meta property="og:url" content="https://guiaflow.pro/integracoes/leadpronto" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow — Integração com o LeadPronto" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Integração GuiaFlow e LeadPronto: lead do demo no WhatsApp" />
+  <meta name="twitter:description" content="Cada lead do demo cai no funil do WhatsApp com o tour, a origem e as UTMs. Conector OAuth do GuiaFlow Pro." />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        if (window.__GUIAFLOW_CLOUD__) return;
+        var host = location.hostname;
+        if (host === "guiaflow-seven.vercel.app" || host === "guiaflow.pro") {
+          window.__GUIAFLOW_CLOUD__ = "https://app.guiaflow.pro";
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/164/css/theme.css" />
+  <link rel="stylesheet" href="/a/164/css/shell.css" />
+  <link rel="stylesheet" href="/a/164/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+    .page .crumbs { margin: 0 0 10px; color: var(--ns-muted); font-size: 0.85rem; }
+    .page .crumbs a { color: inherit; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--ns-border); }
+    .page th { color: var(--ns-muted); font-weight: 600; }
+    .page .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .page .note { color: var(--ns-muted); font-size: 0.88rem; }
+    .page .shot { margin: 14px 0 0; }
+    .page .shot img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--ns-border); }
+    .page .shot figcaption { color: var(--ns-muted); font-size: 0.82rem; margin-top: 6px; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://guiaflow.pro/integracoes/leadpronto#webpage",
+        "url": "https://guiaflow.pro/integracoes/leadpronto",
+        "name": "Integração GuiaFlow e LeadPronto: lead do demo no WhatsApp",
+        "description": "Conecte o GuiaFlow ao LeadPronto por OAuth: cada lead do demo cai no funil do WhatsApp com o tour, a origem e as UTMs.",
+        "inLanguage": "pt-BR",
+        "dateModified": "2026-10-26",
+        "isPartOf": { "@id": "https://guiaflow.pro/#website" },
+        "about": { "@id": "https://guiaflow.pro/#software" },
+        "mentions": { "@type": "SoftwareApplication", "name": "LeadPronto", "url": "https://leadpronto.ai" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Início", "item": "https://guiaflow.pro/" },
+          { "@type": "ListItem", "position": 2, "name": "Integrações", "item": "https://guiaflow.pro/integracoes" },
+          { "@type": "ListItem", "position": 3, "name": "LeadPronto", "item": "https://guiaflow.pro/integracoes/leadpronto" }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "Como conectar o GuiaFlow ao LeadPronto",
+        "inLanguage": "pt-BR",
+        "totalTime": "PT3M",
+        "step": [
+          { "@type": "HowToStep", "position": 1, "name": "Abra os contatos do link permanente", "text": "No editor, publique o tour e abra os contatos do link permanente." },
+          { "@type": "HowToStep", "position": 2, "name": "Conecte ao LeadPronto", "text": "Na seção LeadPronto, clique em Conectar ao LeadPronto e autorize no LeadPronto." },
+          { "@type": "HowToStep", "position": 3, "name": "Escolha os tours e ligue o envio", "text": "Ao voltar, escolha todos os tours ou só alguns, ligue o envio e use Enviar teste." }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "inLanguage": "pt-BR",
+        "mainEntity": [
+          { "@type": "Question", "name": "Preciso do GuiaFlow Pro para usar o conector?", "acceptedAnswer": { "@type": "Answer", "text": "Sim. O conector LeadPronto faz parte do GuiaFlow Pro. O Grátis serve para criar e testar o demo, mas a captura de leads e a entrega para o CRM são do Pro." } },
+          { "@type": "Question", "name": "A conexão é por conta ou por tour?", "acceptedAnswer": { "@type": "Answer", "text": "A conexão é da conta. Depois de autorizar, você escolhe todos os tours ou só alguns e pode ligar ou desligar o envio sem refazer o login." } },
+          { "@type": "Question", "name": "O que acontece se eu desconectar?", "acceptedAnswer": { "@type": "Answer", "text": "Os contatos deixam de ser enviados ao LeadPronto. A autorização é revogada e as credenciais guardadas pelo GuiaFlow são apagadas. Os leads que já chegaram ao LeadPronto continuam lá." } },
+          { "@type": "Question", "name": "O lead é enviado de novo em caso de falha?", "acceptedAnswer": { "@type": "Answer", "text": "A entrega é feita uma vez por lead, com um identificador estável para o destino reconhecer duplicatas. Se a chamada falhar, o GuiaFlow tenta de novo e o mesmo identificador evita dois contatos iguais." } },
+          { "@type": "Question", "name": "Como fica o consentimento LGPD?", "acceptedAnswer": { "@type": "Answer", "text": "O formulário do demo pede consentimento explícito e o GuiaFlow registra a resposta. O LeadPronto recebe o contato com esse consentimento. Você continua sendo o controlador dos dados que coleta." } },
+          { "@type": "Question", "name": "Funciona com o demo incorporado no site?", "acceptedAnswer": { "@type": "Answer", "text": "Sim. O conector vale para o link permanente e para o demo incorporado. Cada contato leva o tour, a origem da visita e as UTMs, inclusive quando o formulário aparece dentro do iframe." } }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/164/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/164/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title"><span>LeadPronto</span></span>
+    </div>
+  </header>
+
+  <main class="page">
+    <p class="crumbs"><a href="/integracoes">Integrações</a> › LeadPronto</p>
+    <h1>Integração GuiaFlow e LeadPronto: do demo ao WhatsApp do vendedor</h1>
+    <p class="lead">No GuiaFlow Pro, você conecta a conta do LeadPronto por OAuth, escolhe todos os tours ou só alguns e cada contato do formulário cai no funil do WhatsApp. O lead leva nome, e-mail, telefone, consentimento, o tour, as UTMs, a origem e o dispositivo. Do lado do LeadPronto, o contato segue a fila, a roleta e o SLA configurados lá.</p>
+    <p class="note">Informações do conector verificadas em 26/10/2026 no editor e na documentação do GuiaFlow.</p>
+
+    <section class="card" id="como-funciona">
+      <h2>O que acontece</h2>
+      <ol>
+        <li>O visitante abre o demo e preenche o formulário de abertura ou o do fim do tour, com consentimento.</li>
+        <li>O GuiaFlow envia o contato para o LeadPronto pela conexão OAuth da sua conta, com o tour e a origem da visita.</li>
+        <li>O LeadPronto coloca o contato no funil e aplica as regras de fila, roleta e SLA que o time do cliente configurou.</li>
+      </ol>
+      <figure class="shot">
+        <img src="/a/164/brand/hero-leadpronto.webp" width="1200" height="787" alt="Demo do LeadPronto feito no GuiaFlow, com destaque no painel e o cartão do passo" loading="lazy" decoding="async" />
+        <figcaption>Um demo do LeadPronto feito no GuiaFlow. O conector leva o contato do formulário para o funil.</figcaption>
+      </figure>
+    </section>
+
+    <section class="card" id="campos">
+      <h2>O que vai em cada lead</h2>
+      <table>
+        <thead><tr><th>Campo</th><th>Exemplo</th><th>Observação</th></tr></thead>
+        <tbody>
+          <tr><td>Nome</td><td>Ana Souza</td><td>Opcional se o campo não estiver ligado no formulário.</td></tr>
+          <tr><td>E-mail</td><td>ana@empresa.com</td><td>Validado antes do envio.</td></tr>
+          <tr><td>Telefone</td><td>+5511999999999</td><td>Em E.164, quando o campo está ligado.</td></tr>
+          <tr><td>Consentimento</td><td>Sim</td><td>O visitante aceitou o uso dos dados para contato.</td></tr>
+          <tr><td>Tour</td><td>checkout / Tour do checkout</td><td>Slug e título do tour publicado.</td></tr>
+          <tr><td>Formulário de origem</td><td>início ou fim</td><td>De qual formulário do tour o contato veio.</td></tr>
+          <tr><td>UTMs</td><td>utm_source=linkedin</td><td>Os parâmetros da visita, quando existem.</td></tr>
+          <tr><td>Origem e dispositivo</td><td>linkedin.com · desktop</td><td>Host de referência e tipo de aparelho.</td></tr>
+        </tbody>
+      </table>
+      <p class="note">O passo alcançado no tour não vai neste conector. Para receber esse dado, use o webhook com o evento <code>lead.session_completed</code> em <a href="/integracoes/leads">Leads no Make, n8n e Zapier</a>.</p>
+    </section>
+
+    <section class="card" id="conectar">
+      <h2>Como conectar</h2>
+      <ol>
+        <li>No editor, publique o tour e abra os contatos do link permanente.</li>
+        <li>Na seção <strong>LeadPronto</strong>, clique em <strong>Conectar ao LeadPronto</strong> e autorize no LeadPronto.</li>
+        <li>Ao voltar, escolha <strong>todos os tours</strong> ou só alguns, ligue o envio e use <strong>Enviar teste</strong>.</li>
+      </ol>
+      <p>O retorno abre o editor com <code>?leadpronto=connected</code> ou <code>?leadpronto=error&amp;reason=…</code>. A conexão fica ligada à sua conta do GuiaFlow, não a um tour específico.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/editor">Abrir o editor</a>
+        <a class="btn" href="/#precos">Ver o Pro</a>
+      </div>
+    </section>
+
+    <section class="card" id="configurar">
+      <h2>O que dá para configurar</h2>
+      <ul>
+        <li><strong>Todos os tours ou uma lista:</strong> o envio vale para a conta inteira ou só para os slugs escolhidos.</li>
+        <li><strong>Ligar e desligar:</strong> pausa o envio sem desconectar a conta.</li>
+        <li><strong>Enviar teste:</strong> confirma a entrega antes de publicar a campanha.</li>
+        <li><strong>Desconectar:</strong> revoga a autorização, apaga as credenciais guardadas pelo GuiaFlow e para os envios.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="requisitos">
+      <h2>Requisitos e limites</h2>
+      <ul>
+        <li>GuiaFlow Pro. A captura de leads e os conectores não fazem parte do uso grátis no navegador.</li>
+        <li>Conta no LeadPronto com autorização feita pelo navegador (OAuth 2.0 com PKCE). Não é preciso colar URL nem segredo.</li>
+        <li>O consentimento do visitante é registrado pelo GuiaFlow e enviado junto com o contato.</li>
+        <li>O GuiaFlow não envia o passo alcançado por este conector; para isso, use o webhook.</li>
+        <li>O contato é enviado quando o formulário é preenchido. Um mesmo lead não vira dois contatos por causa de nova tentativa.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="quando-nao-usar">
+      <h2>Quando não é para você</h2>
+      <p>Se o cliente usa RD Station Marketing, HubSpot ou outro CRM, use o conector correspondente. Se ele usa Pipefy, Pipedrive, Google Sheets, Make, n8n ou Zapier, use o webhook assinado.</p>
+      <ul>
+        <li><a href="/integracoes#rd-station">RD Station Marketing</a></li>
+        <li><a href="/integracoes#hubspot">HubSpot</a></li>
+        <li><a href="/integracoes/leads">Make, n8n e Zapier</a></li>
+      </ul>
+      <p class="note">O GuiaFlow e o LeadPronto são produtos parceiros. A integração usa OAuth e pode ser desconectada a qualquer momento.</p>
+    </section>
+
+    <section class="card" id="faq">
+      <h2>Perguntas frequentes</h2>
+      <h3>Preciso do GuiaFlow Pro para usar o conector?</h3>
+      <p>Sim. O conector LeadPronto faz parte do GuiaFlow Pro. O Grátis serve para criar e testar o demo, mas a captura de leads e a entrega para o CRM são do Pro.</p>
+      <h3>A conexão é por conta ou por tour?</h3>
+      <p>A conexão é da conta. Depois de autorizar, você escolhe todos os tours ou só alguns e pode ligar ou desligar o envio sem refazer o login.</p>
+      <h3>O que acontece se eu desconectar?</h3>
+      <p>Os contatos deixam de ser enviados ao LeadPronto. A autorização é revogada e as credenciais guardadas pelo GuiaFlow são apagadas. Os leads que já chegaram ao LeadPronto continuam lá.</p>
+      <h3>O lead é enviado de novo em caso de falha?</h3>
+      <p>A entrega é feita uma vez por lead, com um identificador estável para o destino reconhecer duplicatas. Se a chamada falhar, o GuiaFlow tenta de novo e o mesmo identificador evita dois contatos iguais.</p>
+      <h3>Como fica o consentimento LGPD?</h3>
+      <p>O formulário do demo pede consentimento explícito e o GuiaFlow registra a resposta. O LeadPronto recebe o contato com esse consentimento. Você continua sendo o controlador dos dados que coleta.</p>
+      <h3>Funciona com o demo incorporado no site?</h3>
+      <p>Sim. O conector vale para o link permanente e para o demo incorporado. Cada contato leva o tour, a origem da visita e as UTMs, inclusive quando o formulário aparece dentro do iframe.</p>
+    </section>
+
+    <section class="card" id="proximo">
+      <h2>Próximo passo</h2>
+      <p>Publique um tour, ligue a captura de leads e conecte o LeadPronto. Se o cliente ainda não usa o LeadPronto, comece pelo webhook para não travar a campanha.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/editor?pro=1">Assinar o Pro</a>
+        <a class="btn" href="/integracoes/leads">Ver as receitas de webhook</a>
+      </div>
+      <p class="note">Dúvidas: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/ajuda">Ajuda</a>
+      <a href="/integracoes">Integrações</a>
+      <a href="/privacidade">Privacidade</a>
+      <a href="/termos">Termos</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+</body>
+</html>

@@ -598,12 +598,15 @@ const fixedStepsEditor = createFixedStepsEditor({
   getProject: () => project,
   viewerIsPro: () => viewerIsPro(),
   openFeatureGate: (feature) => openFeatureGate(feature),
-  openLeads: () => leadsDialog.open(),
+  openLeads: () => openResults("leads"),
+  permanentShare: () => cloudShareEnabled(),
+  onNeedsCloud: () => toast(t("fixed.start.needsCloud"), 4200),
   onSaved: (kind) => {
     onChange();
     editor.refresh();
     paintShareMenu();
-    toast(t(kind === "start" ? "fixed.start.saved" : "fixed.saved"), 4200);
+    const key = kind === "start" ? "fixed.start.saved" : kind === "both" ? "fixed.capture.saved" : "fixed.saved";
+    toast(t(key), 4200);
   },
 });
 
@@ -858,9 +861,35 @@ function enhanceLangSelects() {
 }
 enhanceLangSelects();
 
-function openAnalytics() {
+const RESULTS_TAB_ORDER = ["leads", "delivery", "analytics", "campaigns"];
+let resultsSidesLoaded = { leads: false, analytics: false };
+
+function selectResultsTab(name, { focus = false } = {}) {
+  const tabs = [...document.querySelectorAll("#modal-results [data-results-tab]")].filter((tab) => !tab.hidden);
+  const target = tabs.find((tab) => tab.dataset.resultsTab === name) || tabs.find((tab) => tab.dataset.resultsTab === "analytics") || tabs[0];
+  if (!target) return "";
+  for (const tab of tabs) {
+    const on = tab === target;
+    tab.setAttribute("aria-selected", on ? "true" : "false");
+    tab.tabIndex = on ? 0 : -1;
+    const pane = document.getElementById(tab.getAttribute("aria-controls"));
+    if (pane) pane.hidden = !on;
+  }
+  if (focus) target.focus();
+  return target.dataset.resultsTab || "";
+}
+
+function ensureResultsSide(tab) {
+  const side = tab === "leads" || tab === "delivery" ? "leads" : "analytics";
+  if (resultsSidesLoaded[side]) return;
+  const opened = side === "leads" ? leadsDialog.open() : analyticsDialog.open();
+  if (opened) resultsSidesLoaded[side] = true;
+}
+
+/** Um diálogo. Análise é o padrão do botão; Contatos e a volta do OAuth escolhem a aba. */
+function openResults(tab = "analytics") {
   if (!viewerIsPro()) {
-    openFeatureGate("analytics");
+    openFeatureGate(tab === "leads" || tab === "delivery" ? "leads" : "analytics");
     return;
   }
   const slug = permanentSlug(activeShareRecord());
@@ -869,15 +898,16 @@ function openAnalytics() {
     link.hidden = !slug;
     if (slug) link.href = `${location.origin}/p/${encodeURIComponent(slug)}?preview=1`;
   }
-  analyticsDialog.open();
+  const selected = selectResultsTab(RESULTS_TAB_ORDER.includes(tab) ? tab : "analytics");
+  ensureResultsSide(selected);
 }
 
-/** Início = captura de lead (Pro, precisa do link permanente); Fim = livre. */
+function openAnalytics() {
+  openResults("analytics");
+}
+
+/** Início abre Formulário inicial; Fim abre Passo final. O botão Captura abre o diálogo. */
 function openFixedStep(kind) {
-  if (kind === "start" && !cloudShareEnabled()) {
-    toast(t("fixed.start.needsCloud"), 4200);
-    return;
-  }
   fixedStepsEditor.open(kind);
 }
 
@@ -1121,12 +1151,6 @@ function activeShareRecord() {
   return project.share?.id && project.share?.writeToken ? project.share : null;
 }
 
-function displayedShareUrl(record) {
-  if (!record) return "";
-  if (viewerIsPro()) return permanentPublicUrl(record);
-  return record.id ? shareViewUrl(record.id) : "";
-}
-
 const shareServerChecked = new Set();
 const shareServerPending = new Set();
 
@@ -1163,14 +1187,24 @@ async function reconcilePublishedBaseline(record) {
   if (rememberShareHash(record, next)) paintShareMenu();
 }
 
+function tempShareRecord() {
+  if (!project?.share?.id || !project.share?.writeToken) return null;
+  return project.share;
+}
+
+function permanentShareRecord() {
+  const record = project?.cloudShare;
+  return permanentSlug(record) ? record : null;
+}
+
 function paintCollabShare() {
   paintProBadges();
-  const tab = document.getElementById("tab-share-team");
-  if (!tab) return;
+  const panel = document.getElementById("people-panel");
+  if (!panel) return;
   const entry = project && collabFlagOn() ? readCollabMap(localStorage)[project.id] : null;
   const signed = Boolean(project && collabFlagOn() && getCloudAccount().signedIn);
-  tab.hidden = !signed;
-  if (!signed && tab.getAttribute("aria-selected") === "true") selectShareTab("link");
+  panel.hidden = !signed;
+  if (!signed) panel.open = false;
   const off = document.getElementById("share-team-off");
   const owner = !entry || entry.role === "owner";
   if (off) off.hidden = Boolean(entry) || !owner;
@@ -1181,18 +1215,28 @@ function paintCollabShare() {
 function paintShareMenu() {
   paintCollabShare();
   const pro = viewerIsPro();
-  const record = activeShareRecord();
-  if (record && pro && permanentSlug(record)) {
-    void reconcilePublishedBaseline(record);
-  } else if (record) {
-    rememberLocalShareBaseline(record);
-  }
-  const hasLink = Boolean(record);
-  const stale = Boolean(record && project && shareRecordIsStale(record, project));
-  const expiry = document.getElementById("share-expiry-note");
+  const perm = permanentShareRecord();
+  const temp = tempShareRecord();
+  if (perm && pro) void reconcilePublishedBaseline(perm);
+  else if (perm) rememberLocalShareBaseline(perm);
+  if (temp) rememberLocalShareBaseline(temp);
+  const permStale = Boolean(perm && project && shareRecordIsStale(perm, project));
+  const tempStale = Boolean(temp && project && shareRecordIsStale(temp, project));
   const upsell = document.getElementById("cloud-share-block");
+  const permPublish = document.getElementById("btn-share-permanent");
+  const permActions = document.getElementById("share-permanent-actions");
+  const permUrl = document.getElementById("share-permanent-url");
+  const permRepublish = document.getElementById("btn-share-permanent-republish");
+  const permStaleBadge = document.getElementById("share-permanent-stale");
+  const permExtra = document.getElementById("share-permanent-extra");
+  if (upsell) upsell.hidden = pro || !isCloudEnabled();
+  if (permPublish) permPublish.hidden = !(pro && cloudShareEnabled() && !perm);
+  if (permActions) permActions.hidden = !perm;
+  if (permUrl) permUrl.value = perm ? permanentPublicUrl(perm) : "";
+  if (permRepublish) permRepublish.hidden = !permStale;
+  if (permStaleBadge) permStaleBadge.hidden = !permStale;
+  if (permExtra) permExtra.hidden = !permStale;
   const publishBtn = document.getElementById("btn-share-publish");
-  const publishDesc = document.getElementById("share-publish-desc");
   const actions = document.getElementById("share-link-actions");
   const republish = document.getElementById("btn-share-republish");
   const revoke = document.getElementById("btn-share-revoke");
@@ -1200,24 +1244,20 @@ function paintShareMenu() {
   const extra = document.getElementById("share-link-extra");
   const urlInput = document.getElementById("share-link-url");
   const dot = document.getElementById("share-stale-dot");
-  if (expiry) expiry.hidden = pro;
-  if (upsell) upsell.hidden = pro || !isCloudEnabled();
-  if (publishBtn) publishBtn.hidden = hasLink;
-  if (publishDesc) {
-    publishDesc.textContent = t(pro ? "share.proDesc" : "share.linkDesc");
-    publishDesc.dataset.i18n = pro ? "share.proDesc" : "share.linkDesc";
-  }
-  if (actions) actions.hidden = !hasLink;
-  if (urlInput) urlInput.value = displayedShareUrl(record);
-  if (republish) republish.hidden = !stale;
-  if (revoke) revoke.hidden = pro || !hasLink;
-  if (staleBadge) staleBadge.hidden = !stale;
-  if (extra) extra.hidden = Boolean(republish?.hidden) && Boolean(revoke?.hidden);
+  if (publishBtn) publishBtn.hidden = Boolean(temp);
+  if (actions) actions.hidden = !temp;
+  if (urlInput) urlInput.value = temp?.id ? shareViewUrl(temp.id) : "";
+  if (republish) republish.hidden = !tempStale;
+  if (revoke) revoke.hidden = !temp;
+  if (staleBadge) staleBadge.hidden = !tempStale;
+  if (extra) extra.hidden = !tempStale && !temp;
+  const stale = permStale || tempStale;
   if (dot) {
     dot.hidden = !stale;
     dot.title = t("share.staleDot");
   }
-  paintShareCover(record, pro);
+  paintShareCover(perm, pro);
+  const record = pro ? perm : temp;
   const embedBtn = document.getElementById("btn-share-embed");
   if (embedBtn) embedBtn.hidden = !cloudShareEnabled();
   const embedBadge = document.getElementById("embed-pro-badge");
@@ -1227,13 +1267,12 @@ function paintShareMenu() {
   if (resultsBtn) resultsBtn.hidden = !showAnalytics;
   const resultsBadge = document.getElementById("results-pro-badge");
   if (resultsBadge) resultsBadge.hidden = pro;
-  // no celular o Resultados sai do cabeçalho e fica no menu ☰ (Análise e Contatos no mesmo diálogo)
+  // no celular o Resultados sai do cabeçalho e fica no menu ☰ (o mesmo diálogo)
   const menuResults = document.getElementById("btn-menu-results");
   if (menuResults) menuResults.hidden = !showAnalytics;
   const menuResultsBadge = document.getElementById("menu-results-pro-badge");
   if (menuResultsBadge) menuResultsBadge.hidden = pro;
-  const leadsAvailable = Boolean(pro && cloudShareEnabled() && permanentSlug(record));
-  for (const tab of document.querySelectorAll("[data-results-tab=\"leads\"]")) tab.hidden = !leadsAvailable;
+  for (const badge of document.querySelectorAll("#modal-results .results-tab .pro-badge")) badge.hidden = pro;
   // why: só o Pro tem /p; a marca sai por padrão e o autor pode pedir o crédito «Feito com GuiaFlow»
   const brandToggle = document.getElementById("share-brand-toggle");
   if (brandToggle) brandToggle.hidden = !(pro && cloudShareEnabled());
@@ -1448,8 +1487,9 @@ function ensureCollab() {
     void collab?.enableForCurrent();
   });
   document.getElementById("btn-team-seats")?.addEventListener("click", () => {
-    document.querySelector(".export-panel")?.removeAttribute("open");
-    settingsDialog.open("team");
+    const people = document.getElementById("people-panel");
+    if (people) people.open = false;
+    void openSubscriptionDialog();
   });
   return collab;
 }
@@ -2139,7 +2179,7 @@ function consumeLeadProntoReturn() {
     return;
   }
   const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
-  if (slug) leadsDialog.open();
+  if (slug) openResults("delivery");
 }
 
 function consumeHubspotReturn() {
@@ -2150,7 +2190,7 @@ function consumeHubspotReturn() {
   leadsDialog.noteHubspotReturn(notice);
   toast(t(notice.key, notice.vars), notice.error ? 6400 : 5200);
   const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
-  if (found.slug && slug && found.slug === slug) leadsDialog.open();
+  if (found.slug && slug && found.slug === slug) openResults("delivery");
 }
 
 function openAdmin() {
@@ -3325,7 +3365,7 @@ function bindChrome() {
   document.addEventListener("pointerdown", (e) => {
     document
       .querySelectorAll(
-        "details.theme-panel[open], details.export-panel[open], details.more-panel[open], details.account-chip[open], details.menu-panel[open]",
+        "details.theme-panel[open], details.export-panel[open], details.people-panel[open], details.more-panel[open], details.account-chip[open], details.menu-panel[open]",
       )
       .forEach((panel) => {
         if (!panel.contains(e.target)) panel.open = false;
@@ -3344,7 +3384,7 @@ function bindChrome() {
     if (e.key !== "Escape") return;
     if (document.querySelector("dialog[open]")) return;
     const open = document.querySelector(
-      "details.menu-panel[open], details.prefs-panel[open], details.export-panel[open]"
+      "details.menu-panel[open], details.prefs-panel[open], details.export-panel[open], details.people-panel[open]"
     );
     if (!open) return;
     e.preventDefault();
@@ -3831,33 +3871,37 @@ function bindChrome() {
   }
 
   document.getElementById("btn-share-publish")?.addEventListener("click", () => {
-    if (viewerIsPro()) {
-      clearCloudPublishIntent();
-      void runCloudPublish();
-      return;
-    }
     void runSharePublish({ update: false });
   });
   document.getElementById("btn-share-republish")?.addEventListener("click", () => {
-    if (viewerIsPro()) {
-      clearCloudPublishIntent();
-      void runCloudPublish();
-      return;
-    }
     void runSharePublish({ update: true });
   });
-  document.getElementById("btn-share-copy")?.addEventListener("click", async () => {
-    const url = displayedShareUrl(activeShareRecord());
+  document.getElementById("btn-share-permanent")?.addEventListener("click", () => {
+    clearCloudPublishIntent();
+    void runCloudPublish();
+  });
+  document.getElementById("btn-share-permanent-republish")?.addEventListener("click", () => {
+    clearCloudPublishIntent();
+    void runCloudPublish();
+  });
+  async function copyShareField(id) {
+    const field = document.getElementById(id);
+    const url = field?.value || "";
     if (!url) return;
     try {
       await copyText(url);
       toast(t("toast.shareCopied"));
     } catch (err) {
-      const field = document.getElementById("share-link-url");
       field?.focus();
       field?.select();
       toast(err?.message || t("share.errGeneric"));
     }
+  }
+  document.getElementById("btn-share-copy")?.addEventListener("click", () => {
+    void copyShareField("share-link-url");
+  });
+  document.getElementById("btn-share-permanent-copy")?.addEventListener("click", () => {
+    void copyShareField("share-permanent-url");
   });
   document.getElementById("cloud-share-block")?.addEventListener("click", () => {
     showUpgradeDialog({ feature: "permanentShare" });
@@ -4022,9 +4066,19 @@ function bindChrome() {
   function pickShareTab(name) {
     if (name === "embed") { openEmbedDialog(); return; }
     selectShareTab(name);
-    if (name === "team") void ensureCollab()?.openMembers?.();
   }
-  openTeamTab = () => pickShareTab("team");
+  openTeamTab = () => {
+    const panel = document.getElementById("people-panel");
+    if (!panel || panel.hidden) return;
+    panel.open = true;
+  };
+  document.getElementById("people-panel")?.addEventListener("toggle", () => {
+    const panel = document.getElementById("people-panel");
+    if (panel?.open) {
+      document.querySelector(".export-panel")?.removeAttribute("open");
+      void ensureCollab()?.openMembers?.();
+    }
+  });
   document.getElementById("share-card")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.("[data-share-tab]");
     if (!tab) return;
@@ -4049,22 +4103,29 @@ function bindChrome() {
   });
 
   document.getElementById("btn-share-embed")?.addEventListener("click", openEmbedDialog);
+  document.getElementById("btn-capture")?.addEventListener("click", () => openFixedStep("capture"));
   document.getElementById("btn-results")?.addEventListener("click", () => openAnalytics());
-  document.addEventListener("click", (e) => {
+  document.getElementById("modal-results")?.addEventListener("close", () => {
+    resultsSidesLoaded = { leads: false, analytics: false };
+  });
+  document.getElementById("modal-results")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.("[data-results-tab]");
     if (!tab || tab.getAttribute("aria-selected") === "true") return;
-    const from = document.getElementById(tab.dataset.resultsTab === "leads" ? "modal-analytics" : "modal-leads");
-    const to = document.getElementById(tab.dataset.resultsTab === "leads" ? "modal-leads" : "modal-analytics");
-    if (tab.dataset.resultsTab === "leads") leadsDialog.open();
-    else openAnalytics();
-    // só fecha o atual se o outro realmente abriu (sem link permanente ele recusa)
-    if (to?.open && from?.open) from.close();
+    const name = selectResultsTab(tab.dataset.resultsTab);
+    if (name) ensureResultsSide(name);
   });
-  document.addEventListener("keydown", (e) => {
-    const tab = e.target.closest?.("[data-results-tab]");
-    if (!tab || (e.key !== "ArrowRight" && e.key !== "ArrowLeft")) return;
-    const other = [...tab.parentElement.querySelectorAll("[data-results-tab]")].find((x) => x !== tab && !x.hidden);
-    if (other) { e.preventDefault(); other.click(); }
+  document.querySelector("#modal-results .results-tablist")?.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End") return;
+    const tabs = [...document.querySelectorAll("#modal-results [data-results-tab]")].filter((tab) => !tab.hidden);
+    const current = Math.max(0, tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true"));
+    let next = current;
+    if (e.key === "ArrowRight") next = (current + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (current + tabs.length - 1) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else next = tabs.length - 1;
+    e.preventDefault();
+    const name = selectResultsTab(tabs[next].dataset.resultsTab, { focus: true });
+    if (name) ensureResultsSide(name);
   });
   embedModal?.querySelector(".embed-tabs")?.addEventListener("click", (e) => {
     const tab = e.target.closest?.(".embed-tab");

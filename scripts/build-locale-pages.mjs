@@ -33,13 +33,13 @@ export const PAGES = [
   {
     src: "index.html",
     path: "",
-    lastmod: "2026-10-12",
+    lastmod: "2026-10-26",
     meta: {
       en: {
-        description: "Free interactive demo maker, open source (MIT): turn screenshots of your product into an interactive, narrated product tour in minutes. Free in the browser.",
+        description: "Turn your client's product into an interactive demo from screenshots. Free in the browser, open source, with leads in LeadPronto, RD Station or HubSpot.",
       },
       es: {
-        description: "Crea gratis un demo interactivo de tu producto: tour interactivo y narrado a partir de capturas, gratis en el navegador y open source (código abierto, MIT).",
+        description: "Demo interactivo del producto de tu cliente, a partir de capturas. Gratis en el navegador, open source, con leads en LeadPronto, RD Station o HubSpot.",
       },
     },
     heroOg: true,
@@ -107,6 +107,15 @@ export const PAGES = [
       es: { description: "Términos de uso de GuiaFlow y de la suscripción GuiaFlow Pro: el servicio, precios, renovación, cancelación, tu contenido y uso aceptable." },
     },
   },
+];
+
+/**
+ * Páginas públicas PT sem par EN/ES: não passam pelo gerador de locales, mas
+ * entram no sitemap. `/cortesia` é linkada no rodapé de todas as páginas.
+ */
+export const EXTRA_PAGES = [
+  { path: "/cortesia", lastmod: "2026-10-26" },
+  { path: "/integracoes/leadpronto", lastmod: "2026-10-26" },
 ];
 
 /** Caminho público (forma canônica: sem barra final; a raiz PT é "/"). */
@@ -311,6 +320,7 @@ function withLandingJsonLd(html, page, loc) {
   const site = { "@type": "WebSite", "@id": `${ORIGIN}/#website`, name: "GuiaFlow", url: `${ORIGIN}/`, inLanguage: ["pt-BR", "en", "es"], publisher: { "@id": `${ORIGIN}/#organization` } };
   const app = {
     "@type": "SoftwareApplication",
+    "@id": `${ORIGIN}/#software`,
     name: "GuiaFlow",
     url,
     applicationCategory: "BusinessApplication",
@@ -419,6 +429,9 @@ export function renderSitemap() {
       alts.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${absUrl(localePath(page, "pt"))}" />`);
       urls.push(`  <url>\n    <loc>${absUrl(localePath(page, loc))}</loc>\n    <lastmod>${page.lastmod}</lastmod>\n${alts.join("\n")}\n  </url>`);
     }
+  }
+  for (const page of EXTRA_PAGES) {
+    urls.push(`  <url>\n    <loc>${absUrl(page.path)}</loc>\n    <lastmod>${page.lastmod}</lastmod>\n  </url>`);
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join("\n")}\n</urlset>\n`;
 }
