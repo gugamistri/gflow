@@ -9,12 +9,14 @@ import { cloudFetch } from "./cloudConfig.js";
 import { formatLeadPhone, leadPhoneE164, leadsToCsv } from "./fixedSteps.js";
 import {
   WEBHOOK_HELP,
+  WEBHOOK_RECIPES,
   generateWebhookSecret,
   isWebhookSecret,
   normalizeTestResult,
   normalizeWebhook,
   planWebhookSave,
   webhookProblem,
+  webhookRecipeHref,
 } from "./leadWebhook.js";
 import {
   RD_HELP,
@@ -154,6 +156,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     copy: $("btn-leads-webhook-copy"),
     remove: $("btn-leads-webhook-remove"),
     help: $("leads-webhook-help"),
+    recipes: WEBHOOK_RECIPES.map((tool) => [tool, $(`leads-webhook-recipe-${tool}`)]),
     whStatus: $("leads-webhook-status"),
     delivery: $("leads-webhook-delivery"),
     save: $("btn-leads-webhook-save"),
@@ -376,6 +379,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     if (e.copy) e.copy.hidden = !secretDraft;
     if (e.remove) e.remove.hidden = !webhook;
     if (e.help) e.help.href = WEBHOOK_HELP[getLocale()] || WEBHOOK_HELP.pt;
+    for (const [tool, link] of e.recipes || []) {
+      if (link) link.href = webhookRecipeHref(tool, getLocale());
+    }
     for (const btn of [e.save, e.test, e.rotate, e.remove, e.reveal]) {
       if (btn) btn.disabled = webhookBusy;
     }

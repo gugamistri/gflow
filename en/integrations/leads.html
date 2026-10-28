@@ -69,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/164/css/theme.css" />
-  <link rel="stylesheet" href="/a/164/css/shell.css" />
-  <link rel="stylesheet" href="/a/164/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/165/css/theme.css" />
+  <link rel="stylesheet" href="/a/165/css/shell.css" />
+  <link rel="stylesheet" href="/a/165/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -90,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/164/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/164/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/165/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/165/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Leads in Make, n8n and Zapier</span></span>
     </div>
     <div class="topbar-appearance">
@@ -184,7 +184,7 @@ const ok = verifyStandardWebhook({
       <h2>Google Sheets</h2>
       <p>One row per contact, on a sheet named <strong>Leads</strong>. Create the header row in this order:</p>
       <p><code>id</code>, <code>criado_em</code>, <code>origem</code>, <code>nome</code>, <code>email</code>, <code>telefone</code>, <code>mensagem</code>, <code>tour</code>, <code>url</code>, <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>referrer</code>, <code>consentimento</code>.</p>
-      <h3>Make</h3>
+      <h3 id="make">Make</h3>
       <ol>
         <li>Create a scenario. Add <strong>Webhooks → Custom webhook</strong>, click <strong>Add</strong>, name it and copy the URL into GuiaFlow.</li>
         <li>Save the webhook in the editor and click <strong>Send test</strong>. In Make, <strong>Run once</strong> so it learns the JSON.</li>
@@ -193,7 +193,7 @@ const ok = verifyStandardWebhook({
         <li>Turn the scenario on.</li>
       </ol>
       <p>HTTP blueprint, if you already have a Google OAuth token for the Sheets API: <a href="/downloads/webhooks/make-google-sheets.json">make-google-sheets.json</a>. Import it into a new scenario (three-dot menu → <strong>Import blueprint</strong>). On the first module, create a new webhook. Replace <code>SEU_ID_DA_PLANILHA</code> and <code>SEU_TOKEN_GOOGLE</code>. The row is appended on the Leads sheet, in the header order above.</p>
-      <h3>n8n</h3>
+      <h3 id="n8n">n8n</h3>
       <ol>
         <li>Import <a href="/downloads/webhooks/n8n-google-sheets.json">n8n-google-sheets.json</a> (workflow menu → Import from file).</li>
         <li>In <strong>Verificar assinatura</strong>, paste the <code>whsec_…</code>. In <strong>Acrescentar linha</strong>, connect Google and replace <code>SEU_ID_DA_PLANILHA</code> with the id in <code>/spreadsheets/d/</code> in the spreadsheet URL. The sheet must be named Leads.</li>
@@ -278,7 +278,7 @@ const ok = verifyStandardWebhook({
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/164/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/165/js/i18n.js";
     initLocale();
     applyI18n(document);
     const titles = { pt: "Leads", es: "Leads", en: "Leads" };

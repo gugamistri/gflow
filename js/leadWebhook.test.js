@@ -7,9 +7,27 @@ import {
   normalizeTestResult,
   normalizeWebhook,
   planWebhookSave,
+  WEBHOOK_HELP,
+  WEBHOOK_RECIPES,
   webhookProblem,
+  webhookRecipeHref,
   webhookUrlError,
 } from "./leadWebhook.js";
+
+test("Receitas prontas: Make, n8n e Zapier apontam para a seção da página de receitas no idioma", () => {
+  assert.deepEqual(WEBHOOK_RECIPES, ["make", "n8n", "zapier"]);
+  assert.equal(webhookRecipeHref("make", "pt"), "/integracoes/leads#make");
+  assert.equal(webhookRecipeHref("n8n", "en"), "/en/integrations/leads#n8n");
+  assert.equal(webhookRecipeHref("zapier", "es"), "/es/integraciones/leads#zapier");
+  for (const locale of SUPPORTED_LOCALES) {
+    for (const tool of WEBHOOK_RECIPES) {
+      assert.equal(webhookRecipeHref(tool, locale), `${WEBHOOK_HELP[locale]}#${tool}`);
+    }
+  }
+  // Idioma sem página cai no português; ferramenta desconhecida abre o topo do guia.
+  assert.equal(webhookRecipeHref("make", "fr"), "/integracoes/leads#make");
+  assert.equal(webhookRecipeHref("pipefy", "en"), "/en/integrations/leads");
+});
 
 test("URL do webhook: só https público na porta 443", () => {
   assert.equal(webhookUrlError(""), "required");

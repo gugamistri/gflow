@@ -10,7 +10,7 @@ import {
   DELIVERY_TESTABLE,
   deliveryState,
 } from "./leadsDialog.js";
-import { catalogs, SUPPORTED_LOCALES, t } from "./i18n.js";
+import { catalogs, setLocale, SUPPORTED_LOCALES, t } from "./i18n.js";
 
 const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
 
@@ -386,6 +386,69 @@ test("Cartões: estado, nível, abrir detalhe, Voltar e Testar pelo cartão", as
     for (const id of DELIVERY_ORDER) assert.equal(ui[`leads-${id}`].hidden, true);
     await flush();
   } finally {
+    dom.restore();
+  }
+});
+
+test("Webhook: subtítulo do cartão e bloco Receitas prontas com Make, n8n e Zapier", () => {
+  const start = html.indexOf('id="results-pane-delivery"');
+  const end = html.indexOf('id="results-pane-analytics"');
+  const pane = html.slice(start, end);
+  const card = pane.slice(pane.indexOf('data-delivery-card="webhook"'), pane.indexOf('data-delivery-card="rd"'));
+  assert.match(card, /data-i18n="leads\.delivery\.webhookSub">para qualquer sistema · Make, n8n, Zapier</);
+  assert.equal(catalogs.pt["leads.delivery.webhookSub"], "para qualquer sistema · Make, n8n, Zapier");
+
+  const section = pane.slice(pane.indexOf('id="leads-webhook"'), pane.indexOf('id="leads-rd"'));
+  const from = section.indexOf('id="leads-webhook-recipes"');
+  assert.ok(from > 0 && from < section.indexOf('id="leads-webhook-url"'), "Receitas prontas fica antes do campo da URL");
+  const recipes = section.slice(from, section.indexOf("</div>\n        </div>", from));
+  assert.match(recipes, /data-i18n="leads\.webhook\.recipes\.title">Receitas prontas</);
+  const tools = [...recipes.matchAll(/data-webhook-recipe="([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(tools, ["make", "n8n", "zapier"]);
+  for (const tool of tools) {
+    assert.match(recipes, new RegExp(`id="leads-webhook-recipe-${tool}"[^>]*href="/integracoes/leads#${tool}" target="_blank" rel="noopener"`));
+  }
+  // Nada de segredo ou URL de webhook no bloco: só links para o guia.
+  assert.doesNotMatch(recipes, /whsec_|<input/);
+
+  for (const locale of SUPPORTED_LOCALES) {
+    for (const key of ["leads.delivery.webhookSub", "leads.webhook.recipes.title", "leads.webhook.recipes.lead",
+      "leads.webhook.recipes.make", "leads.webhook.recipes.n8n", "leads.webhook.recipes.zapier"]) {
+      assert.ok(String(catalogs[locale][key] || "").trim(), `${locale} ${key}`);
+    }
+    assert.match(catalogs[locale]["leads.delivery.webhookSub"], /· Make, n8n, Zapier$/);
+  }
+});
+
+test("Webhook: links das receitas seguem o idioma atual", async () => {
+  const dom = deliveryDom();
+  globalThis.fetch = async (url) => {
+    const path = new URL(String(url)).pathname;
+    if (path.endsWith("/leads")) return json({ leads: [], title: "" });
+    if (path.endsWith("/webhook")) return json({ url: "https://hook.test/leads", enabled: true, hasSecret: true, secretLast4: "abcd" });
+    if (path === "/integrations/leadpronto") return json({ status: "disconnected" });
+    if (path.endsWith("/shares/mine")) return json({ shares: [] });
+    return json({}, 404);
+  };
+  const expected = {
+    pt: "/integracoes/leads",
+    en: "/en/integrations/leads",
+    es: "/es/integraciones/leads",
+  };
+  try {
+    for (const locale of SUPPORTED_LOCALES) {
+      setLocale(locale, { persist: false });
+      const dialog = createLeadsDialog({ getSlug: () => "tour", toast() {} });
+      dialog.open();
+      await flush();
+      for (const tool of ["make", "n8n", "zapier"]) {
+        const href = dom.nodes[`leads-webhook-recipe-${tool}`].href;
+        assert.equal(href, `${expected[locale]}#${tool}`, `${locale} ${tool}`);
+        assert.doesNotMatch(href, /hook\.test|whsec_/);
+      }
+    }
+  } finally {
+    setLocale("pt", { persist: false });
     dom.restore();
   }
 });

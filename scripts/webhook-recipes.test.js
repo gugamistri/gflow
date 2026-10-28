@@ -112,3 +112,15 @@ test("modelos do n8n e do Make trazem o gatilho, a assinatura e o destino", () =
   assert.match(makePipedrive.flow[2].mapper.url, /\/api\/v1\/leads/);
   assert.match(makePipedrive.flow[2].mapper.body, /\{\{2\.data\.id\}\}/);
 });
+
+test("a página de receitas tem as âncoras #make, #n8n e #zapier usadas pelo cartão Webhook", () => {
+  for (const file of ["integracoes/leads.html", "en/integrations/leads.html", "es/integraciones/leads.html"]) {
+    const html = read(file);
+    for (const anchor of ["make", "n8n", "zapier"]) {
+      assert.equal((html.match(new RegExp(`id="${anchor}"`, "g")) || []).length, 1, `${file} #${anchor}`);
+    }
+    // Make e n8n abrem na primeira receita (Google Sheets), antes do Pipefy.
+    assert.ok(html.indexOf('id="make"') > html.indexOf('id="planilha"'), `${file} #make na planilha`);
+    assert.ok(html.indexOf('id="n8n"') < html.indexOf('id="pipefy"'), `${file} #n8n na planilha`);
+  }
+});

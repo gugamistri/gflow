@@ -6642,6 +6642,72 @@ dialog.results-modal .results-tablist {
   white-space: nowrap;
 }
 
+/* Subtítulo discreto do cartão (Webhook): não compete com a etiqueta do LeadPronto. */
+#results-pane-delivery .delivery-card-sub {
+  flex-basis: 100%;
+  color: var(--ns-muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+/* Receitas prontas no detalhe do Webhook: três links para a página de receitas. */
+.webhook-recipes {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ns-accent) 5%, var(--ns-panel));
+}
+
+.webhook-recipes .fixed-hint {
+  margin: 0;
+}
+
+.webhook-recipes-title {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.webhook-recipes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+}
+
+.webhook-recipe {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--ns-border);
+  border-radius: 8px;
+  background: var(--ns-panel);
+  color: inherit;
+  text-decoration: none;
+}
+
+.webhook-recipe:hover {
+  border-color: color-mix(in srgb, var(--ns-accent) 45%, var(--ns-border));
+}
+
+.webhook-recipe:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+.webhook-recipe-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ns-accent-dark, var(--ns-accent));
+}
+
+.webhook-recipe-hint {
+  font-size: 0.74rem;
+  color: var(--ns-muted);
+}
+
 #results-pane-delivery .delivery-card-chev {
   flex: 0 0 auto;
   width: 16px;
