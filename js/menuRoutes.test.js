@@ -19,13 +19,13 @@ test("compara versões x.y.z", () => {
   assert.equal(compareVersions("0.10.0", "0.9.0"), 1);
 });
 
-test("avisos de mudança valem por duas versões (0.3.1 e 0.3.2)", () => {
+test("avisos de mudança valem por duas versões (0.3.1 e 0.4.0)", () => {
   assert.equal(MOVED_SINCE, "0.3.1");
-  assert.equal(MOVED_UNTIL, "0.3.3");
+  assert.equal(MOVED_UNTIL, "0.4.1");
   assert.equal(movedHintsActive("0.3.0"), false);
   assert.equal(movedHintsActive("0.3.1"), true);
-  assert.equal(movedHintsActive("0.3.2"), true);
-  assert.equal(movedHintsActive("0.3.3"), false);
+  assert.equal(movedHintsActive("0.4.0"), true);
+  assert.equal(movedHintsActive("0.4.1"), false);
   assert.equal(movedHintsActive(""), false);
   assert.equal(movedHintsActive(RELEASE_NOTES_VERSION), true, "a versão atual mostra os avisos");
 });
