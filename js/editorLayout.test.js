@@ -9,6 +9,7 @@ import {
   writePropsPanelOpen,
 } from "./editorLayout.js";
 import { catalogs, SUPPORTED_LOCALES } from "./i18n.js";
+import { MENU_HOME, MOVED_ENTRIES, duplicateActions } from "./menuRoutes.js";
 
 function memoryStorage(initial = {}) {
   const data = { ...initial };
@@ -111,8 +112,12 @@ test("o header não tem mais o ícone de relógio do Preview automático", () =>
   assert.match(html, /id="preview-panel"/);
   assert.match(header, /class="share-label" data-i18n="topbar.share">Compartilhar</);
   assert.match(header, /id="file-panel"/);
-  for (const id of ["btn-file-new", "btn-file-open", "btn-file-import", "btn-export-json", "btn-file-rename", "btn-capture-desktop", "btn-file-delete"]) {
+  for (const id of ["btn-file-rename", "btn-export-json", "btn-file-optimize", "btn-file-restore-links", "btn-capture-desktop", "btn-file-delete"]) {
     assert.match(header, new RegExp(`id="${id}"`), id);
+  }
+  // GUI-32: Projetos, Novo, Abrir e Importar saíram do menu do projeto (moram no ☰)
+  for (const id of ["btn-file-projects", "btn-file-new", "btn-file-open", "btn-file-import", "btn-menu-open", "btn-menu-results"]) {
+    assert.equal(html.includes(`id="${id}"`), false, id);
   }
   const prefs = block('id="prefs-panel"', 'id="preview-split"');
   assert.match(prefs, /id="theme-panel"/);
@@ -283,4 +288,63 @@ test("topo da filmstrip e barra do canvas têm a mesma altura (variável compart
   const editor = readFileSync(new URL("./editor.js", import.meta.url), "utf8");
   assert.match(editor, /el\.dataset\.tip = t\("editor\.durationTitle"\)/);
   assert.equal(/el\.title = compact \? full : t\("editor\.durationTitle"\)/.test(editor), false);
+});
+
+/** Ações (data-menu-action) de cada menu marcado com data-menu no editor.html. */
+function menuActions() {
+  const out = {};
+  const opens = [...html.matchAll(/<(div|nav)\b[^>]*\sdata-menu="([a-z]+)"[^>]*>/g)];
+  for (const m of opens) {
+    // fecha no próximo menu marcado ou no fim do bloco do menu (</details> ou fim da folha)
+    const start = m.index;
+    const tail = html.slice(start + m[0].length);
+    const stop = [tail.indexOf("</details>"), tail.indexOf('class="mobile-publish-end"'), tail.indexOf("\n  </div>\n")]
+      .filter((i) => i >= 0)
+      .reduce((a, b) => Math.min(a, b), tail.length);
+    const body = tail.slice(0, stop);
+    out[m[2]] = [...body.matchAll(/data-menu-action="([a-z-]+)"/g)].map((x) => x[1]);
+  }
+  return out;
+}
+
+test("GUI-32: nenhuma ação aparece em dois menus (☰, projeto, conta e Publicar)", () => {
+  assert.deepEqual(duplicateActions(), []);
+  const found = menuActions();
+  assert.deepEqual(Object.keys(found).sort(), ["account", "app", "project", "publish"]);
+  for (const [menu, actions] of Object.entries(MENU_HOME)) {
+    assert.deepEqual([...found[menu]].sort(), [...actions].sort(), menu);
+    assert.equal(new Set(found[menu]).size, found[menu].length, `${menu} repete item`);
+  }
+  assert.deepEqual(duplicateActions(found), []);
+  // ☰ na ordem da proposta: Projetos, Novo, Importar, (Entrar no celular), Ajuda, Atalhos, Feedback, Sobre, Modo, Idioma
+  assert.deepEqual(found.app, ["projects", "new", "import", "signin", "help", "shortcuts", "feedback", "about", "theme", "locale"]);
+  assert.deepEqual(found.project, ["rename", "export", "optimize", "restore", "capture-desktop", "delete"]);
+  // o chip da Conta não recebe mais Ajuda/Modo/Idioma
+  assert.equal(html.includes('id="account-help-slot"'), false);
+  const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  assert.equal(app.includes("placeHelpGroups"), false);
+  assert.equal(/morePanel\.hidden = /.test(app), false, "o ☰ não some no editor");
+});
+
+test("GUI-32: todo destino antigo tem um caminho para o novo", () => {
+  const menus = new Set(Object.keys(MENU_HOME));
+  for (const e of MOVED_ENTRIES) {
+    assert.ok(menus.has(e.from) && menus.has(e.to), JSON.stringify(e));
+    assert.ok(MENU_HOME[e.to].includes(e.action), `${e.old} → ${e.to}/${e.action}`);
+    assert.equal(MENU_HOME[e.from].includes(e.old), false, `${e.old} ainda está em ${e.from}`);
+    // o menu antigo tem um aviso que leva ao novo
+    const hint = [...html.matchAll(/data-moved-to="([a-z]+)"/g)].map((m) => m[1]);
+    assert.ok(hint.includes(e.to), `sem aviso para ${e.to}`);
+  }
+  for (const [id, to] of [["btn-file-moved", "app"], ["btn-account-moved", "app"], ["btn-menu-moved-results", "publish"]]) {
+    assert.match(html, new RegExp(`id="${id}"[^>]*data-moved-to="${to}"`), id);
+  }
+  // os avisos começam ocultos; o app só mostra enquanto movedHintsActive(versão)
+  for (const m of html.matchAll(/<[^>]*\sdata-moved-group\b[^>]*>/g)) assert.match(m[0], /\shidden\b/, m[0]);
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const key of ["moved.results", "moved.fileMenu", "moved.account"]) {
+      assert.equal(typeof catalogs[loc][key], "string", `${loc} ${key}`);
+      assert.match(catalogs[loc][key], key === "moved.results" ? /Publi/ : /☰/, `${loc} ${key}`);
+    }
+  }
 });
