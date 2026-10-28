@@ -41,10 +41,10 @@ test("não mostra sem versão atual", () => {
 });
 
 test("dispensar a versão anterior ainda mostra esta", () => {
-  assert.equal(RELEASE_NOTES_VERSION, "0.3.1");
+  assert.equal(RELEASE_NOTES_VERSION, "0.4.0");
   assert.equal(
     shouldShowReleaseNotes({
-      dismissedVersion: "0.3.0",
+      dismissedVersion: "0.3.1",
       currentVersion: RELEASE_NOTES_VERSION,
     }),
     true
@@ -79,5 +79,31 @@ test("GUI-32: novidades avisam que as integrações mudaram de lugar, em pt, en 
     assert.ok(moved.includes(catalogs[loc]["results.tab.delivery"]), `${loc} aba Envio`);
     assert.ok(moved.includes(catalogs[loc]["settings.tab.connections"]), `${loc} aba Conexões`);
     assert.ok(catalogs[loc]["releaseNotes.menus"].includes(catalogs[loc]["mbar.publish"]), `${loc} Publicar`);
+  }
+});
+
+test("0.4.0: novidades citam os lugares com os rótulos da interface, em pt, en e es", () => {
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const start = html.indexOf('class="release-notes-list"');
+  const list = html.slice(start, html.indexOf("</ul>", start));
+  const keys = [...list.matchAll(/data-i18n="(releaseNotes\.[a-zA-Z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(keys, [
+    "releaseNotes.menus",
+    "releaseNotes.settings",
+    "releaseNotes.clients",
+    "releaseNotes.publish",
+    "releaseNotes.integrationsMoved",
+    "releaseNotes.leadContext",
+  ]);
+  assert.ok(keys.length <= 6, "no máximo 6 itens no aviso");
+  for (const loc of SUPPORTED_LOCALES) {
+    const c = catalogs[loc];
+    for (const k of keys) assert.ok(c[k], `${loc} ${k}`);
+    for (const tab of ["account", "plan", "team", "clients", "connections", "api"]) {
+      assert.ok(c["releaseNotes.settings"].includes(c[`settings.tab.${tab}`]), `${loc} aba ${tab}`);
+    }
+    assert.ok(c["releaseNotes.clients"].includes(c["clients.moveTitle"]), `${loc} Mover para cliente`);
+    assert.ok(c["releaseNotes.publish"].includes(c["topbar.share"]), `${loc} Compartilhar`);
+    assert.ok(c["releaseNotes.publish"].includes(c["results.button"]), `${loc} Resultados`);
   }
 });

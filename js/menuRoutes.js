@@ -29,9 +29,12 @@ export const MOVED_ENTRIES = Object.freeze([
   { from: "account", old: "locale", to: "app", action: "locale" },
 ]);
 
-/** Primeira versão com os menus novos e a primeira em que os avisos de mudança somem (duas versões depois). */
+/**
+ * Primeira versão com os menus novos e a primeira em que os avisos de mudança somem (duas versões depois).
+ * why: a versão seguinte à 0.3.1 foi a 0.4.0, então as duas versões com aviso são 0.3.1 e 0.4.0.
+ */
 export const MOVED_SINCE = "0.3.1";
-export const MOVED_UNTIL = "0.3.3";
+export const MOVED_UNTIL = "0.4.1";
 
 /** Compara versões x.y.z (sem sufixo). Negativo se a < b. */
 export function compareVersions(a, b) {
