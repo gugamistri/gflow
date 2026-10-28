@@ -69,9 +69,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/164/css/theme.css" />
-  <link rel="stylesheet" href="/a/164/css/shell.css" />
-  <link rel="stylesheet" href="/a/164/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/165/css/theme.css" />
+  <link rel="stylesheet" href="/a/165/css/shell.css" />
+  <link rel="stylesheet" href="/a/165/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .install-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
@@ -90,7 +90,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/164/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/164/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/165/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/165/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title"><span data-int-title>Leads</span></span>
     </div>
     <div class="topbar-appearance">
@@ -185,7 +185,7 @@ const ok = verifyStandardWebhook({
       <h2>Google Sheets</h2>
       <p>Uma linha por contato, na aba <strong>Leads</strong>. Crie a primeira linha com estes cabeçalhos, nesta ordem:</p>
       <p><code>id</code>, <code>criado_em</code>, <code>origem</code>, <code>nome</code>, <code>email</code>, <code>telefone</code>, <code>mensagem</code>, <code>tour</code>, <code>url</code>, <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>referrer</code>, <code>consentimento</code>.</p>
-      <h3>Make</h3>
+      <h3 id="make">Make</h3>
       <ol>
         <li>Crie um cenário. Módulo <strong>Webhooks → Custom webhook</strong>, botão <strong>Add</strong>, dê um nome e copie a URL para o GuiaFlow.</li>
         <li>Salve o webhook no editor e clique em <strong>Enviar teste</strong>. No Make, <strong>Run once</strong> para ele aprender o JSON.</li>
@@ -194,7 +194,7 @@ const ok = verifyStandardWebhook({
         <li>Ative o cenário.</li>
       </ol>
       <p>Modelo HTTP, se você já tem um token OAuth do Google com a API Sheets: <a href="/downloads/webhooks/make-google-sheets.json">make-google-sheets.json</a>. Importe em um cenário novo (menu de três pontos → <strong>Import blueprint</strong>). No primeiro módulo, crie um webhook novo. Troque <code>SEU_ID_DA_PLANILHA</code> e <code>SEU_TOKEN_GOOGLE</code>. A linha é acrescentada na aba Leads, na ordem dos cabeçalhos acima.</p>
-      <h3>n8n</h3>
+      <h3 id="n8n">n8n</h3>
       <ol>
         <li>Importe <a href="/downloads/webhooks/n8n-google-sheets.json">n8n-google-sheets.json</a> (menu do fluxo → Import from file).</li>
         <li>No nó <strong>Verificar assinatura</strong>, cole o <code>whsec_…</code>. No nó <strong>Acrescentar linha</strong>, conecte o Google e troque <code>SEU_ID_DA_PLANILHA</code> pelo id que aparece em <code>/spreadsheets/d/</code> na URL da planilha. A aba tem de se chamar Leads.</li>
@@ -279,7 +279,7 @@ const ok = verifyStandardWebhook({
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/164/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/165/js/i18n.js";
     initLocale();
     applyI18n(document);
     const titles = { pt: "Leads", es: "Leads", en: "Leads" };

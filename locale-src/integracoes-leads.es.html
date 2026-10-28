@@ -76,7 +76,7 @@ const ok = verifyStandardWebhook({
       <h2>Google Sheets</h2>
       <p>Una fila por contacto, en la hoja <strong>Leads</strong>. Crea la primera fila con estos encabezados, en este orden:</p>
       <p><code>id</code>, <code>criado_em</code>, <code>origem</code>, <code>nome</code>, <code>email</code>, <code>telefone</code>, <code>mensagem</code>, <code>tour</code>, <code>url</code>, <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code>, <code>referrer</code>, <code>consentimento</code>.</p>
-      <h3>Make</h3>
+      <h3 id="make">Make</h3>
       <ol>
         <li>Crea un escenario. Módulo <strong>Webhooks → Custom webhook</strong>, botón <strong>Add</strong>, ponle un nombre y copia la URL en GuiaFlow.</li>
         <li>Guarda el webhook en el editor y haz clic en <strong>Enviar prueba</strong>. En Make, <strong>Run once</strong> para que aprenda el JSON.</li>
@@ -85,7 +85,7 @@ const ok = verifyStandardWebhook({
         <li>Activa el escenario.</li>
       </ol>
       <p>Modelo HTTP, si ya tienes un token OAuth de Google con la API de Sheets: <a href="/downloads/webhooks/make-google-sheets.json">make-google-sheets.json</a>. Impórtalo en un escenario nuevo (menú de tres puntos → <strong>Import blueprint</strong>). En el primer módulo, crea un webhook nuevo. Cambia <code>SEU_ID_DA_PLANILHA</code> y <code>SEU_TOKEN_GOOGLE</code>. La fila se añade en la pestaña Leads, en el orden de los encabezados de arriba.</p>
-      <h3>n8n</h3>
+      <h3 id="n8n">n8n</h3>
       <ol>
         <li>Importa <a href="/downloads/webhooks/n8n-google-sheets.json">n8n-google-sheets.json</a> (menú del flujo → Import from file).</li>
         <li>En el nodo <strong>Verificar assinatura</strong>, pega el <code>whsec_…</code>. En <strong>Acrescentar linha</strong>, conecta Google y cambia <code>SEU_ID_DA_PLANILHA</code> por el id que aparece en <code>/spreadsheets/d/</code> en la URL de la hoja. La pestaña tiene que llamarse Leads.</li>
