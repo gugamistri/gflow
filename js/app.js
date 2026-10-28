@@ -66,6 +66,7 @@ import { isTypingTarget } from "./canvasEdit.js";
 import { createPlayer } from "./player.js";
 import { themeContrastIssues } from "./a11y.js";
 import { exportStandaloneHtml, exportVideo } from "./exportPack.js";
+import { exportVideoOptions } from "./videoQuality.js";
 import { buildVtt, exportLangs, htmlLangData, langFileName, videoDemoForLang } from "./exportLangs.js";
 import { ensureNarration, ensurePlayback, holdMs } from "./playback.js";
 import { createHistory } from "./history.js";
@@ -3913,6 +3914,11 @@ function bindChrome() {
     const billingWatermark = exportShowsWatermark(billingSnapshot());
     // Pro que desligou "Remover marca" mantém o crédito também no vídeo (mesma configuração do link)
     const watermark = billingWatermark || project.removeBranding === false;
+    const videoOpts = exportVideoOptions({
+      quality: document.getElementById("export-video-quality")?.value,
+      fps: document.getElementById("export-video-fps")?.value,
+      pro: !billingWatermark,
+    });
     exportAbort = new AbortController();
     showExportOverlay(t("export.overlayVideo"), { cancelable: true, preview: true });
     overlayStatus.textContent = t("export.overlayVideoHint");
@@ -3930,9 +3936,9 @@ function bindChrome() {
         const tag = queue.length > 1 ? `${lang} (${i + 1}/${queue.length}) · ` : "";
         result = await exportVideo(demo, {
           watermark,
-          pro: !billingWatermark,
-          quality: "standard",
-          fps: 30,
+          pro: videoOpts.pro,
+          quality: videoOpts.quality,
+          fps: videoOpts.fps,
           canvas: previewCanvas,
           signal: exportAbort.signal,
           fileBase: lang ? `${base}.${lang}` : "",
