@@ -65,6 +65,60 @@ function formatPhone(stored) {
   return formatLeadPhone(stored);
 }
 
+function contextOf(lead) {
+  const c = lead?.context;
+  return c && typeof c === "object" ? c : null;
+}
+
+function referrerOf(c) {
+  return String(c?.referrer || c?.referrerHost || "");
+}
+
+/** Linha de origem do contato: "UTM: google / cpc / blackfriday · embed: site.com · celular". Vazia sem contexto. */
+export function leadOriginLine(lead) {
+  const c = contextOf(lead);
+  if (!c) return "";
+  const parts = [];
+  const utm = [c.utm_source, c.utm_medium, c.utm_campaign].filter(Boolean);
+  if (utm.length) parts.push(t("leads.origin.utm", { value: utm.join(" / ") }));
+  const site = referrerOf(c);
+  if (c.embed) parts.push(site ? t("leads.origin.embed", { site }) : t("leads.origin.embedNoSite"));
+  else if (site) parts.push(t("leads.origin.ref", { site }));
+  if (c.device === "mobile" || c.device === "desktop") parts.push(t(`leads.device.${c.device}`));
+  return parts.join(" · ");
+}
+
+/** Opções do filtro por origem/campanha, a partir dos contatos carregados. */
+export function leadOriginFilters(leads = []) {
+  const campaigns = new Set();
+  const sources = new Set();
+  let embed = false;
+  let none = false;
+  for (const lead of leads) {
+    const c = contextOf(lead);
+    if (c?.utm_campaign) campaigns.add(String(c.utm_campaign));
+    if (c?.utm_source) sources.add(String(c.utm_source));
+    if (c?.embed) embed = true;
+    if (!c?.utm_source && !c?.utm_campaign) none = true;
+  }
+  const sort = (set) => [...set].sort((a, b) => a.localeCompare(b));
+  return { campaigns: sort(campaigns), sources: sort(sources), embed, none };
+}
+
+/** Filtro: "" (todos), "campaign:<v>", "source:<v>", "embed" ou "none" (sem UTM). */
+export function leadMatchesOrigin(lead, filter = "") {
+  if (!filter) return true;
+  const c = contextOf(lead);
+  if (filter === "embed") return Boolean(c?.embed);
+  if (filter === "none") return !c?.utm_source && !c?.utm_campaign;
+  const i = filter.indexOf(":");
+  const kind = filter.slice(0, i);
+  const value = filter.slice(i + 1);
+  if (kind === "campaign") return String(c?.utm_campaign || "") === value;
+  if (kind === "source") return String(c?.utm_source || "") === value;
+  return true;
+}
+
 /** Data do CSV no fuso America/Sao_Paulo ("2026-10-11 11:03:04"), que o Excel reconhece. */
 export function csvDate(iso) {
   const date = new Date(iso);
@@ -116,6 +170,7 @@ export function deliveryState({ configured, enabled, failures = 0, autoDisabled 
 export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let leads = [];
   let title = "";
+  let originFilter = "";
   let bound = false;
   let loading = false;
   let webhook = null;
@@ -146,6 +201,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     meta: $("leads-meta"),
     status: $("leads-status"),
     list: $("leads-list"),
+    filterWrap: $("leads-filter"),
+    filter: $("leads-filter-select"),
     csv: $("btn-leads-csv"),
     refresh: $("btn-leads-refresh"),
     close: $("btn-results-close"),
@@ -314,16 +371,57 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     return source === "contact" ? t("leads.sourceContact") : t("leads.sourceStart");
   }
 
+  function visibleLeads() {
+    return leads.filter((lead) => leadMatchesOrigin(lead, originFilter));
+  }
+
+  function paintFilter() {
+    const e = els();
+    if (!e.filter || !e.filterWrap) return;
+    const opts = leadOriginFilters(leads);
+    const hasContext = opts.campaigns.length || opts.sources.length || opts.embed;
+    e.filterWrap.hidden = !hasContext;
+    if (!hasContext) {
+      originFilter = "";
+      return;
+    }
+    const keys = new Set([""]);
+    const option = (value, label) => {
+      const node = el("option", "", label);
+      node.value = value;
+      keys.add(value);
+      return node;
+    };
+    const group = (label, kind, values) => {
+      const node = el("optgroup");
+      node.label = label;
+      for (const value of values) node.append(option(`${kind}:${value}`, value));
+      return node;
+    };
+    const children = [option("", t("leads.filter.all"))];
+    if (opts.campaigns.length) children.push(group(t("leads.filter.campaign"), "campaign", opts.campaigns));
+    if (opts.sources.length) children.push(group(t("leads.filter.source"), "source", opts.sources));
+    if (opts.embed) children.push(option("embed", t("leads.filter.embed")));
+    if (opts.none) children.push(option("none", t("leads.filter.none")));
+    e.filter.replaceChildren(...children);
+    if (!keys.has(originFilter)) originFilter = "";
+    e.filter.value = originFilter;
+  }
+
   function paint() {
     const e = els();
     e.list.replaceChildren();
-    e.csv.disabled = !leads.length;
-    e.meta.textContent = leads.length || title ? t("leads.meta", { n: leads.length, title: title || "" }) : "";
+    paintFilter();
+    const shown = visibleLeads();
+    e.csv.disabled = !shown.length;
+    e.meta.textContent = originFilter
+      ? t("leads.metaFiltered", { n: shown.length, total: leads.length, title: title || "" })
+      : leads.length || title ? t("leads.meta", { n: leads.length, title: title || "" }) : "";
     if (!leads.length) {
       if (!loading && !e.status.textContent) e.status.textContent = t("leads.empty");
       return;
     }
-    for (const lead of leads) {
+    for (const lead of shown) {
       const row = el("div", "leads-row");
       row.setAttribute("role", "listitem");
       const head = el("div", "leads-row-head");
@@ -351,6 +449,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
         contact.append(a);
       }
       if (contact.childElementCount) row.append(contact);
+      const origin = leadOriginLine(lead);
+      if (origin) row.append(el("p", "leads-origin", origin));
       if (lead.message) row.append(el("p", "leads-message", lead.message));
       const consent = el("p", "leads-consent", lead.consent ? t("leads.consentAt", { date: formatDate(lead.consentAt || lead.createdAt) }) : "");
       if (lead.consentText) consent.title = lead.consentText;
@@ -537,8 +637,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   }
 
   function downloadCsv() {
-    if (!leads.length) return;
-    const rows = leads.map((lead) => ({ ...lead, createdAt: csvDate(lead.createdAt), consentAt: csvDate(lead.consentAt) }));
+    const shown = visibleLeads();
+    if (!shown.length) return;
+    const rows = shown.map((lead) => ({ ...lead, createdAt: csvDate(lead.createdAt), consentAt: csvDate(lead.consentAt) }));
     const csv = leadsToCsv(rows, {
       createdAt: t("leads.col.date"),
       source: t("leads.col.source"),
@@ -551,6 +652,9 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       consentAt: t("leads.col.consentAt"),
       consentText: t("leads.col.consentText"),
       lang: t("leads.col.lang"),
+      device: t("leads.col.device"),
+      device_mobile: t("leads.device.mobile"),
+      device_desktop: t("leads.device.desktop"),
       yes: t("leads.yes"),
       no: t("leads.no"),
       source_start: t("leads.sourceStart"),
@@ -1444,6 +1548,10 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       void loadLeadPronto();
     });
     e.csv?.addEventListener("click", downloadCsv);
+    e.filter?.addEventListener("change", () => {
+      originFilter = String(e.filter.value || "");
+      paint();
+    });
     e.secret?.addEventListener("input", () => {
       secretDraft = e.secret.value.trim();
       secretDirty = true;

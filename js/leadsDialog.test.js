@@ -9,6 +9,9 @@ import {
   DELIVERY_ORDER,
   DELIVERY_TESTABLE,
   deliveryState,
+  leadMatchesOrigin,
+  leadOriginFilters,
+  leadOriginLine,
 } from "./leadsDialog.js";
 import { catalogs, setLocale, SUPPORTED_LOCALES, t } from "./i18n.js";
 
@@ -451,4 +454,40 @@ test("Webhook: links das receitas seguem o idioma atual", async () => {
     setLocale("pt", { persist: false });
     dom.restore();
   }
+});
+
+test("Contatos: linha de origem por contato e filtro por origem/campanha", () => {
+  const ana = { context: { utm_source: "google", utm_medium: "cpc", utm_campaign: "blackfriday", referrer: "site.com", embed: true, device: "mobile" } };
+  const bia = { context: { utm_source: "linkedin", utm_campaign: null, referrer: "news.example", embed: false, device: "desktop" } };
+  const caio = { context: { utm_source: null, referrer: null, embed: false, device: null } };
+  const legacy = {};
+  try {
+    setLocale("pt", { persist: false });
+    assert.equal(leadOriginLine(ana), "UTM: google / cpc / blackfriday · embed: site.com · celular");
+    assert.equal(leadOriginLine(bia), "UTM: linkedin · via news.example · computador");
+    assert.equal(leadOriginLine(caio), "");
+    assert.equal(leadOriginLine(legacy), "");
+    assert.equal(leadOriginLine({ context: { embed: true } }), "embed");
+    setLocale("en", { persist: false });
+    assert.equal(leadOriginLine(bia), "UTM: linkedin · via news.example · desktop");
+    setLocale("es", { persist: false });
+    assert.equal(leadOriginLine(ana), "UTM: google / cpc / blackfriday · embed: site.com · móvil");
+  } finally {
+    setLocale("pt", { persist: false });
+  }
+
+  const all = [ana, bia, caio, legacy];
+  assert.deepEqual(leadOriginFilters(all), { campaigns: ["blackfriday"], sources: ["google", "linkedin"], embed: true, none: true });
+  assert.deepEqual(all.filter((l) => leadMatchesOrigin(l, "")), all);
+  assert.deepEqual(all.filter((l) => leadMatchesOrigin(l, "campaign:blackfriday")), [ana]);
+  assert.deepEqual(all.filter((l) => leadMatchesOrigin(l, "source:linkedin")), [bia]);
+  assert.deepEqual(all.filter((l) => leadMatchesOrigin(l, "embed")), [ana]);
+  assert.deepEqual(all.filter((l) => leadMatchesOrigin(l, "none")), [caio, legacy]);
+
+  for (const loc of SUPPORTED_LOCALES) {
+    for (const key of ["leads.origin.utm", "leads.origin.embed", "leads.origin.embedNoSite", "leads.origin.ref", "leads.device.mobile", "leads.device.desktop", "leads.col.device", "leads.filter.label", "leads.filter.all", "leads.filter.campaign", "leads.filter.source", "leads.filter.embed", "leads.filter.none", "leads.metaFiltered"]) {
+      assert.ok(catalogs[loc][key], `${loc}: ${key}`);
+    }
+  }
+  assert.match(html, /id="leads-filter-select"/);
 });
