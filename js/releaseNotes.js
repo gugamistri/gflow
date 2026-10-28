@@ -2,8 +2,10 @@
  * Aviso de novidades na home: some ao dispensar e só volta em versão nova.
  * why: a versão espelha package.json; o browser não importa o JSON do app.
  *      0.3.1 traz os menus sem itens repetidos e o aviso de que as integrações mudaram de lugar (GUI-32).
+ *      0.4.0 fecha a Fase 1: menus, Configurações com abas, Clientes/marcas, Captura · Compartilhar · Resultados
+ *      e o contexto de captura nos Contatos (GUI-25 a GUI-33). Minor porque muda onde as coisas ficam.
  */
-export const RELEASE_NOTES_VERSION = "0.3.1";
+export const RELEASE_NOTES_VERSION = "0.4.0";
 export const RELEASE_NOTES_DATE = "2026-10-28";
 export const RELEASE_NOTES_DISMISS_KEY = "ns-release-notes-dismissed";
 
