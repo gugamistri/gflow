@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/166/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/166/css/theme.css" />
-  <link rel="stylesheet" href="a/166/css/shell.css" />
-  <link rel="stylesheet" href="a/166/css/player.css" />
-  <link rel="stylesheet" href="a/166/css/editor.css" />
-  <link rel="stylesheet" href="a/166/css/settings.css" />
-  <link rel="stylesheet" href="a/166/css/collab.css" />
-  <link rel="stylesheet" href="a/166/css/comments.css" />
+  <link rel="stylesheet" href="a/167/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/167/css/theme.css" />
+  <link rel="stylesheet" href="a/167/css/shell.css" />
+  <link rel="stylesheet" href="a/167/css/player.css" />
+  <link rel="stylesheet" href="a/167/css/editor.css" />
+  <link rel="stylesheet" href="a/167/css/settings.css" />
+  <link rel="stylesheet" href="a/167/css/collab.css" />
+  <link rel="stylesheet" href="a/167/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -88,57 +88,47 @@
         <summary class="btn btn-ghost btn-icon" id="btn-menu" aria-label="Menu" aria-expanded="false" aria-controls="more-panel-body" data-i18n-aria="topbar.menu">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-menu"></use></svg>
         </summary>
-        <div class="more-panel-body" id="more-panel-body">
+        <div class="more-panel-body" id="more-panel-body" data-menu="app">
           <div class="more-group" id="more-file-group">
-            <button type="button" class="more-item" id="btn-menu-new">
+            <button type="button" class="more-item" id="btn-menu-projects" data-menu-action="projects">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+              <span data-i18n="topbar.projects">Projetos</span>
+            </button>
+            <button type="button" class="more-item" id="btn-menu-new" data-menu-action="new">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
               <span data-i18n="menu.new">Novo</span>
             </button>
-            <button type="button" class="more-item" id="btn-menu-open">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-open"></use></svg>
-              <span data-i18n="menu.open">Abrir</span>
-            </button>
-            <button type="button" class="more-item" id="btn-menu-import">
+            <button type="button" class="more-item" id="btn-menu-import" data-menu-action="import">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
               <span data-i18n="menu.import">Importar</span>
             </button>
           </div>
           <hr class="more-divider" id="more-file-divider" />
           <div class="more-group more-group-actions">
-            <button type="button" class="more-item" id="btn-menu-account" hidden>
+            <button type="button" class="more-item compact-only" id="btn-menu-account" data-menu-action="signin" hidden>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-user"></use></svg>
               <span data-i18n="account.subscribeOrSignIn">Assinar / Entrar</span>
             </button>
-            <div class="more-editor-only" id="more-editor-only" hidden>
-              <button type="button" class="more-item" id="btn-menu-projects">
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-                <span data-i18n="topbar.projects">Projetos</span>
-              </button>
-              <button type="button" class="more-item compact-only" id="btn-menu-results" aria-haspopup="dialog" hidden>
-                <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
-                <span data-i18n="results.menuItem">Resultados: análise e contatos</span>
-                <span class="pro-badge" id="menu-results-pro-badge" hidden>
-                  <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
-                  <span data-i18n="billing.badge">Pro</span>
-                </span>
-              </button>
-            </div>
+            <button type="button" class="more-item more-item-moved compact-only" id="btn-menu-moved-results" data-moved-to="publish" data-moved-group hidden>
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
+              <span data-i18n="moved.results">Resultados agora fica em Publicar, na barra de baixo</span>
+            </button>
             <div class="more-help" id="help-group">
-            <button type="button" class="more-item" id="btn-shortcuts">
+            <a class="more-item" id="btn-help" href="/ajuda" target="_blank" rel="noopener noreferrer" data-menu-action="help">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
+              <span data-i18n="topbar.help">Ajuda</span>
+            </a>
+            <button type="button" class="more-item" id="btn-shortcuts" data-menu-action="shortcuts">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-keyboard"></use></svg>
               <span data-i18n="shortcuts.title">Atalhos</span>
             </button>
-            <button type="button" class="more-item" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
+            <button type="button" class="more-item" data-menu-action="feedback" data-tally-open="81OY5O" data-tally-hide-title="1" data-tally-emoji-text="👋" data-tally-emoji-animation="flash" data-tally-auto-close="0">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-message"></use></svg>
               <span data-i18n="topbar.feedback">Feedback</span>
             </button>
-            <a class="more-item" id="btn-about" href="/" target="_blank" rel="noopener">
+            <a class="more-item" id="btn-about" href="/" target="_blank" rel="noopener" data-menu-action="about">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
               <span data-i18n="menu.about">Sobre o GuiaFlow</span>
-            </a>
-            <a class="more-item" id="btn-help" href="/ajuda" target="_blank" rel="noopener noreferrer">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-help"></use></svg>
-              <span data-i18n="topbar.help">Ajuda</span>
             </a>
             <p class="more-legal">
               <a href="/privacidade" target="_blank" rel="noopener" data-i18n="legal.privacy">Privacidade</a>
@@ -149,7 +139,7 @@
           </div>
           <hr class="more-divider" />
           <div class="more-group more-group-prefs">
-            <div class="more-pref-row more-theme-row">
+            <div class="more-pref-row more-theme-row" data-menu-action="theme">
               <span class="more-pref-label" data-i18n="appearance.theme">Modo</span>
               <div class="appearance-segment" id="appearance-segment" role="radiogroup" aria-label="Modo" data-i18n-aria="appearance.theme">
                 <button type="button" class="appearance-opt" data-mode="documento" title="Claro" aria-label="Claro" aria-pressed="false" data-i18n-title="appearance.light" data-i18n-aria="appearance.light">
@@ -163,7 +153,7 @@
                 </button>
               </div>
             </div>
-            <div class="locale-select more-locale">
+            <div class="locale-select more-locale" data-menu-action="locale">
               <span class="more-pref-label" data-i18n="locale.label">Idioma</span>
               <select id="locale-select" data-i18n-aria="locale.label" aria-label="Idioma">
                 <option value="pt">Português</option>
@@ -175,59 +165,48 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/166/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/166/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/167/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/167/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
-          <summary class="menu-summary file-menu" id="btn-file-menu" aria-haspopup="menu" title="Menu do tour: novo, abrir, renomear, backup" data-i18n-title="tourMenu.title">
+          <summary class="menu-summary file-menu" id="btn-file-menu" aria-haspopup="menu" title="Projeto: renomear, exportar, otimizar e apagar" data-i18n-title="tourMenu.title">
             <span class="topbar-project" id="topbar-project"></span>
             <svg class="btn-ico menu-caret" aria-hidden="true"><use href="#i-chevron-down"></use></svg>
           </summary>
-          <div class="menu-panel-body" role="menu" aria-label="Menu do tour" data-i18n-aria="tourMenu.aria">
-            <button type="button" class="more-item" role="menuitem" id="btn-file-projects">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-folder"></use></svg>
-              <span data-i18n="topbar.projects">Projetos</span>
+          <div class="menu-panel-body" role="menu" aria-label="Menu do projeto" data-i18n-aria="tourMenu.aria" data-menu="project">
+            <button type="button" class="more-item" role="menuitem" id="btn-file-rename" data-menu-action="rename">
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
+              <span data-i18n="file.rename">Renomear</span>
             </button>
-            <hr class="more-divider" />
-            <button type="button" class="more-item" role="menuitem" id="btn-file-new">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
-              <span data-i18n="file.new">Novo projeto…</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-file-open">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-open"></use></svg>
-              <span data-i18n="file.open">Abrir…</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-file-import">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-              <span data-i18n="file.import">Importar JSON…</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-file-restore-links" data-sync-restore hidden>
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
-              <span data-i18n="sync.restore">Restaurar dos links publicados</span>
-            </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-export-json">
+            <button type="button" class="more-item" role="menuitem" id="btn-export-json" data-menu-action="export">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
               <span data-i18n="file.export">Exportar JSON</span>
             </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-file-optimize">
+            <button type="button" class="more-item" role="menuitem" id="btn-file-optimize" data-menu-action="optimize">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-compress"></use></svg>
               <span data-i18n="file.optimize">Otimizar projeto…</span>
               <span class="file-size-tag" id="file-optimize-size" title="Tamanho do projeto" data-i18n-title="file.sizeTitle"></span>
             </button>
-            <hr class="more-divider" />
-            <button type="button" class="more-item" role="menuitem" id="btn-file-rename">
-              <svg class="btn-ico" aria-hidden="true"><use href="#i-pencil"></use></svg>
-              <span data-i18n="file.rename">Renomear</span>
+            <button type="button" class="more-item" role="menuitem" id="btn-file-restore-links" data-menu-action="restore" data-sync-restore hidden>
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
+              <span data-i18n="sync.restore">Restaurar dos links publicados</span>
             </button>
-            <button type="button" class="more-item" role="menuitem" id="btn-capture-desktop" hidden>
+            <button type="button" class="more-item" role="menuitem" id="btn-capture-desktop" data-menu-action="capture-desktop" hidden>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-camera"></use></svg>
               <span data-i18n="file.capture">Capturar telas</span>
             </button>
             <hr class="more-divider" />
-            <button type="button" class="more-item more-item-danger" role="menuitem" id="btn-file-delete">
+            <button type="button" class="more-item more-item-danger" role="menuitem" id="btn-file-delete" data-menu-action="delete">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
               <span data-i18n="file.delete">Apagar projeto…</span>
             </button>
+            <div class="more-moved-group" data-moved-group hidden>
+              <hr class="more-divider" />
+              <button type="button" class="more-item more-item-moved" role="menuitem" id="btn-file-moved" data-moved-to="app">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-menu"></use></svg>
+                <span data-i18n="moved.fileMenu">Projetos, Novo, Abrir e Importar agora ficam no menu ☰</span>
+              </button>
+            </div>
           </div>
         </details>
       </nav>
@@ -474,15 +453,15 @@
             <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
             <svg class="btn-ico account-anon-ico" aria-hidden="true"><use href="#i-user"></use></svg>
           </summary>
-          <div class="account-chip-menu">
+          <div class="account-chip-menu" data-menu="account">
             <div class="account-signed-in" id="account-signed-in">
             <p class="account-chip-email" id="account-chip-email"></p>
             <p class="account-chip-plan" id="account-chip-plan" hidden></p>
             <p class="account-chip-usage" id="account-chip-usage" hidden></p>
-            <button type="button" class="account-chip-action" id="btn-account-settings" data-i18n="settings.menu">Configurações</button>
+            <button type="button" class="account-chip-action" id="btn-account-settings" data-menu-action="settings" data-i18n="settings.menu">Configurações</button>
             </div>
-            <div class="account-help-slot" id="account-help-slot"></div>
-            <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
+            <button type="button" class="account-chip-action more-item-moved" id="btn-account-moved" data-moved-to="app" data-moved-group hidden data-i18n="moved.account">Ajuda, Modo e Idioma agora ficam no menu ☰</button>
+            <button type="button" class="account-chip-signout" id="btn-account-signout" data-menu-action="signout" data-i18n="account.signOut">Sair</button>
           </div>
         </details>
       </div>
@@ -496,7 +475,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/166/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/166/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/167/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/167/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -509,8 +488,29 @@
     <button type="button" class="mobile-bar-btn" data-mbar="add"><svg aria-hidden="true"><use href="#i-plus"></use></svg><span data-i18n="mbar.add">Passo</span></button>
     <button type="button" class="mobile-bar-btn" data-mbar="text" aria-controls="props-panel"><svg aria-hidden="true"><use href="#i-edit"></use></svg><span data-i18n="mbar.text">Texto</span></button>
     <button type="button" class="mobile-bar-btn" data-mbar="narration" aria-controls="props-panel"><svg aria-hidden="true"><use href="#i-mic"></use></svg><span data-i18n="mbar.narration">Narração</span></button>
+    <button type="button" class="mobile-bar-btn" data-mbar="publish" aria-haspopup="menu" aria-controls="mobile-publish" aria-expanded="false"><svg aria-hidden="true"><use href="#i-export"></use></svg><span data-i18n="mbar.publish">Publicar</span><i class="mobile-bar-dot" id="mobile-publish-dot" aria-hidden="true" hidden></i></button>
     <button type="button" class="mobile-bar-btn" data-mbar="settings"><svg aria-hidden="true"><use href="#i-settings"></use></svg><span data-i18n="mbar.settings">Ajustes</span></button>
   </nav>
+  <div class="mobile-publish" id="mobile-publish" role="menu" aria-label="Publicar" data-i18n-aria="mbar.publish" data-menu="publish" hidden>
+    <p class="mobile-publish-title" data-i18n="mbar.publishTitle">Publicar o tour</p>
+    <button type="button" class="more-item" role="menuitem" data-publish="capture" data-menu-action="capture">
+      <svg class="btn-ico" aria-hidden="true"><use href="#i-form"></use></svg>
+      <span class="mobile-publish-text"><strong data-i18n="fixed.capture.button">Captura</strong><small data-i18n="mbar.publishCaptureHint">Formulário, passo final e consentimento</small></span>
+    </button>
+    <button type="button" class="more-item" role="menuitem" data-publish="share" data-menu-action="share">
+      <svg class="btn-ico" aria-hidden="true"><use href="#i-link"></use></svg>
+      <span class="mobile-publish-text"><strong data-i18n="topbar.share">Compartilhar</strong><small data-i18n="mbar.publishShareHint">Link, no seu site ou baixar</small></span>
+      <i class="mobile-bar-dot" id="mobile-publish-share-dot" aria-hidden="true" hidden></i>
+    </button>
+    <button type="button" class="more-item" role="menuitem" data-publish="results" data-menu-action="results" hidden>
+      <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
+      <span class="mobile-publish-text"><strong data-i18n="results.button">Resultados</strong><small data-i18n="mbar.publishResultsHint">Visitas e contatos</small></span>
+      <span class="pro-badge" hidden>
+        <svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg>
+        <span data-i18n="billing.badge">Pro</span>
+      </span>
+    </button>
+  </div>
   <div class="mobile-sheet-backdrop" id="mobile-sheet-backdrop" hidden></div>
 
   <aside class="ext-banner" id="ext-banner" hidden>
@@ -545,13 +545,10 @@
     </div>
     <aside class="release-notes" id="release-notes" hidden>
       <div class="release-notes-body">
-        <p class="release-notes-title" id="release-notes-title">Novidades da versão 0.3.0 · outubro de 2026</p>
+        <p class="release-notes-title" id="release-notes-title">Novidades da versão 0.3.1 · outubro de 2026</p>
         <ul class="release-notes-list">
-          <li data-i18n="releaseNotes.item1">Entre com email e senha, ou peça um link por email, sem senha.</li>
-          <li data-i18n="releaseNotes.item2">GuiaFlow Pro: link permanente, texto e áudio com IA, e vídeo sem o logo.</li>
-          <li data-i18n="releaseNotes.item3">No celular, revise e edite o texto de cada passo.</li>
-          <li data-i18n="releaseNotes.item4">Novo projeto fica num card. No menu: Novo, Abrir e Importar.</li>
-          <li data-i18n="releaseNotes.item5">Preview e Compartilhar ficam só com ícone. Desfazer e refazer ficam ao lado de copiar e colar.</li>
+          <li data-i18n="releaseNotes.integrationsMoved">Integrações mudaram de lugar: o envio de contatos (Webhook, RD Station, HubSpot e LeadPronto) fica em Resultados › Envio automático, e as contas conectadas ficam em Configurações › Conexões.</li>
+          <li data-i18n="releaseNotes.menus">Menus mais simples: o ☰ tem Projetos, Novo, Importar e Ajuda; o nome do projeto tem Renomear, Exportar e Apagar. No celular, Publicar reúne Captura, Compartilhar e Resultados.</li>
         </ul>
       </div>
       <button type="button" class="btn btn-sm" id="release-notes-dismiss" data-i18n="releaseNotes.dismiss">Entendi</button>
@@ -1082,7 +1079,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/166/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/167/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2560,8 +2557,8 @@
     </symbol>
   </svg>
 
-  <script src="a/166/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/166/js/app.js"></script>
+  <script src="a/167/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/167/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
