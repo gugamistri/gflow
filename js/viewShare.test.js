@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
+import { ASSET_PREFIX_RE } from "../scripts/asset-version.mjs";
 import {
   BRAND_BADGE_HREF,
   brandBadge,
@@ -208,7 +209,7 @@ test("o shell de /p usa o mesmo player, canonical e não fala em 7 dias", () => 
   assert.match(html, /property="og:title" content="Tour fixo"/);
   assert.match(html, /property="og:url" content="https:\/\/guiaflow\.pro\/p\/slug-permanente"/);
   assert.match(html, /"kind":"permanent"/);
-  assert.match(html, /a\/163\/js\/viewApp\.js/);
+  assert.match(html, new RegExp(`${ASSET_PREFIX_RE}js\\/viewApp\\.js`));
   assert.match(html, /data-i18n="present\.escHint"/);
   assert.match(html, /Clique fora ou Esc para sair/);
   assert.match(html, /id="view-share-replay"/);

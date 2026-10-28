@@ -73,13 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/163/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/163/css/theme.css" />
-  <link rel="stylesheet" href="a/163/css/shell.css" />
-  <link rel="stylesheet" href="a/163/css/player.css" />
-  <link rel="stylesheet" href="a/163/css/editor.css" />
-  <link rel="stylesheet" href="a/163/css/collab.css" />
-  <link rel="stylesheet" href="a/163/css/comments.css" />
+  <link rel="stylesheet" href="a/164/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/164/css/theme.css" />
+  <link rel="stylesheet" href="a/164/css/shell.css" />
+  <link rel="stylesheet" href="a/164/css/player.css" />
+  <link rel="stylesheet" href="a/164/css/editor.css" />
+  <link rel="stylesheet" href="a/164/css/settings.css" />
+  <link rel="stylesheet" href="a/164/css/collab.css" />
+  <link rel="stylesheet" href="a/164/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -174,7 +175,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/163/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/163/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/164/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/164/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -478,9 +479,7 @@
             <p class="account-chip-email" id="account-chip-email"></p>
             <p class="account-chip-plan" id="account-chip-plan" hidden></p>
             <p class="account-chip-usage" id="account-chip-usage" hidden></p>
-            <button type="button" class="account-chip-action" id="btn-account-billing" hidden></button>
-            <button type="button" class="account-chip-action" id="btn-account-api-keys" data-i18n="apiKeys.menu">Chaves de API</button>
-            <button type="button" class="account-chip-action" id="btn-account-admin" hidden data-i18n="account.admin">Administração</button>
+            <button type="button" class="account-chip-action" id="btn-account-settings" data-i18n="settings.menu">Configurações</button>
             </div>
             <div class="account-help-slot" id="account-help-slot"></div>
             <button type="button" class="account-chip-signout" id="btn-account-signout" data-i18n="account.signOut">Sair</button>
@@ -497,7 +496,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/163/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/163/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/164/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/164/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -711,99 +710,9 @@
                 <label><span data-i18n="narration.defaultHold">Pausa padrão (s)</span>
                   <input type="number" id="playback-default-hold" min="1" max="120" step="1" value="6" />
                 </label>
-                <details class="settings-fold" id="settings-tts">
-                  <summary data-i18n="narration.cartesiaKey">Cartesia</summary>
-                  <div class="settings-fold-body">
-                    <p class="props-meta" id="cartesia-status" data-i18n="cartesia.noKey">Nenhuma chave salva.</p>
-                    <div class="settings-key-row">
-                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
-                        <input
-                          type="text"
-                          id="cartesia-key"
-                          class="settings-secret"
-                          name="guiaflow-cartesia-api-key"
-                          autocomplete="off"
-                          autocorrect="off"
-                          autocapitalize="off"
-                          spellcheck="false"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-form-type="other"
-                          placeholder="sk_car_…"
-                          aria-label="Chave da API"
-                          data-i18n-aria="narration.apiKey"
-                        />
-                      </form>
-                      <div class="settings-actions">
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                        </button>
-                        <a class="btn btn-sm btn-icon" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-                <details class="settings-fold" id="settings-llm">
-                  <summary data-i18n="llm.section">Inteligência</summary>
-                  <div class="settings-fold-body">
-                    <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">Modelo com visão · só neste navegador</p>
-                    <label><span data-i18n="llm.provider">Provedor</span>
-                      <select id="llm-provider">
-                        <option value="openrouter" selected>OpenRouter</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
-                      </select>
-                    </label>
-                    <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
-                      <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
-                    </label>
-                    <label><span data-i18n="llm.model">Modelo</span>
-                      <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
-                      <datalist id="llm-model-list"></datalist>
-                    </label>
-                    <div class="settings-key-row">
-                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
-                        <input
-                          type="text"
-                          id="llm-key"
-                          class="settings-secret"
-                          name="guiaflow-llm-api-key"
-                          autocomplete="off"
-                          autocorrect="off"
-                          autocapitalize="off"
-                          spellcheck="false"
-                          data-1p-ignore="true"
-                          data-lpignore="true"
-                          data-bwignore="true"
-                          data-form-type="other"
-                          placeholder="sk-…"
-                          aria-label="Chave da API"
-                          data-i18n-aria="narration.apiKey"
-                        />
-                      </form>
-                      <div class="settings-actions">
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-list-models" title="Listar modelos" aria-label="Listar modelos" data-i18n-title="llm.listModels" data-i18n-aria="llm.listModels">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-list"></use></svg>
-                        </button>
-                        <a class="btn btn-sm btn-icon" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
-                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </details>
+                <p class="settings-byok-jump">
+                  <button type="button" class="btn btn-sm" id="btn-open-browser-keys" data-i18n="settings.byokLink">Chaves de IA e voz</button>
+                </p>
               </div>
             </details>
           </div>
@@ -1173,7 +1082,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/163/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/164/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1863,6 +1772,254 @@
   </dialog>
 
 
+  <dialog class="studio-modal settings-modal" id="modal-settings" aria-labelledby="settings-title">
+    <div class="studio-modal-body settings-dialog">
+      <div class="account-dialog-head">
+        <h3 id="settings-title" data-i18n="settings.title">Configurações</h3>
+        <button type="button" class="btn btn-icon" id="btn-settings-close" aria-label="Fechar" data-i18n-aria="canvas.close">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <div class="settings-tabbar">
+        <div class="settings-tabs" id="settings-tabs" role="tablist" aria-label="Seção" data-i18n-aria="settings.tabs">
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-account" data-settings-tab="account" aria-selected="true" aria-controls="settings-panel-account" tabindex="0">
+            <span data-i18n="settings.tab.account">Conta</span>
+          </button>
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-plan" data-settings-tab="plan" aria-selected="false" aria-controls="settings-panel-plan" tabindex="-1">
+            <span data-i18n="settings.tab.plan">Plano</span>
+          </button>
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-team" data-settings-tab="team" aria-selected="false" aria-controls="settings-panel-team" tabindex="-1">
+            <span data-i18n="settings.tab.team">Equipe</span>
+            <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+          </button>
+          <span id="settings-tab-slot-clients" class="settings-tab-slot" data-settings-reserved="clients" hidden></span>
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-connections" data-settings-tab="connections" aria-selected="false" aria-controls="settings-panel-connections" tabindex="-1">
+            <span data-i18n="settings.tab.connections">Conexões</span>
+            <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+          </button>
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-api" data-settings-tab="api" aria-selected="false" aria-controls="settings-panel-api" tabindex="-1">
+            <span data-i18n="settings.tab.api">API e MCP</span>
+            <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+          </button>
+          <button type="button" class="settings-tab" role="tab" id="settings-tab-admin" data-settings-tab="admin" aria-selected="false" aria-controls="settings-panel-admin" tabindex="-1" hidden>
+            <span data-i18n="settings.tab.admin">Administração</span>
+          </button>
+        </div>
+        <label class="settings-tab-select">
+          <span class="visually-hidden" data-i18n="settings.tabs">Seção</span>
+          <select id="settings-tab-select"></select>
+        </label>
+      </div>
+      <div class="settings-panels">
+        <div role="tabpanel" id="settings-panel-account" aria-labelledby="settings-tab-account">
+          <p class="settings-kicker" data-i18n="settings.email">E-mail</p>
+          <p class="settings-email" id="settings-email"></p>
+          <div class="settings-pref">
+            <span class="settings-kicker" data-i18n="locale.label">Idioma</span>
+            <select id="settings-locale" data-i18n-aria="locale.label" aria-label="Idioma">
+              <option value="pt">Português</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+            </select>
+          </div>
+          <div class="settings-pref">
+            <span class="settings-kicker" data-i18n="appearance.theme">Modo</span>
+            <div class="appearance-segment" id="settings-appearance" role="radiogroup" aria-label="Modo" data-i18n-aria="appearance.theme">
+              <button type="button" class="appearance-opt" data-mode="documento" title="Claro" aria-label="Claro" aria-pressed="false" data-i18n-title="appearance.light" data-i18n-aria="appearance.light">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-sun"></use></svg>
+              </button>
+              <button type="button" class="appearance-opt" data-mode="social" title="Escuro" aria-label="Escuro" aria-pressed="false" data-i18n-title="appearance.dark" data-i18n-aria="appearance.dark">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-moon"></use></svg>
+              </button>
+              <button type="button" class="appearance-opt" data-mode="system" title="Sistema" aria-label="Sistema" aria-pressed="false" data-i18n-title="appearance.system" data-i18n-aria="appearance.system">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-appearance"></use></svg>
+              </button>
+            </div>
+          </div>
+          <div id="settings-byok">
+            <p class="settings-note" data-i18n="settings.byokNote">Chaves de IA e de voz ficam só neste navegador. Mostramos os 4 últimos caracteres.</p>
+                <details class="settings-fold" id="settings-tts">
+                  <summary data-i18n="narration.cartesiaKey">Cartesia</summary>
+                  <div class="settings-fold-body">
+                    <p class="props-meta" id="cartesia-status" data-i18n="cartesia.noKey">Nenhuma chave salva.</p>
+                    <div class="settings-key-row">
+                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
+                        <input
+                          type="text"
+                          id="cartesia-key"
+                          class="settings-secret"
+                          name="guiaflow-cartesia-api-key"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          placeholder="sk_car_…"
+                          aria-label="Chave da API"
+                          data-i18n-aria="narration.apiKey"
+                        />
+                      </form>
+                      <div class="settings-actions">
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-cartesia-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                        <a class="btn btn-sm btn-icon" id="link-cartesia-signup" href="https://play.cartesia.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+                <details class="settings-fold" id="settings-llm">
+                  <summary data-i18n="llm.section">Inteligência</summary>
+                  <div class="settings-fold-body">
+                    <p class="props-meta" id="llm-status" data-i18n="llm.statusHint">Modelo com visão · só neste navegador</p>
+                    <label><span data-i18n="llm.provider">Provedor</span>
+                      <select id="llm-provider">
+                        <option value="openrouter" selected>OpenRouter</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="custom" data-i18n="llm.providerCustom">URL personalizada</option>
+                      </select>
+                    </label>
+                    <label id="wrap-llm-base" hidden><span data-i18n="llm.baseUrl">URL base</span>
+                      <input type="url" id="llm-base-url" autocomplete="off" spellcheck="false" placeholder="https://…" />
+                    </label>
+                    <label><span data-i18n="llm.model">Modelo</span>
+                      <input type="text" id="llm-model" list="llm-model-list" autocomplete="off" spellcheck="false" value="deepseek/deepseek-v4.1-flash" />
+                      <datalist id="llm-model-list"></datalist>
+                    </label>
+                    <div class="settings-key-row">
+                      <form class="settings-key-form" autocomplete="off" onsubmit="return false">
+                        <input
+                          type="text"
+                          id="llm-key"
+                          class="settings-secret"
+                          name="guiaflow-llm-api-key"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="off"
+                          spellcheck="false"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          data-bwignore="true"
+                          data-form-type="other"
+                          placeholder="sk-…"
+                          aria-label="Chave da API"
+                          data-i18n-aria="narration.apiKey"
+                        />
+                      </form>
+                      <div class="settings-actions">
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-save" title="Salvar" aria-label="Salvar" data-i18n-title="narration.save" data-i18n-aria="narration.save">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-save"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-clear" hidden title="Remover" aria-label="Remover" data-i18n-title="narration.remove" data-i18n-aria="narration.remove">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" id="btn-llm-list-models" title="Listar modelos" aria-label="Listar modelos" data-i18n-title="llm.listModels" data-i18n-aria="llm.listModels">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-list"></use></svg>
+                        </button>
+                        <a class="btn btn-sm btn-icon" id="link-llm-signup" href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" title="Obter chave" aria-label="Obter chave" data-i18n-title="narration.getKey" data-i18n-aria="narration.getKey">
+                          <svg class="btn-ico" aria-hidden="true"><use href="#i-key"></use></svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </details>
+          </div>
+        </div>
+        <div role="tabpanel" id="settings-panel-plan" aria-labelledby="settings-tab-plan" hidden>
+          <div data-settings-account>
+            <p class="settings-usage" id="settings-usage" hidden></p>
+            <p class="settings-seat-line" id="settings-seat-line" hidden></p>
+            <div id="settings-plan-host"></div>
+          </div>
+          <p class="settings-signed-out" data-settings-signed-out hidden>
+            <span data-i18n="settings.plan.signIn">Entre para ver o plano.</span>
+            <button type="button" class="btn" data-settings-signin data-i18n="account.signIn">Entrar</button>
+          </p>
+        </div>
+        <div role="tabpanel" id="settings-panel-team" aria-labelledby="settings-tab-team" hidden>
+          <div data-settings-account>
+            <div id="settings-seats-host"></div>
+            <h4 data-i18n="settings.team.people">Pessoas</h4>
+            <p class="settings-note" data-i18n="settings.team.project">Neste projeto</p>
+            <ul id="settings-people" class="settings-people"></ul>
+            <p class="settings-note" data-i18n="settings.team.hint">As pessoas entram em cada tour, em Compartilhar. As vagas do plano ficam aqui.</p>
+          </div>
+          <p class="settings-signed-out" data-settings-signed-out hidden>
+            <span data-i18n="settings.team.signIn">Entre para ver vagas e pessoas.</span>
+            <button type="button" class="btn" data-settings-signin data-i18n="account.signIn">Entrar</button>
+          </p>
+        </div>
+        <div role="tabpanel" id="settings-panel-connections" aria-labelledby="settings-tab-connections" hidden>
+          <div data-settings-account>
+            <div class="settings-connections" id="settings-connections">
+              <article class="settings-conn is-lead" data-conn="leadpronto">
+                <h4>LeadPronto</h4>
+                <p class="settings-conn-kicker" data-i18n="settings.conn.same">Do mesmo fabricante</p>
+                <p class="settings-conn-status" id="settings-lp-status" role="status"></p>
+                <p data-i18n="settings.conn.lpHint">A conexão é da conta. Quais tours enviam fica no link publicado.</p>
+                <div class="settings-conn-actions">
+                  <button type="button" class="btn btn-primary" id="btn-settings-lp-connect" data-i18n="leads.lp.connect">Conectar ao LeadPronto</button>
+                  <button type="button" class="btn" id="btn-settings-lp-disconnect" data-i18n="leads.lp.disconnect" hidden>Desconectar</button>
+                </div>
+              </article>
+              <article class="settings-conn" data-conn="webhook">
+                <h4 data-i18n="settings.conn.webhook">Webhook</h4>
+                <p data-i18n="settings.conn.perLink">Por link, no tour publicado.</p>
+              </article>
+              <article class="settings-conn" data-conn="rd">
+                <h4 data-i18n="settings.conn.rd">RD Station</h4>
+                <p data-i18n="settings.conn.perLink">Por link, no tour publicado.</p>
+              </article>
+              <article class="settings-conn" data-conn="hubspot">
+                <h4 data-i18n="settings.conn.hubspot">HubSpot</h4>
+                <p data-i18n="settings.conn.perLink">Por link, no tour publicado.</p>
+              </article>
+            </div>
+          </div>
+          <p class="settings-signed-out" data-settings-signed-out hidden>
+            <span data-i18n="settings.conn.signIn">Entre para ver as conexões da conta.</span>
+            <button type="button" class="btn" data-settings-signin data-i18n="account.signIn">Entrar</button>
+          </p>
+        </div>
+        <div role="tabpanel" id="settings-panel-api" aria-labelledby="settings-tab-api" hidden>
+          <div data-settings-account>
+            <div id="settings-api-header"></div>
+            <div class="settings-tabs settings-subtabs" id="settings-api-tabs" role="tablist" aria-label="API e MCP" data-i18n-aria="settings.tab.api">
+              <button type="button" class="settings-subtab" role="tab" id="settings-sub-connect" data-settings-subtab="connect" aria-selected="true" aria-controls="settings-api-connect">
+                <span data-i18n="settings.sub.connect">Conectar</span>
+              </button>
+              <button type="button" class="settings-subtab" role="tab" id="settings-sub-keys" data-settings-subtab="keys" aria-selected="false" aria-controls="settings-api-keys" tabindex="-1">
+                <span data-i18n="settings.sub.keys">Chaves</span>
+              </button>
+              <button type="button" class="settings-subtab" role="tab" id="settings-sub-apps" data-settings-subtab="apps" aria-selected="false" aria-controls="settings-api-apps" tabindex="-1">
+                <span data-i18n="settings.sub.apps">Apps</span>
+              </button>
+            </div>
+            <div role="tabpanel" id="settings-api-connect" class="settings-api-panel" aria-labelledby="settings-sub-connect"></div>
+            <div role="tabpanel" id="settings-api-keys" class="settings-api-panel" aria-labelledby="settings-sub-keys" hidden></div>
+            <div role="tabpanel" id="settings-api-apps" class="settings-api-panel" aria-labelledby="settings-sub-apps" hidden></div>
+          </div>
+          <p class="settings-signed-out" data-settings-signed-out hidden>
+            <span data-i18n="settings.api.signIn">Entre para gerenciar a API e o MCP.</span>
+            <button type="button" class="btn" data-settings-signin data-i18n="account.signIn">Entrar</button>
+          </p>
+        </div>
+        <div role="tabpanel" id="settings-panel-admin" aria-labelledby="settings-tab-admin" hidden>
+          <p class="settings-admin-lead" data-i18n="settings.admin.lead">Painel da equipe GuiaFlow. Abre em outra aba, com a sessão desta conta.</p>
+          <button type="button" class="btn btn-primary" id="btn-settings-admin" data-i18n="settings.admin.open">Abrir administração</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="studio-modal subscription-modal" id="modal-subscription" aria-labelledby="subscription-title">
     <div class="studio-modal-body subscription-dialog">
       <div class="account-dialog-head">
@@ -2390,8 +2547,8 @@
     </symbol>
   </svg>
 
-  <script src="a/163/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/163/js/app.js"></script>
+  <script src="a/164/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/164/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

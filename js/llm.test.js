@@ -24,8 +24,8 @@ test("chave LLM genérica e máscara", () => {
   assert.equal(isPlausibleLlmKey(SAMPLE_KEY), true);
   assert.equal(isPlausibleLlmKey("short"), false);
   assert.equal(isPlausibleLlmKey("has space here"), false);
-  assert.equal(maskLlmKey(SAMPLE_KEY).includes("*"), true);
-  assert.equal(maskLlmKey(SAMPLE_KEY).includes(SAMPLE_KEY), false);
+  assert.equal(maskLlmKey(SAMPLE_KEY), `****${SAMPLE_KEY.slice(-4)}`);
+  assert.equal(maskLlmKey(SAMPLE_KEY).includes(SAMPLE_KEY.slice(0, 4)), false);
 });
 
 test("OpenRouter é o provedor padrão com DeepSeek V4.1 Flash", () => {

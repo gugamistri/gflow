@@ -3881,6 +3881,8 @@ export function createEditor(ctx) {
   }
 
   function openLlmSettings() {
+    const ev = new CustomEvent("gf-open-browser-keys", { cancelable: true });
+    if (document.dispatchEvent(ev) === false) return;
     const more = document.getElementById("prefs-panel") || document.getElementById("more-panel");
     const panel = document.getElementById("narration-panel");
     if (!panel) return;
