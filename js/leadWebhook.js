@@ -13,6 +13,15 @@ export const WEBHOOK_HELP = {
   es: "/es/integraciones/leads",
 };
 
+/** Receitas prontas no detalhe do Webhook, na ordem do bloco. Cada uma é uma âncora da página de receitas. */
+export const WEBHOOK_RECIPES = ["make", "n8n", "zapier"];
+
+/** Link da receita na página de receitas do idioma atual (pt se o idioma não tiver página). */
+export function webhookRecipeHref(tool, locale) {
+  const base = WEBHOOK_HELP[locale] || WEBHOOK_HELP.pt;
+  return WEBHOOK_RECIPES.includes(tool) ? `${base}#${tool}` : base;
+}
+
 const SECRET_RE = /^whsec_[A-Za-z0-9+/_=-]{16,200}$/;
 
 export function isWebhookSecret(value) {

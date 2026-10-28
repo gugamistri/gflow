@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/164/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/164/css/theme.css" />
-  <link rel="stylesheet" href="a/164/css/shell.css" />
-  <link rel="stylesheet" href="a/164/css/player.css" />
-  <link rel="stylesheet" href="a/164/css/editor.css" />
-  <link rel="stylesheet" href="a/164/css/settings.css" />
-  <link rel="stylesheet" href="a/164/css/collab.css" />
-  <link rel="stylesheet" href="a/164/css/comments.css" />
+  <link rel="stylesheet" href="a/165/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/165/css/theme.css" />
+  <link rel="stylesheet" href="a/165/css/shell.css" />
+  <link rel="stylesheet" href="a/165/css/player.css" />
+  <link rel="stylesheet" href="a/165/css/editor.css" />
+  <link rel="stylesheet" href="a/165/css/settings.css" />
+  <link rel="stylesheet" href="a/165/css/collab.css" />
+  <link rel="stylesheet" href="a/165/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -175,7 +175,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/164/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/164/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/165/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/165/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -496,7 +496,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/164/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/164/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/165/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/165/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -1082,7 +1082,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/164/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/165/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -1460,6 +1460,7 @@
               <span class="delivery-card-name">
                 <span class="delivery-card-title" data-i18n="leads.webhook.title">Webhook</span>
                 <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
+                <span class="delivery-card-sub" data-i18n="leads.delivery.webhookSub">para qualquer sistema · Make, n8n, Zapier</span>
               </span>
               <svg class="delivery-card-chev" aria-hidden="true"><use href="#i-chevron-right"></use></svg>
             </span>
@@ -1520,6 +1521,15 @@
           <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span>
         </h4>
         <p class="leads-webhook-lead" data-i18n="leads.webhook.lead">Cada contato novo sai para o endereço abaixo, assinado. Use Make, n8n, Zapier, o LeadPronto ou o seu sistema.</p>
+        <div class="webhook-recipes" id="leads-webhook-recipes" role="group" aria-labelledby="leads-webhook-recipes-heading">
+          <p class="webhook-recipes-title" id="leads-webhook-recipes-heading" data-i18n="leads.webhook.recipes.title">Receitas prontas</p>
+          <p class="fixed-hint" data-i18n="leads.webhook.recipes.lead">Leve cada contato para uma planilha, o Pipefy ou o Pipedrive. A ferramenta mostra uma URL: cole no campo abaixo.</p>
+          <div class="webhook-recipes-list">
+            <a class="webhook-recipe" id="leads-webhook-recipe-make" data-webhook-recipe="make" href="/integracoes/leads#make" target="_blank" rel="noopener"><span class="webhook-recipe-name">Make</span><span class="webhook-recipe-hint" data-i18n="leads.webhook.recipes.make">Modelos para importar</span></a>
+            <a class="webhook-recipe" id="leads-webhook-recipe-n8n" data-webhook-recipe="n8n" href="/integracoes/leads#n8n" target="_blank" rel="noopener"><span class="webhook-recipe-name">n8n</span><span class="webhook-recipe-hint" data-i18n="leads.webhook.recipes.n8n">Modelos que conferem a assinatura</span></a>
+            <a class="webhook-recipe" id="leads-webhook-recipe-zapier" data-webhook-recipe="zapier" href="/integracoes/leads#zapier" target="_blank" rel="noopener"><span class="webhook-recipe-name">Zapier</span><span class="webhook-recipe-hint" data-i18n="leads.webhook.recipes.zapier">Gatilho Webhooks by Zapier</span></a>
+          </div>
+        </div>
         <label class="leads-webhook-field">
           <span data-i18n="leads.webhook.url">URL (https://)</span>
           <input type="url" id="leads-webhook-url" inputmode="url" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="2000" placeholder="https://" />
@@ -2547,8 +2557,8 @@
     </symbol>
   </svg>
 
-  <script src="a/164/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/164/js/app.js"></script>
+  <script src="a/165/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/165/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
