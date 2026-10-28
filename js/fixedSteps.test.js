@@ -178,3 +178,25 @@ test("leadsToCsv: BOM, ; e proteção contra fórmula", () => {
   assert.ok(csv.startsWith("\uFEFFData;Origem;Nome"));
   assert.ok(csv.includes(";Início;'@Ana;a@b.co;'+5511999998888;BR +55 (11) 99999-8888;;sim;x;Aceito"));
 });
+
+test("leadsToCsv: colunas de UTM, referrer, embed e dispositivo; lead sem contexto fica com elas vazias", () => {
+  const withUtm = {
+    createdAt: "2026-10-11 07:00:00", source: "start", name: "Ana", email: "a@b.co", consent: true,
+    context: { utm_source: "google", utm_medium: "cpc", utm_campaign: "blackfriday", utm_term: "tour", utm_content: "banner", referrer: "site.com", embed: true, device: "mobile" },
+  };
+  const noUtm = { source: "contact", name: "Bia", consent: false, context: { utm_source: null, referrer: null, embed: false, device: "desktop" } };
+  const legacy = { source: "start", name: "Caio", consent: true };
+  const csv = leadsToCsv([withUtm, noUtm, legacy], { yes: "sim", no: "não", device: "dispositivo", device_mobile: "celular", device_desktop: "computador" });
+  const lines = csv.slice(1).trimEnd().split("\r\n");
+  const header = lines[0].split(";");
+  assert.deepEqual(header.slice(-8), ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "referrer", "embed", "dispositivo"]);
+  assert.equal(lines.length, 4);
+  for (const line of lines) assert.equal(line.split(";").length, header.length, line);
+  assert.deepEqual(lines[1].split(";").slice(-8), ["google", "cpc", "blackfriday", "tour", "banner", "site.com", "sim", "celular"]);
+  assert.deepEqual(lines[2].split(";").slice(-8), ["", "", "", "", "", "", "não", "computador"]);
+  assert.deepEqual(lines[3].split(";").slice(-8), ["", "", "", "", "", "", "", ""]);
+  // sem rótulos: nomes padrão e valores crus; UTM com fórmula é neutralizada
+  const raw = leadsToCsv([{ context: { utm_campaign: "=cmd()", referrerHost: "old.example", device: "desktop", embed: false } }]);
+  assert.ok(raw.includes(";utm_source;utm_medium;utm_campaign;utm_term;utm_content;referrer;embed;dispositivo\r\n"));
+  assert.ok(raw.endsWith(";;;'=cmd();;;old.example;não;desktop\r\n"), raw);
+});

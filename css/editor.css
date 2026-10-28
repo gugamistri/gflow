@@ -6323,6 +6323,31 @@ dialog.leads-modal {
   overflow-wrap: anywhere;
 }
 
+.leads-origin {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ns-muted);
+  overflow-wrap: anywhere;
+}
+
+.leads-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--ns-muted);
+}
+
+.leads-filter[hidden] {
+  display: none;
+}
+
+.leads-filter select {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .leads-message {
   margin: 2px 0 0;
   white-space: pre-line;

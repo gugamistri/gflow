@@ -404,7 +404,18 @@ export function csvCell(value) {
   return s;
 }
 
-/** CSV dos leads (UTF-8 com BOM, separador ;) — abre direto no Excel em pt-BR. */
+const CONTEXT_COLS = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "referrer", "embed", "device"]);
+
+// why: lead antigo (sem contexto) sai com as colunas vazias, sem "não" inventado
+function contextCell(key, context, headers) {
+  if (!context || typeof context !== "object") return "";
+  if (key === "embed") return context.embed ? headers.yes || "sim" : headers.no || "não";
+  if (key === "referrer") return context.referrer || context.referrerHost || "";
+  if (key === "device") return context.device ? headers[`device_${context.device}`] || context.device : "";
+  return context[key] || "";
+}
+
+/** CSV dos leads (UTF-8 com BOM, separador ;) — abre direto no Excel em pt-BR. Inclui o contexto de captura (UTM, referrer, embed, dispositivo). */
 export function leadsToCsv(leads = [], headers = {}) {
   const cols = [
     ["createdAt", headers.createdAt || "Data"],
@@ -418,6 +429,14 @@ export function leadsToCsv(leads = [], headers = {}) {
     ["consentAt", headers.consentAt || "Consentimento em"],
     ["consentText", headers.consentText || "Texto do consentimento"],
     ["lang", headers.lang || "Idioma"],
+    ["utm_source", "utm_source"],
+    ["utm_medium", "utm_medium"],
+    ["utm_campaign", "utm_campaign"],
+    ["utm_term", "utm_term"],
+    ["utm_content", "utm_content"],
+    ["referrer", "referrer"],
+    ["embed", "embed"],
+    ["device", headers.device || "dispositivo"],
   ];
   const rows = [cols.map(([, label]) => csvCell(label)).join(";")];
   for (const lead of leads) {
@@ -428,6 +447,7 @@ export function leadsToCsv(leads = [], headers = {}) {
           if (key === "source") return csvCell(headers[`source_${lead.source}`] || lead.source);
           if (key === "phone") return csvCell(leadPhoneE164(lead.phone));
           if (key === "phoneFormatted") return csvCell(csvPhoneFormatted(lead.phone));
+          if (CONTEXT_COLS.has(key)) return csvCell(contextCell(key, lead.context, headers));
           return csvCell(lead[key]);
         })
         .join(";")
