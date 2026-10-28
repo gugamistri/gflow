@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { ASSET_PREFIX, ASSET_PREFIX_RE, ASSET_VERSION } from "../scripts/asset-version.mjs";
 import {
   CLOUD_AUTH_MESSAGE_TYPE,
   CLOUD_FLAG_KEYS,
@@ -224,7 +225,7 @@ test("override local com o host anterior da nuvem continua a valer", () => {
   });
 });
 
-test("o HTML publicado aponta app.guiaflow.pro e os assets em a/163", () => {
+test(`o HTML publicado aponta app.guiaflow.pro e os assets em ${ASSET_PREFIX}`, () => {
   for (const file of ["../index.html", "../editor.html", "../auth/callback.html"]) {
     const html = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(html, /__GUIAFLOW_CLOUD__ = (?:"https:\/\/app\.guiaflow\.pro"|\{ baseUrl: "https:\/\/app\.guiaflow\.pro", flags: \{ collab: true \} \})/);
@@ -232,68 +233,9 @@ test("o HTML publicado aponta app.guiaflow.pro e os assets em a/163", () => {
   }
   for (const file of ["../index.html", "../editor.html", "../view.html", "../ajuda.html", "../api/lib/view-shell.cjs"]) {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.match(text, /a\/163\//);
-    assert.equal(text.includes("a/162/"), false);
-    assert.equal(text.includes("a/161/"), false);
-    assert.equal(text.includes("a/160/"), false);
-    assert.equal(text.includes("a/159/"), false);
-    assert.equal(text.includes("a/158/"), false);
-    assert.equal(text.includes("a/157/"), false);
-    assert.equal(text.includes("a/156/"), false);
-    assert.equal(text.includes("a/155/"), false);
-    assert.equal(text.includes("a/154/"), false);
-    assert.equal(text.includes("a/153/"), false);
-    assert.equal(text.includes("a/152/"), false);
-    assert.equal(text.includes("a/147/"), false);
-    assert.equal(text.includes("a/146/"), false);
-    assert.equal(text.includes("a/70/"), false);
-    assert.equal(text.includes("a/69/"), false);
-    assert.equal(text.includes("a/68/"), false);
-    assert.equal(text.includes("a/71/"), false);
-    assert.equal(text.includes("a/64/"), false);
-    assert.equal(text.includes("a/63/"), false);
-    assert.equal(text.includes("a/62/"), false);
-    assert.equal(text.includes("a/61/"), false);
-    assert.equal(text.includes("a/60/"), false);
-    assert.equal(text.includes("a/59/"), false);
-    assert.equal(text.includes("a/58/"), false);
-    assert.equal(text.includes("a/57/"), false);
-    assert.equal(text.includes("a/56/"), false);
-    assert.equal(text.includes("a/55/"), false);
-    assert.equal(text.includes("a/54/"), false);
-    assert.equal(text.includes("a/52/"), false);
-    assert.equal(text.includes("a/43/"), false);
-    assert.equal(text.includes("a/42/"), false);
-    assert.equal(text.includes("a/41/"), false);
-    assert.equal(text.includes("a/40/"), false);
-    assert.equal(text.includes("a/39/"), false);
-    assert.equal(text.includes("a/38/"), false);
-    assert.equal(text.includes("a/37/"), false);
-    assert.equal(text.includes("a/36/"), false);
-    assert.equal(text.includes("a/35/"), false);
-    assert.equal(text.includes("a/34/"), false);
-    assert.equal(text.includes("a/33/"), false);
-    assert.equal(text.includes("a/32/"), false);
-    assert.equal(text.includes("a/31/"), false);
-    assert.equal(text.includes("a/30/"), false);
-    assert.equal(text.includes("a/29/"), false);
-    assert.equal(text.includes("a/28/"), false);
-    assert.equal(text.includes("a/27/"), false);
-    assert.equal(text.includes("a/26/"), false);
-    assert.equal(text.includes("a/25/"), false);
-    assert.equal(text.includes("a/24/"), false);
-    assert.equal(text.includes("a/23/"), false);
-    assert.equal(text.includes("a/22/"), false);
-    assert.equal(text.includes("a/21/"), false);
-    assert.equal(text.includes("a/20/"), false);
-    assert.equal(text.includes("a/19/"), false);
-    assert.equal(text.includes("a/18/"), false);
-    assert.equal(text.includes("a/17/"), false);
-    assert.equal(text.includes("a/16/"), false);
-    assert.equal(text.includes("a/15/"), false);
-    assert.equal(text.includes("a/14/"), false);
-    assert.equal(text.includes("a/13/"), false);
-    assert.equal(text.includes("a/11/"), false);
+    assert.match(text, new RegExp(ASSET_PREFIX_RE));
+    const stale = [...text.matchAll(/\ba\/(\d+)\//g)].map((m) => Number(m[1])).filter((v) => v !== ASSET_VERSION);
+    assert.deepEqual(stale, [], file);
   }
 });
 

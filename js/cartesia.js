@@ -150,7 +150,7 @@ export function isCartesiaKeysUrl(value) {
 export function maskApiKey(value) {
   const key = String(value || "").trim();
   if (!isPlausibleApiKey(key)) return "";
-  return `${key.slice(0, 4)}****${key.slice(-4)}`;
+  return `****${key.slice(-4)}`;
 }
 
 /**

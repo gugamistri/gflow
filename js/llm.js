@@ -50,7 +50,7 @@ export function maskLlmKey(value) {
   const key = String(value || "").trim();
   if (!isPlausibleLlmKey(key)) return "";
   if (key.length <= 8) return "****";
-  return `${key.slice(0, 4)}****${key.slice(-4)}`;
+  return `****${key.slice(-4)}`;
 }
 
 /** hazard: mensagens de erro podem ecoar a chave; só devolvemos o texto redatado. */

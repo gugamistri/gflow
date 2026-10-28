@@ -35,8 +35,8 @@ test("chave da Cartesia começa com sk_car_", () => {
   assert.equal(isPlausibleApiKey(SAMPLE_KEY), true);
   assert.equal(isPlausibleApiKey("sk-testkeyvalue123456"), false);
   assert.equal(isPlausibleApiKey(`${SAMPLE_KEY}\nstatus`), false);
-  assert.equal(maskApiKey(SAMPLE_KEY).includes("*"), true);
-  assert.equal(maskApiKey(SAMPLE_KEY).includes(SAMPLE_KEY), false);
+  assert.equal(maskApiKey(SAMPLE_KEY), `****${SAMPLE_KEY.slice(-4)}`);
+  assert.equal(maskApiKey(SAMPLE_KEY).includes(SAMPLE_KEY.slice(0, 4)), false);
 });
 
 test("o pedido fala português e não carrega a chave", () => {

@@ -170,6 +170,7 @@ import { createLeadsDialog } from "./leadsDialog.js";
 import { leadProntoReturnKey, readLeadProntoReturn, stripLeadProntoReturn } from "./leadPronto.js";
 import { hubspotReturnNotice, readHubspotReturn, stripHubspotReturn } from "./hubspot.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
+import { createSettingsDialog, takeSettingsReturn } from "./settingsDialog.js";
 import { createAnalyticsDialog } from "./analyticsDialog.js";
 import { createTranslationsDialog } from "./translationsDialog.js";
 import { createTranslationGrid } from "./translationGrid.js";
@@ -199,15 +200,14 @@ function applyChromeAppearance(mode = resolveAppearanceMode(appearancePreference
   document.documentElement.setAttribute("data-appearance", mode);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = mode === "social" ? "#101010" : "#1A4D6D";
-  const segment = document.getElementById("appearance-segment");
-  if (segment) {
+  // why: data-appearance no botão herdava tokens do tema escuro ([data-appearance=social])
+  document.querySelectorAll(".appearance-segment").forEach((segment) => {
     segment.querySelectorAll(".appearance-opt").forEach((btn) => {
-      // why: data-appearance no botão herdava tokens do tema escuro ([data-appearance=social])
       const value = btn.getAttribute("data-mode");
       const pressed = value === appearancePreference;
       btn.setAttribute("aria-pressed", pressed ? "true" : "false");
     });
-  }
+  });
 }
 
 /** Aparência do site — não altera o tema do tour (slides/popover) */
@@ -618,6 +618,27 @@ const leadsDialog = createLeadsDialog({
 
 const apiKeysDialog = createApiKeysDialog({ toast, onUpgrade: () => showUpgradeDialog() });
 
+const settingsDialog = createSettingsDialog({
+  toast,
+  getAccount: () => {
+    const account = isCloudEnabled() ? getCloudAccount() : { signedIn: false, email: "" };
+    return { signedIn: Boolean(account.signedIn), email: account.email || "" };
+  },
+  getPeople: () => {
+    const members = collab?._ctx?.()?.members;
+    return Array.isArray(members) ? members : [];
+  },
+  onOpenPlan: () => loadSubscription(),
+  onOpenApi: () => apiKeysDialog.open(),
+  onCloseApi: () => apiKeysDialog.dismissFresh(),
+  onAdmin: () => openAdmin(),
+  onSignIn: () => showAccountDialog(),
+  onUpgrade: () => {
+    settingsDialog.close();
+    showUpgradeDialog();
+  },
+});
+
 function paintAgentTag(show) {
   const tag = document.getElementById("topbar-agent-tag");
   if (!tag) return;
@@ -834,6 +855,7 @@ function enhanceLangSelects() {
   const txt = (id) => () => document.getElementById(id)?.textContent || "";
   enhanceLangSelect(document.getElementById("edit-lang"), { label: () => t("ml.editingIn") });
   enhanceLangSelect(document.getElementById("locale-select"), { label: () => t("locale.label"), showName: true, align: "end" });
+  enhanceLangSelect(document.getElementById("settings-locale"), { label: () => t("locale.label"), showName: true });
   enhanceLangSelect(document.getElementById("export-video-lang"), { label: () => t("export.langLabel"), showName: true });
   enhanceLangSelect(document.getElementById("embed-lang"), { label: txt("embed-lang-label"), showName: true });
 }
@@ -1708,6 +1730,8 @@ function paintAccount() {
   }
   const adminBtn = document.getElementById("btn-account-admin");
   if (adminBtn) adminBtn.hidden = !menu.showAdmin;
+  settingsDialog.setStaff(menu.showAdmin);
+  settingsDialog.paintAccount();
   if (billingBtn) {
     billingBtn.hidden = !menu.showAction;
     if (menu.showAction) {
@@ -1904,11 +1928,16 @@ function paintHostedUsage() {
   }
   el.hidden = !lines.length;
   el.textContent = lines.join("\n");
+  const usage = document.getElementById("settings-usage");
+  if (usage) {
+    usage.hidden = !lines.length;
+    usage.textContent = lines.join("\n");
+  }
 }
 
 function paintByokSettings() {
   const show = shouldShowByokSettings(billingSnapshot());
-  for (const id of ["settings-llm", "settings-tts"]) {
+  for (const id of ["settings-llm", "settings-tts", "settings-byok", "btn-open-browser-keys"]) {
     const el = document.getElementById(id);
     if (!el) continue;
     el.hidden = !show;
@@ -2145,6 +2174,10 @@ function consumeLeadProntoReturn() {
   const key = found.kind === "connected" ? "leads.lp.connectedToast" : leadProntoReturnKey(found.reason);
   toast(t(key), found.kind === "error" ? 5600 : 4200);
   leadsDialog.noteLeadProntoReturn(found);
+  if (takeSettingsReturn() === "connections") {
+    settingsDialog.open("connections");
+    return;
+  }
   const slug = viewerIsPro() ? permanentSlug(project?.cloudShare) || "" : "";
   if (slug) openResults("delivery");
 }
@@ -2276,6 +2309,11 @@ function paintSubscriptionSeats(screen) {
   if (note) note.textContent = t(yearly ? "billing.seats.noteYear" : "billing.seats.noteMonth", { price: formatPaywallAmount(yearly ? seat.year : seat.month, currency, locale) });
   const btn = document.getElementById("btn-subscription-seats");
   if (btn) btn.disabled = subscriptionBusy;
+  const line = document.getElementById("settings-seat-line");
+  if (line) {
+    line.hidden = !on;
+    line.textContent = on ? t("settings.seatLine", { total: 5 + extra, extra }) : "";
+  }
 }
 
 let seatsDirty = false;
@@ -2321,6 +2359,7 @@ function closeSubscriptionDialog() {
   subscriptionTicket += 1;
   const dialog = document.getElementById("modal-subscription");
   if (dialog?.open) dialog.close();
+  settingsDialog.close();
 }
 
 async function loadSubscription() {
@@ -2352,14 +2391,7 @@ async function loadSubscription() {
 
 async function openSubscriptionDialog() {
   if (!isCloudEnabled()) return;
-  const dialog = document.getElementById("modal-subscription");
-  if (!dialog) return;
-  subscriptionRecord = null;
-  subscriptionPhase = "loading";
-  subscriptionBusy = false;
-  paintSubscription();
-  if (!dialog.open) dialog.showModal();
-  await loadSubscription();
+  settingsDialog.open("plan");
 }
 
 async function changeSubscription(action) {
@@ -3171,14 +3203,16 @@ function bindChrome() {
     if (document.visibilityState === "hidden") persistOnLeave();
   });
 
-  document.getElementById("appearance-segment")?.addEventListener("click", (e) => {
-    const btn = e.target.closest(".appearance-opt");
-    if (!btn) return;
-    const next = btn.getAttribute("data-mode");
-    if (!next || next === appearancePreference) return;
-    appearancePreference = next;
-    setAppearancePreference(appearancePreference);
-    syncAppearanceOnly();
+  document.querySelectorAll(".appearance-segment").forEach((segment) => {
+    segment.addEventListener("click", (e) => {
+      const btn = e.target.closest(".appearance-opt");
+      if (!btn || !segment.contains(btn)) return;
+      const next = btn.getAttribute("data-mode");
+      if (!next || next === appearancePreference) return;
+      appearancePreference = next;
+      setAppearancePreference(appearancePreference);
+      syncAppearanceOnly();
+    });
   });
 
   const flyouts = [
@@ -4807,7 +4841,12 @@ async function boot() {
     e.preventDefault();
     window.open("/?landing=1", "_blank", "noopener");
   });
-  bindLocaleSelect(document.getElementById("locale-select"), () => {
+  const onLocaleChange = () => {
+    const value = getLocale();
+    for (const id of ["locale-select", "settings-locale"]) {
+      const select = document.getElementById(id);
+      if (select && select.value !== value) select.value = value;
+    }
     applyChromeAppearance();
     paintChrome();
     paintShareMenu();
@@ -4817,7 +4856,9 @@ async function boot() {
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();
-  });
+  };
+  bindLocaleSelect(document.getElementById("locale-select"), onLocaleChange);
+  bindLocaleSelect(document.getElementById("settings-locale"), onLocaleChange);
 
   let seeded = false;
   try {

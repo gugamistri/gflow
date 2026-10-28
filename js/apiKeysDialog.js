@@ -308,7 +308,8 @@ export function createApiKeysDialog({ toast, onUpgrade } = {}) {
     e.freshCopy?.addEventListener("click", () => void copyText(freshKey, toast));
     e.snippetCopy?.addEventListener("click", () => void copyText(e.snippet.value, toast));
     e.upsellBtn?.addEventListener("click", () => {
-      e.dialog.close();
+      e.dialog?.close();
+      document.getElementById("modal-settings")?.close();
       onUpgrade?.();
     });
     e.tabs?.addEventListener("click", (event) => {
@@ -327,19 +328,28 @@ export function createApiKeysDialog({ toast, onUpgrade } = {}) {
     });
   }
 
+  function dismissFresh() {
+    freshKey = "";
+    const e = els();
+    if (e.fresh) e.fresh.hidden = true;
+    if (e.freshValue) e.freshValue.value = "";
+  }
+
   function open() {
     const e = els();
-    if (!e.dialog) return;
+    const hosted = Boolean(document.getElementById("settings-panel-api")?.contains(document.getElementById("api-connect-tabs")));
+    if (!e.dialog && !hosted) return;
     bind();
     state = null;
     freshKey = "";
-    e.upsell.hidden = true;
-    e.form.hidden = true;
-    e.fresh.hidden = true;
+    if (e.upsell) e.upsell.hidden = true;
+    if (e.form) e.form.hidden = true;
+    if (e.fresh) e.fresh.hidden = true;
+    if (e.freshValue) e.freshValue.value = "";
     paintConnect();
-    if (!e.dialog.open) e.dialog.showModal();
+    if (!hosted && e.dialog && !e.dialog.open) e.dialog.showModal();
     void load();
   }
 
-  return { open };
+  return { open, dismissFresh };
 }
