@@ -69,7 +69,7 @@ test("GUI-32: novidades avisam que as integrações mudaram de lugar, em pt, en 
   assert.equal(pkg.version, RELEASE_NOTES_VERSION, "a versão das novidades espelha o package.json");
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const list = html.slice(html.indexOf('class="release-notes-list"'), html.indexOf("</ul>", html.indexOf('class="release-notes-list"')));
-  assert.match(list, /data-i18n="releaseNotes\.integrationsMoved">Integrações mudaram de lugar/);
+  assert.match(list, /data-i18n="releaseNotes\.integrationsMoved">Mudou de lugar/);
   assert.match(list, /data-i18n="releaseNotes\.menus"/);
   const where = { pt: /Resultados › Envio automático[\s\S]*Configurações › Conexões/, es: /Resultados › Envío automático[\s\S]*Configuración › Conexiones/, en: /Results › Automatic delivery[\s\S]*Settings › Connections/ };
   for (const loc of SUPPORTED_LOCALES) {
@@ -91,11 +91,12 @@ test("0.4.0: novidades citam os lugares com os rótulos da interface, em pt, en 
     "releaseNotes.menus",
     "releaseNotes.settings",
     "releaseNotes.clients",
-    "releaseNotes.publish",
+    "releaseNotes.leads",
     "releaseNotes.integrationsMoved",
-    "releaseNotes.leadContext",
+    "releaseNotes.publish",
+    "releaseNotes.video",
   ]);
-  assert.ok(keys.length <= 6, "no máximo 6 itens no aviso");
+  assert.ok(keys.length <= 7, "no máximo 7 itens no aviso");
   for (const loc of SUPPORTED_LOCALES) {
     const c = catalogs[loc];
     for (const k of keys) assert.ok(c[k], `${loc} ${k}`);
@@ -105,5 +106,10 @@ test("0.4.0: novidades citam os lugares com os rótulos da interface, em pt, en 
     assert.ok(c["releaseNotes.clients"].includes(c["clients.moveTitle"]), `${loc} Mover para cliente`);
     assert.ok(c["releaseNotes.publish"].includes(c["topbar.share"]), `${loc} Compartilhar`);
     assert.ok(c["releaseNotes.publish"].includes(c["results.button"]), `${loc} Resultados`);
+    // LeadPronto vem antes dos outros destinos, como nos cartões de Envio automático
+    const leads = c["releaseNotes.leads"];
+    assert.ok(leads.indexOf("LeadPronto") >= 0 && leads.indexOf("LeadPronto") < leads.indexOf("RD Station"), `${loc} LeadPronto primeiro`);
+    assert.ok(leads.indexOf("RD Station") < leads.indexOf("HubSpot"), `${loc} RD antes do HubSpot`);
+    assert.match(c["releaseNotes.video"], /4K/, `${loc} vídeo até 4K`);
   }
 });
