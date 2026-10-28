@@ -23,6 +23,15 @@ export function resolveVideoQuality({ quality = "standard", fps = 30, pro = fals
   return { ...preset, fps: rate, bitrate };
 }
 
+/**
+ * O que o handler de export passa a `exportVideo`.
+ * O plano entra só aqui, via `resolveVideoQuality`: sem Pro, ou com valor inválido, cai em standard/30.
+ */
+export function exportVideoOptions({ quality, fps, pro = false } = {}) {
+  const resolved = resolveVideoQuality({ quality, fps, pro });
+  return { quality: resolved.id, fps: resolved.fps, pro: Boolean(pro) };
+}
+
 /** Codecs H.264 candidatos com nível suficiente para resolução × fps (High primeiro). */
 export function avcCodecCandidates(width, height, fps = 30) {
   const px = width * height;

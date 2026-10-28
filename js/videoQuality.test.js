@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveVideoQuality, avcCodecCandidates } from "./videoQuality.js";
+import { readFileSync } from "node:fs";
+import { resolveVideoQuality, avcCodecCandidates, exportVideoOptions } from "./videoQuality.js";
 
 test("free fica no padrão 1080p30 8 Mbps mesmo pedindo Pro", () => {
   const q = resolveVideoQuality({ quality: "uhd", fps: 60, pro: false });
@@ -18,6 +19,39 @@ test("pro recebe resolução, fps e bitrate pedidos", () => {
 test("valores inválidos caem no padrão", () => {
   const q = resolveVideoQuality({ quality: "x", fps: 24, pro: true });
   assert.deepEqual([q.id, q.fps], ["standard", 30]);
+});
+
+test("o export recebe uhd/60 no Pro e rebaixa o resto para standard/30", () => {
+  assert.deepEqual(exportVideoOptions({ quality: "uhd", fps: "60", pro: true }), {
+    quality: "uhd",
+    fps: 60,
+    pro: true,
+  });
+  assert.deepEqual(exportVideoOptions({ quality: "uhd", fps: 60, pro: false }), {
+    quality: "standard",
+    fps: 30,
+    pro: false,
+  });
+  assert.doesNotThrow(() => {
+    assert.deepEqual(exportVideoOptions({ quality: "x", fps: "x", pro: true }), {
+      quality: "standard",
+      fps: 30,
+      pro: true,
+    });
+  });
+});
+
+test("o handler de export lê os selects e entrega o resultado do gate", () => {
+  const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const start = app.indexOf('getElementById("btn-export-video")');
+  const handler = app.slice(start, app.indexOf("function showLinkCopied", start));
+  assert.match(handler, /getElementById\("export-video-quality"\)/);
+  assert.match(handler, /getElementById\("export-video-fps"\)/);
+  assert.match(handler, /exportVideoOptions\(/);
+  assert.match(handler, /quality: videoOpts\.quality/);
+  assert.match(handler, /fps: videoOpts\.fps/);
+  assert.equal(handler.includes('quality: "standard"'), false);
+  assert.equal(handler.includes("fps: 30"), false);
 });
 
 test("nível H.264 adequado", () => {
