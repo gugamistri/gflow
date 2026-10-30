@@ -282,6 +282,48 @@ export function endStepActions(raw, { tour = "", link = "", nome = "", contactFo
   return actions;
 }
 
+/** Maior passo aceito no "botão do WhatsApp a partir do passo N" (o tour tem bem menos que isso). */
+export const STICKY_WHATSAPP_MAX_STEP = 999;
+
+/**
+ * Passo (1 = primeiro passo do tour) a partir do qual o player mostra o botão fixo do WhatsApp.
+ * Fica em `playback.stickyWhatsAppFromStep`; ausente, 0 ou inválido = desligado (comportamento antigo).
+ * why: playback viaja inteiro no payload (editor, sync, colaboração e snapshot do Cloud copiam o objeto),
+ * então o campo novo não some ao publicar — e tours sem ele mantêm o mesmo hash.
+ */
+export function stickyWhatsAppFromStep(playback) {
+  const raw = playback && typeof playback === "object" ? playback.stickyWhatsAppFromStep : undefined;
+  if (typeof raw === "boolean" || raw === null || raw === "") return 0;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 0;
+  return Math.min(STICKY_WHATSAPP_MAX_STEP, Math.floor(n));
+}
+
+/** Grava (ou apaga, com 0) o passo do botão fixo, sem tocar no resto do playback. */
+export function setStickyWhatsAppFromStep(playback, fromStep) {
+  const out = playback && typeof playback === "object" ? { ...playback } : {};
+  const n = stickyWhatsAppFromStep({ stickyWhatsAppFromStep: fromStep });
+  if (n) out.stickyWhatsAppFromStep = n;
+  else delete out.stickyWhatsAppFromStep;
+  return out;
+}
+
+/**
+ * Botão fixo do WhatsApp no passo `stepIndex` (0 = primeiro) do tour, ou null.
+ * Usa o número, a mensagem e o texto do botão do passo final — e só existe com o passo final ligado
+ * e um número válido (a mesma regra do botão do cartão final).
+ */
+export function stickyWhatsAppAction(demo, stepIndex, vars = {}) {
+  const from = stickyWhatsAppFromStep(demo?.playback);
+  if (!from) return null;
+  const i = Number(stepIndex);
+  if (!Number.isInteger(i) || i < 0) return null;
+  if (i + 1 < from) return null;
+  if (!endStepActive(demo?.endStep)) return null;
+  const wa = endStepActions(demo.endStep, { tour: vars.tour, link: vars.link, nome: vars.nome }).find((a) => a.kind === "whatsapp");
+  return wa ? { kind: "whatsapp", label: wa.label, href: wa.href, sticky: true } : null;
+}
+
 /** Máscara BR: (11) 99999-8888 / (11) 3333-4444; com +, deixa os dígitos livres. */
 export function formatBrPhone(input) {
   const raw = String(input ?? "");

@@ -5887,6 +5887,41 @@ dialog.fixed-modal[open] {
   resize: vertical;
 }
 
+/* botão fixo do WhatsApp durante o tour (playback.stickyWhatsAppFromStep) */
+.studio-modal-body .fixed-sticky {
+  display: grid;
+  gap: 4px;
+}
+
+.studio-modal-body .fixed-sticky label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ns-ink);
+}
+
+.studio-modal-body .fixed-sticky select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--ns-ink) 42%, var(--ns-input-bg));
+  border-radius: 8px;
+  background: var(--ns-input-bg);
+  color: var(--ns-ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.studio-modal-body .fixed-sticky select:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 1px;
+  border-color: var(--ns-accent);
+}
+
+.studio-modal-body .fixed-sticky .fixed-hint {
+  margin: 0;
+}
+
 .studio-modal-body .fixed-config :is(input, textarea)::placeholder {
   color: var(--ns-muted);
   -webkit-text-fill-color: var(--ns-muted);

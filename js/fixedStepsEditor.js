@@ -13,6 +13,8 @@ import {
   safeContactHref,
   leadPhoneDefaultIso,
   splitWhatsAppNumber,
+  setStickyWhatsAppFromStep,
+  stickyWhatsAppFromStep,
 } from "./fixedSteps.js";
 import { renderEndCard, renderStartCard } from "./fixedStepsView.js";
 import { defaultCountry } from "./phoneCountries.js";
@@ -68,7 +70,7 @@ export function createFixedStepsEditor(ctx) {
   const canPermanent = permanentShare || (() => true);
   let bound = false;
   let phoneField = null;
-  let baseline = { start: "", end: "" };
+  let baseline = { start: "", end: "", sticky: 0 };
 
   function els() {
     return {
@@ -108,6 +110,7 @@ export function createFixedStepsEditor(ctx) {
       waError: $("fixed-end-wa-error"),
       waMessage: $("fixed-end-wa-message"),
       waLabel: $("fixed-end-wa-label"),
+      waSticky: $("fixed-end-wa-sticky"),
       contact: $("fixed-end-contact"),
       contactFields: $("fixed-end-contact-fields"),
       mode: $("fixed-end-mode"),
@@ -232,6 +235,7 @@ export function createFixedStepsEditor(ctx) {
     const { step, errors } = readEnd(ui);
     ui.endConfig.classList.toggle("is-off", !ui.endEnabled.checked);
     ui.waFields.hidden = !ui.wa.checked;
+    if (ui.waSticky) ui.waSticky.disabled = !ui.wa.checked || !ui.endEnabled.checked;
     ui.contactFields.hidden = !ui.contact.checked;
     const mode = selectedMode(ui);
     ui.linkFields.hidden = mode !== "link";
@@ -251,6 +255,28 @@ export function createFixedStepsEditor(ctx) {
     ui.previewEnd.replaceChildren(card);
     ui.previewEnd.classList.toggle("is-off", !step.enabled);
     return { step, errors };
+  }
+
+  /** Opções "Não" + "Passo 1…N" (N = passos do tour; um valor salvo maior continua na lista). */
+  function fillSticky(ui) {
+    const select = ui.waSticky;
+    if (!select) return;
+    const project = getProject();
+    const saved = stickyWhatsAppFromStep(project?.playback);
+    const count = Math.max(Array.isArray(project?.steps) ? project.steps.length : 0, saved);
+    const options = [new Option(t("fixed.end.waStickyOff"), "0")];
+    for (let n = 1; n <= count; n += 1) {
+      const step = project?.steps?.[n - 1];
+      const title = String(step?.popover?.title || step?.label || "").trim();
+      const label = t("fixed.end.waStickyStep", { n });
+      options.push(new Option(title ? `${label} · ${title.slice(0, 48)}` : label, String(n)));
+    }
+    select.replaceChildren(...options);
+    select.value = String(saved);
+  }
+
+  function readSticky(ui) {
+    return stickyWhatsAppFromStep({ stickyWhatsAppFromStep: ui.waSticky?.value });
   }
 
   function paint(ui, opts) {
@@ -377,7 +403,10 @@ export function createFixedStepsEditor(ctx) {
       if (!project) return;
       const painted = paint(ui, { showErrors: true });
       const startChanged = JSON.stringify(painted.start.step) !== baseline.start;
-      const endChanged = JSON.stringify(painted.end.step) !== baseline.end;
+      const stickyFrom = readSticky(ui);
+      const stickyChanged = stickyFrom !== baseline.sticky;
+      const endStepChanged = JSON.stringify(painted.end.step) !== baseline.end;
+      const endChanged = endStepChanged || stickyChanged;
       if (!startChanged && !endChanged) {
         ui.dialog.close();
         return;
@@ -415,12 +444,14 @@ export function createFixedStepsEditor(ctx) {
         }
         project.startStep = painted.start.step;
       }
-      if (endChanged) {
+      if (endStepChanged) {
         if (painted.end.step.contact.mode === "form" && !painted.end.step.contact.consentText) {
           painted.end.step.contact.consentText = t("fixed.consentDefault");
         }
         project.endStep = painted.end.step;
       }
+      // why: fica no playback (viaja inteiro no payload e no snapshot do Cloud); 0 apaga o campo
+      if (stickyChanged) project.playback = setStickyWhatsAppFromStep(project.playback, stickyFrom);
       ui.dialog.close();
       onSaved(captureSaveKind(startChanged, endChanged));
     });
@@ -434,9 +465,11 @@ export function createFixedStepsEditor(ctx) {
     if (!project) return false;
     fillStart(ui, project.startStep || null);
     fillEnd(ui, project.endStep || null);
+    fillSticky(ui);
     baseline = {
       start: JSON.stringify(readStart(ui).step),
       end: JSON.stringify(readEnd(ui).step),
+      sticky: readSticky(ui),
     };
     // why: o cartão 📌 abre o diálogo já com o passo ligado, como o diálogo antigo fazia ao criar
     if (kind === "start" && !project.startStep && viewerIsPro() && canPermanent()) ui.startEnabled.checked = true;
