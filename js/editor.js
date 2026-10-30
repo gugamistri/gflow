@@ -81,6 +81,7 @@ import {
   normalizeCaptionPlaybackRate,
   playableNarrationClips,
   savedNarrationClips,
+  slideKickerText,
   stopSpeech,
   tourHoldSeconds,
 } from "./playback.js";
@@ -1778,23 +1779,23 @@ export function createEditor(ctx) {
     const demo = getDemo();
     const n = Number(step.scene) || 1;
     const label = sceneLabel(demo, n);
-    const prefix = t("filmstrip.scene", { n });
-    if (!editing) {
-      host.textContent = label ? `${prefix} · ${label}` : prefix;
+    // why: igual ao player (slideKickerText): sem o prefixo "Cena N"; o rótulo só aparece quando o slide não tem título
+    const title = String(shownText(step, "title") || "").trim();
+    const text = slideKickerText({ scene: n, popover: { title }, label: step.label }, demo, (k) => t("filmstrip.scene", { n: k }));
+    host.hidden = !text;
+    if (!editing || !text) {
+      host.textContent = text;
       host.removeAttribute("role");
       host.removeAttribute("tabindex");
       host.removeAttribute("title");
       host.classList.remove("is-renamable");
       return;
     }
-    const num = document.createElement("span");
-    num.className = "kicker-scene-n";
-    num.textContent = label ? `${prefix} · ` : prefix;
     const name = document.createElement("span");
     name.className = "kicker-scene-name";
     name.dataset.scene = String(n);
-    name.textContent = label;
-    host.replaceChildren(num, name);
+    name.textContent = label || t("filmstrip.scene", { n });
+    host.replaceChildren(name);
     host.classList.add("is-renamable");
     host.dataset.scene = String(n);
     host.setAttribute("role", "button");
@@ -1807,9 +1808,7 @@ export function createEditor(ctx) {
     const step = currentStep();
     if (!step) return;
     const n = Number(step.scene) || 1;
-    let name = host.querySelector(".kicker-scene-name");
-    const num = host.querySelector(".kicker-scene-n");
-    if (num) num.textContent = `${t("filmstrip.scene", { n })} · `;
+    const name = host.querySelector(".kicker-scene-name");
     if (!name) return;
     renameSceneInline(name, n);
   }
