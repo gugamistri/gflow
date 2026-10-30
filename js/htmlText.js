@@ -3,6 +3,7 @@
  * why: título e descrição iam crus para o balão — qualquer marcação no texto virava HTML no /p, /v, embed e preview.
  * Puro (sem DOM). O player autônomo (HTML offline) tem uma cópia inline em standalonePlayer.js.
  */
+import { richTextHtml } from "./tour-schema/richText.js";
 
 /** Escapa & < > " ' — o resultado mostra o texto exatamente como foi digitado. */
 export function escapeHtml(value) {
@@ -19,9 +20,12 @@ export function popoverTitleHtml(text) {
   return escapeHtml(text);
 }
 
-/** Texto do balão: texto puro; as quebras de linha continuam quebrando (como o antigo `\n → <br/>`). */
+/**
+ * Texto do balão: formatação leve (**negrito**, *itálico*, ++sublinhado++, "- " lista) montada em
+ * tags fixas; todo texto do autor sai escapado. Sem marcador fica igual ao antigo `\n → <br/>`.
+ */
 export function popoverBodyHtml(text) {
-  return escapeHtml(String(text ?? "").replace(/\r\n?/g, "\n")).replace(/\n/g, "<br/>");
+  return richTextHtml(text);
 }
 
 const COLOR_RE =

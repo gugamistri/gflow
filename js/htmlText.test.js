@@ -54,7 +54,8 @@ test("player do HTML offline usa a mesma regra (cópia inline) e o seletor de pa
   const gfEscapeHtml = new Function(`${fn}; return gfEscapeHtml;`)();
   for (const p of PAYLOADS) assert.equal(gfEscapeHtml(p), escapeHtml(p));
   assert.match(src, /title: gfEscapeHtml\(step\.popover\?\.title \|\| step\.label \|\| ""\)/);
-  assert.match(src, /description: gfEscapeHtml\(/);
+  // texto do balão: formatação leve da cópia inline de richText.js (tags fixas + texto escapado)
+  assert.match(src, /description: gfRichText\.richTextHtml\(step\.popover\?\.description \|\| ""\)/);
   assert.match(src, /const label = gfEscapeHtml\(step\.popover\?\.title/);
   assert.doesNotMatch(src, /description: \(step\.popover\?\.description \|\| ""\)\.replace/);
 });

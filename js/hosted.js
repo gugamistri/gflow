@@ -7,6 +7,7 @@
  *           { text, voice?, language? } → { ok, audio: { contentType, base64 }, seconds, usage }
  */
 
+import { normalizeRichText, stripRichText } from "./tour-schema/richText.js";
 import { cloudFetch } from "./cloudConfig.js";
 import { getLocale, t } from "./i18n.js";
 
@@ -57,7 +58,22 @@ function stripFences(raw) {
  * Lê o texto de `result`. JSON entre cercas vira campos.
  * Um pedido de um campo só aceita o texto cru. Vários campos sem JSON falham.
  */
+/** Título, narração (voz) e alt: texto puro; texto do balão: só a formatação leve. */
+function cleanCopy(out) {
+  const next = { ...out };
+  if (next.title) next.title = stripRichText(next.title).replace(/\s+/g, " ").trim();
+  if (next.description) next.description = normalizeRichText(next.description);
+  if (next.narration) next.narration = stripRichText(next.narration, { sentences: true }).trim();
+  if (next.alt) next.alt = stripRichText(next.alt, { sentences: true }).trim();
+  return next;
+}
+
 export function parseHostedResult(raw, expected = ["title", "description", "narration"]) {
+  const result = parseHostedRaw(raw, expected);
+  return result.ok ? cleanCopy(result) : result;
+}
+
+function parseHostedRaw(raw, expected) {
   const text = stripFences(raw);
   const keys = expected.length ? expected : ["title", "description", "narration"];
   const start = text.indexOf("{");

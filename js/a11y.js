@@ -3,6 +3,8 @@
  * why: texto alternativo das capturas e contraste do texto em cor de destaque.
  */
 
+import { stripRichText } from "./tour-schema/richText.js";
+
 export const STEP_ALT_MAX = 300;
 
 /** Texto alternativo da captura do passo: decorativa → "", senão alt do autor, senão título/texto do balão. */
@@ -11,7 +13,7 @@ export function stepImageAlt(step) {
   const own = String(step.alt || "").trim();
   if (own) return own.slice(0, STEP_ALT_MAX);
   const title = String(step.popover?.title || step.label || "").trim();
-  const desc = String(step.popover?.description || "")
+  const desc = stripRichText(step.popover?.description || "", { sentences: true })
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();

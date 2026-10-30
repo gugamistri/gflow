@@ -70,6 +70,7 @@ export function buildTranslateMessages({ items, source, target, name = "", gloss
     toneLine,
     glossary.length ? `Never translate these terms; keep them exactly as written: ${glossary.join(", ")}.` : "",
     "Keep placeholders in curly braces like {nome}, {tour}, {link} byte-for-byte as they are (never translate the word inside the braces). Keep URLs, e-mail addresses and phone numbers unchanged.",
+    "Keep text formatting markers exactly as in the source, around the translated words: **bold**, *italic*, ++underline++, and lines starting with \"- \" (list items). Never add new markers, markdown, HTML or links.",
     "Respect each item's max length in characters (\"max\"). Keep line breaks where they exist. Do not add quotes or explanations.",
     "Legal consent texts must stay faithful to the original meaning.",
     'Answer ONLY with a JSON object mapping EVERY id (including the tour name) to its translation: {"<id>": "<translation>", ...}.',

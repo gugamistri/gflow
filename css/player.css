@@ -2590,3 +2590,27 @@ html.gf-video-expanded body {
     font-size: 14px;
   }
 }
+
+/* ---- formatação leve do texto (js/tour-schema/richText.js): balão, slide, passos inicial/final ---- */
+.gf-rt-list {
+  margin: 0.3em 0;
+  padding-inline-start: 1.25em;
+  list-style: disc;
+  text-align: start;
+}
+.gf-rt-list li + li {
+  margin-top: 0.15em;
+}
+.slide-card .gf-rt-list,
+.fixed-card-body .gf-rt-list {
+  display: inline-block;
+  vertical-align: top;
+}
+.driver-popover-description strong,
+.slide-card strong,
+.fixed-card-body strong {
+  font-weight: 700;
+}
+#player-slide-body {
+  margin: 1em 0;
+}
