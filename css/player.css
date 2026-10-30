@@ -2057,3 +2057,210 @@ body:not(.view-share).is-presenting .present-hint {
     opacity: 0;
   }
 }
+
+/* ── Vídeo por link (YouTube/Vimeo): fachada sobre o pôster; o iframe só entra no clique ── */
+.gf-video {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  line-height: 1.2;
+  border-radius: inherit;
+  overflow: hidden;
+  /* why: o pôster é o <img> do passo; aqui só escurece de leve para o ▶ aparecer */
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.45));
+}
+
+.gf-video[hidden] {
+  display: none !important;
+}
+
+.gf-video-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1.1rem 0.55rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.86);
+  color: #fff;
+  font: 600 1rem/1.2 var(--demo-font, system-ui, sans-serif);
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.gf-video-play:hover {
+  transform: scale(1.04);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.gf-video-play:focus-visible,
+.gf-video-expand:focus-visible,
+.gf-video-open:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--demo-accent, #2a9d8f);
+}
+
+.gf-video-play-ico {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--demo-accent, #2a9d8f);
+}
+
+.gf-video-play-ico svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-left: 2px;
+}
+
+.gf-video-note {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.5rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font: 500 0.72rem/1.3 system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.gf-video.is-static {
+  pointer-events: none;
+}
+
+.gf-video.is-static .gf-video-play {
+  cursor: default;
+}
+
+.gf-video.is-playing {
+  background: #000;
+}
+
+.gf-video.is-playing .gf-video-play,
+.gf-video.is-playing .gf-video-note {
+  display: none;
+}
+
+.gf-video-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+.gf-video-bar {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.gf-video-bar[hidden] {
+  display: none;
+}
+
+.gf-video-expand,
+.gf-video-open {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  cursor: pointer;
+}
+
+.gf-video-expand svg,
+.gf-video-open svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.gf-video-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Expandido: CSS (não a tela cheia nativa); acima do overlay, do balão e dos controles do tour. */
+.gf-video.is-expanded {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 2147483600;
+  border-radius: 0;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+
+/* why: o palco tem container-type/isolation — sem isso o position:fixed ficaria preso a ele */
+.canvas-stage.has-video-expanded,
+.player-stage.has-video-expanded {
+  container-type: normal;
+  isolation: auto;
+  z-index: auto;
+  overflow: visible;
+}
+
+.has-video-expanded .canvas-frame,
+.has-video-expanded .player-frame {
+  transform: none !important;
+  /* why: o frame tem z-index 0 (contexto de empilhamento) — prenderia o vídeo abaixo do overlay */
+  z-index: auto;
+}
+
+html.gf-video-expanded .driver-popover {
+  visibility: hidden !important;
+}
+
+html.gf-video-expanded,
+html.gf-video-expanded body {
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .gf-video-play {
+    font-size: 0.9rem;
+    padding-right: 0.85rem;
+  }
+  .gf-video-play-ico {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-video-play {
+    transition: none;
+  }
+}
+
+/* Export HTML (sem rede garantida): o pôster vira link para o vídeo. */
+.gf-video-link {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  color: #fff;
+  line-height: 1.2;
+}

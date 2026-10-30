@@ -570,6 +570,8 @@ function requestSharedExit(reason) {
 function onSharedEscape(event) {
   if (event.key !== "Escape") return;
   if (!touring) return;
+  // why: com o vídeo expandido o Esc só recolhe o vídeo (videoStage trata) — o tour continua
+  if (document.querySelector(".gf-video.is-expanded")) return;
   const action = decideEscape({
     fullscreen: Boolean(fullscreenElement()),
     overlay: Boolean(findPlayerOverlay()),
@@ -764,6 +766,8 @@ async function boot() {
     onStep: (info) => tracker?.onStep(info),
     onComplete: (info) => tracker?.onComplete(info),
     onExit: (info) => tracker?.onExit(info),
+    onVideoPlay: (info) => tracker?.videoPlay(info),
+    onVideoProgress: (info) => tracker?.videoProgress(info),
   });
 
   tracker = startTracking(route);

@@ -26,6 +26,9 @@ import { createTourLifecycle } from "./tourLifecycle.js";
 import { pauseAudio, resumeAudio, setAudioMuted } from "./playback.js";
 import { createPlayerControls, createLiveAnnouncer, playerShortcut } from "./playerControls.js";
 import { stepImageAlt } from "./a11y.js";
+import { createVideoStage, VIDEO_STAGE_ID } from "./videoStage.js";
+import { stepVideo } from "./tour-schema/video.js";
+import { stopSpeech } from "./playback.js";
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
@@ -93,6 +96,22 @@ export function createPlayer(ctx) {
   });
 
   const narration = createNarrationController({ captionEl: els.caption });
+  // why: passo com vídeo (link YouTube/Vimeo) — fachada com o pôster; o iframe só entra no clique
+  const video = createVideoStage({
+    frame: els.frame,
+    onPlay: (info) => ctx.onVideoPlay?.(info),
+    onProgress: (info) => ctx.onVideoProgress?.(info),
+    onState: (state) => {
+      if (state === "playing") {
+        // o vídeo manda: nada de avançar sozinho nem narrar por cima
+        clearAutoplay();
+        stopSpeech();
+      } else if (state === "ended") {
+        armAutoplay();
+      }
+    },
+    onLayout: () => refreshDriver(),
+  });
   let captionHome = null;
 
   function elevateCaption() {
@@ -146,6 +165,7 @@ export function createPlayer(ctx) {
   function armAutoplay() {
     clearAutoplay();
     if (!autoplayOn() || !driverObj) return;
+    if (video.isPlaying()) return;
     const demo = getDemo();
     ensurePlayback(demo);
     ensureNarration(demo);
@@ -241,7 +261,7 @@ export function createPlayer(ctx) {
   }
 
   function zoomEnabled(step) {
-    return step?.type !== "slide" && step?.zoomHighlight === true && els.image && !els.image.hidden;
+    return step?.type !== "slide" && step?.zoomHighlight === true && !stepVideo(step) && els.image && !els.image.hidden;
   }
 
   async function applyStepZoom(step) {
@@ -306,6 +326,9 @@ export function createPlayer(ctx) {
 
       // why: ponto de edição some na apresentação; o cursor simulado cuida do clique
       if (els.clickPoint) els.clickPoint.hidden = true;
+      const stepVid = stepVideo(step);
+      if (!stepVid) video.hide();
+      else video.teardown();
 
       if (step.type === "slide") {
         els.image.hidden = true;
@@ -332,8 +355,12 @@ export function createPlayer(ctx) {
       const src = resolveImageSrc(getDemo(), step.image);
       if (els.image) els.image.alt = stepImageAlt(step);
       bindImage(els.image, src, (ok) => {
-        if (els.missing) els.missing.hidden = ok;
-        if (ok) {
+        if (els.missing) els.missing.hidden = ok || Boolean(stepVid);
+        if (stepVid) {
+          // why: o destaque do passo de vídeo é a própria fachada (o Driver aponta para #gf-video)
+          els.hotspot.hidden = true;
+          video.show(step, { index: activeIndex, interactive: true });
+        } else if (ok) {
           placeHotspot(step.hotspot);
         } else {
           els.hotspot.hidden = true;
@@ -372,7 +399,7 @@ export function createPlayer(ctx) {
   }
 
   async function animateClick(step) {
-    if (step.type === "slide" || step.simulateClick === false) return;
+    if (step.type === "slide" || step.simulateClick === false || stepVideo(step)) return;
     await clickFx.animateTo(clickTarget(step), { pressHotspot: true });
   }
 
@@ -528,7 +555,7 @@ export function createPlayer(ctx) {
       steps: playOrder.map((stepIndex) => {
         const step = steps[stepIndex];
         return {
-          element: step.type === "slide" ? "#canvas-slide" : "#hotspot",
+          element: step.type === "slide" ? "#canvas-slide" : stepVideo(step) ? `#${VIDEO_STAGE_ID}` : "#hotspot",
           popover: {
           title: step.popover?.title || step.label || "",
           description: (step.popover?.description || "").replace(/\n/g, "<br/>"),
@@ -597,6 +624,7 @@ export function createPlayer(ctx) {
         controls.hide();
         clearAutoplay();
         narration.stop();
+        video.hide();
         setProgress(t("player.stopped"));
         clickFx.reset();
         clearZoom({ animate: false });
@@ -633,6 +661,7 @@ export function createPlayer(ctx) {
     driveToken += 1;
     controls.hide();
     silenceAudio();
+    video.hide();
     if (driverObj) {
       suppressExitArm = true;
       try {
@@ -660,6 +689,8 @@ export function createPlayer(ctx) {
   function highlightRect() {
     const step = getDemo()?.steps?.[activeIndex];
     if (!step || step.type === "slide") return null;
+    // why: no passo de vídeo clicar na área é para o vídeo, nunca «Próximo»
+    if (stepVideo(step)) return null;
     const el = els.hotspot;
     if (!el || el.hidden) return null;
     return el.getBoundingClientRect();
@@ -714,6 +745,8 @@ export function createPlayer(ctx) {
 
     // why: sair da página (fechar aba, voltar) não pode deixar a narração tocando
     window.addEventListener("pagehide", () => silenceAudio());
+    // why: fecha o vídeo aberto para o tempo assistido entrar no último lote (beacon)
+    window.addEventListener("pagehide", () => video.teardown());
 
     document.getElementById("canvas-slide-play")?.addEventListener(
       "click",
@@ -786,6 +819,7 @@ export function createPlayer(ctx) {
         const pool = [
           ...document.querySelectorAll(".gf-player-controls button"),
           ...(els.slide && !els.slide.hidden ? els.slide.querySelectorAll("button") : []),
+          ...document.querySelectorAll(`#${VIDEO_STAGE_ID}:not([hidden]) button:not([disabled]), #${VIDEO_STAGE_ID}:not([hidden]) a[href], #${VIDEO_STAGE_ID}:not([hidden]) iframe`),
           ...document.querySelectorAll(".driver-popover:not(.is-slide-hidden) button, .driver-popover:not(.is-slide-hidden) a[href]"),
         ].filter(visible);
         if (!pool.length) return;
@@ -821,7 +855,7 @@ export function createPlayer(ctx) {
       (e) => {
         swipe = null;
         if (!isPresenting() || !driverObj || e.touches.length !== 1) return;
-        if (e.target.closest?.("input, textarea, select, label, form, audio, video, a, [contenteditable], .gf-player-controls")) return;
+        if (e.target.closest?.("input, textarea, select, label, form, audio, video, a, [contenteditable], .gf-player-controls, .gf-video")) return;
         const t = e.touches[0];
         swipe = { x: t.clientX, y: t.clientY, at: Date.now() };
       },
@@ -864,7 +898,7 @@ export function createPlayer(ctx) {
         sizeSlideLikeImage(els.slide, els.stage, demo, step, resolveImageSrc);
         return;
       }
-      if (!els.image.hidden) {
+      if (!els.image.hidden && !stepVideo(step)) {
         placeHotspot(step.hotspot);
         applyStepZoom(step).then(() => {
           try {

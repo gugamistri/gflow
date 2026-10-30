@@ -44,6 +44,7 @@ Assets e cópias. Lógica nova não mora aqui.
 | Comentários | `js/comments.js`, `js/commentsUi.js` | `apps/api/src/routes/comments.js` |
 | Leads e passos de abertura/fim | `js/leadsDialog.js`, `js/fixedSteps.js`, `js/fixedStepsEditor.js` | `apps/api/src/routes/leads.js` |
 | Player e página publicada | `js/player.js`, `js/playback.js`, `js/viewApp.js`, `view.html` | `packages/player-host` |
+| Vídeo do YouTube/Vimeo no passo (só link) | `js/tour-schema/video.js`, `js/videoStage.js`, `js/stepVideoEditor.js`, `js/videoI18n.js` | `packages/player-host` (fachada e CSP `frame-src`), `apps/api/src/lib/view-analytics.js` (`video_play`, `video_progress`) |
 | Formato do tour | `js/tour-schema/README.md` e os arquivos nomeados lá | cópia em `packages/tour-schema/` |
 | Captura no Chrome | `extension/background.js`, `extension/content.js`, `extension/popup.js`, `js/captureInbox.js` | — |
 | App desktop | `electron/main.js` | — |

@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/171/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/171/css/theme.css" />
-  <link rel="stylesheet" href="a/171/css/shell.css" />
-  <link rel="stylesheet" href="a/171/css/player.css" />
-  <link rel="stylesheet" href="a/171/css/editor.css" />
-  <link rel="stylesheet" href="a/171/css/settings.css" />
-  <link rel="stylesheet" href="a/171/css/collab.css" />
-  <link rel="stylesheet" href="a/171/css/comments.css" />
+  <link rel="stylesheet" href="a/172/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/172/css/theme.css" />
+  <link rel="stylesheet" href="a/172/css/shell.css" />
+  <link rel="stylesheet" href="a/172/css/player.css" />
+  <link rel="stylesheet" href="a/172/css/editor.css" />
+  <link rel="stylesheet" href="a/172/css/settings.css" />
+  <link rel="stylesheet" href="a/172/css/collab.css" />
+  <link rel="stylesheet" href="a/172/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -165,7 +165,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/171/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/171/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/172/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/172/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -480,7 +480,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/171/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/171/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/172/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/172/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -766,6 +766,7 @@
               <button type="button" class="stb-btn" data-value="slide" title="Slide" aria-label="Slide" data-i18n-title="props.slide" data-i18n-aria="props.slide" aria-pressed="false"><svg aria-hidden="true"><use href="#i-slide"></use></svg></button>
             </div>
             <button type="button" class="stb-btn stb-screen-only" id="stb-image" title="Trocar imagem" aria-label="Trocar imagem" data-i18n-title="canvas.changeImage" data-i18n-aria="canvas.changeImage"><svg aria-hidden="true"><use href="#i-image-swap"></use></svg></button>
+            <button type="button" class="stb-btn stb-screen-only" id="stb-video" title="Vídeo do YouTube ou Vimeo" aria-label="Vídeo do YouTube ou Vimeo" data-i18n-title="video.toolbar" data-i18n-aria="video.toolbar" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"></use></svg></button>
           </div>
           <span class="stb-sep" aria-hidden="true"></span>
           <div class="stb-group" data-stb-group="position" data-stb-keep="1" role="group" aria-label="Posição do balão" data-i18n-aria="stb.groupBalloon">
@@ -966,6 +967,23 @@
         </button>
         <select id="prop-image" hidden></select>
       </div>
+      <div id="wrap-video" class="video-link-field">
+        <p class="video-link-head"><svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg><span data-i18n="video.section">Vídeo</span></p>
+        <label for="prop-video-url" data-i18n="video.fieldLabel">Link do YouTube ou Vimeo</label>
+        <div class="video-link-row">
+          <input type="url" id="prop-video-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="youtube.com/watch?v=… ou vimeo.com/…" data-i18n-placeholder="video.placeholder" aria-describedby="prop-video-status prop-video-hint" />
+          <button type="button" class="btn btn-sm" id="btn-video-apply" data-i18n="video.add">Usar vídeo</button>
+        </div>
+        <p class="props-meta video-link-status" id="prop-video-status" role="status" aria-live="polite" hidden></p>
+        <div class="video-link-current">
+          <a class="video-link-chip" id="prop-video-current" target="_blank" rel="noopener noreferrer" hidden></a>
+          <button type="button" class="btn btn-sm btn-ghost btn-danger-hover" id="btn-video-remove" hidden>
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-trash"></use></svg>
+            <span data-i18n="video.remove">Remover vídeo</span>
+          </button>
+        </div>
+        <p class="props-meta" id="prop-video-hint" data-i18n="video.hint">Só o link: o vídeo não é enviado nem guardado. Quem assiste vê a capa; o YouTube ou o Vimeo só carrega quando a pessoa toca no play.</p>
+      </div>
         </div>
       </details>
       <details class="props-section" data-sec="texts" open>
@@ -1090,7 +1108,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/171/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/172/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2612,8 +2630,8 @@
     </symbol>
   </svg>
 
-  <script src="a/171/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/171/js/app.js"></script>
+  <script src="a/172/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/172/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

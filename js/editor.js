@@ -16,6 +16,9 @@ import {
   bindImage,
 } from "./store.js";
 import { stepImageAlt } from "./a11y.js";
+import { createVideoStage } from "./videoStage.js";
+import { createStepVideoEditor } from "./stepVideoEditor.js";
+import { stepVideo } from "./tour-schema/video.js";
 import { createClickFxController } from "./clickFx.js";
 import { clickDriverNext } from "./popoverFooter.js";
 import {
@@ -254,6 +257,33 @@ export function createEditor(ctx) {
     prefersHostedGeneration,
     noteHostedUsage,
   } = ctx;
+
+  // why: vídeo por link (YouTube/Vimeo) — campo no painel + prévia estática no canvas
+  let videoEditor = null;
+  let canvasVideo = null;
+  function ensureVideoEditor() {
+    videoEditor ||= createStepVideoEditor({
+      getDemo,
+      currentStep: () => currentStep(),
+      toast,
+      newImageId: () => createStepId().replace("step-", "img-"),
+      defaultTitles: new Set(["", t("editor.newStep"), t("editor.newHighlight"), t("editor.newSlide")]),
+      openSection: (sec) => openPropsSection(sec, { focus: false }),
+      commit: () => {
+        setDemo(getDemo());
+        fillImageSelect();
+        syncForm();
+        renderCanvas();
+        renderFilmstrip();
+        onChange();
+      },
+    });
+    return videoEditor;
+  }
+  function ensureCanvasVideo() {
+    canvasVideo ||= createVideoStage({ frame: els.canvasFrame });
+    return canvasVideo;
+  }
 
   function onChange() {
     renderEditorMetrics();
@@ -747,6 +777,13 @@ export function createEditor(ctx) {
     els.wrapImage.hidden = step.type === "slide";
     syncPropsSections(step);
     syncImageButton();
+    ensureVideoEditor().sync(step);
+    {
+      // passo de vídeo: sem clique simulado nem zoom (o destaque é o próprio vídeo)
+      const isVideo = Boolean(stepVideo(step));
+      document.getElementById("wrap-simulate")?.toggleAttribute("hidden", isVideo);
+      document.getElementById("wrap-zoom")?.toggleAttribute("hidden", isVideo);
+    }
     syncNarrationPanel();
     syncCaptionAudio();
     suppressForm = false;
@@ -1361,6 +1398,10 @@ export function createEditor(ctx) {
   }
 
   function hotspotAnchor() {
+    if (stepVideo(currentStep())) {
+      // why: no passo de vídeo o balão aponta para o quadro inteiro (igual ao player)
+      return { left: 0, top: 0, width: els.canvasFrame?.clientWidth || 360, height: els.canvasFrame?.clientHeight || 200 };
+    }
     const hs = els.hotspot;
     if (hs && !hs.hidden && hs.offsetWidth > 0 && hs.offsetHeight > 0) {
       return {
@@ -1694,6 +1735,7 @@ export function createEditor(ctx) {
       syncNarrationBar(!!step && !!demoNow && savedNarrationClips(step, demoNow).length > 0);
     }
 
+    if (editing) ensureCanvasVideo().hide();
     if (!demo.steps.length || !step) {
       if (els.canvasEmpty) els.canvasEmpty.hidden = false;
       els.canvasFrame.hidden = true;
@@ -1748,8 +1790,9 @@ export function createEditor(ctx) {
     });
 
     els.canvasSlide.hidden = true;
-    els.hotspot.hidden = false;
-    const showClick = step.simulateClick !== false;
+    const video = stepVideo(step);
+    els.hotspot.hidden = Boolean(video);
+    const showClick = step.simulateClick !== false && !video;
     els.clickPoint.hidden = !showClick;
     hideEditorPopover();
 
@@ -1758,8 +1801,12 @@ export function createEditor(ctx) {
     syncAltChip(step);
     bindImage(els.canvasImage, src, (ok) => {
       if (currentStep() !== step) return;
-      if (els.canvasMissing) els.canvasMissing.hidden = ok;
-      if (ok) {
+      if (els.canvasMissing) els.canvasMissing.hidden = ok || Boolean(video);
+      if (video) {
+        els.hotspot.hidden = true;
+        els.clickPoint.hidden = true;
+        if (editingCanvas()) ensureCanvasVideo().show(step, { index: getSelectedIndex(), interactive: false });
+      } else if (ok) {
         placeHotspot(step.hotspot);
         if (showClick) placeClickPoint(ensureClickPoint(step));
         else els.clickPoint.hidden = true;
@@ -1857,6 +1904,9 @@ export function createEditor(ctx) {
         btn.setAttribute("aria-label", label);
       }
     });
+    const isVideo = Boolean(stepVideo(step));
+    if (els.stbSimulate) els.stbSimulate.hidden = isSlide || isVideo;
+    if (els.stbZoom) els.stbZoom.hidden = isSlide || isVideo;
     const sim = step.simulateClick !== false;
     els.stbSimulate?.classList.toggle("is-active", sim);
     els.stbSimulate?.setAttribute("aria-pressed", sim ? "true" : "false");
