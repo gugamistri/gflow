@@ -4,6 +4,7 @@
  */
 
 import { t, getLocale } from "./i18n.js";
+import { normalizeRichText, stripRichText } from "./tour-schema/richText.js";
 
 export const LLM_DEFAULT_PROVIDER = "openrouter";
 export const LLM_DEFAULT_MODEL = "deepseek/deepseek-v4.1-flash";
@@ -114,7 +115,8 @@ export function buildStepContext(steps, currentIndex, { limit = LLM_CONTEXT_STEP
   return prior.map((step, i) => {
     const n = idx - prior.length + i + 1;
     const title = clipText(step?.popover?.title || step?.label || "");
-    const description = clipText(step?.popover?.description || "");
+    // why: contexto é só história — sem marcadores de formatação (o modelo não deve copiá-los)
+    const description = clipText(stripRichText(step?.popover?.description || "", { sentences: true }));
     const caption = clipText(step?.caption || "");
     const type = step?.type === "slide" ? "slide" : "screen";
     const scene = Number(step?.scene) || 1;
@@ -214,6 +216,7 @@ export function buildUserPrompt({ context, draft, locale, focus, stepType, hasIm
     "title: short label for this teaching moment (a few words).",
     "description: one glanceable sentence (about 80–140 characters) — purpose of this screen + next action when there is one.",
     "narration: 2–4 spoken sentences for voiceover; guide the learner, name the control to use when marked, continue the story from prior steps.",
+    "Formatting: description may use **bold** (at most one key term) and, only when listing 2–4 short items, lines starting with \"- \". Keep any **bold**, *italic*, ++underline++ markers from the draft description that still fit. No other markdown, no HTML, no links. title, narration and alt are plain text (no markers).",
     "alt: accessible alt text for the screenshot (WCAG 1.1.1) — one plain sentence, max 200 characters, describing what the screen shows and the highlighted control; empty string when there is no image.",
   ];
   if (type === "slide") {
@@ -312,11 +315,12 @@ export function parseCopyJson(raw) {
   } catch {
     return null;
   }
-  const title = String(data?.title || "").trim();
-  const description = String(data?.description || "").trim();
-  const narration = String(data?.narration || data?.caption || "").trim();
+  // título, narração (voz) e alt são texto puro; o texto do balão aceita só a formatação leve
+  const title = stripRichText(String(data?.title || "")).replace(/\s+/g, " ").trim();
+  const description = normalizeRichText(String(data?.description || "")).trim();
+  const narration = stripRichText(String(data?.narration || data?.caption || ""), { sentences: true }).trim();
   if (!title || !description || !narration) return null;
-  const alt = String(data?.alt || "").trim().slice(0, 300);
+  const alt = stripRichText(String(data?.alt || ""), { sentences: true }).trim().slice(0, 300);
   return alt ? { title, description, narration, alt } : { title, description, narration };
 }
 

@@ -8,6 +8,7 @@ import { CLICK_INSET, clampClickToHotspot, hasHotspot, pointInHotspot } from "./
 import { LIMITS as FIXED_LIMITS, isValidWhatsAppNumber, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
 import { THEME_COLOR_KEYS, THEME_PRESETS, cloneTheme, getPreset } from "./theme.js";
 import { THEME_FONT_IDS, isThemeFontId } from "./fonts.js";
+import { normalizeRichText } from "./richText.js";
 import { applyVideoToStep, normalizeStepVideo, parseVideoUrl, removeVideoFromStep, videoWatchUrl } from "./video.js";
 
 export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
@@ -136,7 +137,8 @@ export function applyAgentStepInput(input = {}, base = null) {
     if (input.label == null && !base) step.label = step.popover.title;
   }
   if (input.text != null) {
-    const text = clean(input.text, STEP_LIMITS.text + 1);
+    // formatação leve (**negrito**, *itálico*, ++sublinhado++, "- " lista); HTML de agente vira marcador
+    const text = clean(normalizeRichText(input.text), STEP_LIMITS.text + 1);
     if (text.length > STEP_LIMITS.text) warnings.push(`text cortado em ${STEP_LIMITS.text} caracteres.`);
     step.popover.description = text.slice(0, STEP_LIMITS.text);
   }
@@ -319,7 +321,8 @@ export function startStepFromAgentInput(input = {}) {
     else if (raw === "optional") fields[key] = { show: true, required: false };
     else if (raw === "hidden") fields[key] = { show: false, required: false };
   }
-  const step = normalizeStartStep({ ...input, enabled: input.enabled !== false, fields: { ...{ name: { show: true, required: true }, email: { show: true, required: true }, phone: { show: false, required: false } }, ...fields } });
+  const body = input.body ?? input.text;
+  const step = normalizeStartStep({ ...input, ...(body == null ? {} : { body: normalizeRichText(body) }), enabled: input.enabled !== false, fields: { ...{ name: { show: true, required: true }, email: { show: true, required: true }, phone: { show: false, required: false } }, ...fields } });
   const errors = [];
   if (step.enabled && !["name", "email", "phone"].some((k) => step.fields[k].show)) {
     errors.push(issue("fields", "Mostre ao menos um campo (name, email ou phone) — ou envie enabled: false."));
@@ -333,7 +336,7 @@ export function endStepFromAgentInput(input = {}) {
   const raw = {
     enabled: input.enabled !== false,
     title: input.title,
-    body: input.text,
+    body: input.text == null ? input.text : normalizeRichText(input.text),
     whatsapp: input.whatsapp ? { enabled: true, phone: input.whatsapp.phone, message: input.whatsapp.message, label: input.whatsapp.label } : { enabled: false },
     contact: input.link ? { enabled: true, mode: "link", url: input.link.url, label: input.link.label } : { enabled: false },
     showReplay: input.showReplay !== false,

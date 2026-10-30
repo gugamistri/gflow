@@ -3,6 +3,7 @@
  * why: o Cloud só guarda e serve; WhatsApp, LinkedIn e Slack mostram esta imagem no preview.
  */
 import { resolveImageSrc } from "./store.js";
+import { stripRichText } from "./tour-schema/richText.js";
 import { embedRatio } from "./embedSnippet.js";
 
 export const COVER_WIDTH = 1200;
@@ -148,7 +149,7 @@ function drawStrip(ctx, { name, badge, width, height, strip, accent }) {
 function drawSlideCard(ctx, step, fallbackTitle, { width, height, strip }) {
   const area = height - strip;
   const title = String(step?.popover?.title || fallbackTitle || "").trim();
-  const desc = String(step?.popover?.description || "").replace(/<[^>]*>/g, " ").trim();
+  const desc = stripRichText(step?.popover?.description || "", { sentences: true }).replace(/<[^>]*>/g, " ").trim();
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "center";
   ctx.font = `700 60px ${FONT}`;

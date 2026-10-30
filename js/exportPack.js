@@ -1,5 +1,6 @@
 import { resolveVideoQuality, avcCodecCandidates, LOGICAL_HEIGHT } from "./videoQuality.js";
 import { getThemeFont } from "./tour-schema/fonts.js";
+import { stripRichText } from "./tour-schema/richText.js";
 import { stepVideo, videoProviderLabel, videoWatchUrl } from "./tour-schema/video.js";
 import {
   encodeAssetPath,
@@ -193,7 +194,7 @@ ${css}
           </button>
           <p class="slide-kicker" id="player-slide-kicker"></p>
           <h2 id="player-slide-title"></h2>
-          <p id="player-slide-body"></p>
+          <div id="player-slide-body"></div>
           <button type="button" class="slide-card-play" id="player-slide-play" aria-label="${t("canvas.play")}">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
           </button>
@@ -798,6 +799,11 @@ export async function exportVideo(
   return { ...out, width: quality.width, height: quality.height, fps: quality.fps };
 }
 
+/** Vídeo/GIF desenham texto no canvas: sem marcadores; item de lista com "• ". */
+function plainBody(text) {
+  return stripRichText(text || "", { bullet: "• " });
+}
+
 function wrapText(ctx, text, maxWidth) {
   // why: zh/ja/ko não têm espaços; quebra por caractere (PRD multi-idioma §10)
   return wrapTextUnits((line) => ctx.measureText(line).width, text, maxWidth);
@@ -877,7 +883,7 @@ function loadImage(src) {
 
 function measurePopover(ctx, step, maxW) {
   ctx.font = `400 14px ${videoFont}`;
-  const lines = wrapText(ctx, step.popover?.description || "", maxW - 36).slice(0, 8);
+  const lines = wrapText(ctx, plainBody(step.popover?.description), maxW - 36).slice(0, 8);
   const h = 22 + 28 + 10 + lines.length * 20 + 56;
   return { w: maxW, h: Math.max(140, h), lines };
 }
@@ -1072,7 +1078,7 @@ function renderFrame(ctx, scene, theme) {
     ctx.font = `700 36px ${videoFont}`;
     const titleLines = wrapText(ctx, step.popover?.title || step.label || "", maxW).slice(0, 3);
     ctx.font = `400 22px ${videoFont}`;
-    const bodyLines = wrapText(ctx, step.popover?.description || "", maxW).slice(0, 8);
+    const bodyLines = wrapText(ctx, plainBody(step.popover?.description), maxW).slice(0, 8);
     const blockH = 15 + 16 + titleLines.length * 44 + (bodyLines.length ? 28 + bodyLines.length * 32 : 0);
     const innerTop = slide.y + 40;
     const innerH = slide.h - 96;
