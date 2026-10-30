@@ -156,6 +156,9 @@ export function pickVoice(voiceURI) {
 
 let speakToken = 0;
 let currentSpeech = null;
+// why: a legenda mínima do celular em pé acompanha o relógio do clipe (também com som mudo)
+let speechClipIndex = 0;
+let speechClipCount = 0;
 // why: WCAG 1.4.2 — o visitante silencia/pausa a narração e a trilha pelos controles do player
 let audioMuted = false;
 let activeBg = null;
@@ -189,8 +192,21 @@ export function resumeAudio() {
   if (typeof window !== "undefined" && window.speechSynthesis && !audioMuted) window.speechSynthesis.resume();
 }
 
+/** Relógio da fala em curso (clipe atual, quantos clipes, tempo e duração) ou null. */
+export function speechClock() {
+  if (!currentSpeech || !speechClipCount) return null;
+  return {
+    index: speechClipIndex,
+    count: speechClipCount,
+    currentTime: Number(currentSpeech.currentTime) || 0,
+    duration: Number(currentSpeech.duration) || 0,
+  };
+}
+
 export function stopSpeech() {
   speakToken += 1;
+  speechClipCount = 0;
+  speechClipIndex = 0;
   if (currentSpeech) {
     currentSpeech.pause();
     currentSpeech.removeAttribute("src");
@@ -460,8 +476,11 @@ export function playNarrationClips(clips, rate = 1) {
   const list = Array.isArray(clips) ? clips : [];
   const speed = normalizeCaptionPlaybackRate(rate);
   return (async () => {
-    for (const url of list) {
+    for (let i = 0; i < list.length; i += 1) {
+      const url = list[i];
       if (token !== speakToken || !url) return;
+      speechClipIndex = i;
+      speechClipCount = list.length;
       await playSpeechUrl(url, speed, token);
     }
   })();
