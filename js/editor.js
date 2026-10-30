@@ -288,6 +288,7 @@ export function createEditor(ctx) {
     altPop: document.getElementById("alt-pop"),
     propCaption: document.getElementById("prop-caption"),
     propShowCaption: document.getElementById("prop-show-caption"),
+    stbShowCaption: document.getElementById("stb-show-caption"),
     propHold: document.getElementById("prop-hold"),
     propHoldHint: document.getElementById("prop-hold-hint"),
     captionAudioFile: document.getElementById("caption-audio-file"),
@@ -1141,14 +1142,14 @@ export function createEditor(ctx) {
     const statusEl = document.getElementById("caption-audio-status");
     const player = document.getElementById("caption-player");
     const actionsEl = document.getElementById("caption-audio-actions");
-    const wrapShow = document.getElementById("wrap-show-caption");
     const generateBtn = document.getElementById("btn-generate-caption");
     const uploadBtn = document.getElementById("btn-upload-caption");
     const clearBtn = els.btnClearCaptionAudio;
     const hasText = String(step?.caption || "").trim().length > 0;
     const clips = step && demo ? savedNarrationClips(step, demo) : [];
 
-    if (wrapShow) wrapShow.hidden = !hasText;
+    // why: o interruptor do painel fica sempre à vista (#46/#47 o esconderam na barra, só com ícone); o atalho da barra só com texto
+    if (els.stbShowCaption) els.stbShowCaption.hidden = !hasText;
     if (generateBtn) generateBtn.hidden = !hasText;
     if (uploadBtn) uploadBtn.hidden = !hasText;
     if (clearBtn) clearBtn.hidden = !clips.length;
@@ -1864,8 +1865,9 @@ export function createEditor(ctx) {
     els.stbZoom?.classList.toggle("is-active", zoom);
     els.stbZoom?.setAttribute("aria-pressed", zoom ? "true" : "false");
     syncStepHold();
-    const showCap = document.getElementById("prop-show-caption");
-    document.getElementById("wrap-show-caption")?.classList.toggle("is-active", !!showCap?.checked);
+    const showCap = step.showCaption !== false;
+    els.stbShowCaption?.classList.toggle("is-active", showCap);
+    els.stbShowCaption?.setAttribute("aria-pressed", showCap ? "true" : "false");
     fitStepToolbar();
   }
 
@@ -2080,6 +2082,7 @@ export function createEditor(ctx) {
     };
     els.stbSimulate?.addEventListener("click", () => toggleCheckbox(els.propSimulate));
     els.stbZoom?.addEventListener("click", () => toggleCheckbox(els.propZoom));
+    els.stbShowCaption?.addEventListener("click", () => toggleCheckbox(els.propShowCaption));
     els.stbHold?.addEventListener("input", () => {
       if (!els.propHold) return;
       els.propHold.value = els.stbHold.value;
