@@ -68,9 +68,9 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/180/css/theme.css" />
-  <link rel="stylesheet" href="/a/180/css/shell.css" />
-  <link rel="stylesheet" href="/a/180/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/181/css/theme.css" />
+  <link rel="stylesheet" href="/a/181/css/shell.css" />
+  <link rel="stylesheet" href="/a/181/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
     .api-doc[hidden] { display: none; }
@@ -84,7 +84,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/180/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/180/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/181/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/181/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title">API · MCP</span>
     </div>
     <div class="topbar-appearance">
@@ -147,7 +147,7 @@
     </section>
     <section class="card">
       <h2>Ferramentas do MCP</h2>
-      <table><thead><tr><th>Ferramenta</th><th>Permissão</th><th>O que faz</th></tr></thead><tbody><tr><td><code>list_tours</code></td><td><code>tours:read</code></td><td>Lista os tours da conta.</td></tr><tr><td><code>get_tour</code></td><td><code>tours:read</code></td><td>Passos, tema, captura de lead, CTA final e link publicado.</td></tr><tr><td><code>create_tour</code></td><td><code>tours:write</code></td><td>Cria um tour vazio (aparece no editor com a etiqueta “criado por agente”).</td></tr><tr><td><code>upload_media</code></td><td><code>tours:write</code></td><td>Grava uma captura (url https ou base64) ou devolve uma URL de upload de 15 min.</td></tr><tr><td><code>add_step / update_step</code></td><td><code>tours:write</code></td><td>Captura, destaque e clique (0..1), título, texto, roteiro de narração.</td></tr><tr><td><code>reorder_steps / delete_step</code></td><td><code>tours:write</code></td><td>Reordena ou remove passos.</td></tr><tr><td><code>set_theme</code></td><td><code>tours:write</code></td><td>Tema pronto ou cores #RRGGBB.</td></tr><tr><td><code>set_lead_capture</code></td><td><code>tours:write</code></td><td>Passo inicial com nome/e-mail/telefone e consentimento (LGPD).</td></tr><tr><td><code>set_end_cta</code></td><td><code>tours:write</code></td><td>Cartão final com WhatsApp (E.164) e/ou link https.</td></tr><tr><td><code>publish</code></td><td><code>publish</code></td><td>Publica no link permanente /p e devolve URL, embed e a capa do link (og:image, gerada no servidor). dryRun:true valida e devolve <code>preview.url</code>, um link de prévia que vale 7 dias.</td></tr><tr><td><code>unpublish</code></td><td><code>publish</code></td><td>Tira o link do ar (exige confirm:true).</td></tr><tr><td><code>generate_step_text</code></td><td><code>ai</code> + <code>tours:write</code></td><td>A IA olha a captura do passo e escreve título e texto (e, se pedir, o roteiro da narração); grava no passo. 1 texto da cota.</td></tr><tr><td><code>generate_narration</code></td><td><code>ai</code> + <code>tours:write</code></td><td>Gera a narração (MP3 mono 64 kbps) e grava como áudio do passo; o passo passa a durar a narração. Conta na cota de áudio.</td></tr><tr><td><code>get_analytics</code></td><td><code>analytics:read</code></td><td>Visualizações, conclusões, cliques no CTA, leads (contagem), série por dia e funil por passo; sem tourId, um resumo por link.</td></tr></tbody></table>
+      <table><thead><tr><th>Ferramenta</th><th>Permissão</th><th>O que faz</th></tr></thead><tbody><tr><td><code>list_tours</code></td><td><code>tours:read</code></td><td>Lista os tours da conta.</td></tr><tr><td><code>get_tour</code></td><td><code>tours:read</code></td><td>Passos, tema, captura de lead, CTA final e link publicado.</td></tr><tr><td><code>create_tour</code></td><td><code>tours:write</code></td><td>Cria um tour vazio (aparece no editor com a etiqueta “criado por agente”).</td></tr><tr><td><code>upload_media</code></td><td><code>tours:write</code></td><td>Grava uma captura (url https ou base64) ou devolve uma URL de upload de 15 min.</td></tr><tr><td><code>add_step / update_step</code></td><td><code>tours:write</code></td><td>Captura, destaque e clique (0..1), título, texto, roteiro de narração. <code>video</code>: link do YouTube ou do Vimeo (só o link; a capa é baixada e vira a imagem do passo; <code>null</code> tira).</td></tr><tr><td><code>reorder_steps / delete_step</code></td><td><code>tours:write</code></td><td>Reordena ou remove passos.</td></tr><tr><td><code>set_theme</code></td><td><code>tours:write</code></td><td>Tema pronto ou cores #RRGGBB.</td></tr><tr><td><code>set_lead_capture</code></td><td><code>tours:write</code></td><td>Passo inicial com nome/e-mail/telefone e consentimento (LGPD).</td></tr><tr><td><code>set_end_cta</code></td><td><code>tours:write</code></td><td>Cartão final com WhatsApp (E.164) e/ou link https.</td></tr><tr><td><code>publish</code></td><td><code>publish</code></td><td>Publica no link permanente /p e devolve URL, embed e a capa do link (og:image, gerada no servidor). dryRun:true valida e devolve <code>preview.url</code>, um link de prévia que vale 7 dias.</td></tr><tr><td><code>unpublish</code></td><td><code>publish</code></td><td>Tira o link do ar (exige confirm:true).</td></tr><tr><td><code>generate_step_text</code></td><td><code>ai</code> + <code>tours:write</code></td><td>A IA olha a captura do passo e escreve título e texto (e, se pedir, o roteiro da narração); grava no passo. 1 texto da cota.</td></tr><tr><td><code>generate_narration</code></td><td><code>ai</code> + <code>tours:write</code></td><td>Gera a narração (MP3 mono 64 kbps) e grava como áudio do passo; o passo passa a durar a narração. Conta na cota de áudio.</td></tr><tr><td><code>get_analytics</code></td><td><code>analytics:read</code></td><td>Visualizações, conclusões, cliques no CTA, leads (contagem), série por dia e funil por passo; sem tourId, um resumo por link.</td></tr></tbody></table>
       <h3>Coordenadas</h3>
       <p>Destaque e clique usam fração da imagem: <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code> entre 0 e 1, a partir do canto superior esquerdo. Só com <code>click</code>, o destaque é criado em volta. Valores fora do intervalo são ajustados e o retorno avisa.</p>
     </section>
@@ -202,7 +202,7 @@ curl -s https://app.guiaflow.pro/v1/tours/$TOUR/analytics -H &quot;Authorization
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/180/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect, getLocale } from "/a/181/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
