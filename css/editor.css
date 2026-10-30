@@ -4854,8 +4854,7 @@ body.is-presenting .editor-popover {
   background: var(--ns-border);
 }
 
-.stb-btn,
-.stb-toggle {
+.stb-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4872,15 +4871,13 @@ body.is-presenting .editor-popover {
   cursor: pointer;
 }
 
-.stb-btn svg,
-.stb-toggle svg {
+.stb-btn svg {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
 }
 
-.stb-btn:hover:not(:disabled),
-.stb-toggle:hover {
+.stb-btn:hover:not(:disabled) {
   background: var(--ns-hover);
 }
 
@@ -4889,8 +4886,7 @@ body.is-presenting .editor-popover {
   cursor: default;
 }
 
-.stb-btn.is-active,
-.stb-toggle.is-active {
+.stb-btn.is-active {
   background: color-mix(in srgb, var(--ns-accent) 22%, var(--ns-panel));
   border-color: color-mix(in srgb, var(--ns-accent) 60%, transparent);
   color: var(--ns-accent);
@@ -4910,24 +4906,10 @@ body.is-presenting .editor-popover {
 }
 
 .stb-btn:focus-visible,
-.stb-toggle:has(input:focus-visible),
 .stb-hold input:focus-visible,
 .stb-menu-item:focus-visible {
   outline: 2px solid var(--ns-accent);
   outline-offset: 1px;
-}
-
-.stb-toggle input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.stb-toggle {
-  position: relative;
 }
 
 .stb-hold {

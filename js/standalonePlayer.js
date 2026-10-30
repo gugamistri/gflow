@@ -770,7 +770,13 @@ function gfEscapeHtml(value) {
         const missing = document.getElementById("player-missing");
         if (missing) missing.hidden = true;
         els.slide.hidden = false;
-        els.slideKicker.textContent = gfT("player.scene", { n: step.scene });
+        // mesma regra de slideKickerText (playback.js): sem "Cena N" quando o slide tem título
+        const slideTitle = String(step.popover?.title || step.label || "").trim();
+        const sceneN = Number(step.scene) || 1;
+        const sceneName = String(demo.sceneLabels?.[sceneN] ?? demo.sceneLabels?.[String(sceneN)] ?? "").trim();
+        const kicker = slideTitle ? "" : sceneName || gfT("player.scene", { n: sceneN });
+        els.slideKicker.textContent = kicker;
+        els.slideKicker.hidden = !kicker;
         els.slideTitle.textContent = step.popover?.title || step.label || "";
         els.slideBody.textContent = step.popover?.description || "";
         applySlideLayout(els.slide, step);

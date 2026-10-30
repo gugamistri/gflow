@@ -11,7 +11,7 @@ function rule(selector) {
   return css.slice(i, css.indexOf("}", i));
 }
 
-test("o campo de renomear a cena no slide fica na mesma linha de 'CENA N ·'", () => {
+test("o campo de renomear a cena no slide fica em linha (não estica o rótulo)", () => {
   const r = rule(".slide-kicker .inline-edit");
   assert.match(r, /display:\s*inline-block/);
   assert.match(r, /width:\s*auto/);
