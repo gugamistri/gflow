@@ -96,6 +96,7 @@ import { getLocale, t } from "./i18n.js";
 import { getTranslation, projectI18n, setTranslation, textHash } from "./tour-schema/i18n.js";
 import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
 import { cloneStepForPaste } from "./stepClipboard.js";
+import { bindPlaybackModeControls, paintPlaybackMode } from "./playbackModeEditor.js";
 import { getStepClipboard, putStepClipboard } from "./projects.js";
 import {
   arrowSelection,
@@ -1277,6 +1278,7 @@ export function createEditor(ctx) {
     if (els.playbackDefaultHold) {
       els.playbackDefaultHold.value = String(demo.playback.defaultHoldSeconds || DEFAULT_HOLD_SECONDS);
     }
+    paintPlaybackMode(document, demo, t);
     fillVoiceSelect(demo.narration.voiceURI);
     fillVoiceIdSelect(demo);
     const bg = demo.narration.background;
@@ -4755,6 +4757,16 @@ export function createEditor(ctx) {
       if (!el) return;
       el.addEventListener("input", applyNarrationPanel);
       el.addEventListener("change", applyNarrationPanel);
+    });
+
+    // why: Gustavo perguntou onde fica — ⚙ Preferências do projeto (topo) e o menu ▾ do Preview
+    bindPlaybackModeControls(document, {
+      getDemo,
+      t,
+      onChanged: (mode) => {
+        onChange();
+        toast(t("mode.changed", { mode: t(mode === "gallery" ? "mode.gallery" : "mode.guided") }));
+      },
     });
 
     document.getElementById("narration-panel")?.addEventListener("toggle", (event) => {

@@ -2614,3 +2614,704 @@ html.gf-video-expanded body {
 #player-slide-body {
   margin: 1em 0;
 }
+
+/* ==== Modo Galeria (playback.mode = "gallery"): carrossel de fotos em tela cheia (js/gallery.js) ==== */
+html.gf-gallery-open,
+html.gf-gallery-open body {
+  overflow: hidden;
+}
+
+.gf-gallery {
+  --gal-bg: #0b0d10;
+  --gal-ink: #ffffff;
+  --gal-muted: #c9ced6;
+  --gal-chip: rgba(255, 255, 255, 0.12);
+  --gal-chip-on: #ffffff;
+  --gal-focus: #ffffff;
+  position: fixed;
+  inset: 0;
+  /* why: acima do player guiado, do véu e do aviso "Esc para sair"; o botão fixo mora dentro dela */
+  z-index: 2147482500;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+  /* why: sem isso a coluna cresce até a foto/legenda e a galeria passa da largura da tela */
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--gal-bg);
+  color: var(--gal-ink);
+  font-family: var(--demo-font, var(--ns-font, system-ui, sans-serif));
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  box-sizing: border-box;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gf-gallery[hidden] {
+  display: none !important;
+}
+
+.gf-gallery *,
+.gf-gallery *::before,
+.gf-gallery *::after {
+  box-sizing: border-box;
+}
+
+.gf-gallery button {
+  font: inherit;
+  color: inherit;
+}
+
+/* 2.4.7 — foco visível sobre foto clara ou escura */
+.gf-gallery :focus-visible {
+  outline: 3px solid var(--gal-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.75);
+}
+
+.gf-gal-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 12px;
+}
+
+.gf-gal-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.gf-gal-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.gf-gal-section {
+  flex: 0 0 auto;
+  color: var(--gal-muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.gf-gal-section[hidden] {
+  display: none;
+}
+
+.gf-gal-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.gf-gal-btn {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.gf-gal-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gf-gal-btn svg,
+.gf-gal-counter svg,
+.gf-gal-details-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gf-gal-btn[hidden],
+.gf-gal-counter[hidden] {
+  display: none;
+}
+
+.gf-gal-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.gf-gal-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.gf-gal-counter svg {
+  width: 18px;
+  height: 18px;
+}
+
+.gf-gal-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  /* why: os gestos (deslizar, pinça, arrastar com zoom) são da galeria, não do navegador */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* why: touch-action não herda e para no primeiro contêiner com rolagem — vale para cada nó do palco */
+.gf-gal-stage * {
+  touch-action: none;
+}
+
+/* o cartão de texto rola na vertical; deslizar para os lados continua trocando de foto */
+.gf-gal-stage .gf-gal-card,
+.gf-gal-stage .gf-gal-card * {
+  touch-action: pan-y;
+}
+
+.gf-gal-backdrop {
+  position: absolute;
+  inset: -40px;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  object-fit: cover;
+  filter: blur(28px) brightness(0.45) saturate(1.1);
+  pointer-events: none;
+}
+
+.gf-gal-backdrop[hidden] {
+  display: none;
+}
+
+.gf-gal-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gf-gal-slide.is-entering {
+  animation: gf-gal-in 180ms ease-out;
+}
+
+@keyframes gf-gal-in {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gf-gal-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* why: flex (não grid) — max-height: 100% da foto precisa de uma altura definida para encolher */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* carregando: o contador já aparece; a foto entra por cima do fundo borrado */
+.gf-gal-media.is-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.02) 70%);
+  background-size: 200% 100%;
+  animation: gf-gal-shimmer 1.2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes gf-gal-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.gf-gal-photo,
+.gf-gal-poster {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transform-origin: 50% 50%;
+  will-change: transform;
+  -webkit-user-drag: none;
+}
+
+.gf-gal-photo.is-animating {
+  transition: transform 220ms ease;
+}
+
+.gf-gallery.is-zoomed .gf-gal-stage {
+  cursor: grab;
+}
+
+.gf-gal-error {
+  position: absolute;
+  inset: auto 16px 50% 16px;
+  transform: translateY(50%);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.72);
+  text-align: center;
+}
+
+.gf-gal-error[hidden] {
+  display: none;
+}
+
+.gf-gal-error p {
+  margin: 0;
+}
+
+.gf-gal-retry {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gf-gal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.gf-gal-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.gf-gal-prev {
+  left: 12px;
+}
+
+.gf-gal-next {
+  right: 12px;
+}
+
+.gf-gal-next.is-finish {
+  background: var(--demo-accent, #2a9d8f);
+  color: var(--demo-button-text, #ffffff);
+}
+
+.gf-gal-zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.gf-gal-card {
+  width: min(640px, calc(100% - 48px));
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  padding: 28px;
+  border-radius: 16px;
+  background: var(--demo-popover-bg, #ffffff);
+  color: var(--demo-popover-text, #3f3f46);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.gf-gal-card-title {
+  margin: 0 0 12px;
+  color: var(--demo-popover-title, #1a4d6d);
+  font-family: var(--demo-font-display, inherit);
+  font-size: clamp(22px, 4vw, 30px);
+  line-height: 1.2;
+}
+
+.gf-gal-card-body {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.gf-gal-card-body .gf-rt-list,
+.gf-gal-details .gf-rt-list {
+  margin: 6px 0;
+  padding-left: 1.3em;
+}
+
+.gf-gal-videohost {
+  background: #000;
+}
+
+.gf-gal-videohost .gf-video {
+  position: absolute;
+  inset: 0;
+}
+
+/* why: na Galeria o slide já é a tela toda; "expandir" não faz sentido */
+.gf-gallery .gf-video-expand {
+  display: none !important;
+}
+
+.gf-gal-videolink {
+  position: absolute;
+  inset: auto auto 50% 50%;
+  transform: translate(-50%, 50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.gf-gal-videolink-ico svg {
+  width: 22px;
+  height: 22px;
+}
+
+.gf-gal-info {
+  position: relative;
+  padding: 8px 16px 6px;
+}
+
+.gf-gal-info[hidden] {
+  display: none;
+}
+
+.gf-gal-caprow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.gf-gal-caption {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gf-gal-caption[hidden] {
+  display: none;
+}
+
+.gf-gal-details-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--gal-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.gf-gal-details-btn[hidden] {
+  display: none;
+}
+
+.gf-gal-details-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 160ms ease;
+}
+
+.gf-gallery.is-details-open .gf-gal-details-btn svg {
+  transform: rotate(180deg);
+}
+
+.gf-gal-details {
+  max-height: min(42vh, 320px);
+  overflow: auto;
+  margin-bottom: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.gf-gal-details[hidden] {
+  display: none;
+}
+
+.gf-gal-cta {
+  flex: 0 0 auto;
+}
+
+.gf-gal-cta:empty {
+  display: none;
+}
+
+.gf-gal-cta .gf-sticky-cta {
+  position: static;
+  max-width: 100%;
+  box-shadow: none;
+}
+
+.gf-gal-chips {
+  display: flex;
+  gap: 8px;
+  padding: 4px 16px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gf-gal-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.gf-gal-chips[hidden] {
+  display: none;
+}
+
+.gf-gal-chip {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: var(--gal-chip);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gf-gal-chip[aria-current="true"] {
+  background: var(--gal-chip-on);
+  border-color: var(--gal-chip-on);
+  color: #0b0d10;
+}
+
+.gf-gal-thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 4px 16px 14px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.gf-gal-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 88px;
+  height: 60px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.gf-gal-thumb[aria-current="true"] {
+  border-color: #ffffff;
+  opacity: 1;
+}
+
+.gf-gal-thumb:hover {
+  opacity: 1;
+}
+
+.gf-gal-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gf-gal-thumb-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.gf-gal-thumb-play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.gf-gal-thumb-play svg {
+  width: 16px;
+  height: 16px;
+}
+
+.gf-gal-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* grade de todas as fotos (toque no contador) */
+.gf-gallery.is-grid-open .gf-gal-thumbs {
+  position: absolute;
+  inset: calc(56px + env(safe-area-inset-top, 0px)) 0 0 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  align-content: start;
+  gap: 10px;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  background: var(--gal-bg);
+}
+
+.gf-gallery.is-grid-open .gf-gal-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.gf-gallery.is-single .gf-gal-thumbs,
+.gf-gallery.is-single .gf-gal-chips {
+  display: none;
+}
+
+/* celular em pé: foto de ponta a ponta; miniaturas só na grade; setas discretas */
+@media (max-width: 720px), (max-height: 520px) {
+  .gf-gallery:not(.is-grid-open) .gf-gal-thumbs {
+    display: none;
+  }
+
+  .gf-gal-title {
+    font-size: 14px;
+  }
+
+  .gf-gal-nav {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .gf-gal-prev {
+    left: 6px;
+  }
+
+  .gf-gal-next {
+    right: 6px;
+  }
+
+  .gf-gal-caprow {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .gf-gal-cta {
+    flex: 1 1 100%;
+  }
+
+  .gf-gal-cta .gf-sticky-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .gf-gal-card {
+    padding: 22px;
+  }
+}
+
+/* celular deitado: a foto ganha a altura; a faixa de baixo fica numa linha */
+@media (max-height: 520px) and (orientation: landscape) {
+  .gf-gal-top {
+    min-height: 44px;
+    padding: 4px 10px;
+  }
+
+  .gf-gal-info {
+    padding: 2px 12px;
+  }
+
+  .gf-gal-caprow {
+    flex-wrap: nowrap;
+  }
+
+  .gf-gal-cta {
+    flex: 0 0 auto;
+  }
+
+  .gf-gal-cta .gf-sticky-cta {
+    width: auto;
+  }
+
+  .gf-gal-chips {
+    padding-bottom: 6px;
+  }
+
+  .gf-gal-chip {
+    min-height: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-gal-slide.is-entering,
+  .gf-gal-media.is-loading::after {
+    animation: none;
+  }
+
+  .gf-gal-photo.is-animating,
+  .gf-gal-details-btn svg {
+    transition: none;
+  }
+}
