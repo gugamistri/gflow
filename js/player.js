@@ -20,6 +20,16 @@ import {
   zoomCameraStyle,
 } from "./zoomHighlight.js";
 import { stickyWhatsAppAction } from "./fixedSteps.js";
+import {
+  isPortraitCompact,
+  readingChunkAt,
+  readingTotalMs,
+  speechProgress,
+  splitSubtitleChunks,
+  stepCaptionParts,
+  subtitleChunkAt,
+  subtitleMaxChars,
+} from "./captionMode.js";
 import { createStickyCta } from "./stickyCta.js";
 import {
   createNarrationController,
@@ -27,7 +37,9 @@ import {
   ensurePlayback,
   holdMs,
   liftCaptionAboveOverlay,
+  playableNarrationClips,
   restoreCaptionHome,
+  speechClock,
 } from "./playback.js";
 import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
@@ -152,11 +164,204 @@ export function createPlayer(ctx) {
     syncChromeVars();
   }
 
+  // ---- celular em pé: legenda curta + "Detalhes" (fechado por padrão) ----
+  let detailsOpen = false;
+  let detailsClosedAt = 0;
+  let detailsToggle = null;
+  let detailsPopover = null;
+  let popStageH = 0;
+
+  function detailsWrap() {
+    return detailsPopover?.wrapper || document.querySelector(".driver-popover");
+  }
+
+  function paintDetails() {
+    const wrap = detailsWrap();
+    wrap?.classList.toggle("is-details-open", detailsOpen);
+    if (detailsToggle) {
+      detailsToggle.setAttribute("aria-expanded", detailsOpen ? "true" : "false");
+      detailsToggle.title = t(detailsOpen ? "player.detailsHide" : "player.detailsShow");
+      const span = detailsToggle.querySelector(".gf-details-label");
+      if (span) span.textContent = t("player.details");
+    }
+  }
+
+  function setDetailsOpen(open, { focusToggle = false } = {}) {
+    const next = Boolean(open) && Boolean(detailsToggle?.isConnected);
+    if (next === detailsOpen) return false;
+    detailsOpen = next;
+    if (!next) detailsClosedAt = Date.now();
+    paintDetails();
+    // why: com o texto aberto o visitante está lendo — o avanço sozinho espera fechar
+    if (next) clearAutoplay();
+    else armAutoplay();
+    if (next) {
+      const desc = detailsPopover?.description;
+      if (desc) desc.scrollTop = 0;
+    }
+    if (focusToggle) detailsToggle?.focus?.();
+    requestAnimationFrame(() => syncChromeVars());
+    return true;
+  }
+
+  /** Fecha "Detalhes" (Esc, toque fora, deslizar para baixo). true = estava aberto. */
+  function closeDetails({ focusToggle = false } = {}) {
+    if (!detailsOpen) return false;
+    return setDetailsOpen(false, { focusToggle });
+  }
+
+  /** O toque/clique é do "Detalhes"? Toque fora com ele aberto só fecha (não avança, não sai). */
+  function detailsOwnsPoint(target) {
+    const node = target?.nodeType === 3 ? target.parentElement : target;
+    if (node?.closest?.(".driver-popover, .gf-player-controls, .gf-sticky-cta")) return false;
+    if (detailsOpen) {
+      closeDetails();
+      return true;
+    }
+    return Date.now() - detailsClosedAt < 650;
+  }
+
+  /**
+   * No slide de texto o balão some (o cartão já mostra título e texto). Em pé ele fica só com a navegação
+   * (← N de X →): a navegação nunca desaparece no celular.
+   */
+  function paintSlideNav(isSlide) {
+    const navOnly = Boolean(isSlide) && isPortraitCompact();
+    setPopoverHiddenForSlide(Boolean(isSlide) && !navOnly);
+    document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-slide-nav", navOnly));
+  }
+
+  /** Um bloco só por passo: o rodapé ganha "Detalhes" (aria-expanded) quando há título e texto. */
+  function decorateStepDetails(popover, step) {
+    detailsPopover = popover;
+    detailsOpen = false;
+    const parts = stepCaptionParts(step);
+    const wrap = popover?.wrapper;
+    const desc = popover?.description;
+    wrap?.classList.toggle("gf-has-details", parts.hasDetails);
+    if (!parts.hasDetails || !desc || !popover?.footer) {
+      detailsToggle?.remove();
+      detailsToggle = null;
+      paintDetails();
+      return;
+    }
+    desc.id = "gf-step-details";
+    if (!detailsToggle) {
+      detailsToggle = document.createElement("button");
+      detailsToggle.type = "button";
+      detailsToggle.className = "gf-details-toggle";
+      detailsToggle.innerHTML =
+        '<span class="gf-details-label"></span><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      detailsToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDetailsOpen(!detailsOpen);
+      });
+    }
+    detailsToggle.setAttribute("aria-controls", desc.id);
+    const next = popover.nextButton;
+    if (next && next.parentElement === popover.footer) popover.footer.insertBefore(detailsToggle, next);
+    else popover.footer.appendChild(detailsToggle);
+    paintDetails();
+  }
+
+  // ---- legenda mínima (celular em pé): a narração em pedaços de ~2 linhas, no ritmo do áudio ----
+  const sub = { full: "", chunks: null, idx: -1, hasAudio: false, speechDone: false, audioStarted: false, elapsed: 0, last: 0, timer: 0, on: false };
+
+  function subtitleMode() {
+    return running && isPresenting() && isPortraitCompact() && Boolean(sub.full);
+  }
+
+  function subtitleChunks() {
+    if (!sub.chunks) {
+      const w = Math.min(window.innerWidth || 390, 900) - 16 - 24;
+      sub.chunks = splitSubtitleChunks(sub.full, subtitleMaxChars(w, 14));
+    }
+    return sub.chunks;
+  }
+
+  function paintSubtitle() {
+    const el = els.caption;
+    if (!el) return;
+    if (!subtitleMode()) {
+      if (sub.on) {
+        el.classList.remove("is-subtitle");
+        el.textContent = sub.full;
+        sub.on = false;
+        sub.idx = -1;
+      }
+      return;
+    }
+    const chunks = subtitleChunks();
+    let idx = 0;
+    const clock = sub.hasAudio ? speechClock() : null;
+    if (clock) {
+      sub.audioStarted = true;
+      idx = subtitleChunkAt(chunks, speechProgress(clock));
+    } else if (sub.hasAudio && sub.speechDone && sub.audioStarted) idx = chunks.length - 1;
+    else idx = readingChunkAt(chunks, sub.elapsed);
+    if (sub.on && idx === sub.idx) return;
+    sub.on = true;
+    sub.idx = idx;
+    el.classList.add("is-subtitle");
+    const span = document.createElement("span");
+    span.className = "gf-subtitle-line";
+    span.textContent = chunks[idx] || "";
+    el.replaceChildren(span);
+  }
+
+  function tickSubtitle() {
+    const now = performance.now();
+    if (!controls.isPaused()) sub.elapsed += now - sub.last;
+    sub.last = now;
+    paintSubtitle();
+  }
+
+  function stopSubtitle() {
+    clearInterval(sub.timer);
+    sub.timer = 0;
+    if (els.caption) {
+      // why: só devolve o texto inteiro se a legenda ainda for a nossa (narration.stop/enterStep já a trocaram)
+      if (sub.on && els.caption.querySelector(".gf-subtitle-line")) els.caption.textContent = sub.full;
+      els.caption.classList.remove("is-subtitle");
+    }
+    sub.on = false;
+    sub.full = "";
+    sub.chunks = null;
+    sub.idx = -1;
+  }
+
+  /** Chamado logo depois de narration.enterStep (que já pôs o texto completo na legenda). */
+  function startSubtitle(step, demo) {
+    stopSubtitle();
+    if (!els.caption || els.caption.hidden) return;
+    sub.full = String(els.caption.textContent || "").trim();
+    sub.hasAudio = demo?.narration?.enabled !== false && playableNarrationClips(step, demo).length > 0;
+    sub.speechDone = false;
+    sub.audioStarted = false;
+    sub.elapsed = 0;
+    sub.last = performance.now();
+    const token = driveToken;
+    narration.whenSpeechDone().then(() => {
+      if (token === driveToken) sub.speechDone = true;
+    });
+    paintSubtitle();
+    if (sub.full) sub.timer = setInterval(tickSubtitle, 150);
+  }
+
+  /** Sem áudio, a legenda em pedaços precisa de tempo para passar inteira antes do avanço sozinho. */
+  function subtitleHoldMs() {
+    if (!subtitleMode() || sub.hasAudio) return 0;
+    return Math.round(readingTotalMs(subtitleChunks()));
+  }
+
   /** Altura real do balão, legenda e botão fixo → variáveis do CSS (o palco em pé usa o espaço que sobra). */
   function syncChromeVars() {
     const root = document.documentElement;
     const pop = document.querySelector(".driver-popover");
     const popH = pop && !pop.classList.contains("is-slide-hidden") ? Math.round(pop.getBoundingClientRect().height) : 0;
+    // why: "Detalhes" aberto cresce por cima da foto — o palco fica com a altura do balão fechado (a foto não pula)
+    if (!detailsOpen) popStageH = popH;
     const cap = els.caption;
     const capRect = cap && !cap.hidden && String(cap.textContent || "").trim() ? cap.getBoundingClientRect() : null;
     const capH = capRect && capRect.height > 0 ? Math.round(capRect.height) + 8 : 0;
@@ -168,6 +373,7 @@ export function createPlayer(ctx) {
       if (root.style.getPropertyValue(k) !== v) root.style.setProperty(k, v);
     };
     set("--gf-pop-vis-h", `${popH}px`);
+    set("--gf-pop-stage-h", `${detailsOpen ? popStageH : popH}px`);
     set("--gf-cap-h", `${capH}px`);
     set("--gf-sticky-h", `${stickyH}px`);
     if (ctlW) set("--gf-ctl-w", `${ctlW}px`);
@@ -305,7 +511,7 @@ export function createPlayer(ctx) {
 
   function armAutoplay() {
     clearAutoplay();
-    if (!autoplayOn() || !driverObj) return;
+    if (!autoplayOn() || !driverObj || detailsOpen) return;
     const demo = getDemo();
     ensurePlayback(demo);
     ensureNarration(demo);
@@ -313,7 +519,7 @@ export function createPlayer(ctx) {
     if (!step) return;
     // why: o áudio já começou em showStepVisual; aqui só esperamos para avançar
     const speechDone = narration.whenSpeechDone();
-    const delay = holdMs(step, demo);
+    const delay = Math.max(holdMs(step, demo), subtitleHoldMs());
     presentProgress.start(delay);
     autoplayTimer = setTimeout(async () => {
       await speechDone.catch(() => {});
@@ -479,6 +685,7 @@ export function createPlayer(ctx) {
       const demo = getDemo();
       ensureNarration(demo);
       narration.enterStep(step, demo, { speak });
+      startSubtitle(step, demo);
 
       // why: ponto de edição some na apresentação; o cursor simulado cuida do clique
       if (els.clickPoint) els.clickPoint.hidden = true;
@@ -715,8 +922,9 @@ export function createPlayer(ctx) {
         renderDemoPopoverFooter(popover);
         labelCloseButton(popover?.closeButton, t(ctx.closeLabelKey || "player.closeTour"));
         const isSlide = steps[activeIndex]?.type === "slide";
-        setPopoverHiddenForSlide(isSlide);
+        paintSlideNav(isSlide);
         decoratePopoverA11y(popover);
+        decorateStepDetails(popover, steps[activeIndex]);
         const stepTitle = steps[activeIndex]?.popover?.title || steps[activeIndex]?.label || "";
         announce(
           t("player.announceStep", { current: playlistPos + 1, total: playOrder.length, title: stepTitle }).replace(/:\s*$/, "")
@@ -755,6 +963,7 @@ export function createPlayer(ctx) {
                 drv.destroy();
                 driverObj = null;
                 narration.stop();
+                stopSubtitle();
                 setProgress(t("player.doneStatus"));
                 return;
               }
@@ -805,6 +1014,7 @@ export function createPlayer(ctx) {
         setBackdrop("");
         clearAutoplay();
         narration.stop();
+        stopSubtitle();
         setProgress(t("player.stopped"));
         clickFx.reset();
         clearZoom({ animate: false });
@@ -834,6 +1044,7 @@ export function createPlayer(ctx) {
   function silenceAudio() {
     clearAutoplay();
     narration.stop();
+    stopSubtitle();
   }
 
   function stop({ silent = false } = {}) {
@@ -1098,7 +1309,8 @@ export function createPlayer(ctx) {
         if (!isPresenting() || !driverObj) return;
         const node = e.target?.nodeType === 3 ? e.target.parentElement : e.target;
         if (node?.closest?.(".gf-player-controls, .gf-sticky-cta, .driver-popover, .slide-card")) return;
-        const recent = Date.now() - gestureEndedAt < 650;
+        // why: o toque fora que fechou "Detalhes" não pode também avançar o passo ou fechar o tour
+        const recent = Date.now() - gestureEndedAt < 650 || Date.now() - detailsClosedAt < 650;
         if (!recent && !zoomOwnsPoint(e.clientX, e.clientY)) return;
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -1107,8 +1319,51 @@ export function createPlayer(ctx) {
     );
   }
 
+  function bindDetailsGestures() {
+    // why: com "Detalhes" aberto, tocar fora só fecha o texto (no editor; no /p o viewApp pergunta antes)
+    window.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (!detailsOpen || !isPresenting() || !driverObj) return;
+        if (!detailsOwnsPoint(e.target)) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      },
+      true
+    );
+    // why: deslizar para baixo no cartão aberto fecha (gesto de folha), se o texto já está no topo
+    let pull = null;
+    window.addEventListener(
+      "touchstart",
+      (e) => {
+        pull = null;
+        if (!detailsOpen || e.touches.length !== 1) return;
+        const pop = e.target?.closest?.(".driver-popover");
+        if (!pop) return;
+        const tch = e.touches[0];
+        pull = { x: tch.clientX, y: tch.clientY, at: Date.now(), top: (detailsPopover?.description?.scrollTop || 0) <= 0 };
+      },
+      { passive: true }
+    );
+    window.addEventListener(
+      "touchend",
+      (e) => {
+        const p = pull;
+        pull = null;
+        if (!p || !detailsOpen || !p.top) return;
+        const tch = e.changedTouches[0];
+        const dx = tch.clientX - p.x;
+        const dy = tch.clientY - p.y;
+        if (Date.now() - p.at > 800 || dy < 50 || dy < Math.abs(dx) * 1.5) return;
+        closeDetails({ focusToggle: true });
+      },
+      { passive: true }
+    );
+  }
+
   function bind() {
     bindZoomGestures();
+    bindDetailsGestures();
     function onHighlightClick(e) {
       if (!driverObj || !isPresenting()) return;
       if (e.target.closest(".slide-card-play, .slide-card-close")) return;
@@ -1166,6 +1421,8 @@ export function createPlayer(ctx) {
       if (e.key === "Escape") {
         if (document.querySelector("dialog[open]")) return;
         e.preventDefault();
+        // why: Esc fecha primeiro o "Detalhes" aberto; o próximo Esc sai do tour
+        if (closeDetails({ focusToggle: true })) return;
         requestExit("esc");
         return;
       }
@@ -1230,7 +1487,8 @@ export function createPlayer(ctx) {
         relayoutRaf = requestAnimationFrame(() => {
           relayoutRaf = 0;
           syncChromeVars();
-          if (running && isPresenting() && isCompactTouch()) relayoutStep();
+          // why: "Detalhes" aberto cobre a foto por cima; a câmera não muda com ele
+          if (running && isPresenting() && isCompactTouch() && !detailsOpen) relayoutStep();
         });
       };
       const ro = new ResizeObserver(() => {
@@ -1308,6 +1566,11 @@ export function createPlayer(ctx) {
 
     window.addEventListener("resize", () => {
       if (!isPresenting() || !running) return;
+      // why: girar o celular troca o modo (legenda mínima em pé, texto inteiro deitado) e a largura dos pedaços
+      sub.chunks = null;
+      sub.idx = -1;
+      paintSubtitle();
+      if (driverObj) paintSlideNav(getDemo()?.steps?.[activeIndex]?.type === "slide");
       relayoutStep();
     });
   }
@@ -1322,6 +1585,10 @@ export function createPlayer(ctx) {
     highlightContains,
     /** Toque na foto ampliada pelo visitante, ou logo depois de uma pinça: o /p não trata como "fora". */
     zoomOwnsTouch: (x, y) => zoomOwnsPoint(x, y) || zoomGestureRecent(),
+    /** Toque com "Detalhes" aberto (fecha e não conta como "fora") ou logo depois de fechar. */
+    detailsOwnsTouch: (target) => isPresenting() && Boolean(driverObj) && detailsOwnsPoint(target),
+    /** Esc da página: fecha "Detalhes" se estiver aberto (true) antes de sair do tour. */
+    closeDetails: () => closeDetails({ focusToggle: true }),
     isRunning: () => running,
     /** Estado do toggle de reprodução automática (mantido ao trocar de idioma no meio do tour). */
     isAutoplay: () => autoplayEnabled,
