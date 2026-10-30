@@ -9135,3 +9135,103 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   width: 22px;
   height: 22px;
 }
+
+/* ---- Modo de exibição (Tour guiado | Galeria): ⚙ Preferências do projeto e menu ▾ do Preview ---- */
+.mode-picker {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 8px 10px 10px;
+  border: 1px solid var(--ns-border);
+  border-radius: 10px;
+}
+
+.mode-picker legend {
+  padding: 0 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ns-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mode-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mode-option:hover {
+  background: var(--ns-hover);
+}
+
+.mode-option:has(input:checked) {
+  border-color: var(--ns-accent);
+  background: color-mix(in srgb, var(--ns-accent) 8%, var(--ns-panel));
+}
+
+.mode-option input {
+  margin-top: 3px;
+  accent-color: var(--ns-accent);
+}
+
+.mode-option-text {
+  display: grid;
+  gap: 2px;
+}
+
+.mode-option-title {
+  font-weight: 600;
+}
+
+.mode-option-hint {
+  font-size: 0.8rem;
+  color: var(--ns-muted);
+}
+
+.mode-note {
+  margin: 2px 4px 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ns-muted);
+}
+
+.menu-group-label {
+  margin: 6px 0 2px;
+  padding: 6px 12px 0;
+  border-top: 1px solid var(--ns-border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ns-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mode-menu-item .mode-check {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+}
+
+.mode-menu-item[aria-checked="true"] .mode-check::before {
+  content: "✓";
+  font-weight: 700;
+  color: var(--ns-accent-dark);
+}
+
+.preview-mode-badge {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ns-accent) 18%, transparent);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.preview-mode-badge[hidden] {
+  display: none;
+}

@@ -15,3 +15,4 @@ export * from "./translate.js";
 export * from "./collabSteps.js";
 export * from "./video.js";
 export * from "./richText.js";
+export * from "./playbackMode.js";

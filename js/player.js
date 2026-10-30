@@ -54,6 +54,8 @@ import { stepImageAlt } from "./a11y.js";
 import { createVideoStage, VIDEO_STAGE_ID } from "./videoStage.js";
 import { stepVideo } from "./tour-schema/video.js";
 import { stopSpeech } from "./playback.js";
+import { isGalleryMode } from "./tour-schema/playbackMode.js";
+import { createGalleryPlayer } from "./galleryPlayer.js";
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
@@ -1624,20 +1626,38 @@ export function createPlayer(ctx) {
 
   bind();
 
+  // why: modo Galeria (playback.mode = "gallery") — carrossel de fotos; sem balões, destaques, avanço sozinho nem voz.
+  // O mesmo lifecycle alimenta o analytics (step_view por foto), então as métricas dos dois modos se comparam.
+  const gallery = createGalleryPlayer(ctx, lifecycle);
+  const galleryActive = () => gallery.isOpen();
+
   return {
-    play: (opts = {}) => buildAndDrive(opts.from ?? startIndex(), opts),
-    stop,
+    play: (opts = {}) => {
+      const from = opts.from ?? startIndex();
+      if (isGalleryMode(getDemo())) {
+        if (running || driverObj) stop({ silent: true });
+        return gallery.play({ from });
+      }
+      gallery.stop();
+      return buildAndDrive(from, opts);
+    },
+    stop: (opts) => {
+      gallery.stop();
+      return stop(opts);
+    },
     /** Sai do tour reportando o motivo ao onExit (ex.: "click_outside" vindo da página). */
-    exit: (reason) => requestExit(reason),
-    highlightContains,
+    exit: (reason) => (galleryActive() ? gallery.exit(reason) : requestExit(reason)),
+    highlightContains: (x, y) => (galleryActive() ? false : highlightContains(x, y)),
     /** Toque na foto ampliada pelo visitante, ou logo depois de uma pinça: o /p não trata como "fora". */
-    zoomOwnsTouch: (x, y) => zoomOwnsPoint(x, y) || zoomGestureRecent(),
+    // why: na Galeria a tela inteira é da galeria (sair só pelo ✕ ou Esc)
+    zoomOwnsTouch: (x, y) => galleryActive() || zoomOwnsPoint(x, y) || zoomGestureRecent(),
     /** Toque com "Detalhes" aberto (fecha e não conta como "fora") ou logo depois de fechar. */
-    detailsOwnsTouch: (target) => isPresenting() && Boolean(driverObj) && detailsOwnsPoint(target),
-    /** Esc da página: fecha "Detalhes" se estiver aberto (true) antes de sair do tour. */
-    closeDetails: () => closeDetails({ focusToggle: true }),
-    isRunning: () => running,
+    detailsOwnsTouch: (target) => !galleryActive() && isPresenting() && Boolean(driverObj) && detailsOwnsPoint(target),
+    /** Esc da página: fecha "Detalhes" (ou a grade/zoom da Galeria) se estiver aberto (true) antes de sair do tour. */
+    closeDetails: () => (galleryActive() ? gallery.closeLayer() : closeDetails({ focusToggle: true })),
+    isRunning: () => gallery.isRunning() || running,
     /** Estado do toggle de reprodução automática (mantido ao trocar de idioma no meio do tour). */
-    isAutoplay: () => autoplayEnabled,
+    isAutoplay: () => (galleryActive() ? false : autoplayEnabled),
+    isGallery: () => galleryActive(),
   };
 }
