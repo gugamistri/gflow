@@ -1,6 +1,6 @@
 /**
  * Cartões dos passos fixos (início e fim) no player do /v e /p e na prévia do editor.
- * why: tudo com textContent e href validado em fixedSteps.js — nunca innerHTML com texto do autor.
+ * why: tudo com textContent/createElement e href validado em fixedSteps.js — nunca innerHTML com texto do autor.
  */
 import { t, getLocale } from "./i18n.js";
 import {
@@ -14,6 +14,7 @@ import {
   validateLeadForm,
 } from "./fixedSteps.js";
 import { defaultCountry, parseE164 } from "./phoneCountries.js";
+import { renderRichText } from "./tour-schema/richText.js";
 import { createPhoneField, phoneErrorText } from "./phoneField.js";
 
 export const WA_ICON =
@@ -24,6 +25,11 @@ function el(tag, className, textContent) {
   if (className) node.className = className;
   if (textContent != null) node.textContent = textContent;
   return node;
+}
+
+/** Corpo do cartão com a formatação leve (negrito, itálico, sublinhado, lista), montado em nós. */
+function richBody(text) {
+  return renderRichText(el("div", "fixed-card-body"), text);
 }
 
 export function svgIcon(path) {
@@ -57,7 +63,7 @@ export function renderEndCard(rawStep, opts = {}) {
   card.setAttribute("aria-labelledby", title.id);
   card.append(title);
   const bodyText = step.body || t("fixed.end.defaultBody");
-  if (bodyText) card.append(el("p", "fixed-card-body", bodyText));
+  if (bodyText) card.append(richBody(bodyText));
 
   const actions = el("div", "fixed-card-actions");
   const list = endStepActions(step, {
@@ -323,7 +329,7 @@ export function renderStartCard(rawStep, opts = {}) {
   card.setAttribute("aria-labelledby", title.id);
   form.append(title);
   const bodyText = step.body || t("fixed.start.defaultBody");
-  if (bodyText) form.append(el("p", "fixed-card-body", bodyText));
+  if (bodyText) form.append(richBody(bodyText));
 
   const inputs = {};
   // why: campos lado a lado quando cabem — o gate precisa caber num embed de 420px sem rolagem

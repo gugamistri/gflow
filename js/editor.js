@@ -29,6 +29,8 @@ import {
   snapPopoverPlacement,
 } from "./canvasEdit.js";
 import { isCompactLandscape, isCompactTouch } from "./compact.js";
+import { hasRichFormatting, renderRichText } from "./tour-schema/richText.js";
+import { createRichTextToolbar } from "./richTextEditor.js";
 import {
   TOUCH_DRAG_HOLD_MS,
   TOUCH_DRAG_SLOP,
@@ -1329,6 +1331,8 @@ export function createEditor(ctx) {
     return !document.getElementById("view-editor")?.classList.contains("is-presenting");
   }
 
+  let richToolbar = null;
+
   function inlineFields() {
     return [els.slideTitle, els.slideBody, els.canvasCaption, els.popoverTitle, els.popoverBody];
   }
@@ -1358,10 +1362,46 @@ export function createEditor(ctx) {
     if (el.contentEditable !== flag) el.contentEditable = flag;
     el.spellcheck = !!editing;
     const focused = document.activeElement === el;
-    if (!focused && el.textContent !== value) el.textContent = value;
+    if (!focused) paintInlineValue(el, value);
     const shown = focused ? readInlineText(el.innerText) : value;
     el.classList.toggle("is-empty", !shown.trim());
     syncInlinePlaceholder(el, shown, editing);
+  }
+
+  /**
+   * Texto do campo do palco fora da edição. Descrição (balão e slide) mostra a formatação leve
+   * montada em nós; com foco o campo volta aos marcadores (ver bindInlineEditing).
+   */
+  const inlineRaw = new WeakMap();
+  function paintInlineValue(el, value) {
+    if (el.dataset.inline === "description" && hasRichFormatting(value)) {
+      if (inlineRaw.get(el) === value && el.dataset.rich === "1") return;
+      renderRichText(el, value);
+      el.dataset.rich = "1";
+    } else if (el.textContent !== value || el.dataset.rich === "1") {
+      el.textContent = value;
+      delete el.dataset.rich;
+    }
+    inlineRaw.set(el, value);
+  }
+
+  /** Foco no campo formatado: troca a prévia pelos marcadores e põe o cursor no fim. */
+  function showInlineMarkers(el) {
+    if (el.dataset.rich !== "1") return;
+    el.textContent = inlineRaw.get(el) ?? readInlineText(el.innerText);
+    delete el.dataset.rich;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = document.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }
+
+  function isRichField(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (el.id === "prop-description" || el.id === "fixed-start-body" || el.id === "fixed-end-body") return true;
+    return el.dataset?.inline === "description" && el.isContentEditable;
   }
 
   function placeCaptionPlaceholder() {
@@ -1515,7 +1555,7 @@ export function createEditor(ctx) {
     for (const twin of inlineFields()) {
       if (!twin || twin === source || twin.dataset.inline !== kind) continue;
       if (document.activeElement === twin) continue;
-      if (twin.textContent !== value) twin.textContent = value;
+      paintInlineValue(twin, value);
       twin.classList.toggle("is-empty", !value.trim());
       syncInlinePlaceholder(twin, value, twin.contentEditable === "true");
     }
@@ -1575,6 +1615,15 @@ export function createEditor(ctx) {
     onChange();
   }
 
+  function getCaretAtEnd(el) {
+    const sel = document.getSelection();
+    if (!sel?.rangeCount || !el.contains(sel.anchorNode)) return true;
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    r.setStart(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset);
+    return !r.toString().replace(/\n$/, "");
+  }
+
   function insertPlainText(el, text) {
     const sel = document.getSelection();
     if (!sel?.rangeCount || !el.contains(sel.anchorNode)) {
@@ -1596,11 +1645,17 @@ export function createEditor(ctx) {
       if (!el) continue;
       el.addEventListener("input", () => commitInline(el));
       el.addEventListener("focus", () => {
+        if (el.contentEditable === "true") showInlineMarkers(el);
         el.dataset.orig = readInlineText(el.innerText);
       });
       el.addEventListener("blur", () => {
         commitInline(el);
         delete el.dataset.orig;
+        // why: fora da edição a descrição volta a mostrar negrito/itálico/lista
+        if (el.dataset.inline === "description") {
+          const step = currentStep();
+          if (step) paintInlineValue(el, shownText(step, "description"));
+        }
       });
       el.addEventListener("keydown", (e) => {
         if (el.contentEditable !== "true") return;
@@ -1633,9 +1688,31 @@ export function createEditor(ctx) {
         if (el.contentEditable !== "true") return;
         if (e.inputType?.startsWith("format")) e.preventDefault();
         if (e.inputType === "insertParagraph" && el.dataset.inline === "title") e.preventDefault();
+        if ((e.inputType === "insertParagraph" || e.inputType === "insertLineBreak") && el.dataset.inline === "description") {
+          // why: só nós de texto no campo (a barra de formatação conta posições no texto);
+          // o "\n" extra no fim faz a linha nova aparecer e o readInlineText o descarta
+          e.preventDefault();
+          const atEnd = getCaretAtEnd(el);
+          insertPlainText(el, atEnd && !el.textContent.endsWith("\n") ? "\n\n" : "\n");
+          if (atEnd) {
+            const sel = document.getSelection();
+            if (sel?.rangeCount) {
+              const r = sel.getRangeAt(0);
+              const node = r.startContainer;
+              if (node.nodeType === 3 && r.startOffset > 0 && node.nodeValue.endsWith("\n\n") && r.startOffset === node.nodeValue.length) {
+                r.setStart(node, node.nodeValue.length - 1);
+                r.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(r);
+              }
+            }
+          }
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
       });
     }
     bindInlineKeyboardInset();
+    richToolbar = createRichTextToolbar({ isField: isRichField, t, compact: () => isCompactTouch() });
   }
 
   function bindInlineKeyboardInset() {

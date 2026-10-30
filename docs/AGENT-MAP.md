@@ -45,6 +45,7 @@ Assets e cópias. Lógica nova não mora aqui.
 | Leads e passos de abertura/fim | `js/leadsDialog.js`, `js/fixedSteps.js`, `js/fixedStepsEditor.js` | `apps/api/src/routes/leads.js` |
 | Player e página publicada | `js/player.js`, `js/playback.js`, `js/viewApp.js`, `view.html` | `packages/player-host` |
 | Vídeo do YouTube/Vimeo no passo (só link) | `js/tour-schema/video.js`, `js/videoStage.js`, `js/stepVideoEditor.js`, `js/videoI18n.js` | `packages/player-host` (fachada e CSP `frame-src`), `apps/api/src/lib/view-analytics.js` (`video_play`, `video_progress`) |
+| Formatação leve do texto (**negrito**, *itálico*, ++sublinhado++, lista "- ") no balão, slide e passos inicial/final | `js/tour-schema/richText.js` (parser, render em nós, strip), `js/richTextEditor.js` (barra B/I/U/lista e atalhos), cópia inline em `js/standalonePlayer.js` (`node scripts/sync-rich-text.mjs`) | `packages/player-host` (viewer mínimo), `apps/api/src/lib/mcp-tools.js` (descrição do `text`), IA/TTS/capa sem marcadores |
 | Formato do tour | `js/tour-schema/README.md` e os arquivos nomeados lá | cópia em `packages/tour-schema/` |
 | Captura no Chrome | `extension/background.js`, `extension/content.js`, `extension/popup.js`, `js/captureInbox.js` | — |
 | App desktop | `electron/main.js` | — |

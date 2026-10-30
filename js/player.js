@@ -2,6 +2,7 @@ import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
+import { renderRichText } from "./tour-schema/richText.js";
 import {
   renderDemoPopoverFooter,
   clickDriverNext,
@@ -727,7 +728,7 @@ export function createPlayer(ctx) {
         els.slideKicker.textContent = kicker;
         els.slideKicker.hidden = !kicker;
         els.slideTitle.textContent = step.popover?.title || step.label || "";
-        els.slideBody.textContent = step.popover?.description || "";
+        renderRichText(els.slideBody, step.popover?.description || "");
         applySlideLayout(els.slide, step);
         sizeSlideLikeImage(els.slide, els.stage, demo, step, resolveImageSrc);
         // why: o editor usa [hidden]; style.display não vence o !important do CSS

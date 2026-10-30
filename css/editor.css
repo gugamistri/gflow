@@ -9072,3 +9072,66 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
 .video-link-chip:hover {
   text-decoration: underline;
 }
+
+/* ---- barra de formatação leve (B / I / U / lista) — js/richTextEditor.js ---- */
+.rt-toolbar {
+  position: fixed;
+  z-index: 2147483000;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ns-border);
+  border-radius: 9px;
+  background: var(--ns-panel);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.16);
+}
+.rt-toolbar[hidden] {
+  display: none !important;
+}
+.rt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ns-ink);
+  cursor: pointer;
+}
+.rt-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.rt-btn:hover {
+  background: var(--ns-hover);
+}
+.rt-btn:focus-visible {
+  outline: 2px solid var(--ns-accent-dark);
+  outline-offset: 1px;
+}
+.rt-btn[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ns-accent) 22%, var(--ns-panel));
+  border-color: color-mix(in srgb, var(--ns-accent-dark) 45%, transparent);
+  color: var(--ns-accent-dark);
+}
+/* toque compacto: barra fixa acima do teclado, alvos de 44 px */
+.rt-toolbar.is-compact {
+  left: 0;
+  right: 0;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 0;
+  border-width: 1px 0 0;
+  padding: 4px max(8px, env(safe-area-inset-left)) calc(4px + env(safe-area-inset-bottom, 0px));
+}
+.rt-toolbar.is-compact .rt-btn {
+  width: 44px;
+  height: 44px;
+}
+.rt-toolbar.is-compact .rt-btn svg {
+  width: 22px;
+  height: 22px;
+}
