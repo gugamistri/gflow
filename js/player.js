@@ -1,6 +1,7 @@
 import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
+import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
 import {
   renderDemoPopoverFooter,
   clickDriverNext,
@@ -40,6 +41,7 @@ import {
   playableNarrationClips,
   restoreCaptionHome,
   speechClock,
+  slideKickerText,
 } from "./playback.js";
 import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
@@ -721,7 +723,9 @@ export function createPlayer(ctx) {
         els.image.removeAttribute("src");
         if (els.missing) els.missing.hidden = true;
         els.slide.hidden = false;
-        els.slideKicker.textContent = t("player.scene", { n: step.scene });
+        const kicker = slideKickerText(step, demo, (n) => t("player.scene", { n }));
+        els.slideKicker.textContent = kicker;
+        els.slideKicker.hidden = !kicker;
         els.slideTitle.textContent = step.popover?.title || step.label || "";
         els.slideBody.textContent = step.popover?.description || "";
         applySlideLayout(els.slide, step);
@@ -971,8 +975,9 @@ export function createPlayer(ctx) {
         return {
           element: step.type === "slide" ? "#canvas-slide" : stepVideo(step) ? `#${VIDEO_STAGE_ID}` : "#hotspot",
           popover: {
-          title: step.popover?.title || step.label || "",
-          description: (step.popover?.description || "").replace(/\n/g, "<br/>"),
+          // why: driver.js usa innerHTML; o texto do autor entra escapado (nunca vira marcação)
+          title: popoverTitleHtml(step.popover?.title || step.label || ""),
+          description: popoverBodyHtml(step.popover?.description || ""),
           side: step.popover?.side || "bottom",
           align: step.popover?.align || "center",
           onNextClick: async (_el, _step, navOpts) => {

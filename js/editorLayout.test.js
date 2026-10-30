@@ -151,7 +151,7 @@ test("barra do passo fixa reúne todos os controles do passo", () => {
     "pro-badge-audio",
     "btn-upload-caption",
     "btn-clear-caption-audio",
-    "prop-show-caption",
+    "stb-show-caption",
     "stb-more",
     "stb-open-panel",
   ]) {
@@ -181,7 +181,7 @@ test("barra de baixo é só o player do áudio", () => {
   for (const id of ["caption-player", "btn-caption-play", "caption-seek", "caption-time", "caption-duration", "btn-caption-rate"]) {
     assert.match(bar, new RegExp(`id="${id}"`), id);
   }
-  for (const id of ["btn-generate-caption", "btn-upload-caption", "btn-clear-caption-audio", "prop-show-caption", "btn-narr-write"]) {
+  for (const id of ["btn-generate-caption", "btn-upload-caption", "btn-clear-caption-audio", "prop-show-caption", "stb-show-caption", "btn-narr-write"]) {
     assert.equal(bar.includes(`id="${id}"`), false, id);
   }
   assert.match(bar, /^id="narration-bar"[^>]*\shidden>/);

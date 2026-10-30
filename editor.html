@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/177/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/177/css/theme.css" />
-  <link rel="stylesheet" href="a/177/css/shell.css" />
-  <link rel="stylesheet" href="a/177/css/player.css" />
-  <link rel="stylesheet" href="a/177/css/editor.css" />
-  <link rel="stylesheet" href="a/177/css/settings.css" />
-  <link rel="stylesheet" href="a/177/css/collab.css" />
-  <link rel="stylesheet" href="a/177/css/comments.css" />
+  <link rel="stylesheet" href="a/181/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/181/css/theme.css" />
+  <link rel="stylesheet" href="a/181/css/shell.css" />
+  <link rel="stylesheet" href="a/181/css/player.css" />
+  <link rel="stylesheet" href="a/181/css/editor.css" />
+  <link rel="stylesheet" href="a/181/css/settings.css" />
+  <link rel="stylesheet" href="a/181/css/collab.css" />
+  <link rel="stylesheet" href="a/181/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -165,7 +165,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/177/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/177/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/181/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/181/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -480,7 +480,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/177/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/177/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/181/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/181/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -806,11 +806,7 @@
             <button type="button" class="stb-btn" id="btn-upload-caption" title="Enviar áudio" aria-label="Enviar áudio" data-i18n-title="props.uploadAudio" data-i18n-aria="props.uploadAudio" hidden><svg aria-hidden="true"><use href="#i-upload"></use></svg></button>
             <button type="button" class="stb-btn btn-danger-hover" id="btn-clear-caption-audio" title="Remover áudio" aria-label="Remover áudio" data-i18n-title="narrbar.removeAudio" data-i18n-aria="narrbar.removeAudio" hidden><svg aria-hidden="true"><use href="#i-trash"></use></svg></button>
             <input type="file" id="caption-audio-file" accept="audio/*,.mp3,.ogg,.wav,.m4a,.aac,.webm" hidden />
-            <label class="stb-toggle" id="wrap-show-caption" title="Mostrar o texto da narração na apresentação" data-i18n-title="narrbar.showTextTitle" hidden>
-              <input type="checkbox" id="prop-show-caption" role="switch" checked aria-label="Texto na tela" data-i18n-aria="narrbar.showText" />
-              <svg aria-hidden="true"><use href="#i-captions"></use></svg>
-              <span class="stb-group-label-inline" data-i18n="narrbar.showText">Texto na tela</span>
-            </label>
+            <button type="button" class="stb-btn" id="stb-show-caption" title="Mostrar o texto da narração na apresentação" aria-label="Mostrar o texto da narração na apresentação" data-i18n-title="narrbar.showTextTitle" data-i18n-aria="narrbar.showTextTitle" aria-pressed="true" hidden><svg aria-hidden="true"><use href="#i-captions"></use></svg></button>
           </div>
         </div>
         <div class="stb-more-wrap">
@@ -1017,7 +1013,7 @@
         </div>
       </details>
       <details class="props-section" data-sec="narration" open>
-        <summary class="props-section-head" title="Gerar, enviar ou remover o áudio e mostrar o texto na tela ficam na barra do passo, acima do canvas. O player aparece abaixo do canvas quando o passo tem áudio." data-i18n-title="narrbar.panelNote">
+        <summary class="props-section-head" title="Gerar, enviar ou remover o áudio fica na barra do passo, acima do canvas. O player aparece abaixo do canvas quando o passo tem áudio." data-i18n-title="narrbar.panelNote">
           <svg class="btn-ico" aria-hidden="true"><use href="#i-mic"></use></svg>
           <span data-i18n="props.caption">Narração</span>
         </summary>
@@ -1026,6 +1022,11 @@
         <label><span data-i18n="panel.captionText">Texto da narração</span>
           <textarea id="prop-caption" rows="5" placeholder="Texto da narração (opcional no slide)" data-i18n-placeholder="props.captionPlaceholder"></textarea>
         </label>
+        <label class="checkbox" id="wrap-show-caption">
+          <input type="checkbox" id="prop-show-caption" role="switch" checked aria-describedby="show-caption-hint" />
+          <span data-i18n="props.showCaption">Mostrar a narração como legenda</span>
+        </label>
+        <p class="props-meta" id="show-caption-hint" data-i18n="props.showCaptionHint">Vale para o preview, os links /p e /v e o embed. Quem assiste ainda pode desligar no botão CC.</p>
         <p class="props-meta" id="caption-audio-status" hidden></p>
       </div>
         </div>
@@ -1108,7 +1109,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/177/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/181/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2635,8 +2636,8 @@
     </symbol>
   </svg>
 
-  <script src="a/177/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/177/js/app.js"></script>
+  <script src="a/181/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/181/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
