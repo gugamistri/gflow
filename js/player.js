@@ -41,6 +41,7 @@ import {
   playableNarrationClips,
   restoreCaptionHome,
   speechClock,
+  slideKickerText,
 } from "./playback.js";
 import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
@@ -699,7 +700,9 @@ export function createPlayer(ctx) {
         els.image.removeAttribute("src");
         if (els.missing) els.missing.hidden = true;
         els.slide.hidden = false;
-        els.slideKicker.textContent = t("player.scene", { n: step.scene });
+        const kicker = slideKickerText(step, demo, (n) => t("player.scene", { n }));
+        els.slideKicker.textContent = kicker;
+        els.slideKicker.hidden = !kicker;
         els.slideTitle.textContent = step.popover?.title || step.label || "";
         els.slideBody.textContent = step.popover?.description || "";
         applySlideLayout(els.slide, step);

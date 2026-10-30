@@ -418,6 +418,20 @@ export function playableNarrationClips(step, demo) {
   return audioDataClips(step?.narrationAudio);
 }
 
+/**
+ * Rótulo pequeno acima do título do slide.
+ * why: era sempre "Cena N" (resto do agrupamento por cena); o Gustavo prefere só o título.
+ * Só volta como reserva quando o slide não tem título: nome da cena, senão "Cena N" (`sceneText(n)`).
+ */
+export function slideKickerText(step, demo, sceneText = (n) => `Cena ${n}`) {
+  const title = String(step?.popover?.title || step?.label || "").trim();
+  if (title) return "";
+  const n = Number(step?.scene) || 1;
+  const labels = demo?.sceneLabels;
+  const label = String((labels && (labels[n] ?? labels[String(n)])) || "").trim();
+  return label || sceneText(n);
+}
+
 export function stepShowsCaption(step) {
   return step?.showCaption !== false;
 }

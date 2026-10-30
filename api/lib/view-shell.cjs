@@ -153,19 +153,19 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/179/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/179/css/theme.css" />
-  <link rel="stylesheet" href="/a/179/css/shell.css" />
-  <link rel="stylesheet" href="/a/179/css/player.css" />
+  <link rel="stylesheet" href="/a/180/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/180/css/theme.css" />
+  <link rel="stylesheet" href="/a/180/css/shell.css" />
+  <link rel="stylesheet" href="/a/180/css/player.css" />
   <script>window.__GF_SHARE = ${scriptJson({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/179/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/179/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/180/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/180/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
-    <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com" target="_blank" rel="noopener" hidden><img src="/a/179/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
+    <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com" target="_blank" rel="noopener" hidden><img src="/a/180/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
   </header>
 
   <main id="view-editor" class="view view-editor is-presenting">
@@ -229,8 +229,8 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/179/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/179/js/viewApp.js"></script>
+  <script src="/a/180/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/180/js/viewApp.js"></script>
 </body>
 </html>
 `;
