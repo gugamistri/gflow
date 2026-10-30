@@ -1,5 +1,6 @@
 import { resolveVideoQuality, avcCodecCandidates, LOGICAL_HEIGHT } from "./videoQuality.js";
 import { getThemeFont } from "./tour-schema/fonts.js";
+import { stepVideo, videoProviderLabel, videoWatchUrl } from "./tour-schema/video.js";
 import {
   encodeAssetPath,
   resolveImageSrc,
@@ -274,7 +275,8 @@ function pickRecorderMime() {
 function sceneTiming(step, demo) {
   ensurePlayback(demo);
   const read = resolveHoldMs(step, demo);
-  const hasClick = step.type !== "slide" && step.simulateClick !== false;
+  // why: passo de vídeo no MP4 é pôster + link (o vídeo do YouTube/Vimeo não entra no arquivo)
+  const hasClick = step.type !== "slide" && step.simulateClick !== false && !stepVideo(step);
   const cursorStart = hasClick ? read : 0;
   const cursorEnd = hasClick ? cursorStart + 550 : 0;
   const clickEnd = hasClick ? cursorEnd + 400 : 0;
@@ -1099,6 +1101,13 @@ function renderFrame(ctx, scene, theme) {
     });
     ctx.textAlign = "left";
     hs = slide;
+  } else if (img && stepVideo(step)) {
+    const rect = containRect(img.naturalWidth, img.naturalHeight, stage.x, stage.y, stage.w, stage.h);
+    ctx.fillStyle = "#111";
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h);
+    drawVideoPosterLink(ctx, rect, stepVideo(step), accent);
+    hs = rect;
   } else if (img) {
     const rect = containRect(img.naturalWidth, img.naturalHeight, stage.x, stage.y, stage.w, stage.h);
     ctx.fillStyle = "#111";
@@ -1173,6 +1182,50 @@ function renderFrame(ctx, scene, theme) {
   ctx.fillRect(0, H - 6, W, 6);
   ctx.fillStyle = accent;
   ctx.fillRect(0, H - 6, W * ((index + progress) / total), 6);
+}
+
+/**
+ * Passo de vídeo no MP4: botão ▶ sobre o pôster e o link escrito embaixo (quem vê o MP4 abre o link).
+ */
+export function drawVideoPosterLink(ctx, rect, video, accent = "#2A9D8F") {
+  const url = videoWatchUrl(video);
+  if (!url) return;
+  const label = t("video.exportWatch", { provider: videoProviderLabel(video.kind), url: url.replace(/^https:\/\//, "") });
+  ctx.save();
+  const grad = ctx.createLinearGradient(0, rect.y + rect.h * 0.55, 0, rect.y + rect.h);
+  grad.addColorStop(0, "rgba(0,0,0,0)");
+  grad.addColorStop(1, "rgba(0,0,0,0.6)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  const r = Math.max(36, Math.min(rect.w, rect.h) * 0.09);
+  const cx = rect.x + rect.w / 2;
+  const cy = rect.y + rect.h / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = accent;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.32, cy - r * 0.45);
+  ctx.lineTo(cx - r * 0.32, cy + r * 0.45);
+  ctx.lineTo(cx + r * 0.5, cy);
+  ctx.closePath();
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.font = `600 24px ${videoFont}`;
+  const padX = 18;
+  const textW = Math.min(rect.w - 32, ctx.measureText(label).width);
+  const boxW = textW + padX * 2;
+  const boxH = 44;
+  const bx = rect.x + (rect.w - boxW) / 2;
+  const by = rect.y + rect.h - boxH - 20;
+  roundRect(ctx, bx, by, boxW, boxH, 10);
+  ctx.fillStyle = "rgba(15, 23, 42, 0.86)";
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, rect.x + rect.w / 2, by + boxH / 2, rect.w - 32);
+  ctx.restore();
 }
 
 /** Cabeçalho do vídeo. Sem assinatura mostra o logo; o Pro mostra o título do projeto. */

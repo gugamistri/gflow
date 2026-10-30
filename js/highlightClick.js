@@ -19,6 +19,7 @@ export const HIGHLIGHT_CLICK_IGNORE = [
   ".driver-popover",
   ".slide-card",
   "#canvas-slide",
+  ".gf-video",
 ].join(", ");
 
 /** true se (x, y) cai dentro do retângulo, com a folga do recorte. */

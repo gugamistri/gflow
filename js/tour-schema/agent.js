@@ -8,6 +8,7 @@ import { CLICK_INSET, clampClickToHotspot, hasHotspot, pointInHotspot } from "./
 import { LIMITS as FIXED_LIMITS, isValidWhatsAppNumber, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
 import { THEME_COLOR_KEYS, THEME_PRESETS, cloneTheme, getPreset } from "./theme.js";
 import { THEME_FONT_IDS, isThemeFontId } from "./fonts.js";
+import { applyVideoToStep, normalizeStepVideo, parseVideoUrl, removeVideoFromStep, videoWatchUrl } from "./video.js";
 
 export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
 export const POPOVER_SIDES = Object.freeze(["top", "bottom", "left", "right", "over"]);
@@ -184,8 +185,51 @@ export function applyAgentStepInput(input = {}, base = null) {
     step.clickPoint = clampClickToHotspot(step.clickPoint || { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 }, step.hotspot);
   }
 
+  readVideoInput(input, step, errors, warnings);
+
   if (!step.popover.title && step.type === "screen" && !base) warnings.push("Passo sem title: o balão fica só com o texto.");
   return { ok: errors.length === 0, step: errors.length ? null : step, warnings, errors };
+}
+
+/**
+ * video: link do YouTube/Vimeo (string) liga o vídeo; null ou "" tira.
+ * why: só o link fica no tour (nada de upload do vídeo); a capa é a imagem do passo.
+ *      Passo com vídeo ocupa a tela toda: destaque/clique do agente são ignorados.
+ */
+function readVideoInput(input, step, errors, warnings) {
+  if (input.video !== undefined) {
+    if (input.video === null || input.video === "") {
+      removeVideoFromStep(step);
+    } else {
+      const video = typeof input.video === "string" ? parseVideoUrl(input.video) : normalizeStepVideo(input.video);
+      if (!video) {
+        errors.push(
+          issue(
+            "video",
+            "video precisa ser um link do YouTube ou do Vimeo (ex.: https://youtu.be/ID, https://www.youtube.com/watch?v=ID ou https://vimeo.com/ID).",
+            "Envie null para tirar o vídeo do passo."
+          )
+        );
+        return;
+      }
+      if (input.type === "slide") {
+        errors.push(issue("video", "Passo do tipo \"slide\" não tem vídeo.", "Use type \"screen\": a capa do vídeo vira a imagem do passo."));
+        return;
+      }
+      applyVideoToStep(step, video);
+    }
+  }
+  if (!step.video) return;
+  if (step.type === "slide") {
+    // why: virar slide tira o vídeo (o slide não tem imagem nem palco)
+    removeVideoFromStep(step);
+    warnings.push("O passo virou slide e o vídeo saiu.");
+    return;
+  }
+  if (input.highlight != null || input.click != null) {
+    warnings.push("Passo com vídeo ocupa a tela toda: highlight e click foram ignorados.");
+  }
+  applyVideoToStep(step, step.video);
 }
 
 /** Passo como o agente vê: coordenadas 0..1, sem mídia embutida. */
@@ -207,7 +251,13 @@ export function stepForAgent(step, index) {
     click: pointToUnit(step.clickPoint),
     popoverSide: step.popover?.side || "bottom",
     popoverAlign: step.popover?.align || "center",
+    ...videoForAgent(step),
   };
+}
+
+function videoForAgent(step) {
+  const video = step.type === "slide" ? null : normalizeStepVideo(step.video);
+  return video ? { video: { kind: video.kind, id: video.id, url: videoWatchUrl(video) } } : {};
 }
 
 /** Tema: preset por id ou cores (#hex). */
@@ -312,6 +362,9 @@ export function checkTourForPublish(tour) {
     if (step.type !== "slide" && !step.image) errors.push(issue(`steps[${i}].image`, `O passo ${i + 1} ("${step.popover?.title || step.id}") é uma captura sem imagem.`, "Envie a imagem com update_step ou mude type para \"slide\"."));
     if (step.type !== "slide" && hasHotspot(step.hotspot) && step.clickPoint && !pointInHotspot(step.clickPoint, step.hotspot)) {
       warnings.push(`Passo ${i + 1}: clique fora do destaque — o player mostra o clique preso ao destaque.`);
+    }
+    if (step.video != null && step.type !== "slide" && !normalizeStepVideo(step.video)) {
+      errors.push(issue(`steps[${i}].video`, `O passo ${i + 1} tem um vídeo inválido.`, "video precisa ser { kind: \"youtube\" | \"vimeo\", id } — ou remova o campo."));
     }
     if (!step.popover?.title && !step.popover?.description) warnings.push(`Passo ${i + 1} sem título e sem texto.`);
   });

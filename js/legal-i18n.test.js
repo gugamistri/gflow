@@ -35,11 +35,11 @@ test("textos legais existem nas três línguas, com os mesmos links e sem 'nuvem
       assert.deepEqual(tags(value), tags(legalCatalogs.pt[key]), `${loc} ${key}`);
     }
   }
-  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: October 13, 2026");
-  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 13 de octubre de 2026");
+  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: October 30, 2026");
+  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 30 de octubre de 2026");
   assert.equal(legalCatalogs.en["terms.updated"], "Last updated: October 11, 2026");
   assert.equal(legalCatalogs.es["terms.updated"], "Última actualización: 11 de octubre de 2026");
-  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 13 de outubro de 2026");
+  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 30 de outubro de 2026");
 });
 
 test("o aviso do Pro não diz mais que os termos estão só em português", () => {
@@ -101,4 +101,16 @@ test("privacidade e termos explicam a análise de visitas: sem cookies, DNT/GPC,
   assert.match(legalCatalogs.pt["privacy.analytics.p5"], /autor do tour é o controlador/);
   assert.match(legalCatalogs.en["privacy.analytics.p5"], /processor/);
   assert.match(legalCatalogs.es["privacy.analytics.p5"], /encargado/);
+});
+
+test("privacidade cita YouTube e Vimeo como terceiros que só carregam no play", () => {
+  const privacy = read("privacidade.html");
+  assert.match(privacy, /id="videos-incorporados"/);
+  for (const loc of SUPPORTED_LOCALES) {
+    const c = legalCatalogs[loc];
+    assert.match(c["privacy.videos.p2"], /youtube-nocookie\.com/);
+    assert.match(c["privacy.videos.p2"], /dnt=1/);
+    assert.match(c["privacy.compartilhamento.li10"], /YouTube/);
+    assert.match(c["privacy.compartilhamento.li10"], /Vimeo/);
+  }
 });

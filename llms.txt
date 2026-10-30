@@ -28,6 +28,7 @@
 5. `publish` {tourId, dryRun: true} to validate and get `preview.url` (a temporary preview link valid for 7 days, show it to the user), then `publish` {tourId} -> permanent URL + embed HTML + cover image (og:image) rendered on the server. Publishing again updates the same link.
 6. Later: `get_analytics` {tourId?, from?, to?} -> views, completions, CTA clicks, lead count, daily series and per-step funnel (scope `analytics:read`).
 
+Video step: `add_step`/`update_step` accept `video` = a YouTube or Vimeo URL (link only, nothing is uploaded). The server downloads the video cover as the step image unless you send `image`; the step fills the frame (highlight/click are ignored) and the player loads YouTube/Vimeo only when the viewer clicks play. `video: null` removes it.
 Other tools: `list_tours`, `get_tour`, `update_step`, `reorder_steps`, `delete_step`, `unpublish` (needs confirm: true).
 
 ## Format rules

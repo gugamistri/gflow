@@ -692,7 +692,57 @@ function gfEscapeHtml(value) {
   }
 
   function zoomEnabled(step) {
-    return step?.type !== "slide" && step?.zoomHighlight === true && els.image && !els.image.hidden;
+    return step?.type !== "slide" && step?.zoomHighlight === true && !stepVideoLink(step) && els.image && !els.image.hidden;
+  }
+
+  // why: espelha tour-schema/video.js — o HTML exportado pode abrir sem rede (ou em file://, onde o
+  // YouTube recusa o embed), então o vídeo vira pôster + link que abre o YouTube/Vimeo em outra aba.
+  function stepVideoLink(step) {
+    const v = step && step.type !== "slide" ? step.video : null;
+    if (!v || typeof v !== "object") return null;
+    const id = String(v.id == null ? "" : v.id);
+    if (v.kind === "youtube" && /^[A-Za-z0-9_-]{11}$/.test(id)) {
+      return { provider: "YouTube", href: "https://www.youtube.com/watch?v=" + id };
+    }
+    if (v.kind === "vimeo" && /^\d{1,12}$/.test(id)) {
+      const h = typeof v.h === "string" && /^[0-9a-f]{6,32}$/i.test(v.h) ? "/" + v.h.toLowerCase() : "";
+      return { provider: "Vimeo", href: "https://vimeo.com/" + id + h };
+    }
+    return null;
+  }
+
+  function videoLinkEl() {
+    let a = document.getElementById("player-video");
+    if (!a && els.frame) {
+      a = document.createElement("a");
+      a.id = "player-video";
+      a.className = "gf-video-link";
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.hidden = true;
+      a.innerHTML =
+        '<span class="gf-video-play"><span class="gf-video-play-ico"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span class="gf-video-play-text"></span></span>';
+      els.frame.insertBefore(a, els.image ? els.image.nextSibling : null);
+    }
+    return a;
+  }
+
+  function syncVideoLink(step) {
+    const link = stepVideoLink(step);
+    const a = link ? videoLinkEl() : document.getElementById("player-video");
+    if (!a) return null;
+    if (!link) {
+      a.hidden = true;
+      a.removeAttribute("href");
+      return null;
+    }
+    a.href = link.href;
+    const label = gfT("video.openOn", { provider: link.provider });
+    a.setAttribute("aria-label", label);
+    a.title = label;
+    a.querySelector(".gf-video-play-text").textContent = label;
+    a.hidden = false;
+    return link;
   }
 
   async function applyStepZoom(step) {
@@ -782,6 +832,7 @@ function gfEscapeHtml(value) {
         applySlideLayout(els.slide, step);
         els.hotspot.style.display = "none";
         els.clickPoint.hidden = true;
+        syncVideoLink(null);
         resolve();
         return;
       }
@@ -799,7 +850,10 @@ function gfEscapeHtml(value) {
           els.hotspot.style.display = "none";
         }
         requestAnimationFrame(() => {
-          if (ok) {
+          if (syncVideoLink(step)) {
+            els.hotspot.style.display = "none";
+            els.clickPoint.hidden = true;
+          } else if (ok) {
             placeHotspot(step.hotspot);
             placeClickPoint(ensureClickPoint(step));
           }
@@ -827,7 +881,7 @@ function gfEscapeHtml(value) {
   }
 
   async function animateClick(step) {
-    if (step.type === "slide" || step.simulateClick === false) return;
+    if (step.type === "slide" || step.simulateClick === false || stepVideoLink(step)) return;
     await clickFx.animateTo(clickTarget(step), { pressHotspot: true });
   }
 
@@ -900,7 +954,7 @@ function gfEscapeHtml(value) {
         armAutoplay();
       },
       steps: steps.map((step) => ({
-        element: step.type === "slide" ? "#player-slide" : "#player-hotspot",
+        element: step.type === "slide" ? "#player-slide" : stepVideoLink(step) ? "#player-video" : "#player-hotspot",
         popover: {
           // why: driver.js usa innerHTML; o texto do autor entra escapado (mesma regra de htmlText.js)
           title: gfEscapeHtml(step.popover?.title || step.label || ""),
@@ -1059,7 +1113,7 @@ function gfEscapeHtml(value) {
 
   window.addEventListener("resize", () => {
     const step = demo.steps[activeIndex];
-    if (step && step.type !== "slide" && !els.image.hidden) {
+    if (step && step.type !== "slide" && !els.image.hidden && !stepVideoLink(step)) {
       placeHotspot(step.hotspot);
       placeClickPoint(ensureClickPoint(step));
       applyStepZoom(step).then(() => {

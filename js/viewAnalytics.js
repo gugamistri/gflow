@@ -9,6 +9,12 @@ export const FLUSH_MS = 10_000;
 export const MAX_BATCH_EVENTS = 32;
 export const MAX_BATCH_BYTES = 16 * 1024;
 export const MAX_DWELL_MS = 10 * 60 * 1000;
+/** Eventos de mídia (vídeo por link). Vão em lote PRÓPRIO: um servidor antigo recusa o lote
+ * inteiro quando vê um nome que não conhece — assim só o lote de vídeo cai, o resto do analytics não. */
+export const MEDIA_EVENTS = Object.freeze(["video_play", "video_progress"]);
+export const VIDEO_KINDS = Object.freeze(["youtube", "vimeo"]);
+export const VIDEO_PCTS = Object.freeze([0, 25, 50, 75, 100]);
+export const MAX_VIDEO_SEC = 24 * 60 * 60;
 
 /** Navegador pediu para não rastrear (DNT "1"/"yes") ou Global Privacy Control. */
 export function privacySignal({ dnt, windowDnt, msDnt, gpc } = {}) {
@@ -172,6 +178,7 @@ export function createViewTracker({
   device = null,
   locale = null,
   langs = null,
+  mediaEvents = true,
   now = () => (typeof performance !== "undefined" ? performance.now() : Date.now()),
   uuid = () => uuidV4(),
   setTimer = (fn, ms) => setInterval(fn, ms),
@@ -179,6 +186,10 @@ export function createViewTracker({
 } = {}) {
   const sessionId = uuid();
   const queue = [];
+  // why: mídia em fila separada → corpo separado (compatível com servidor que ainda não conhece)
+  const mediaQueue = [];
+  const mediaOn = mediaEvents !== false;
+  const played = new Set();
   const dwell = new Map();
   let current = null; // { index, stepId, since|null }
   let hidden = false;
@@ -194,15 +205,29 @@ export function createViewTracker({
   }
 
   function flush({ beacon = false } = {}) {
-    if (!queue.length) return 0;
+    if (!queue.length && !mediaQueue.length) return 0;
     const batch = queue.splice(0, queue.length);
-    const bodies = chunkEvents(sessionId, batch);
+    // why: o lote principal sai antes — o servidor cria a sessão no 1º lote com session_start
+    const bodies = [...chunkEvents(sessionId, batch), ...chunkEvents(sessionId, mediaQueue.splice(0, mediaQueue.length))];
     for (const body of bodies) send(body, { beacon });
     if (timer) {
       clearTimer(timer);
       timer = null;
     }
     return bodies.length;
+  }
+
+  function pushMedia(ev) {
+    if (disposed || !mediaOn) return;
+    mediaQueue.push(ev);
+    if (!timer) timer = setTimer(() => flush(), FLUSH_MS);
+  }
+
+  function mediaBase({ index, stepId, kind } = {}) {
+    if (!Number.isInteger(index) || index < 0 || index > 999) return null;
+    if (!VIDEO_KINDS.includes(kind)) return null;
+    const id = stepId && /^[\w:.-]{1,80}$/.test(stepId) ? stepId : null;
+    return { index, stepId: id, kind };
   }
 
   function settle() {
@@ -242,6 +267,9 @@ export function createViewTracker({
     get queue() {
       return queue.slice();
     },
+    get mediaQueue() {
+      return mediaQueue.slice();
+    },
     onStep({ index, stepId = null, total = 0 } = {}) {
       if (!Number.isInteger(index) || index < 0) return;
       if (current && current.index === index) return;
@@ -276,6 +304,21 @@ export function createViewTracker({
       const f = langFields(next);
       if (!f.textLang && !f.audioLang) return;
       push({ name: "lang_change", ...f });
+    },
+    /** Visitante tocou ▶ no vídeo do passo (uma vez por passo na sessão). */
+    videoPlay(info) {
+      const base = mediaBase(info);
+      if (!base || played.has(base.index)) return;
+      played.add(base.index);
+      pushMedia({ name: "video_play", ...base });
+    },
+    /** Marco de progresso (25/50/75/100) ou 0 = só o tempo assistido ao sair do passo. */
+    videoProgress(info = {}) {
+      const base = mediaBase(info);
+      if (!base || !VIDEO_PCTS.includes(info.pct)) return;
+      const watchedSec = Math.max(0, Math.min(MAX_VIDEO_SEC, Math.round(Number(info.watchedSec) || 0)));
+      pushMedia({ name: "video_progress", ...base, pct: info.pct, watchedSec });
+      if (info.pct === 100) flush();
     },
     /** Só chamar com o leadId de quem marcou o consentimento no passo inicial. */
     lead(leadId) {

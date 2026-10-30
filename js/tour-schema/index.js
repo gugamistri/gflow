@@ -13,3 +13,4 @@ export * from "./agent.js";
 export * from "./i18n.js";
 export * from "./translate.js";
 export * from "./collabSteps.js";
+export * from "./video.js";
