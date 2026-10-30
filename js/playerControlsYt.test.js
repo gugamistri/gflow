@@ -37,7 +37,7 @@ test("barra única: pausa, som, autoplay, CC e ⚙ no mesmo grupo; menu estilo Y
   assert.match(menu, /flagSvg\(o\.flag\)/);
   const player = readFileSync(new URL("./player.js", import.meta.url), "utf8");
   assert.match(player, /autoplay: autoplayEnabled/);
-  assert.match(player, /isAutoplay: \(\) => autoplayEnabled/);
+  assert.match(player, /isAutoplay: \(\) => \(galleryActive\(\) \? false : autoplayEnabled\)/);
   const css = ["shell", "player", "editor"].map((n) => readFileSync(new URL(`../css/${n}.css`, import.meta.url), "utf8")).join("\n");
   assert.match(css, /body\.gf-cc-off\.gf-player-on #canvas-caption/);
 });

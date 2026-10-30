@@ -818,6 +818,8 @@ async function boot() {
     // why: botão fixo do WhatsApp (playback.stickyWhatsAppFromStep) com as mesmas variáveis do cartão final
     stickyCtaVars: () => ({ tour: tourTitleForMessage(), link: tourLink(), nome: fixedState.lead?.name || "" }),
     onStickyCta: (action) => tracker?.ctaClick(ctaFromAction(action)),
+    // why: Galeria no embed não puxa o foco (rolaria a página do cliente até o iframe)
+    focusOnOpen: !isEmbed,
   });
 
   tracker = startTracking(route);

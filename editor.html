@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/182/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/182/css/theme.css" />
-  <link rel="stylesheet" href="a/182/css/shell.css" />
-  <link rel="stylesheet" href="a/182/css/player.css" />
-  <link rel="stylesheet" href="a/182/css/editor.css" />
-  <link rel="stylesheet" href="a/182/css/settings.css" />
-  <link rel="stylesheet" href="a/182/css/collab.css" />
-  <link rel="stylesheet" href="a/182/css/comments.css" />
+  <link rel="stylesheet" href="a/183/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/183/css/theme.css" />
+  <link rel="stylesheet" href="a/183/css/shell.css" />
+  <link rel="stylesheet" href="a/183/css/player.css" />
+  <link rel="stylesheet" href="a/183/css/editor.css" />
+  <link rel="stylesheet" href="a/183/css/settings.css" />
+  <link rel="stylesheet" href="a/183/css/collab.css" />
+  <link rel="stylesheet" href="a/183/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -165,7 +165,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/182/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/182/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/183/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/183/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -480,7 +480,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/182/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/182/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/183/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/183/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -651,6 +651,24 @@
             <svg class="btn-ico" aria-hidden="true"><use href="#i-settings"></use></svg>
           </summary>
           <div class="more-panel-body prefs-panel-body">
+            <fieldset class="mode-picker" id="playback-mode">
+              <legend data-i18n="mode.label">Modo de exibição</legend>
+              <label class="mode-option">
+                <input type="radio" name="playback-mode" value="guided" checked />
+                <span class="mode-option-text">
+                  <span class="mode-option-title" data-i18n="mode.guided">Tour guiado</span>
+                  <span class="mode-option-hint" data-i18n="mode.guidedHint">Balões e destaques, bom para software.</span>
+                </span>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="playback-mode" value="gallery" />
+                <span class="mode-option-text">
+                  <span class="mode-option-title" data-i18n="mode.gallery">Galeria</span>
+                  <span class="mode-option-hint" data-i18n="mode.galleryHint">Foto em tela cheia, bom para imóveis.</span>
+                </span>
+              </label>
+              <p class="mode-note" id="playback-mode-note" data-i18n="mode.galleryNote" hidden>Na Galeria não aparecem balões, destaques, avanço automático nem narração. O passo inicial (lead), o WhatsApp fixo e o cartão final continuam.</p>
+            </fieldset>
             <details class="more-section more-flyout theme-panel more-editor-pref" id="theme-panel" hidden>
               <summary>
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-palette"></use></svg>
@@ -729,6 +747,7 @@
           <button type="button" class="btn split-main" id="btn-play-from" title="Preview a partir deste passo (P)" aria-label="Preview" data-i18n-title="preview.fromHereTitle" data-i18n-aria="toolbar.preview">
             <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
             <span class="split-label" data-i18n="toolbar.preview">Preview</span>
+            <span class="preview-mode-badge" id="preview-mode-badge" hidden>Galeria</span>
           </button>
           <details class="menu-panel preview-panel" id="preview-panel">
             <summary class="split-caret" aria-label="Mais opções de preview" title="Mais opções de preview" data-i18n-aria="toolbar.previewMore" data-i18n-title="toolbar.previewMore" aria-haspopup="menu">
@@ -749,6 +768,17 @@
                 <span data-i18n="toolbar.autoPreview">Preview automático</span>
                 <kbd class="menu-kbd" data-i18n="shortcuts.autoPreviewChord">Shift+P</kbd>
               </button>
+              <p class="menu-group-label" id="preview-mode-label" data-i18n="mode.label">Modo de exibição</p>
+              <div role="group" aria-labelledby="preview-mode-label">
+                <button type="button" class="more-item mode-menu-item" role="menuitemradio" aria-checked="true" data-playback-mode="guided">
+                  <span class="mode-check" aria-hidden="true"></span>
+                  <span data-i18n="mode.guided">Tour guiado</span>
+                </button>
+                <button type="button" class="more-item mode-menu-item" role="menuitemradio" aria-checked="false" data-playback-mode="gallery">
+                  <span class="mode-check" aria-hidden="true"></span>
+                  <span data-i18n="mode.gallery">Galeria</span>
+                </button>
+              </div>
             </div>
           </details>
         </div>
@@ -1109,7 +1139,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/182/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/183/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2636,8 +2666,8 @@
     </symbol>
   </svg>
 
-  <script src="a/182/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/182/js/app.js"></script>
+  <script src="a/183/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/183/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

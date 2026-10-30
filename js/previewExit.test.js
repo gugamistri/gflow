@@ -58,7 +58,7 @@ test("clique no destaque avança só durante o tour, em passo de captura", () =>
 test("o player liga o clique no destaque em todo contexto e o editor não duplica", () => {
   const player = read("js/player.js");
   assert.match(player, /window\.addEventListener\(\s*"click",[\s\S]{0,200}highlightClickAdvances\(highlightClickInfo\(e\)\)[\s\S]{0,200}clickDriverNext\(\)/);
-  assert.match(player, /highlightContains,/);
+  assert.match(player, /highlightContains: \(x, y\) => \(galleryActive\(\) \? false : highlightContains\(x, y\)\)/);
   const editor = read("js/editor.js");
   assert.doesNotMatch(editor, /els\.hotspot\.addEventListener\("click"/);
   // /p: a folga em volta do destaque não conta como «clique fora»

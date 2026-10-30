@@ -96,12 +96,15 @@ export function createVideoStage(opts = {}) {
   let expanded = false;
   let detach = () => {};
 
+  // why: a Galeria tem a própria fachada (outro id) num nó que entra e sai do DOM a cada foto
+  const stageId = opts.id || VIDEO_STAGE_ID;
+
   function ensureEl() {
-    if (el?.isConnected) return el;
-    el = document.getElementById(VIDEO_STAGE_ID);
+    if (el && (el.isConnected || frame?.contains?.(el))) return el;
+    el = frame?.querySelector?.(`#${stageId}`) || document.getElementById(stageId);
     if (!el && frame) {
       el = document.createElement("div");
-      el.id = VIDEO_STAGE_ID;
+      el.id = stageId;
       el.className = "gf-video";
       el.hidden = true;
       el.innerHTML = `
@@ -361,6 +364,12 @@ export function createVideoStage(opts = {}) {
       }
     },
     teardown,
+    /** Some de vez (Galeria: uma fachada por slide): para o vídeo e solta os ouvintes da janela. */
+    destroy() {
+      this.hide();
+      window.removeEventListener("keydown", onKeydown, true);
+      window.removeEventListener("keyup", onKeyup, true);
+    },
     play,
     collapse: () => setExpanded(false),
     toggleExpanded: () => setExpanded(!expanded),
