@@ -9,6 +9,6 @@ GuiaFlow's tour format in plain JS (no DOM), used by the editor, the player, and
 | `scenes.js` | scenes (groups of steps) |
 | `theme.js` | ready-made themes and theme copy |
 | `video.js` | optional `step.video` (YouTube/Vimeo link only): URL parsing, embed/watch URLs, poster sources, progress milestones |
-| `agent.js` | agent/API input: 0..1 coordinates, LLM-readable errors, pre-publish checks |
+| `agent.js` | agent/API input: 0..1 coordinates, `video` (YouTube/Vimeo URL or null), LLM-readable errors, pre-publish checks |
 
 This directory is the source. guiaflow-cloud keeps a copy in `packages/tour-schema/` (`npm run sync:tour-schema`); a test there checks that the copy matches the commit recorded in `SOURCE`.
