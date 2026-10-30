@@ -64,6 +64,20 @@ export function tourFromPermanentShare(data) {
 }
 
 /**
+ * Título público do tour para o {tour} da mensagem do WhatsApp.
+ * why: no /p o link pode ter um título próprio (publicado pelo agente/MCP com outro nome);
+ * é ele que o visitante vê no cartão do link. Com o texto traduzido, vale o nome traduzido.
+ * @param {{ shareTitle?: string, name?: string, sourceName?: string }} opts
+ */
+export function publicTourTitle({ shareTitle = "", name = "", sourceName = "" } = {}) {
+  const share = String(shareTitle || "").trim();
+  const shown = String(name || "").trim();
+  const source = String(sourceName || "").trim();
+  if (share && (!shown || shown === source)) return share;
+  return shown || share;
+}
+
+/**
  * Esc no player compartilhado, na mesma ordem do preview do editor.
  * overlay = lista de passos, ajuda ou partilha — não o véu do tour.
  * Sem página anterior, fecha o tour nesta página.
