@@ -27,7 +27,8 @@ test("avisos de mudança valem por duas versões (0.3.1 e 0.4.0)", () => {
   assert.equal(movedHintsActive("0.4.0"), true);
   assert.equal(movedHintsActive("0.4.1"), false);
   assert.equal(movedHintsActive(""), false);
-  assert.equal(movedHintsActive(RELEASE_NOTES_VERSION), true, "a versão atual mostra os avisos");
+  // 0.5.0: os avisos "mudou de lugar" já cumpriram as duas versões
+  assert.equal(movedHintsActive(RELEASE_NOTES_VERSION), false, "depois da 0.4.x os avisos somem");
 });
 
 test("destinos antigos levam ao lugar novo", () => {
