@@ -3,7 +3,12 @@ import test from "node:test";
 import {
   DEFAULT_PLAYBACK_MODE,
   PLAYBACK_MODES,
+  SCENE_NAME_MAX,
+  TOUR_TEMPLATES,
   defaultModeForTemplate,
+  parseTourTemplate,
+  templateSceneLabels,
+  templateScaffold,
   displayForAgent,
   displayFromAgentInput,
   isGalleryMode,
@@ -46,9 +51,23 @@ test("parsePlaybackMode aceita pt/es/en e devolve null para lixo", () => {
   assert.equal(parsePlaybackMode(undefined), null);
 });
 
-test("template de empreendimento/imóvel começa em Galeria; o resto, guiado", () => {
-  for (const k of ["empreendimento", "Imóvel", "imoveis", "real-estate", "property"]) assert.equal(defaultModeForTemplate(k), "gallery", k);
-  for (const k of ["", "software", "onboarding", null]) assert.equal(defaultModeForTemplate(k), "guided", String(k));
+test("modelos empreendimento, veículo e produto começam em Galeria; o resto, guiado", () => {
+  for (const k of ["empreendimento", "Imóvel", "imoveis", "real-estate", "property", "veiculo", "Veículo", "carro", "produto", "e-commerce", "Catálogo"]) {
+    assert.equal(defaultModeForTemplate(k), "gallery", k);
+  }
+  for (const k of ["", "software", "onboarding", null, "__proto__", "constructor"]) assert.equal(defaultModeForTemplate(k), "guided", String(k));
+  assert.equal(parseTourTemplate("Veículos"), "veiculo");
+  assert.equal(parseTourTemplate("ecommerce"), "produto");
+  assert.equal(parseTourTemplate("toString"), null);
+});
+
+test("modelos trazem cenas sugeridas (nomes das seções), sem passos", () => {
+  assert.deepEqual(Object.keys(TOUR_TEMPLATES), ["software", "empreendimento", "veiculo", "produto"]);
+  assert.deepEqual(templateScaffold("carro").scenes.map((s) => s.name), ["Exterior", "Interior", "Detalhes", "Ficha técnica"]);
+  assert.deepEqual(templateSceneLabels("produto"), { 1: "Visão geral", 2: "Detalhes", 3: "Em uso", 4: "Medidas e variações" });
+  assert.deepEqual(templateSceneLabels("software"), {});
+  assert.equal(templateScaffold("xyz"), null);
+  for (const t of Object.values(TOUR_TEMPLATES)) for (const sc of t.scenes) assert.ok(sc.name.length <= SCENE_NAME_MAX && sc.hint, sc.name);
 });
 
 test("index do tour-schema exporta o modo (a API usa a cópia sincronizada)", () => {

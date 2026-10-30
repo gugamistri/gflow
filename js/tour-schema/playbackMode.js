@@ -1,7 +1,7 @@
 /**
  * Modo de exibição do tour: `playback.mode`.
  * - "guided" (padrão): balões, destaques, clique simulado, avanço sozinho e narração.
- * - "gallery": carrossel de fotos em tela cheia (imóveis): contador, legenda de 1 linha, "Detalhes",
+ * - "gallery": carrossel de fotos em tela cheia (imóveis, veículos, produtos, catálogos): contador, legenda de 1 linha, "Detalhes",
  *   zoom, seções e miniaturas; sem balões, destaques, avanço sozinho nem voz.
  * why: `playback` viaja inteiro no payload (editor, sync, colaboração, snapshot do Cloud), então o campo
  * novo não some ao publicar; tours sem ele continuam guiados e com o mesmo hash.
@@ -41,12 +41,77 @@ export function setPlaybackMode(playback, mode) {
   return out;
 }
 
-/** Modo inicial de um tour novo pelo tipo de template ("empreendimento"/"imovel" = Galeria). */
+/**
+ * Modelos de tour (create_tour { template }): modo inicial e as cenas sugeridas (nomes viram as seções da Galeria).
+ * why: o modelo não cria passos vazios (sem imagem o tour não publica); só nomeia as cenas e diz o que fotografar.
+ */
+export const TOUR_TEMPLATES = Object.freeze({
+  software: Object.freeze({ mode: "guided", scenes: Object.freeze([]) }),
+  empreendimento: Object.freeze({
+    mode: "gallery",
+    scenes: Object.freeze([
+      { name: "Fachada", hint: "fachada, portaria, vista aérea" },
+      { name: "Lazer", hint: "piscina, academia, salão de festas, áreas comuns" },
+      { name: "Plantas", hint: "uma planta por tipologia, com metragem no título" },
+      { name: "Localização", hint: "mapa e o que há por perto" },
+    ]),
+  }),
+  veiculo: Object.freeze({
+    mode: "gallery",
+    scenes: Object.freeze([
+      { name: "Exterior", hint: "frente, traseira, laterais e rodas" },
+      { name: "Interior", hint: "painel, bancos, porta-malas" },
+      { name: "Detalhes", hint: "motor, quilometragem, opcionais, marcas de uso" },
+      { name: "Ficha técnica", hint: "ano, versão, km, câmbio e revisões (um slide de texto serve)" },
+    ]),
+  }),
+  produto: Object.freeze({
+    mode: "gallery",
+    scenes: Object.freeze([
+      { name: "Visão geral", hint: "o produto inteiro, fundo limpo" },
+      { name: "Detalhes", hint: "acabamento, textura, etiquetas" },
+      { name: "Em uso", hint: "no ambiente ou sendo usado" },
+      { name: "Medidas e variações", hint: "tamanhos, cores, tabela de medidas" },
+    ]),
+  }),
+});
+
+const TEMPLATE_ALIASES = {
+  software: "software", saas: "software", onboarding: "software",
+  empreendimento: "empreendimento", lancamento: "empreendimento", imovel: "empreendimento", imoveis: "empreendimento",
+  "real-estate": "empreendimento", realestate: "empreendimento", property: "empreendimento", inmueble: "empreendimento",
+  veiculo: "veiculo", veiculos: "veiculo", carro: "veiculo", carros: "veiculo", moto: "veiculo", vehicle: "veiculo", car: "veiculo", vehiculo: "veiculo",
+  produto: "produto", produtos: "produto", product: "produto", producto: "produto", ecommerce: "produto", "e-commerce": "produto",
+  loja: "produto", catalogo: "produto", catalog: "produto",
+};
+
+/** Nome canônico do modelo ("Veículo" → "veiculo", "e-commerce" → "produto"); null se desconhecido. */
+export function parseTourTemplate(kind) {
+  const k = String(kind ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return Object.prototype.hasOwnProperty.call(TEMPLATE_ALIASES, k) ? TEMPLATE_ALIASES[k] : null;
+}
+
+/** Modo inicial de um tour novo pelo modelo (empreendimento, veiculo, produto = Galeria). */
 export function defaultModeForTemplate(kind) {
   const k = String(kind ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return ["empreendimento", "imovel", "imoveis", "real-estate", "realestate", "property", "gallery", "galeria"].includes(k)
-    ? "gallery"
-    : DEFAULT_PLAYBACK_MODE;
+  if (k === "gallery" || k === "galeria") return "gallery";
+  const t = parseTourTemplate(k);
+  return t ? TOUR_TEMPLATES[t].mode : DEFAULT_PLAYBACK_MODE;
+}
+
+/** Cenas sugeridas do modelo: [{ scene: 1, name, hint }]; vazio se o modelo não tem. */
+export function templateScaffold(kind) {
+  const t = parseTourTemplate(kind);
+  if (!t) return null;
+  return { template: t, mode: TOUR_TEMPLATES[t].mode, scenes: TOUR_TEMPLATES[t].scenes.map((sc, i) => ({ scene: i + 1, name: sc.name, hint: sc.hint })) };
+}
+
+/** sceneLabels iniciais do modelo ({ "1": "Fachada", ... }). */
+export function templateSceneLabels(kind) {
+  const sc = templateScaffold(kind);
+  const out = {};
+  for (const s of sc?.scenes || []) out[String(s.scene)] = s.name;
+  return out;
 }
 
 export const SCENE_NAME_MAX = 40;
@@ -91,7 +156,7 @@ export function displayFromAgentInput(input = {}, current = {}) {
   if (!input || typeof input !== "object") return { ok: false, playback, sceneLabels, errors: [issue("display", "Envie um objeto com mode, stickyWhatsAppFromStep e/ou sceneNames.")] };
   if (input.mode !== undefined) {
     const mode = parsePlaybackMode(input.mode);
-    if (!mode) errors.push(issue("mode", 'mode precisa ser "guided" (tour guiado, com balões) ou "gallery" (galeria de fotos em tela cheia).', 'Para imóveis use "gallery".'));
+    if (!mode) errors.push(issue("mode", 'mode precisa ser "guided" (tour guiado, com balões) ou "gallery" (galeria de fotos em tela cheia).', 'Para fotos de imóveis, veículos ou produtos use "gallery".'));
     else playback = setPlaybackMode(playback, mode);
   }
   if (input.stickyWhatsAppFromStep !== undefined) {
