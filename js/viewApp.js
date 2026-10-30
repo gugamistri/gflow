@@ -579,6 +579,12 @@ function requestSharedExit(reason) {
 function onSharedEscape(event) {
   if (event.key !== "Escape") return;
   if (!touring) return;
+  // why: o primeiro Esc fecha o "Detalhes" aberto; só o próximo sai do tour
+  if (player?.closeDetails?.()) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
   const action = decideEscape({
     fullscreen: Boolean(fullscreenElement()),
     overlay: Boolean(findPlayerOverlay()),
@@ -620,6 +626,12 @@ window.addEventListener(
     }
     if (!touring || event.button !== 0) return;
     if (multiTouch) return;
+    // why: com "Detalhes" aberto, tocar fora só fecha o texto do passo
+    if (player?.detailsOwnsTouch?.(event.target)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
     // why: com a foto ampliada (pinça) o toque nela é do zoom (toque duplo volta), não sai do tour
     if (player?.zoomOwnsTouch?.(event.clientX, event.clientY)) return;
     if (!clickClosesSharedTour(event.target, { embed: isEmbed })) return;
