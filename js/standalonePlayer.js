@@ -10,6 +10,16 @@ function gfT(key, vars) {
   return text;
 }
 
+/** Cópia de escapeHtml (js/htmlText.js): este arquivo é script clássico, sem imports. */
+function gfEscapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /**
  * Player autônomo (arquivo HTML exportado). Script clássico — sem modules.
  * Espera window.INTERACTIVE_DEMO já definido.
@@ -892,8 +902,9 @@ function gfT(key, vars) {
       steps: steps.map((step) => ({
         element: step.type === "slide" ? "#player-slide" : "#player-hotspot",
         popover: {
-          title: step.popover?.title || step.label || "",
-          description: (step.popover?.description || "").replace(/\n/g, "<br/>"),
+          // why: driver.js usa innerHTML; o texto do autor entra escapado (mesma regra de htmlText.js)
+          title: gfEscapeHtml(step.popover?.title || step.label || ""),
+          description: gfEscapeHtml(String(step.popover?.description || "").replace(/\r\n?/g, "\n")).replace(/\n/g, "<br/>"),
           side: step.popover?.side || "bottom",
           align: step.popover?.align || "center",
           onNextClick: async (_el, _step, optsNext) => {
@@ -960,7 +971,7 @@ function gfT(key, vars) {
   if (startSel) {
     startSel.innerHTML = demo.steps
       .map((step, i) => {
-        const label = (step.popover?.title || step.label || gfT("editor.stepFallback")).replace(/</g, "&lt;");
+        const label = gfEscapeHtml(step.popover?.title || step.label || gfT("editor.stepFallback"));
         return `<option value="${i}">${i + 1}. ${label}</option>`;
       })
       .join("");

@@ -1,6 +1,7 @@
 import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
+import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
 import {
   renderDemoPopoverFooter,
   clickDriverNext,
@@ -947,8 +948,9 @@ export function createPlayer(ctx) {
         return {
           element: step.type === "slide" ? "#canvas-slide" : "#hotspot",
           popover: {
-          title: step.popover?.title || step.label || "",
-          description: (step.popover?.description || "").replace(/\n/g, "<br/>"),
+          // why: driver.js usa innerHTML; o texto do autor entra escapado (nunca vira marcação)
+          title: popoverTitleHtml(step.popover?.title || step.label || ""),
+          description: popoverBodyHtml(step.popover?.description || ""),
           side: step.popover?.side || "bottom",
           align: step.popover?.align || "center",
           onNextClick: async (_el, _step, navOpts) => {
