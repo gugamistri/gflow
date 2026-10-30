@@ -1,4 +1,5 @@
 import { THEME_FONTS, getThemeFont, themeFontFaceCss } from "./tour-schema/fonts.js";
+import { safeCssColor } from "./htmlText.js";
 import {
   exportDemo,
   importDemoFile,
@@ -2697,11 +2698,11 @@ function renderThemeSwatches(container, items, { selectedId, onPick, customActio
         : item.name || id;
       const active = selectedId && id === selectedId ? "is-active" : "";
       return `
-        <button type="button" class="theme-swatch ${active}" data-theme-id="${id}" title="${escapeAttr(name)}">
+        <button type="button" class="theme-swatch ${active}" data-theme-id="${escapeAttr(id)}" title="${escapeAttr(name)}">
           <span class="theme-swatch-dots">
-            <i style="background:${colors.accent}"></i>
-            <i style="background:${colors.popoverBg};border:1px solid var(--ns-border)"></i>
-            <i style="background:${colors.button}"></i>
+            <i style="background:${safeCssColor(colors.accent)}"></i>
+            <i style="background:${safeCssColor(colors.popoverBg)};border:1px solid var(--ns-border)"></i>
+            <i style="background:${safeCssColor(colors.button)}"></i>
           </span>
           <span class="theme-swatch-name">${escapeHtml(name)}</span>
         </button>`;
@@ -2999,7 +3000,7 @@ function renderLibraryGrid() {
   grid.innerHTML = projects
     .map((p) => {
       const dots = (p.themePreview || [])
-        .map((c) => `<i style="background:${c}"></i>`)
+        .map((c) => `<i style="background:${safeCssColor(c)}"></i>`)
         .join("");
       const thumbSrc = p.thumb && !isHeavyDataUrl(p.thumb) ? p.thumb : "";
       const thumb = thumbSrc
