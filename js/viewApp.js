@@ -27,6 +27,7 @@ import {
   shareStartIndex,
   sharedPreviewBackTarget,
   tourFromPermanentShare,
+  publicTourTitle,
 } from "./viewShare.js";
 import { endStepActive, leadPhoneDefaultIso, normalizeEndStep, startStepActive } from "./fixedSteps.js";
 import { cardShell, renderContactForm, renderEndCard, renderStartCard } from "./fixedStepsView.js";
@@ -106,6 +107,7 @@ async function loadPermanent(slug) {
   }
   shareFeatures = parsed.features;
   shareServerBranding = parsed.branding;
+  sharePublicTitle = parsed.title || "";
   // why: /p v2 — áudio dos idiomas-alvo por referência; o navegador só baixa o que tocar
   return resolveShareMedia(parsed.tour, endpoint);
 }
@@ -192,6 +194,8 @@ let touring = false;
 let replayTour = () => {};
 let shareFeatures = { leadCapture: false, contactForm: false };
 let shareServerBranding = null;
+/** Título do link permanente no Cloud (pode diferir do nome do projeto). */
+let sharePublicTitle = "";
 let shareSlug = "";
 // why: o shell do /p já vem com ou sem a classe conforme o plano do dono (meta do Cloud)
 let branding = document.documentElement.classList.contains("is-unbranded") ? "none" : "full";
@@ -375,10 +379,15 @@ async function postShare(kind, body) {
   }
 }
 
+/** {tour} da mensagem do WhatsApp: o título público do link (ou o nome traduzido do tour). */
+function tourTitleForMessage() {
+  return publicTourTitle({ shareTitle: sharePublicTitle, name: demo?.name, sourceName: sourceDemo?.name });
+}
+
 function endCard() {
   const step = normalizeEndStep(demo.endStep);
   return renderEndCard(step, {
-    tour: String(demo?.name || "").trim(),
+    tour: tourTitleForMessage(),
     link: tourLink(),
     nome: fixedState.lead?.name || "",
     contactForm: Boolean(shareSlug && shareFeatures.contactForm),
@@ -596,10 +605,23 @@ window.addEventListener("keydown", onSharedEscape, true);
 
 // why: o listener do Driver só fecha se o alvo for o path do SVG; no slide o clique
 // cai na área escura e é engolido. Na janela, em captura, corre antes disso.
+// why: dois dedos na tela = pinça na foto; nenhum dos dedos conta como "toque fora"
+const activeTouches = new Set();
+let multiTouch = false;
 window.addEventListener(
   "pointerdown",
   (event) => {
+    if (event.pointerType === "touch") {
+      activeTouches.add(event.pointerId);
+      if (activeTouches.size > 1) {
+        multiTouch = true;
+        pendingTouchExit = null;
+      }
+    }
     if (!touring || event.button !== 0) return;
+    if (multiTouch) return;
+    // why: com a foto ampliada (pinça) o toque nela é do zoom (toque duplo volta), não sai do tour
+    if (player?.zoomOwnsTouch?.(event.clientX, event.clientY)) return;
     if (!clickClosesSharedTour(event.target, { embed: isEmbed })) return;
     // why: a folga do recorte em volta do destaque é clique no destaque (= Próximo), não fora
     if (player?.highlightContains?.(event.clientX, event.clientY)) return;
@@ -619,10 +641,15 @@ let pendingTouchExit = null;
 window.addEventListener(
   "pointerup",
   (event) => {
+    if (event.pointerType === "touch") {
+      activeTouches.delete(event.pointerId);
+      if (!activeTouches.size) queueMicrotask(() => { if (!activeTouches.size) multiTouch = false; });
+    }
     const p = pendingTouchExit;
     if (!p || p.id !== event.pointerId) return;
     pendingTouchExit = null;
-    if (!touring) return;
+    if (!touring || multiTouch) return;
+    if (player?.zoomOwnsTouch?.(event.clientX, event.clientY)) return;
     const moved = Math.hypot(event.clientX - p.x, event.clientY - p.y);
     if (moved > 12 || Date.now() - p.at > 800) return;
     event.preventDefault();
@@ -631,7 +658,15 @@ window.addEventListener(
   },
   true
 );
-window.addEventListener("pointercancel", () => { pendingTouchExit = null; }, true);
+window.addEventListener(
+  "pointercancel",
+  (event) => {
+    pendingTouchExit = null;
+    if (event.pointerType === "touch") activeTouches.delete(event.pointerId);
+    if (!activeTouches.size) multiTouch = false;
+  },
+  true
+);
 
 let onLangSwitch = () => {};
 
@@ -764,6 +799,9 @@ async function boot() {
     onStep: (info) => tracker?.onStep(info),
     onComplete: (info) => tracker?.onComplete(info),
     onExit: (info) => tracker?.onExit(info),
+    // why: botão fixo do WhatsApp (playback.stickyWhatsAppFromStep) com as mesmas variáveis do cartão final
+    stickyCtaVars: () => ({ tour: tourTitleForMessage(), link: tourLink(), nome: fixedState.lead?.name || "" }),
+    onStickyCta: (action) => tracker?.ctaClick(ctaFromAction(action)),
   });
 
   tracker = startTracking(route);
