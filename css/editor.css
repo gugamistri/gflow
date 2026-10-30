@@ -6120,60 +6120,6 @@ dialog.fixed-modal[open] {
 }
 }
 
-/* why: cor, fundo e placeholder explícitos — o tema do tour (ou o editor escuro) não pode apagar o texto */
-.fixed-card .fixed-form .fixed-input {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 40px;
-  margin: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--demo-field-border, #8a8a94);
-  border-radius: 4px;
-  background: var(--demo-field-bg, #ffffff);
-  color: var(--demo-field-ink, #18181b);
-  -webkit-text-fill-color: var(--demo-field-ink, #18181b);
-  caret-color: var(--demo-field-ink, #18181b);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.35;
-}
-
-.fixed-card .fixed-form .fixed-input::placeholder {
-  color: var(--demo-field-placeholder, #6b6b76);
-  -webkit-text-fill-color: var(--demo-field-placeholder, #6b6b76);
-  opacity: 1;
-}
-
-.fixed-card .fixed-form .fixed-input:-webkit-autofill {
-  -webkit-text-fill-color: var(--demo-field-ink, #18181b);
-  box-shadow: 0 0 0 1000px var(--demo-field-bg, #ffffff) inset;
-}
-
-.fixed-card .fixed-form textarea.fixed-input {
-  min-height: 64px;
-  resize: vertical;
-}
-
-.fixed-card .fixed-form .fixed-input:focus-visible {
-  outline: 2px solid var(--demo-form-focus);
-  outline-offset: 1px;
-  border-color: var(--demo-form-focus);
-}
-
-.fixed-card .fixed-form .fixed-input[aria-invalid="true"] {
-  border-color: #d93025;
-}
-
-.fixed-card .fixed-phone > .fixed-input {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.fixed-card .fixed-cc .wa-cc-chevron {
-  color: var(--demo-field-placeholder, #6b6b76);
-}
-
 .fixed-legend {
   padding: 0 4px;
   font-size: 0.8rem;
@@ -6253,18 +6199,9 @@ dialog.capture-modal textarea {
 }
 
 @media (max-width: 720px), (pointer: coarse) {
-/* why: no celular, 16px evita o zoom automático do iOS ao focar o campo */
-.fixed-card .fixed-form .fixed-input,
-  .fixed-preview .fixed-card .fixed-form .fixed-input {
+/* why: no celular, 16px evita o zoom automático do iOS ao focar o campo (a regra do cartão mora no player.css) */
+.fixed-preview .fixed-card .fixed-form .fixed-input {
     font-size: 16px;
-  
-}
-}
-
-@media (max-height: 560px) {
-.fixed-card .fixed-form .fixed-input {
-    min-height: 36px;
-    padding: 6px 7px;
   
 }
 }
