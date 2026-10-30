@@ -2264,3 +2264,259 @@ html.gf-video-expanded body {
   color: #fff;
   line-height: 1.2;
 }
+
+/* ---- Fundo desfocado da própria foto (só no celular em pé; ver o bloco de retrato abaixo) ---- */
+.canvas-backdrop {
+  display: none;
+}
+
+/* ---- Zoom do visitante (pinça/arraste): a foto ampliada não rola a página ---- */
+.canvas-stage.is-user-zoomed {
+  overflow: hidden;
+  touch-action: none;
+}
+
+.gf-zoom-reset[hidden] {
+  display: none !important;
+}
+
+.gf-zoom-reset svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- Botão fixo "Chamar no WhatsApp" durante o tour (playback.stickyWhatsAppFromStep) ---- */
+.gf-sticky-cta {
+  position: fixed;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  /* why: acima do véu do Driver, como os controles; o balão nunca fica embaixo (ver retrato) */
+  z-index: 2147483000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border-radius: 999px;
+  /* why: 1.4.3 — mesmo par do botão do cartão final (#0b3d20 sobre #25d366 ≈ 7:1) */
+  background: #25d366;
+  color: #0b3d20;
+  font-family: var(--demo-font, var(--ns-font));
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+}
+
+.gf-sticky-cta[hidden] {
+  display: none !important;
+}
+
+.gf-sticky-cta svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.gf-sticky-cta-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gf-sticky-cta:hover {
+  filter: brightness(1.06);
+}
+
+/* why: 2.4.7 — halo duplo visível sobre foto clara ou escura */
+.gf-sticky-cta:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px #0b3d20, 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.driver-active .gf-sticky-cta,
+.driver-active .gf-sticky-cta * {
+  pointer-events: auto !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gf-sticky-cta {
+    animation: gf-sticky-in 220ms ease-out;
+  }
+
+  @keyframes gf-sticky-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+
+@media (hover: hover), (pointer: fine) {
+  /* no editor a barra do app fica no topo; embaixo à esquerda não briga com os controles (topo à direita) */
+  body:not(.view-share) .gf-sticky-cta {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/*
+ * ---- Celular em pé, apresentando: a foto usa toda a altura livre ----
+ * De cima para baixo: controles + aviso (faixa do topo) · foto (centralizada, fundo desfocado) ·
+ * legenda · botão do WhatsApp · balão. As alturas reais vêm do player (--gf-pop-vis-h, --gf-cap-h,
+ * --gf-sticky-h, --gf-ctl-w); os valores padrão valem até o primeiro passo medir.
+ */
+@media (hover: none) and (pointer: coarse) and (max-width: 900px) and (orientation: portrait) {
+  body.is-presenting {
+    --gf-stage-pt: calc(60px + env(safe-area-inset-top, 0px));
+    /* why: --gf-pop-stage-h = balão fechado; "Detalhes" aberto cresce por cima da foto sem mexer no palco */
+    --gf-stage-pb: calc(16px + env(safe-area-inset-bottom, 0px) + var(--gf-pop-stage-h, var(--gf-pop-vis-h, 180px)) + var(--gf-sticky-h, 0px) + var(--gf-cap-h, 0px));
+  }
+
+  body.is-presenting .canvas-stage {
+    align-items: center;
+    padding-top: var(--gf-stage-pt);
+    padding-bottom: var(--gf-stage-pb);
+  }
+
+  body.is-presenting .canvas-stage > .canvas-frame,
+  body.is-presenting .canvas-stage > #canvas-frame {
+    align-self: center;
+  }
+
+  body.is-presenting .canvas-frame img {
+    max-height: calc(100dvh - var(--gf-stage-pt) - var(--gf-stage-pb));
+  }
+
+  /* why: o fundo desfocado ocupa a faixa que sobra, sem cortar a foto nem a planta */
+  body.is-presenting .canvas-backdrop:not([hidden]) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--ns-canvas);
+  }
+
+  body.is-presenting .canvas-backdrop img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(22px) brightness(0.62) saturate(1.1);
+    transform: scale(1.15);
+  }
+
+  body.is-presenting .canvas-frame {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  /* why: o slide de texto não é mais 16:9 fixo em pé — cresce com o texto e rola se passar da área */
+  body.is-presenting .slide-card {
+    aspect-ratio: auto;
+    width: 100% !important;
+    height: auto !important;
+    min-height: min(260px, calc(100dvh - var(--gf-stage-pt) - var(--gf-stage-pb)));
+    max-width: min(1200px, 100cqw);
+    max-height: calc(100dvh - var(--gf-stage-pt) - var(--gf-stage-pb));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 20px 20px 68px;
+  }
+
+  body.is-presenting .slide-card h2 {
+    font-size: clamp(1.25rem, 6vw, 1.6rem);
+    overflow-wrap: anywhere;
+  }
+
+  body.is-presenting .slide-card #canvas-slide-body {
+    font-size: 1rem;
+    max-width: none;
+    overflow-wrap: anywhere;
+  }
+
+  body.is-presenting .slide-card .slide-card-close {
+    top: 6px;
+    right: 6px;
+    width: 44px;
+    height: 44px;
+  }
+
+  body.is-presenting .slide-card h2 {
+    padding-right: 36px;
+  }
+
+  /* why: o aviso "Toque fora para sair" fica na faixa do topo, ao lado dos controles — nunca sobre a foto */
+  html body.is-presenting .present-hint {
+    top: max(12px, env(safe-area-inset-top, 0px));
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    right: calc(var(--gf-ctl-w, 200px) + 24px + env(safe-area-inset-right, 0px));
+    max-height: 44px;
+    overflow: hidden;
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    white-space: normal;
+    text-align: left;
+  }
+
+  /* no preview do editor o X de sair fica no canto de cima à esquerda: o aviso começa depois dele */
+  html body.is-presenting:has(#present-close:not([hidden])) .present-hint {
+    left: calc(64px + env(safe-area-inset-left, 0px));
+  }
+
+  body.is-presenting .caption-bar,
+  body.view-share .caption-bar,
+  .caption-bar.is-above-overlay {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--gf-pop-vis-h, var(--gf-pop-h, 180px)) + var(--gf-sticky-h, 0px));
+  }
+
+  /* narração = legenda mínima: até ~2 linhas por vez (pedaços no ritmo do áudio), sem caixa larga */
+  body.is-presenting .caption-bar.is-subtitle,
+  .caption-bar.is-above-overlay.is-subtitle {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: calc(2 * 1.4em + 6px);
+    padding: 0 4px;
+    background: transparent;
+    box-shadow: none;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .caption-bar.is-subtitle .gf-subtitle-line {
+    max-width: 100%;
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--demo-overlay, #0f172a) 80%, transparent);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    overflow-wrap: anywhere;
+  }
+
+  /* botão do WhatsApp: logo acima do balão, alinhado à direita (não cobre o balão nem a navegação) */
+  .gf-sticky-cta {
+    left: auto;
+    right: calc(8px + env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--gf-pop-vis-h, 0px));
+    max-width: calc(100vw - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  /* deitado: o balão fica na coluna da direita; o botão vai embaixo à esquerda, sobre a foto */
+  .gf-sticky-cta {
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    left: calc(10px + env(safe-area-inset-left, 0px));
+    max-width: calc(100vw - min(320px, 40vw) - 40px);
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
