@@ -319,7 +319,7 @@ return { parseRichText, renderRichText, richTextHtml, stripRichText };
 /* <gf-gallery> cópia gerada de js/gallery.js (node scripts/sync-gallery.mjs) */
 var gfGallery = (function () {
 /**
- * Modo Galeria (playback.mode = "gallery"): carrossel de fotos em tela cheia, como nos portais de imóveis.
+ * Modo Galeria (playback.mode = "gallery"): carrossel de fotos em tela cheia, como nos portais de imóveis, veículos e lojas.
  * Sem imports de propósito: este arquivo é copiado inteiro para o HTML offline (js/standalonePlayer.js,
  * `node scripts/sync-gallery.mjs`; o teste falha se a cópia divergir). Tudo que depende do app chega em `opts`.
  *
