@@ -95,3 +95,17 @@ test("0.5.0: novidades do dia 30/10 em pt, en e es, citando os rótulos da inter
     assert.doesNotMatch(c["mode.galleryHint"], /^[^:]*(bom para|ideal para|good for)/, `${loc} dica genérica`);
   }
 });
+
+test("fonte única: o pop-up do editor lista os itens de RELEASE_NOTE_ENTRIES desta versão", async () => {
+  const { RELEASE_NOTE_ENTRIES, editorReleaseNotes, splitReleaseNote, RELEASE_NOTE_TAGS } = await import("./releaseNotes.js");
+  const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const start = html.indexOf('class="release-notes-list"');
+  const list = html.slice(start, html.indexOf("</ul>", start));
+  const keys = [...list.matchAll(/data-i18n="releaseNotes\.([a-zA-Z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(keys, editorReleaseNotes().map((e) => e.key));
+  for (const e of RELEASE_NOTE_ENTRIES) {
+    assert.ok(RELEASE_NOTE_TAGS.includes(e.tag), e.key);
+    assert.match(e.date, /^\d{4}-\d{2}-\d{2}$/);
+    for (const loc of SUPPORTED_LOCALES) assert.ok(splitReleaseNote(catalogs[loc][`releaseNotes.${e.key}`]).desc, `${loc} ${e.key}`);
+  }
+});
