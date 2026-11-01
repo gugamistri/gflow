@@ -249,3 +249,137 @@ select:focus-visible {
   padding: 8px 10px;
   background: var(--panel);
 }
+
+/* ---------- Novidades ---------- */
+
+.news {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 10px 12px;
+}
+
+.news[hidden] {
+  display: none;
+}
+
+.news-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--button);
+}
+
+.news-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.news-item + .news-item {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.news-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: #e8f4f2;
+  color: var(--accent-dark);
+}
+
+.news-tag.is-feature {
+  background: #e6eef4;
+  color: var(--button);
+}
+
+.news-tag.is-fix {
+  background: #f4f4f5;
+  color: var(--text);
+}
+
+.news-item-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.news-ico {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--accent);
+}
+
+.news-desc {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.news-link {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--button);
+}
+
+.news-link:hover {
+  color: var(--accent-dark);
+}
+
+.news-link:focus-visible,
+.news-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.news-toggle {
+  margin-top: 8px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--button);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.news-toggle:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+.news-toggle[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-list {
+    scroll-behavior: auto;
+  }
+}

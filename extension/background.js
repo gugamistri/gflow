@@ -8,6 +8,7 @@ import {
 } from "./lib/editor-origin.js";
 import { setLocale, resolveLocale, getLocale, t } from "./lib/i18n.js";
 import { fileSchemeAllowed, isRestrictedUrl } from "./lib/tab-access.js";
+import { WHATS_NEW_KEY, badgeFor, stateAfterInstall, stateAfterSeen } from "./lib/whats-new.js";
 
 const LOCALE_KEY = "guiaLocale";
 
@@ -41,6 +42,23 @@ let captureLock = false;
 let lastCaptureAt = 0;
 let handoffTimer = null;
 let fileAccess = false;
+let whatsNew = null;
+
+function extVersion() {
+  return chrome.runtime.getManifest().version;
+}
+
+async function loadWhatsNew() {
+  if (whatsNew) return whatsNew;
+  const stored = await chrome.storage.local.get(WHATS_NEW_KEY);
+  whatsNew = stored[WHATS_NEW_KEY] || null;
+  return whatsNew;
+}
+
+async function saveWhatsNew(next) {
+  whatsNew = next;
+  await chrome.storage.local.set({ [WHATS_NEW_KEY]: next });
+}
 
 function emptySession() {
   return { active: false, shots: [] };
@@ -149,10 +167,14 @@ async function syncAllTabActions() {
   await Promise.all(tabs.map((tab) => syncTabAction(tab).catch(() => {})));
 }
 
+// why: o contador da captura vence o selo NOVO; o selo volta quando a captura acaba, até abrir o popup
 async function updateBadge() {
   const count = session?.active ? session.shots.length : 0;
-  await chrome.action.setBadgeBackgroundColor({ color: "#1A4D6D" });
-  await chrome.action.setBadgeText({ text: count ? String(count) : "" });
+  const news = await loadWhatsNew().catch(() => null);
+  const badge = badgeFor({ count, pending: Boolean(news?.pending), newLabel: t("ext.news.badge") });
+  await chrome.action.setBadgeBackgroundColor({ color: badge.color });
+  if (chrome.action.setBadgeTextColor) await chrome.action.setBadgeTextColor({ color: "#FFFFFF" });
+  await chrome.action.setBadgeText({ text: badge.text });
 }
 
 function randId(prefix) {
@@ -540,11 +562,16 @@ async function handle(msg, sender) {
     case "SET_LOCALE": {
       const locale = setLocale(msg.locale || "en", { persist: false });
       await chrome.storage.local.set({ [LOCALE_KEY]: locale });
+      await updateBadge().catch(() => {});
       const state = publicState();
       await broadcast(state);
       await syncAllTabActions().catch(() => {});
       return state;
     }
+    case "WHATS_NEW_SEEN":
+      await saveWhatsNew(stateAfterSeen(extVersion()));
+      await updateBadge();
+      return { ok: true };
     case "SAVE_SETTINGS":
       await saveSettings({
         editorOrigin: msg.editorOrigin,
@@ -619,8 +646,14 @@ chrome.tabs.onReplaced.addListener((addedTabId) => {
     .catch(() => {});
 });
 
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener((details) => {
   syncAllTabActions().catch(() => {});
+  (async () => {
+    const stored = await loadWhatsNew();
+    await saveWhatsNew(stateAfterInstall({ reason: details?.reason, previousVersion: details?.previousVersion, current: extVersion(), stored }));
+    session = await loadSession();
+    await updateBadge();
+  })().catch(() => {});
 });
 
 chrome.runtime.onStartup.addListener(async () => {
