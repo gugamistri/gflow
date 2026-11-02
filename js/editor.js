@@ -1479,7 +1479,8 @@ export function createEditor(ctx) {
     if (!pop) return;
     const step = currentStep();
     const editing = editingCanvas();
-    if (!editing || !step || step.type === "slide") {
+    // why: passo com vídeo não tem balão no player — o editor também não mostra
+    if (!editing || !step || step.type === "slide" || isVideoMedia(step)) {
       pop.hidden = true;
       return;
     }
@@ -1997,6 +1998,10 @@ export function createEditor(ctx) {
       }
     });
     const isVideo = isVideoMedia(step);
+    // passo com vídeo: sem balão (posição) nem IA de textos na barra
+    const posGroup = bar.querySelector('[data-stb-group="position"]');
+    if (posGroup) posGroup.hidden = isVideo;
+    if (els.stbGenerateCopy) els.stbGenerateCopy.hidden = isVideo;
     if (els.stbSimulate) els.stbSimulate.hidden = isSlide || isVideo;
     if (els.stbZoom) els.stbZoom.hidden = isSlide || isVideo;
     const sim = step.simulateClick !== false;
@@ -2106,6 +2111,23 @@ export function createEditor(ctx) {
     if (narrSec) narrSec.hidden = noNarration;
     const railNarr = els.propsRail?.querySelector('[data-rail="narration"]');
     if (railNarr) railNarr.hidden = noNarration;
+    // why: o player não mostra balão no passo com vídeo — some a descrição, a IA de textos e a
+    // posição do balão; o título fica como "Nome do passo" (lista de passos / leitor de tela)
+    const video = noNarration;
+    const desc = document.getElementById("wrap-description");
+    if (desc) desc.hidden = video;
+    const gen = document.getElementById("btn-generate-copy");
+    if (gen) gen.hidden = video;
+    const titleLabel = document.getElementById("prop-title-label");
+    if (titleLabel) {
+      const key = video ? "media.stepName" : "props.title";
+      titleLabel.dataset.i18n = key;
+      titleLabel.textContent = t(key);
+    }
+    const posSec = els.propsPanel?.querySelector('.props-section[data-sec="position"]');
+    if (posSec) posSec.hidden = video;
+    const railPos = els.propsRail?.querySelector('[data-rail="position"]');
+    if (railPos) railPos.hidden = video;
   }
 
   function panelShortcutLabel() {

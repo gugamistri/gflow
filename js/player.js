@@ -48,7 +48,7 @@ import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
 import { createPresentProgress } from "./presentProgress.js";
 import { createTourLifecycle } from "./tourLifecycle.js";
-import { pauseAudio, resumeAudio, setAudioMuted } from "./playback.js";
+import { pauseAudio, resumeAudio, setAudioMuted, VIDEO_END_ADVANCE_MS, videoStepAdvance } from "./playback.js";
 import { createPlayerControls, createLiveAnnouncer, playerShortcut } from "./playerControls.js";
 import { stepImageAlt } from "./a11y.js";
 import { createVideoStage, VIDEO_STAGE_ID } from "./videoStage.js";
@@ -86,6 +86,8 @@ export function createPlayer(ctx) {
     },
     onMuteChange: (muted, { announce: say } = {}) => {
       setAudioMuted(muted);
+      // why: o botão de som do tour também manda no vídeo do passo (o clique libera o som)
+      video.setMuted(muted);
       if (say) announce(t(muted ? "player.mutedNote" : "player.unmutedNote"));
     },
     // why: toggle estilo YouTube — liga/desliga o avanço sozinho sem sair do passo atual
@@ -123,22 +125,37 @@ export function createPlayer(ctx) {
   });
 
   const narration = createNarrationController({ captionEl: els.caption });
-  // why: passo com vídeo (link YouTube/Vimeo) — fachada com o pôster; o iframe só entra no clique
+  // why: passo com vídeo (link YouTube/Vimeo) — o iframe carrega e toca sozinho ao entrar no passo
+  let videoEnded = false;
   const video = createVideoStage({
     frame: els.frame,
     onPlay: (info) => ctx.onVideoPlay?.(info),
     onProgress: (info) => ctx.onVideoProgress?.(info),
     onState: (state) => {
       if (state === "playing") {
-        // o vídeo manda: nada de avançar sozinho nem narrar por cima
-        clearAutoplay();
+        // o vídeo manda: nada de narrar por cima; o avanço segue videoStepAdvance (armAutoplay)
+        videoEnded = false;
         stopSpeech();
+        armAutoplay();
       } else if (state === "ended") {
+        videoEnded = true;
         armAutoplay();
       }
     },
     onLayout: () => refreshDriver(),
   });
+  // why: autoplay com som só depois de a pessoa interagir com a página; antes, mudo
+  let interacted = false;
+  const markInteracted = () => {
+    interacted = true;
+  };
+  window.addEventListener("pointerdown", markInteracted, { capture: true, passive: true });
+  window.addEventListener("keydown", markInteracted, { capture: true });
+  function videoSound() {
+    if (controls.isMuted()) return false;
+    const ua = typeof navigator !== "undefined" ? navigator.userActivation : null;
+    return Boolean(interacted || ua?.hasBeenActive);
+  }
   let captionHome = null;
 
   function elevateCaption() {
@@ -253,6 +270,11 @@ export function createPlayer(ctx) {
     const navOnly = Boolean(isSlide) && isPortraitCompact();
     setPopoverHiddenForSlide(Boolean(isSlide) && !navOnly);
     document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-slide-nav", navOnly));
+  }
+
+  /** Passo com vídeo: o balão vira só a navegação (← N de X →), fora do vídeo e sem texto. */
+  function paintVideoNav(isVideo) {
+    document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-video-nav", Boolean(isVideo)));
   }
 
   /** Um bloco só por passo: o rodapé ganha "Detalhes" (aria-expanded) quando há título e texto. */
@@ -536,12 +558,23 @@ export function createPlayer(ctx) {
   function armAutoplay() {
     clearAutoplay();
     if (!autoplayOn() || !driverObj || detailsOpen) return;
-    if (video.isPlaying()) return;
     const demo = getDemo();
     ensurePlayback(demo);
     ensureNarration(demo);
     const step = demo.steps[activeIndex];
     if (!step) return;
+    if (stepVideo(step)) {
+      // why: passo com vídeo não corta o vídeo pelo temporizador padrão — só a duração do autor ou o fim
+      const rule = videoStepAdvance(step);
+      const delay = rule.holdMs ?? (videoEnded ? VIDEO_END_ADVANCE_MS : null);
+      if (delay == null) return;
+      presentProgress.start(delay);
+      autoplayTimer = setTimeout(() => {
+        document.querySelector(".driver-popover-next-btn")?.click();
+      }, delay);
+      return;
+    }
+    if (video.isPlaying()) return;
     // why: o áudio já começou em showStepVisual; aqui só esperamos para avançar
     const speechDone = narration.whenSpeechDone();
     const delay = Math.max(holdMs(step, demo), subtitleHoldMs());
@@ -715,6 +748,7 @@ export function createPlayer(ctx) {
       // why: ponto de edição some na apresentação; o cursor simulado cuida do clique
       if (els.clickPoint) els.clickPoint.hidden = true;
       const stepVid = stepVideo(step);
+      videoEnded = false;
       if (!stepVid) video.hide();
       else video.teardown();
 
@@ -753,7 +787,7 @@ export function createPlayer(ctx) {
         if (stepVid) {
           // why: o destaque do passo de vídeo é a própria fachada (o Driver aponta para #gf-video)
           els.hotspot.hidden = true;
-          video.show(step, { index: activeIndex, interactive: true });
+          video.show(step, { index: activeIndex, interactive: true, autoplay: true, sound: videoSound() });
         } else if (ok) {
           placeHotspot(step.hotspot);
         } else {
@@ -855,7 +889,7 @@ export function createPlayer(ctx) {
   }
 
   /** why: WCAG 2.4.3 — a cada passo o foco vai para o título (não para o X), sem roubar foco dos controles. */
-  function focusStepHeading(popover, isSlide) {
+  function focusStepHeading(popover, isSlide, isVideo = false) {
     setTimeout(() => {
       if (!driverObj || !isPresenting()) return;
       const active = document.activeElement;
@@ -864,6 +898,9 @@ export function createPlayer(ctx) {
       if (isSlide) {
         target = els.slideTitle;
         if (target && target.tabIndex < 0) target.tabIndex = -1;
+      } else if (isVideo) {
+        // why: o balão do vídeo não tem texto — o foco vai para o Próximo
+        target = popover?.nextButton || null;
       } else {
         target = popover?.title && !popover.title.hidden && popover.title.style.display !== "none" ? popover.title : popover?.description;
         if (target && !target.hasAttribute("tabindex")) target.tabIndex = -1;
@@ -956,14 +993,16 @@ export function createPlayer(ctx) {
         renderDemoPopoverFooter(popover);
         labelCloseButton(popover?.closeButton, t(ctx.closeLabelKey || "player.closeTour"));
         const isSlide = steps[activeIndex]?.type === "slide";
+        const isVideo = Boolean(stepVideo(steps[activeIndex]));
         paintSlideNav(isSlide);
+        paintVideoNav(isVideo);
         decoratePopoverA11y(popover);
-        decorateStepDetails(popover, steps[activeIndex]);
+        decorateStepDetails(popover, isVideo ? null : steps[activeIndex]);
         const stepTitle = steps[activeIndex]?.popover?.title || steps[activeIndex]?.label || "";
         announce(
           t("player.announceStep", { current: playlistPos + 1, total: playOrder.length, title: stepTitle }).replace(/:\s*$/, "")
         );
-        focusStepHeading(popover, isSlide);
+        focusStepHeading(popover, isSlide, isVideo);
         requestAnimationFrame(() => syncChromeVars());
         armAutoplay();
       },
@@ -975,14 +1014,16 @@ export function createPlayer(ctx) {
       },
       steps: playOrder.map((stepIndex) => {
         const step = steps[stepIndex];
+        // why: passo com vídeo — nenhum texto nosso (título/descrição); o balão é só a navegação, embaixo
+        const isVid = Boolean(stepVideo(step));
         return {
-          element: step.type === "slide" ? "#canvas-slide" : stepVideo(step) ? `#${VIDEO_STAGE_ID}` : "#hotspot",
+          element: step.type === "slide" ? "#canvas-slide" : isVid ? `#${VIDEO_STAGE_ID}` : "#hotspot",
           popover: {
           // why: driver.js usa innerHTML; o texto do autor entra escapado (nunca vira marcação)
-          title: popoverTitleHtml(step.popover?.title || step.label || ""),
-          description: popoverBodyHtml(step.popover?.description || ""),
-          side: step.popover?.side || "bottom",
-          align: step.popover?.align || "center",
+          title: isVid ? "" : popoverTitleHtml(step.popover?.title || step.label || ""),
+          description: isVid ? "" : popoverBodyHtml(step.popover?.description || ""),
+          side: isVid ? "bottom" : step.popover?.side || "bottom",
+          align: isVid ? "center" : step.popover?.align || "center",
           onNextClick: async (_el, _step, navOpts) => {
             if (animating || token !== driveToken) return;
             animating = true;

@@ -2,7 +2,7 @@
  * Vídeo do passo por LINK (YouTube ou Vimeo). Sem upload e sem armazenamento: o passo guarda só
  * `step.video = { kind, id, h?, durationSec? }` e um pôster nosso (WebP) em `step.image`.
  * why: capa, miniaturas, exportação, validação e players antigos continuam lendo `step.image`
- *      (mostram o pôster); só o player novo troca o pôster pelo vídeo, e só depois do clique.
+ *      (mostram o pôster); só o player novo troca o pôster pelo vídeo, que toca sozinho ao abrir o passo.
  * JS puro (sem DOM): editor, players e API usam as mesmas regras.
  */
 
@@ -131,26 +131,40 @@ export function stepAllowsNarration(step) {
 }
 
 /**
- * URL do iframe — só depois do clique em ▶. Começa sem som (autoplay só toca mudo no celular),
- * inline no iPhone e com legenda; YouTube sem cookies (youtube-nocookie) e Vimeo com dnt=1.
+ * URL do iframe: o vídeo carrega e toca sozinho quando o passo abre (autoplay).
+ * Começa sem som por padrão (o navegador só deixa tocar sozinho mudo); `muted: false` tenta com som
+ * (quem chama cai para mudo se não tocar). Inline no iPhone e com o mínimo de texto por cima:
+ * YouTube sem cookies (youtube-nocookie), sem vídeos relacionados de outros canais e sem anotações;
+ * Vimeo com dnt=1 e sem título/autor/foto.
  * `origin` (opcional) vai para o YouTube conferir as mensagens da API (enablejsapi).
  */
-export function videoEmbedUrl(video, { origin = "" } = {}) {
+export function videoEmbedUrl(video, { origin = "", muted = true } = {}) {
   const v = normalizeStepVideo(video);
   if (!v) return "";
+  const mute = muted === false ? "0" : "1";
   if (v.kind === "youtube") {
     const params = new URLSearchParams({
-      playsinline: "1",
-      mute: "1",
       autoplay: "1",
-      cc_load_policy: "1",
-      enablejsapi: "1",
+      mute,
+      playsinline: "1",
       rel: "0",
+      modestbranding: "1",
+      iv_load_policy: "3",
+      controls: "1",
+      enablejsapi: "1",
     });
     if (/^https?:\/\/[^/]+$/i.test(String(origin || ""))) params.set("origin", origin);
     return `${VIDEO_FRAME_ORIGINS.youtube}/embed/${v.id}?${params.toString()}`;
   }
-  const params = new URLSearchParams({ muted: "1", playsinline: "1", dnt: "1", autoplay: "1" });
+  const params = new URLSearchParams({
+    autoplay: "1",
+    muted: mute,
+    playsinline: "1",
+    dnt: "1",
+    title: "0",
+    byline: "0",
+    portrait: "0",
+  });
   if (v.h) params.set("h", v.h);
   return `${VIDEO_FRAME_ORIGINS.vimeo}/video/${v.id}?${params.toString()}`;
 }
