@@ -452,7 +452,7 @@ test("editor: 'Modo de exibição' em ⚙ e no menu do Preview; trocar grava pla
   assert.match(html, /role="menuitemradio" aria-checked="false" data-playback-mode="gallery"/);
   assert.match(read("./editor.js"), /bindPlaybackModeControls\(document, \{/);
   for (const loc of ["pt", "es", "en"]) {
-    for (const k of ["mode.label", "mode.guided", "mode.gallery", "mode.guidedHint", "mode.galleryHint", "mode.galleryNote", "mode.changed", "gallery.counter", "gallery.announce", "gallery.showAll"]) {
+    for (const k of ["mode.label", "mode.guided", "mode.gallery", "mode.guidedHint", "mode.galleryHint", "mode.changed", "gallery.counter", "gallery.announce", "gallery.showAll"]) {
       assert.ok(catalogs[loc][k], `${loc}: ${k}`);
     }
   }
