@@ -7,13 +7,11 @@ import { playbackMode, setPlaybackMode } from "./tour-schema/playbackMode.js";
 export const PLAYBACK_MODE_RADIO = 'input[name="playback-mode"]';
 export const PLAYBACK_MODE_MENU = "[data-playback-mode]";
 
-/** Pinta rádios, itens do menu e o aviso da Galeria com o modo do tour. */
+/** Pinta rádios, itens do menu e o selo do Preview com o modo do tour. */
 export function paintPlaybackMode(doc, demo, t = (k) => k) {
   const mode = playbackMode(demo?.playback);
   for (const input of doc.querySelectorAll(PLAYBACK_MODE_RADIO)) input.checked = input.value === mode;
   for (const item of doc.querySelectorAll(PLAYBACK_MODE_MENU)) item.setAttribute("aria-checked", item.dataset.playbackMode === mode ? "true" : "false");
-  const note = doc.getElementById("playback-mode-note");
-  if (note) note.hidden = mode !== "gallery";
   const badge = doc.getElementById("preview-mode-badge");
   if (badge) {
     badge.hidden = mode !== "gallery";

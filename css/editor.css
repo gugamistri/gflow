@@ -9193,13 +9193,6 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   color: var(--ns-muted);
 }
 
-.mode-note {
-  margin: 2px 4px 0;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--ns-muted);
-}
-
 .menu-group-label {
   margin: 6px 0 2px;
   padding: 6px 12px 0;
