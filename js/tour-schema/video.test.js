@@ -90,18 +90,22 @@ test("videoEmbedUrl: youtube-nocookie e player.vimeo com os parâmetros de priva
   const yt = new URL(videoEmbedUrl({ kind: "youtube", id: YT }, { origin: "https://guiaflow.pro" }));
   assert.equal(yt.origin, "https://www.youtube-nocookie.com");
   assert.equal(yt.pathname, `/embed/${YT}`);
-  for (const [k, v] of Object.entries({ playsinline: "1", mute: "1", autoplay: "1", cc_load_policy: "1", enablejsapi: "1" })) {
+  for (const [k, v] of Object.entries({ playsinline: "1", mute: "1", autoplay: "1", rel: "0", iv_load_policy: "3", modestbranding: "1", enablejsapi: "1" })) {
     assert.equal(yt.searchParams.get(k), v, k);
   }
+  // why: nada de legenda forçada por cima do vídeo (pedido do Gustavo: nenhum texto no vídeo)
+  assert.equal(yt.searchParams.has("cc_load_policy"), false);
+  assert.equal(new URL(videoEmbedUrl({ kind: "youtube", id: YT }, { muted: false })).searchParams.get("mute"), "0");
   assert.equal(yt.searchParams.get("origin"), "https://guiaflow.pro");
   assert.equal(new URL(videoEmbedUrl({ kind: "youtube", id: YT }, { origin: "null" })).searchParams.has("origin"), false);
 
   const vm = new URL(videoEmbedUrl({ kind: "vimeo", id: "76979871", h: "abcdef12" }));
   assert.equal(vm.origin, "https://player.vimeo.com");
   assert.equal(vm.pathname, "/video/76979871");
-  for (const [k, v] of Object.entries({ muted: "1", playsinline: "1", dnt: "1", h: "abcdef12" })) {
+  for (const [k, v] of Object.entries({ autoplay: "1", muted: "1", playsinline: "1", dnt: "1", title: "0", byline: "0", portrait: "0", h: "abcdef12" })) {
     assert.equal(vm.searchParams.get(k), v, k);
   }
+  assert.equal(new URL(videoEmbedUrl({ kind: "vimeo", id: "76979871" }, { muted: false })).searchParams.get("muted"), "0");
   assert.equal(videoEmbedUrl({ kind: "youtube", id: "bad" }), "");
 });
 

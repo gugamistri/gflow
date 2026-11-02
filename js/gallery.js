@@ -649,13 +649,15 @@ export function createGallery(opts = {}) {
     }
 
     const cap = galleryCaption(step, strip);
-    ui.caption.textContent = kind === "card" ? "" : cap.caption;
-    ui.caption.hidden = kind === "card" || !cap.caption;
-    ui.detailsBtn.hidden = kind === "card" || !cap.hasDetails;
+    // why: slide de vídeo sem texto nosso (legenda/detalhes) — o vídeo fala por si
+    const noText = kind === "card" || kind === "video";
+    ui.caption.textContent = noText ? "" : cap.caption;
+    ui.caption.hidden = noText || !cap.caption;
+    ui.detailsBtn.hidden = noText || !cap.hasDetails;
     ui.details.replaceChildren();
     if (!ui.detailsBtn.hidden) renderRich(ui.details, cap.details);
     setDetails(false);
-    ui.info.hidden = ui.caption.hidden && ui.detailsBtn.hidden && !ui.cta.childElementCount && kind === "card";
+    ui.info.hidden = ui.caption.hidden && ui.detailsBtn.hidden && !ui.cta.childElementCount && noText;
 
     opts.renderCta?.(ui.cta, current);
     root.classList.toggle("has-cta", Boolean(ui.cta.querySelector("a:not([hidden]), button:not([hidden])")));

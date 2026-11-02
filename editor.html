@@ -73,14 +73,14 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/187/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/187/css/theme.css" />
-  <link rel="stylesheet" href="a/187/css/shell.css" />
-  <link rel="stylesheet" href="a/187/css/player.css" />
-  <link rel="stylesheet" href="a/187/css/editor.css" />
-  <link rel="stylesheet" href="a/187/css/settings.css" />
-  <link rel="stylesheet" href="a/187/css/collab.css" />
-  <link rel="stylesheet" href="a/187/css/comments.css" />
+  <link rel="stylesheet" href="a/188/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/188/css/theme.css" />
+  <link rel="stylesheet" href="a/188/css/shell.css" />
+  <link rel="stylesheet" href="a/188/css/player.css" />
+  <link rel="stylesheet" href="a/188/css/editor.css" />
+  <link rel="stylesheet" href="a/188/css/settings.css" />
+  <link rel="stylesheet" href="a/188/css/collab.css" />
+  <link rel="stylesheet" href="a/188/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -165,7 +165,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/187/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/187/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/188/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/188/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -480,7 +480,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/187/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/187/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/188/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/188/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -552,7 +552,7 @@
       <div class="release-notes-body">
         <p class="release-notes-title" id="release-notes-title">Novidades da versão 0.5.0 · outubro de 2026</p>
         <ul class="release-notes-list">
-          <li data-i18n="releaseNotes.stepVideo">Vídeo nos passos: cole um link do YouTube ou do Vimeo; o vídeo só carrega quando a pessoa clica.</li>
+          <li data-i18n="releaseNotes.stepVideo">Vídeo nos passos: cole um link do YouTube ou do Vimeo; o vídeo toca sozinho quando o passo abre.</li>
           <li data-i18n="releaseNotes.narrationCaption">Legenda da narração: a opção “Mostrar a narração como legenda” voltou ao painel de Narração.</li>
           <li data-i18n="releaseNotes.slideTitle">Slides sem “CENA X”: quando o slide tem título, só o título aparece.</li>
           <li data-i18n="releaseNotes.richText">Texto com formatação: negrito, itálico, sublinhado e listas nos balões, slides e cartões.</li>
@@ -1003,15 +1003,13 @@
       <div id="wrap-video" class="video-link-field" hidden>
         <label class="field-label" for="prop-video-url" data-i18n="video.fieldLabel">Link do YouTube ou Vimeo</label>
         <div class="video-link-row">
-          <input type="url" id="prop-video-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Cole o link aqui" data-i18n-placeholder="video.placeholder" aria-describedby="prop-video-status prop-video-hint" />
+          <input type="url" id="prop-video-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Cole o link aqui" data-i18n-placeholder="video.placeholder" aria-describedby="prop-video-status" />
           <button type="button" class="btn btn-sm" id="btn-video-apply" data-i18n="video.add">Usar vídeo</button>
         </div>
         <p class="props-meta video-link-status" id="prop-video-status" role="status" aria-live="polite" hidden></p>
         <div class="video-link-current">
           <a class="video-link-chip" id="prop-video-current" target="_blank" rel="noopener noreferrer" hidden></a>
         </div>
-        <p class="props-meta" id="prop-video-hint" data-i18n="video.hint">Só o link: o vídeo não é enviado nem guardado. Quem assiste vê a capa; o YouTube ou o Vimeo só carrega quando a pessoa toca no play.</p>
-        <p class="props-meta" id="prop-video-no-narration" data-i18n="media.videoNoNarration">Passo com vídeo não tem narração, destaque nem clique: o som e a legenda vêm do próprio vídeo.</p>
       </div>
         </div>
       </details>
@@ -1037,10 +1035,10 @@
           <span data-i18n="billing.badge">Pro</span>
         </span>
       </button>
-      <label><span data-i18n="props.title">Título</span>
+      <label><span id="prop-title-label" data-i18n="props.title">Título</span>
         <input type="text" id="prop-title" />
       </label>
-      <label><span data-i18n="props.description">Descrição</span>
+      <label id="wrap-description"><span data-i18n="props.description">Descrição</span>
         <textarea id="prop-description" rows="3"></textarea>
       </label>
         </div>
@@ -1142,7 +1140,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/187/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/188/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2669,8 +2667,8 @@
     </symbol>
   </svg>
 
-  <script src="a/187/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/187/js/app.js"></script>
+  <script src="a/188/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/188/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>

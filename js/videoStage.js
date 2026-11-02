@@ -1,7 +1,9 @@
 /**
- * Vídeo do passo no player (prévia do editor, /p, embed): fachada com o pôster e um botão ▶.
- * why: nada do YouTube/Vimeo carrega antes do clique — o pôster é a nossa imagem (step.image).
- *      Só no clique entra o iframe (youtube-nocookie / player.vimeo com dnt=1), mudo e inline.
+ * Vídeo do passo no player (prévia do editor, /p, /v, embed, Galeria).
+ * Ao entrar no passo o iframe (youtube-nocookie / player.vimeo com dnt=1) carrega e toca sozinho,
+ * inline e sem texto nosso por cima; o pôster (step.image) fica embaixo enquanto o player monta.
+ * why: o navegador só deixa tocar sozinho sem som — se a pessoa já interagiu com o tour tentamos
+ *      com som e, se não começar a tocar, recarregamos mudo. O editor mostra só o pôster (estático).
  * Modo expandido é CSS (position:fixed; 100dvh) para os controles da página continuarem visíveis;
  * Esc recolhe antes de fechar o tour. O progresso (25/50/75/100% + segundos) vem pelo postMessage.
  */
@@ -13,7 +15,6 @@ import {
   trackVideoTime,
   videoEmbedUrl,
   videoProviderLabel,
-  videoWatchUrl,
 } from "./tour-schema/video.js";
 
 const PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
@@ -21,10 +22,14 @@ const EXPAND_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const COLLAPSE_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const EXTERNAL_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 export const VIDEO_STAGE_ID = "gf-video";
+/**
+ * Tentativa com som: se o player ficar pronto e o vídeo não começar em SOUND_READY_GRACE_MS
+ * (o navegador barrou o som), recarrega mudo. SOUND_FALLBACK_MS é o limite se o "pronto" nunca chegar.
+ */
+export const SOUND_READY_GRACE_MS = 1500;
+export const SOUND_FALLBACK_MS = 8000;
 
 /** Lê uma mensagem do iframe (string JSON ou objeto). null se não for nossa. */
 export function parseEmbedMessage(kind, data) {
@@ -93,6 +98,9 @@ export function createVideoStage(opts = {}) {
   let progress = null;
   let reportedWatched = 0;
   let playing = false;
+  let heardPlaying = false;
+  let soundFallback = null;
+  let soundRetry = null; // () => recarrega mudo (só na tentativa com som)
   let expanded = false;
   let detach = () => {};
 
@@ -107,14 +115,12 @@ export function createVideoStage(opts = {}) {
       el.id = stageId;
       el.className = "gf-video";
       el.hidden = true;
+      // why: só o ícone ▶ (sem texto nosso sobre o vídeo); some quando o iframe entra
       el.innerHTML = `
         <button type="button" class="gf-video-play">
           <span class="gf-video-play-ico">${PLAY_SVG}</span>
-          <span class="gf-video-play-text"></span>
         </button>
-        <span class="gf-video-note" aria-hidden="true"></span>
         <div class="gf-video-bar" hidden>
-          <a class="gf-video-open" target="_blank" rel="noopener noreferrer">${EXTERNAL_SVG}<span class="gf-video-sr"></span></a>
           <button type="button" class="gf-video-expand" aria-pressed="false">${EXPAND_SVG}<span class="gf-video-sr"></span></button>
         </div>`;
       // why: depois da imagem e antes do destaque — o pôster é o próprio <img> do passo
@@ -146,13 +152,6 @@ export function createVideoStage(opts = {}) {
     const title = current.title;
     const play = el.querySelector(".gf-video-play");
     play.setAttribute("aria-label", title ? t("video.playLabel", { provider, title }) : t("video.playLabelNoTitle", { provider }));
-    el.querySelector(".gf-video-play-text").textContent = t("video.play");
-    el.querySelector(".gf-video-note").textContent = t("video.loadsOnClick", { provider });
-    const open = el.querySelector(".gf-video-open");
-    open.href = videoWatchUrl(current.video);
-    const openLabel = t("video.openOn", { provider });
-    open.title = openLabel;
-    open.querySelector(".gf-video-sr").textContent = openLabel;
     syncExpandLabel();
   }
 
@@ -205,6 +204,20 @@ export function createVideoStage(opts = {}) {
 
   function handle(update) {
     if (!update || !current) return;
+    if (update.ready && soundRetry && !heardPlaying) {
+      // why: player pronto e sem tocar = som barrado pelo navegador; dá um respiro e cai para mudo
+      clearTimeout(soundFallback);
+      soundFallback = setTimeout(() => soundRetry?.(), SOUND_READY_GRACE_MS);
+    }
+    if (update.state === "playing" && !heardPlaying) {
+      // why: "tocou" de verdade (o autoplay pode ser barrado) — é aqui que conta o play na análise
+      heardPlaying = true;
+      clearTimeout(soundFallback);
+      soundFallback = null;
+      soundRetry = null;
+      if (el) el.dataset.playback = "playing";
+      opts.onPlay?.({ index: current.index, stepId: current.stepId, kind: current.video.kind });
+    }
     if (update.state === "playing" && !playing) {
       playing = true;
       opts.onState?.("playing");
@@ -255,6 +268,9 @@ export function createVideoStage(opts = {}) {
     };
     window.addEventListener("message", onMessage);
     frameEl.addEventListener("load", () => {
+      // why: cada load (inclusive a troca para mudo) é um player novo; precisa assinar de novo
+      heard = false;
+      tries = 0;
       subscribe();
       // why: o "listening" do YouTube pode chegar antes do player montar; repete até ouvir
       clearInterval(timer);
@@ -271,14 +287,20 @@ export function createVideoStage(opts = {}) {
     };
   }
 
-  function play() {
+  /**
+   * Carrega o iframe já tocando. `sound: true` tenta com som (a pessoa já interagiu); se o vídeo
+   * não começar em SOUND_FALLBACK_MS, recarrega mudo. `focus` só no clique (o autoplay não rouba o foco).
+   */
+  function play({ sound = false, focus = true } = {}) {
     if (!current || iframe || !el) return;
     const { video } = current;
     const origin = typeof location !== "undefined" ? location.origin : "";
-    const src = videoEmbedUrl(video, { origin: /^https?:/.test(origin) ? origin : "" });
+    const embedOrigin = /^https?:/.test(origin) ? origin : "";
+    const src = videoEmbedUrl(video, { origin: embedOrigin, muted: !sound });
     if (!src) return;
     progress = createVideoProgress();
     reportedWatched = 0;
+    heardPlaying = false;
     iframe = document.createElement("iframe");
     iframe.className = "gf-video-frame";
     iframe.src = src;
@@ -289,12 +311,23 @@ export function createVideoStage(opts = {}) {
     detach = bridge(iframe, video.kind);
     el.classList.add("is-playing");
     el.appendChild(iframe);
-    el.querySelector(".gf-video-bar").hidden = false;
-    // why: o clique é a intenção de assistir; o "tocando" de verdade chega pelo postMessage
+    // why: nada por cima do vídeo — o botão de expandir cobria a engrenagem do YouTube, que já tem tela cheia
+    el.querySelector(".gf-video-bar").hidden = true;
+    if (sound) {
+      const frameEl = iframe;
+      const mutedSrc = videoEmbedUrl(video, { origin: embedOrigin, muted: true });
+      soundRetry = () => {
+        soundRetry = null;
+        clearTimeout(soundFallback);
+        soundFallback = null;
+        if (iframe === frameEl && !heardPlaying) frameEl.src = mutedSrc;
+      };
+      soundFallback = setTimeout(() => soundRetry?.(), SOUND_FALLBACK_MS);
+    }
+    // why: o vídeo manda no passo desde já (sem avançar sozinho nem narrar por cima)
     playing = true;
     opts.onState?.("playing");
-    opts.onPlay?.({ index: current.index, stepId: current.stepId, kind: video.kind });
-    iframe.focus({ preventScroll: true });
+    if (focus) iframe.focus({ preventScroll: true });
   }
 
   /** Para o vídeo do passo atual (troca de passo, sair do tour) e manda o tempo assistido. */
@@ -303,6 +336,11 @@ export function createVideoStage(opts = {}) {
       const watched = Math.round(progress.watchedSec);
       if (watched > reportedWatched) reportProgress(0);
     }
+    clearTimeout(soundFallback);
+    soundFallback = null;
+    soundRetry = null;
+    heardPlaying = false;
+    if (el) delete el.dataset.playback;
     detach();
     detach = () => {};
     iframe?.remove();
@@ -324,8 +362,11 @@ export function createVideoStage(opts = {}) {
     get element() {
       return ensureEl();
     },
-    /** Mostra a fachada do passo. `interactive: false` = prévia estática do editor (sem clique). */
-    show(step, { index = 0, interactive = true } = {}) {
+    /**
+     * Mostra o vídeo do passo. `interactive: false` = prévia estática do editor (só o pôster).
+     * `autoplay: true` carrega e toca na hora; `sound` tenta com som (cai para mudo).
+     */
+    show(step, { index = 0, interactive = true, autoplay = false, sound = false } = {}) {
       const video = stepVideo(step);
       if (!video) {
         this.hide();
@@ -353,6 +394,7 @@ export function createVideoStage(opts = {}) {
       else btn.setAttribute("aria-hidden", "true");
       labels();
       node.hidden = false;
+      if (interactive && autoplay) play({ sound, focus: false });
       return true;
     },
     hide() {
@@ -371,6 +413,20 @@ export function createVideoStage(opts = {}) {
       window.removeEventListener("keyup", onKeyup, true);
     },
     play,
+    /** Liga/desliga o som do vídeo que está tocando (botão de som do tour). */
+    setMuted(muted) {
+      if (!iframe || !current) return;
+      const kind = current.video.kind;
+      const msg =
+        kind === "youtube"
+          ? { event: "command", func: muted ? "mute" : "unMute", args: [], id: VIDEO_STAGE_ID, channel: "widget" }
+          : { method: "setMuted", value: Boolean(muted) };
+      try {
+        iframe.contentWindow?.postMessage(JSON.stringify(msg), VIDEO_FRAME_ORIGINS[kind]);
+      } catch {
+        /* iframe fora do ar */
+      }
+    },
     collapse: () => setExpanded(false),
     toggleExpanded: () => setExpanded(!expanded),
     isPlaying: () => playing,
