@@ -121,6 +121,16 @@ export function isVideoStep(step) {
 }
 
 /**
+ * Passo com vídeo não tem narração: o som e a legenda vêm do próprio vídeo.
+ * why: o player, o HTML offline, a exportação e a API não tocam, não mostram e não geram narração
+ *      nesse passo — mesmo que dados antigos tenham texto ou áudio (nada é apagado; voltar para
+ *      imagem traz tudo de volta).
+ */
+export function stepAllowsNarration(step) {
+  return !isVideoStep(step);
+}
+
+/**
  * URL do iframe — só depois do clique em ▶. Começa sem som (autoplay só toca mudo no celular),
  * inline no iPhone e com legenda; YouTube sem cookies (youtube-nocookie) e Vimeo com dnt=1.
  * `origin` (opcional) vai para o YouTube conferir as mensagens da API (enablejsapi).

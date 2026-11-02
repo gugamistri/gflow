@@ -14,6 +14,7 @@ import {
   videoWatchUrl,
   vimeoThumbnailFromOembed,
 } from "./tour-schema/video.js";
+import { chooseStepMedia, createStepMediaMemory, rememberStepImage, settleStepVideo, stepMediaKind } from "./stepMedia.js";
 
 export const POSTER_MAX_WIDTH = 1920;
 export const POSTER_QUALITY = 0.85;
@@ -127,7 +128,7 @@ export async function fetchVideoPoster(video, { fetchImpl = globalThis.fetch?.bi
 /**
  * @param {{ getDemo: Function, currentStep: Function, commit: Function, toast?: Function,
  *   newImageId: Function, defaultTitles?: Set<string>, openSection?: Function, onMediaAdded?: Function,
- *   fetchPoster?: Function }} ctx
+ *   fetchPoster?: Function, refresh?: Function }} ctx
  */
 export function createStepVideoEditor(ctx) {
   const els = {
@@ -138,9 +139,25 @@ export function createStepVideoEditor(ctx) {
     status: document.getElementById("prop-video-status"),
     current: document.getElementById("prop-video-current"),
     stb: document.getElementById("stb-video"),
+    media: document.getElementById("prop-media"),
+    imageWrap: document.getElementById("wrap-image"),
   };
   const fetchPoster = ctx.fetchPoster || fetchVideoPoster;
+  /** why: Imagem ⇄ Vídeo na sessão não destrói dados (ver stepMedia.js) */
+  const memory = createStepMediaMemory();
   let busy = false;
+
+  function mediaKind(step = ctx.currentStep()) {
+    return stepMediaKind(step, memory);
+  }
+
+  function paintMedia(kind) {
+    els.media?.querySelectorAll("[data-value]").forEach((btn) => {
+      const on = btn.dataset.value === kind;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
 
   function setStatus(text, { error = false } = {}) {
     if (!els.status) return;
@@ -152,8 +169,11 @@ export function createStepVideoEditor(ctx) {
 
   function sync(step = ctx.currentStep()) {
     if (!els.wrap) return;
-    const isScreen = Boolean(step) && step.type !== "slide";
-    els.wrap.hidden = !isScreen;
+    const kind = mediaKind(step);
+    paintMedia(kind);
+    if (els.media) els.media.hidden = !kind;
+    els.wrap.hidden = kind !== "video";
+    if (els.imageWrap) els.imageWrap.hidden = kind !== "image";
     const video = stepVideo(step);
     if (els.current) {
       els.current.hidden = !video;
@@ -221,7 +241,9 @@ export function createStepVideoEditor(ctx) {
       }
       const video = { ...parsed };
       if (poster?.durationSec) video.durationSec = poster.durationSec;
+      rememberStepImage(step, memory);
       applyVideoToStep(step, video, posterRef);
+      settleStepVideo(step, memory);
       if (!step.popover) step.popover = { side: "bottom", align: "center" };
       const defaults = ctx.defaultTitles || new Set([""]);
       if (poster?.title && defaults.has(String(step.popover.title || ""))) {
@@ -250,6 +272,25 @@ export function createStepVideoEditor(ctx) {
     return true;
   }
 
+  /** Troca Imagem ⇄ Vídeo. Sem vídeo guardado, "Vídeo" só abre o campo do link (dados intactos). */
+  function choose(kind, { focus = true } = {}) {
+    const step = ctx.currentStep();
+    if (!step || busy) return false;
+    const res = chooseStepMedia(step, kind, memory);
+    setStatus("");
+    if (res.changed) ctx.commit();
+    else (ctx.refresh || ctx.commit)();
+    if (focus && res.kind === "video" && !stepVideo(step)) {
+      requestAnimationFrame(() => els.input?.focus({ preventScroll: true }));
+    }
+    return res.changed;
+  }
+
+  els.media?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-value]");
+    if (!btn || !els.media.contains(btn)) return;
+    choose(btn.dataset.value);
+  });
   els.apply?.addEventListener("click", () => apply());
   els.remove?.addEventListener("click", () => remove());
   els.input?.addEventListener("keydown", (e) => {
@@ -263,8 +304,9 @@ export function createStepVideoEditor(ctx) {
   });
   els.stb?.addEventListener("click", () => {
     ctx.openSection?.("image");
-    requestAnimationFrame(() => els.input?.focus({ preventScroll: true }));
+    if (mediaKind() === "image") choose("video");
+    else requestAnimationFrame(() => els.input?.focus({ preventScroll: true }));
   });
 
-  return { sync, apply, remove };
+  return { sync, apply, remove, choose, mediaKind };
 }

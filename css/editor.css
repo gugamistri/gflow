@@ -3071,16 +3071,49 @@ body.is-presenting #topbar-actions-editor {
   color: var(--ns-muted);
 }
 
+/*
+ * Campos do painel do passo — um só padrão (design system: --ns-font, raio 7px igual a .btn/.mode-btn,
+ * texto 0.8125rem igual a .btn, altura 34px, foco com o acento).
+ * why: o input[type=url] do vídeo ficava fora da regra (borda/fonte do navegador, placeholder cortado).
+ */
+.props {
+  --props-field-h: 34px;
+  --props-field-radius: 7px;
+  --props-field-font: 0.8125rem;
+}
+
 .props input[type="text"],
 .props input[type="number"],
+.props input[type="url"],
 .props select,
 .props textarea {
+  box-sizing: border-box;
+  min-height: var(--props-field-h);
   border: 1px solid var(--ns-border);
-  border-radius: 6px;
-  padding: 8px;
+  border-radius: var(--props-field-radius);
+  padding: 7px 10px;
   color: var(--ns-ink);
+  font-family: var(--ns-font);
+  font-size: var(--props-field-font);
   font-weight: 400;
+  line-height: 1.4;
   background: var(--ns-input-bg);
+}
+
+.props textarea {
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.props :is(input, textarea)::placeholder {
+  color: var(--ns-muted);
+  opacity: 1;
+}
+
+.props :is(input[type="text"], input[type="number"], input[type="url"], select, textarea):focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 1px;
+  border-color: var(--ns-accent);
 }
 
 .caption-block {
@@ -3240,8 +3273,6 @@ body.is-presenting #topbar-actions-editor {
 
 .hold-field input[type="number"] {
   width: 76px;
-  padding: 4px 6px;
-  font-size: 0.78rem;
 }
 
 .settings-key-row {
@@ -3457,6 +3488,7 @@ body.is-presenting .editor-popover {
 
 .props-meta {
   font-size: 0.72rem;
+  line-height: 1.45;
   color: var(--ns-muted);
   margin: 0;
 }
@@ -3484,10 +3516,16 @@ body.is-presenting .editor-popover {
   width: 100%;
   padding: 8px;
   border: 1px dashed var(--ns-border);
-  border-radius: 8px;
+  border-radius: var(--props-field-radius, 7px);
   background: var(--ns-input-bg);
+  color: var(--ns-ink);
   cursor: pointer;
   text-align: left;
+}
+
+.image-pick-btn:focus-visible {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 1px;
 }
 
 .image-pick-btn:hover {
@@ -8992,48 +9030,38 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   }
 }
 
-/* Vídeo por link (YouTube/Vimeo) no painel do passo */
+/* Mídia do passo (Imagem | Vídeo) e vídeo por link (YouTube/Vimeo) no painel */
+.media-toggle[hidden] {
+  display: none;
+}
+
 .video-link-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--ns-border, rgba(127, 127, 127, 0.25));
 }
 
 .video-link-field[hidden] {
   display: none;
 }
 
-.video-link-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ns-muted);
-}
-
-.video-link-field > label {
-  font-size: 0.8rem;
-}
-
 .video-link-row {
   display: flex;
+  align-items: stretch;
   gap: 6px;
 }
 
 .video-link-row input {
   flex: 1;
   min-width: 0;
+  text-overflow: ellipsis;
 }
 
+/* why: mesma altura/raio dos campos — o botão e o input formam uma linha só */
 .video-link-row .btn {
   flex: none;
+  min-height: var(--props-field-h, 34px);
+  border-radius: var(--props-field-radius, 7px);
 }
 
 .video-link-status.is-error {
@@ -9058,8 +9086,8 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   align-items: center;
   padding: 2px 10px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--demo-accent, #2a9d8f) 16%, transparent);
-  color: inherit;
+  background: color-mix(in srgb, var(--ns-accent) 16%, transparent);
+  color: var(--ns-ink);
   font-size: 0.78rem;
   font-weight: 600;
   text-decoration: none;

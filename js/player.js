@@ -52,7 +52,7 @@ import { pauseAudio, resumeAudio, setAudioMuted } from "./playback.js";
 import { createPlayerControls, createLiveAnnouncer, playerShortcut } from "./playerControls.js";
 import { stepImageAlt } from "./a11y.js";
 import { createVideoStage, VIDEO_STAGE_ID } from "./videoStage.js";
-import { stepVideo } from "./tour-schema/video.js";
+import { stepAllowsNarration, stepVideo } from "./tour-schema/video.js";
 import { stopSpeech } from "./playback.js";
 import { isGalleryMode } from "./tour-schema/playbackMode.js";
 import { createGalleryPlayer } from "./galleryPlayer.js";
@@ -900,7 +900,7 @@ export function createPlayer(ctx) {
     lifecycle.start();
     controls.show({
       autoplay: autoplayEnabled,
-      captions: steps.some((st) => String(st.caption || "").trim()),
+      captions: steps.some((st) => stepAllowsNarration(st) && String(st.caption || "").trim()),
     });
     setAudioMuted(controls.isMuted());
     pendingExitReason = "";
