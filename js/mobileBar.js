@@ -143,6 +143,16 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
     audioRow.hidden = genBtn.hidden && upBtn.hidden;
   }
 
+  // why: passo com vídeo não tem narração — o editor esconde a seção; aqui o atalho fica desativado
+  const narrSec = panel.querySelector('.props-section[data-sec="narration"]');
+  function paintNarration() {
+    const btn = byAct("narration");
+    if (!btn || !narrSec) return;
+    const off = Boolean(narrSec.hidden);
+    btn.disabled = off;
+    if (off && openSec === SHEET_SECTIONS.narration) close();
+  }
+
   function paintHistory() {
     for (const a of ["undo", "redo"]) {
       const src = doc.getElementById(`btn-${a}`);
@@ -201,7 +211,8 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
   });
 
   // Mantém a barra em dia com desfazer/refazer e o botão de áudio do passo
-  const mo = new MutationObserver(() => { paintHistory(); if (openSec) paintAudio(); });
+  const mo = new MutationObserver(() => { paintHistory(); paintNarration(); if (openSec) paintAudio(); });
+  if (narrSec) mo.observe(narrSec, { attributes: true, attributeFilter: ["hidden"] });
   const moPublish = new MutationObserver(() => paintPublish());
   for (const id of ["btn-capture", "btn-results", "results-pro-badge", "share-stale-dot"]) {
     const el = doc.getElementById(id);
@@ -218,6 +229,7 @@ export function createMobileBar({ doc = document, t = (k) => k, onSettings } = {
     body.classList.toggle("has-mobile-bar", show);
     if (!show) { close(); closePublish(); }
     paintHistory();
+    paintNarration();
     paintPublish();
   }
   return { paint, close, open, openPublish, closePublish, paintPublish };

@@ -1238,7 +1238,8 @@ return { createGallery, galleryCaption, gallerySections };
       const fromDemo = Number(demo.playback.defaultHoldSeconds);
       hold = Number.isFinite(fromDemo) && fromDemo > 0 ? fromDemo : DEFAULT_HOLD_SECONDS;
     }
-    const audio = step?.narrationAudio;
+    // why: passo com vídeo não tem narração (o som é do vídeo) — sem piso do áudio
+    const audio = stepVideoLink(step) ? null : step?.narrationAudio;
     const duration = Number(audio?.durationSeconds);
     const clips = Array.isArray(audio?.clips)
       ? audio.clips.filter((url) => typeof url === "string" && url.startsWith("data:audio/"))
@@ -1377,6 +1378,8 @@ return { createGallery, galleryCaption, gallerySections };
   }
 
   function playableCaptionClips(step) {
+    // why: espelha stepAllowsNarration (tour-schema/video.js): passo com vídeo não toca narração
+    if (stepVideoLink(step)) return [];
     const saved = savedCaptionClips(step);
     if (saved.length) return saved;
     const audio = step?.narrationAudio;
@@ -1450,7 +1453,7 @@ return { createGallery, galleryCaption, gallerySections };
       },
       enterStep(step, speak) {
         const caption = String(step?.caption || "").trim();
-        setCaption(caption, step?.showCaption !== false);
+        setCaption(caption, step?.showCaption !== false && !stepVideoLink(step));
         const runId = ++speakToken;
         stopSpeech();
         duck(false);

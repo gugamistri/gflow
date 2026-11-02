@@ -1168,7 +1168,7 @@ function renderFrame(ctx, scene, theme) {
   }
 
   const caption = String(step.caption || "").trim();
-  if (caption && step.showCaption !== false) {
+  if (caption && step.showCaption !== false && !stepVideo(step)) {
     const maxW = stage.w - 48;
     ctx.font = `500 18px ${videoFont}`;
     const lines = wrapText(ctx, caption, maxW).slice(0, 3);
