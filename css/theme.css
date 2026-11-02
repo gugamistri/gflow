@@ -101,6 +101,30 @@
  * why: o SVG do Driver usa z-index inline 10000; no zoom a captura pode cobrir o recorte.
  * Mantém a overlay abaixo do popover (…020) e da legenda (…015).
  */
+/*
+ * Passo com vídeo: o balão vira só a navegação (← N de X →), embaixo do vídeo e sem texto nosso.
+ * why: pedido do Gustavo — nada de balão/texto sobre o vídeo; a navegação do tour continua.
+ */
+.driver-popover.demo-popover.is-video-nav {
+  padding: 6px 10px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 280px !important;
+}
+
+.driver-popover.demo-popover.is-video-nav .driver-popover-title,
+.driver-popover.demo-popover.is-video-nav .driver-popover-description,
+.driver-popover.demo-popover.is-video-nav .driver-popover-close-btn,
+.driver-popover.demo-popover.is-video-nav .driver-popover-arrow,
+.driver-popover.demo-popover.is-video-nav .gf-details-toggle {
+  display: none !important;
+}
+
+.driver-popover.demo-popover.is-video-nav .driver-popover-footer {
+  margin-top: 0 !important;
+  min-height: 36px;
+}
+
 .driver-overlay {
   z-index: 1000000008 !important;
 }

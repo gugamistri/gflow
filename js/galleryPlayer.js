@@ -50,7 +50,9 @@ export function createGalleryPlayer(ctx, lifecycle) {
         onPlay: (info) => ctx.onVideoPlay?.(info),
         onProgress: (info) => ctx.onVideoProgress?.(info),
       });
-      if (!videoStage.show(step, { index, interactive: true })) return null;
+      // why: o vídeo toca sozinho ao abrir o slide; com som só se a pessoa já interagiu (senão mudo)
+      const sound = Boolean(typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
+      if (!videoStage.show(step, { index, interactive: true, autoplay: true, sound })) return null;
       const stage = videoStage;
       return {
         teardown: () => {

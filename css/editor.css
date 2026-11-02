@@ -4885,6 +4885,15 @@ body.is-presenting .editor-popover {
   margin-left: 6px;
 }
 
+/* grupo escondido (ex.: posição do balão no passo com vídeo) leva junto o separador seguinte */
+.stb-group[hidden] {
+  display: none !important;
+}
+
+.stb-group[hidden] + .stb-sep {
+  display: none;
+}
+
 .stb-sep {
   width: 1px;
   height: 22px;

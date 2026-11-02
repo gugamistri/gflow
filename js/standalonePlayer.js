@@ -969,13 +969,15 @@ function createGallery(opts = {}) {
     }
 
     const cap = galleryCaption(step, strip);
-    ui.caption.textContent = kind === "card" ? "" : cap.caption;
-    ui.caption.hidden = kind === "card" || !cap.caption;
-    ui.detailsBtn.hidden = kind === "card" || !cap.hasDetails;
+    // why: slide de vídeo sem texto nosso (legenda/detalhes) — o vídeo fala por si
+    const noText = kind === "card" || kind === "video";
+    ui.caption.textContent = noText ? "" : cap.caption;
+    ui.caption.hidden = noText || !cap.caption;
+    ui.detailsBtn.hidden = noText || !cap.hasDetails;
     ui.details.replaceChildren();
     if (!ui.detailsBtn.hidden) renderRich(ui.details, cap.details);
     setDetails(false);
-    ui.info.hidden = ui.caption.hidden && ui.detailsBtn.hidden && !ui.cta.childElementCount && kind === "card";
+    ui.info.hidden = ui.caption.hidden && ui.detailsBtn.hidden && !ui.cta.childElementCount && noText;
 
     opts.renderCta?.(ui.cta, current);
     root.classList.toggle("has-cta", Boolean(ui.cta.querySelector("a:not([hidden]), button:not([hidden])")));
@@ -1666,6 +1668,12 @@ return { createGallery, galleryCaption, gallerySections };
     if (!autoplayOn() || !driverObj) return;
     const step = demo.steps[activeIndex];
     if (!step) return;
+    // why: espelha videoStepAdvance (playback.js) — sem duração do autor, o passo de vídeo não avança
+    // sozinho (aqui o HTML não ouve o fim do vídeo); com duração, avança nela.
+    if (stepVideoLink(step)) {
+      const own = Number(step.holdSeconds);
+      if (!(Number.isFinite(own) && own > 0)) return;
+    }
     const speechDone = narration.whenSpeechDone();
     const delay = holdMs(step);
     startPresentProgress(delay);
@@ -1778,37 +1786,95 @@ return { createGallery, galleryCaption, gallerySections };
     return null;
   }
 
-  function videoLinkEl() {
-    let a = document.getElementById("player-video");
-    if (!a && els.frame) {
-      a = document.createElement("a");
-      a.id = "player-video";
-      a.className = "gf-video-link";
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.hidden = true;
-      a.innerHTML =
-        '<span class="gf-video-play"><span class="gf-video-play-ico"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span><span class="gf-video-play-text"></span></span>';
-      els.frame.insertBefore(a, els.image ? els.image.nextSibling : null);
+  // why: espelha videoEmbedUrl (tour-schema/video.js) — toca sozinho, mudo (ou com som depois de
+  // interagir), inline e com o mínimo de texto do YouTube/Vimeo por cima.
+  function stepVideoEmbedUrl(step, muted) {
+    const v = step && step.type !== "slide" ? step.video : null;
+    if (!stepVideoLink(step)) return "";
+    const mute = muted === false ? "0" : "1";
+    if (v.kind === "youtube") {
+      const q = "autoplay=1&mute=" + mute + "&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&controls=1";
+      return "https://www.youtube-nocookie.com/embed/" + v.id + "?" + q;
     }
-    return a;
+    let q = "autoplay=1&muted=" + mute + "&playsinline=1&dnt=1&title=0&byline=0&portrait=0";
+    if (typeof v.h === "string" && /^[0-9a-f]{6,32}$/i.test(v.h)) q += "&h=" + v.h.toLowerCase();
+    return "https://player.vimeo.com/video/" + v.id + "?" + q;
   }
 
+  /** Página servida por http(s): o vídeo entra no passo. Do disco (file://) o YouTube recusa — vira link. */
+  function canEmbedVideo() {
+    return typeof location !== "undefined" && /^https?:$/.test(location.protocol);
+  }
+
+  function videoSoundAllowed() {
+    return Boolean(typeof navigator !== "undefined" && navigator.userActivation && navigator.userActivation.hasBeenActive);
+  }
+
+  function makeVideoFrame(step) {
+    const src = stepVideoEmbedUrl(step, !videoSoundAllowed());
+    if (!src) return null;
+    const iframe = document.createElement("iframe");
+    iframe.className = "gf-video-frame";
+    iframe.src = src;
+    iframe.title = gfT("video.frameTitle", { provider: stepVideoLink(step).provider, title: String(step.popover?.title || step.label || "") }).replace(/[:\s—-]+$/, "");
+    iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
+    iframe.setAttribute("allowfullscreen", "");
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    return iframe;
+  }
+
+  function videoLinkEl() {
+    const embed = canEmbedVideo();
+    let node = document.getElementById("player-video");
+    if (node && (node.tagName === "A") === embed) {
+      node.remove();
+      node = null;
+    }
+    if (!node && els.frame) {
+      if (embed) {
+        node = document.createElement("div");
+        node.className = "gf-video is-playing";
+      } else {
+        node = document.createElement("a");
+        node.className = "gf-video-link";
+        node.target = "_blank";
+        node.rel = "noopener noreferrer";
+        // só o ícone ▶ (o rótulo vai no aria-label): nenhum texto nosso sobre o vídeo
+        node.innerHTML =
+          '<span class="gf-video-play"><span class="gf-video-play-ico"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span></span>';
+      }
+      node.id = "player-video";
+      node.hidden = true;
+      els.frame.insertBefore(node, els.image ? els.image.nextSibling : null);
+    }
+    return node;
+  }
+
+  let videoFrameStep = null;
   function syncVideoLink(step) {
     const link = stepVideoLink(step);
-    const a = link ? videoLinkEl() : document.getElementById("player-video");
-    if (!a) return null;
+    const node = link ? videoLinkEl() : document.getElementById("player-video");
+    if (!node) return null;
     if (!link) {
-      a.hidden = true;
-      a.removeAttribute("href");
+      // why: sair do passo para o vídeo (some o iframe)
+      node.hidden = true;
+      node.replaceChildren?.();
+      if (node.tagName === "A") node.removeAttribute("href");
+      videoFrameStep = null;
       return null;
     }
-    a.href = link.href;
     const label = gfT("video.openOn", { provider: link.provider });
-    a.setAttribute("aria-label", label);
-    a.title = label;
-    a.querySelector(".gf-video-play-text").textContent = label;
-    a.hidden = false;
+    if (node.tagName === "A") {
+      node.href = link.href;
+      node.setAttribute("aria-label", label);
+      node.title = label;
+    } else if (videoFrameStep !== step || !node.querySelector("iframe")) {
+      node.replaceChildren();
+      const iframe = makeVideoFrame(step);
+      if (iframe) node.appendChild(iframe);
+      videoFrameStep = step;
+    }
+    node.hidden = false;
     return link;
   }
 
@@ -2018,17 +2084,20 @@ return { createGallery, galleryCaption, gallerySections };
           popover.closeButton.title = gfT("player.closeTour");
         }
         setPopoverHiddenForSlide(steps[activeIndex]?.type === "slide");
+        // passo com vídeo: o balão é só a navegação (← N de X →), sem texto
+        const isVid = Boolean(stepVideoLink(steps[activeIndex]));
+        document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-video-nav", isVid));
         armAutoplay();
       },
       steps: steps.map((step) => ({
         element: step.type === "slide" ? "#player-slide" : stepVideoLink(step) ? "#player-video" : "#player-hotspot",
         popover: {
           // why: driver.js usa innerHTML; o texto do autor entra escapado (mesma regra de htmlText.js)
-          title: gfEscapeHtml(step.popover?.title || step.label || ""),
+          title: stepVideoLink(step) ? "" : gfEscapeHtml(step.popover?.title || step.label || ""),
           // formatação leve montada em tags fixas; o texto do autor sai escapado (cópia de richText.js)
-          description: gfRichText.richTextHtml(step.popover?.description || ""),
-          side: step.popover?.side || "bottom",
-          align: step.popover?.align || "center",
+          description: stepVideoLink(step) ? "" : gfRichText.richTextHtml(step.popover?.description || ""),
+          side: stepVideoLink(step) ? "bottom" : step.popover?.side || "bottom",
+          align: stepVideoLink(step) ? "center" : step.popover?.align || "center",
           onNextClick: async (_el, _step, optsNext) => {
             if (animating) return;
             animating = true;
@@ -2076,6 +2145,8 @@ return { createGallery, galleryCaption, gallerySections };
       onDestroyed: () => {
         clearAutoplay();
         narration.stop();
+        // why: fechou o tour — o vídeo do passo para (sai o iframe)
+        syncVideoLink(null);
         setProgress(gfT("player.stopped"));
         clickFx.reset();
         clearZoom(false);
@@ -2126,6 +2197,17 @@ return { createGallery, galleryCaption, gallerySections };
         imageSrc: (step) => (step && step.image ? resolveImageSrc(step.image) : ""),
         altOf: galleryAlt,
         videoOf: (step) => stepVideoLink(step),
+        // why: servido por http(s) o vídeo toca sozinho no slide; do disco vira o link abaixo
+        mountVideo: (host, step) => {
+          if (!canEmbedVideo()) return null;
+          const iframe = makeVideoFrame(step);
+          if (!iframe) return null;
+          const box = document.createElement("div");
+          box.className = "gf-video is-playing";
+          box.appendChild(iframe);
+          host.appendChild(box);
+          return { teardown: () => box.remove() };
+        },
         // why: offline/file:// o YouTube recusa o embed — o vídeo vira pôster + link (igual ao modo guiado)
         videoLink: (step) => {
           const link = stepVideoLink(step);

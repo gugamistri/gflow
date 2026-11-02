@@ -35,11 +35,11 @@ test("textos legais existem nas três línguas, com os mesmos links e sem 'nuvem
       assert.deepEqual(tags(value), tags(legalCatalogs.pt[key]), `${loc} ${key}`);
     }
   }
-  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: October 30, 2026");
-  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 30 de octubre de 2026");
+  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: November 2, 2026");
+  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 2 de noviembre de 2026");
   assert.equal(legalCatalogs.en["terms.updated"], "Last updated: October 11, 2026");
   assert.equal(legalCatalogs.es["terms.updated"], "Última actualización: 11 de octubre de 2026");
-  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 30 de outubro de 2026");
+  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 2 de novembro de 2026");
 });
 
 test("o aviso do Pro não diz mais que os termos estão só em português", () => {
@@ -103,7 +103,7 @@ test("privacidade e termos explicam a análise de visitas: sem cookies, DNT/GPC,
   assert.match(legalCatalogs.es["privacy.analytics.p5"], /encargado/);
 });
 
-test("privacidade cita YouTube e Vimeo como terceiros que só carregam no play", () => {
+test("privacidade cita YouTube e Vimeo como terceiros que carregam ao abrir o passo do vídeo", () => {
   const privacy = read("privacidade.html");
   assert.match(privacy, /id="videos-incorporados"/);
   for (const loc of SUPPORTED_LOCALES) {
@@ -112,5 +112,9 @@ test("privacidade cita YouTube e Vimeo como terceiros que só carregam no play",
     assert.match(c["privacy.videos.p2"], /dnt=1/);
     assert.match(c["privacy.compartilhamento.li10"], /YouTube/);
     assert.match(c["privacy.compartilhamento.li10"], /Vimeo/);
+    // why: o vídeo toca sozinho ao abrir o passo — o texto não pode mais dizer "só no clique/play"
+    for (const k of ["privacy.videos.p2", "privacy.cookies.li7", "privacy.compartilhamento.li10"]) {
+      assert.doesNotMatch(c[k], /clica no play|clicks play|clic en play/, `${loc} ${k}`);
+    }
   }
 });

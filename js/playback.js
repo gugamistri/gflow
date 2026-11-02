@@ -97,6 +97,20 @@ export function minHoldSecondsForStep(step, demo) {
   return minHoldSecondsForNarration(step?.narrationAudio?.durationSeconds, step?.narrationAudio?.playbackRate);
 }
 
+/** Pausa curta depois que o vídeo do passo acaba, antes de avançar sozinho. */
+export const VIDEO_END_ADVANCE_MS = 1200;
+
+/**
+ * Passo com vídeo e avanço automático: com duração definida pelo autor (holdSeconds), avança nela
+ * mesmo com o vídeo tocando; sem duração, espera o vídeo acabar (o temporizador padrão não corta o vídeo).
+ * @returns {{ holdMs: number|null, afterEnd: boolean }}
+ */
+export function videoStepAdvance(step) {
+  const n = Number(step?.holdSeconds);
+  if (Number.isFinite(n) && n > 0) return { holdMs: n * 1000, afterEnd: false };
+  return { holdMs: null, afterEnd: true };
+}
+
 export function resolveHoldSeconds(step, demo) {
   const fromStep = Number(step?.holdSeconds);
   let hold;
