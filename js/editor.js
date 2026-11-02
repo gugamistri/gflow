@@ -273,6 +273,11 @@ export function createEditor(ctx) {
       newImageId: () => createStepId().replace("step-", "img-"),
       defaultTitles: new Set(["", t("editor.newStep"), t("editor.newHighlight"), t("editor.newSlide")]),
       openSection: (sec) => openPropsSection(sec, { focus: false }),
+      // why: "Vídeo" sem link ainda só muda a UI do passo (dados intactos)
+      refresh: () => {
+        syncForm();
+        renderCanvas();
+      },
       commit: () => {
         setDemo(getDemo());
         fillImageSelect();
@@ -283,6 +288,10 @@ export function createEditor(ctx) {
       },
     });
     return videoEditor;
+  }
+  /** Passo com mídia "vídeo" (inclui o modo pendente, antes de colar o link): sem narração, destaque nem clique. */
+  function isVideoMedia(step) {
+    return ensureVideoEditor().mediaKind(step) === "video";
   }
   function ensureCanvasVideo() {
     canvasVideo ||= createVideoStage({ frame: els.canvasFrame });
@@ -779,13 +788,12 @@ export function createEditor(ctx) {
     els.propSimulate.checked = step.simulateClick !== false;
     if (els.propZoom) els.propZoom.checked = step.zoomHighlight === true;
     syncSideAlignControls(step);
-    els.wrapImage.hidden = step.type === "slide";
     syncPropsSections(step);
     syncImageButton();
     ensureVideoEditor().sync(step);
     {
       // passo de vídeo: sem clique simulado nem zoom (o destaque é o próprio vídeo)
-      const isVideo = Boolean(stepVideo(step));
+      const isVideo = isVideoMedia(step);
       document.getElementById("wrap-simulate")?.toggleAttribute("hidden", isVideo);
       document.getElementById("wrap-zoom")?.toggleAttribute("hidden", isVideo);
     }
@@ -1186,8 +1194,12 @@ export function createEditor(ctx) {
     const generateBtn = document.getElementById("btn-generate-caption");
     const uploadBtn = document.getElementById("btn-upload-caption");
     const clearBtn = els.btnClearCaptionAudio;
-    const hasText = String(step?.caption || "").trim().length > 0;
-    const clips = step && demo ? savedNarrationClips(step, demo) : [];
+    // why: passo com vídeo não tem narração (o som e a legenda vêm do vídeo) — some tudo de narração
+    const narrates = !!step && !isVideoMedia(step);
+    const hasText = narrates && String(step?.caption || "").trim().length > 0;
+    const clips = step && demo && narrates ? savedNarrationClips(step, demo) : [];
+    const narrWrite = document.getElementById("btn-narr-write");
+    if (narrWrite) narrWrite.hidden = !narrates;
 
     // why: o interruptor do painel fica sempre à vista (#46/#47 o esconderam na barra, só com ícone); o atalho da barra só com texto
     if (els.stbShowCaption) els.stbShowCaption.hidden = !hasText;
@@ -1832,7 +1844,8 @@ export function createEditor(ctx) {
 
     if (els.canvasEmpty) els.canvasEmpty.hidden = true;
     els.canvasFrame.hidden = false;
-    setCanvasCaption(shownText(step, "caption"), { visible: step.showCaption !== false, editing });
+    if (isVideoMedia(step)) setCanvasCaption("", { editing: false });
+    else setCanvasCaption(shownText(step, "caption"), { visible: step.showCaption !== false, editing });
 
     if (step.type === "slide") {
       syncAltChip(null);
@@ -1983,7 +1996,7 @@ export function createEditor(ctx) {
         btn.setAttribute("aria-label", label);
       }
     });
-    const isVideo = Boolean(stepVideo(step));
+    const isVideo = isVideoMedia(step);
     if (els.stbSimulate) els.stbSimulate.hidden = isSlide || isVideo;
     if (els.stbZoom) els.stbZoom.hidden = isSlide || isVideo;
     const sim = step.simulateClick !== false;
@@ -2087,6 +2100,12 @@ export function createEditor(ctx) {
     if (imageSec) imageSec.hidden = !!isSlide;
     const railImage = els.propsRail?.querySelector('[data-rail="image"]');
     if (railImage) railImage.hidden = !!isSlide;
+    // why: passo com vídeo não tem narração — a seção (e o atalho do trilho) somem
+    const noNarration = !!step && isVideoMedia(step);
+    const narrSec = els.propsPanel?.querySelector('.props-section[data-sec="narration"]');
+    if (narrSec) narrSec.hidden = noNarration;
+    const railNarr = els.propsRail?.querySelector('[data-rail="narration"]');
+    if (railNarr) railNarr.hidden = noNarration;
   }
 
   function panelShortcutLabel() {
@@ -2381,8 +2400,8 @@ export function createEditor(ctx) {
         valign: readChoice(els.propSide, "center"),
       };
     }
-    els.wrapImage.hidden = isSlide;
     syncPropsSections(step);
+    ensureVideoEditor().sync(step);
     syncSideAlignControls(step);
     syncImageButton();
     renderFilmstrip();

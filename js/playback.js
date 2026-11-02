@@ -10,6 +10,7 @@ import {
   isVoiceId,
 } from "./cartesia.js";
 import { readCartesiaKey } from "./cartesia-store.js";
+import { stepAllowsNarration } from "./tour-schema/video.js";
 
 export { CARTESIA_VOICES as NARRATION_VOICES, defaultVoiceURI } from "./cartesia.js";
 
@@ -394,7 +395,7 @@ function audioDataClips(audio) {
  */
 export function savedNarrationClips(step, demo) {
   const audio = step?.narrationAudio;
-  if (!audio) return [];
+  if (!audio || !stepAllowsNarration(step)) return [];
   const clips = audioDataClips(audio);
   if (!clips.length) return [];
   if (audio.source === "upload") return clips;
@@ -413,6 +414,8 @@ export function savedNarrationClips(step, demo) {
  * why: na reprodução/preview tocamos o áudio salvo mesmo se o TTS estiver desatualizado.
  */
 export function playableNarrationClips(step, demo) {
+  // why: passo com vídeo: o som é do vídeo (dados antigos podem ter áudio de narração)
+  if (!stepAllowsNarration(step)) return [];
   const saved = savedNarrationClips(step, demo);
   if (saved.length) return saved;
   return audioDataClips(step?.narrationAudio);
@@ -433,6 +436,7 @@ export function slideKickerText(step, demo, sceneText = (n) => `Cena ${n}`) {
 }
 
 export function stepShowsCaption(step) {
+  if (!stepAllowsNarration(step)) return false;
   return step?.showCaption !== false;
 }
 
