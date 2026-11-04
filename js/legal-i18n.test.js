@@ -35,11 +35,11 @@ test("textos legais existem nas três línguas, com os mesmos links e sem 'nuvem
       assert.deepEqual(tags(value), tags(legalCatalogs.pt[key]), `${loc} ${key}`);
     }
   }
-  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: November 2, 2026");
-  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 2 de noviembre de 2026");
+  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: November 4, 2026");
+  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 4 de noviembre de 2026");
   assert.equal(legalCatalogs.en["terms.updated"], "Last updated: October 11, 2026");
   assert.equal(legalCatalogs.es["terms.updated"], "Última actualización: 11 de octubre de 2026");
-  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 2 de novembro de 2026");
+  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 4 de novembro de 2026");
 });
 
 test("o aviso do Pro não diz mais que os termos estão só em português", () => {
@@ -86,6 +86,7 @@ test("privacidade separa o link de login (15 min) do link de convite (7 dias)", 
 test("privacidade e termos explicam a análise de visitas: sem cookies, DNT/GPC, 90 dias / 25 meses", () => {
   const privacy = read("privacidade.html");
   assert.match(privacy, /id="visitas-tours"/);
+  assert.match(privacy, /id="treinamento-identificado"/);
   for (const loc of SUPPORTED_LOCALES) {
     const c = legalCatalogs[loc];
     for (const key of ["privacy.analytics.p1", "privacy.analytics.li4", "privacy.analytics.p3", "privacy.analytics.p5", "privacy.retencao.li7", "terms.leads.p3"]) {

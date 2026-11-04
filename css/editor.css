@@ -9265,3 +9265,39 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
 .preview-mode-badge[hidden] {
   display: none;
 }
+
+/* F1: tipos de evento do webhook/LeadPronto e histórico de entregas */
+.leads-webhook-events {
+  border: 0;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.leads-webhook-events legend {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  padding: 0;
+}
+
+.leads-webhook-history {
+  margin: 4px 0 8px;
+  font-size: 0.8rem;
+}
+
+.leads-webhook-history summary {
+  cursor: pointer;
+}
+
+.leads-webhook-history-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.leads-webhook-history-row.is-failed {
+  color: var(--ns-danger, #b42318);
+}

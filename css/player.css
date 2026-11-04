@@ -3293,3 +3293,44 @@ html.gf-gallery-open body {
     transition: none;
   }
 }
+
+/* F1: aviso único da entrada identificada (acima do véu e do balão do tour) */
+.gf-entry-notice {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  background: var(--ns-ink);
+  color: var(--ns-surface);
+  padding: 10px 40px 10px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  max-width: min(520px, calc(100vw - 32px));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.gf-entry-notice a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.gf-entry-notice-close {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
