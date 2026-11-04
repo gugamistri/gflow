@@ -9,7 +9,8 @@ import { applyDocumentLang, createLangMenu, readStoredLangs, resolvePlayerLangs,
 import { setCaptions } from "./playerControls.js";
 import { baseLang, langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
-import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource } from "./viewAnalytics.js";
+import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource, uuidV4 } from "./viewAnalytics.js";
+import { consumeEntryToken, entryResult, markNoticeSeen, noticeAlreadySeen, privacyNoticeUrl } from "./identifiedEntry.js";
 import { resolveShareMedia } from "./shareMedia.js";
 import {
   BRAND_BADGE_HREF,
@@ -181,6 +182,11 @@ function tryLeaveSharedPreview() {
   }
   return false;
 }
+
+// F1: o `?lp=` sai da barra antes de qualquer outra coisa (não vai para histórico, referrer nem analytics)
+const entryToken = consumeEntryToken();
+/** Sessão identificada: { sessionId, company } depois que a Cloud aceitou o token. */
+let entryState = null;
 
 let player = null;
 /** Tracker do analytics; null quando não há rastreio (DNT/GPC, /v, preview). */
@@ -420,6 +426,7 @@ function showEndStep() {
 function startTracking(route) {
   const nav = typeof navigator !== "undefined" ? navigator : {};
   const ok = shouldTrack({
+    identified: Boolean(entryState),
     kind: route?.kind,
     cloudEnabled: isCloudEnabled() || route?.kind === "permanent",
     flags: isCloudEnabled() ? getCloudFlags() : null,
@@ -440,14 +447,58 @@ function startTracking(route) {
     device: deviceKind({ coarse, width: window.innerWidth || 0 }),
     locale: shortLocale(document.documentElement.lang || nav.language),
     langs: langState,
+    ...(entryState ? { sessionId: entryState.sessionId } : {}),
   });
   document.addEventListener("visibilitychange", () => t.visibility(document.visibilityState === "hidden"));
   window.addEventListener("pagehide", () => t.pagehide());
   return t;
 }
 
+/** Valida o `?lp=` na Cloud e prende a sessão do analytics à pessoa. Falha = tour normal. */
+async function resolveEntry(route) {
+  if (!entryToken || route?.kind !== "permanent" || !shareSlug) return null;
+  const sessionId = uuidV4();
+  const res = await postShare("entry", { token: entryToken, sessionId });
+  const result = entryResult(res);
+  return result ? { ...result, sessionId } : null;
+}
+
+/** Aviso único (por tour, neste navegador): o progresso é registrado para a empresa. */
+function showEntryNotice() {
+  if (!entryState) return;
+  let storage = null;
+  try {
+    storage = window.localStorage;
+  } catch {
+    storage = null;
+  }
+  if (noticeAlreadySeen(storage, shareSlug)) return;
+  const box = document.createElement("div");
+  box.className = "gf-entry-notice";
+  box.setAttribute("role", "status");
+  const text = document.createElement("span");
+  text.textContent = entryState.company ? t("view.entryNotice", { empresa: entryState.company }) : t("view.entryNoticeGeneric");
+  const link = document.createElement("a");
+  link.href = privacyNoticeUrl(getLocale());
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = t("view.entryNoticePrivacy");
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "gf-entry-notice-close";
+  close.setAttribute("aria-label", t("view.entryNoticeClose"));
+  close.textContent = "×";
+  close.addEventListener("click", () => box.remove());
+  box.append(text, " ", link, close);
+  document.body.append(box);
+  markNoticeSeen(storage, shareSlug);
+  setTimeout(() => box.remove(), 12000);
+}
+
 /** Passo inicial (Pro): só no /p, com o recurso ativo no servidor, uma vez por sessão. */
 function startGateNeeded() {
+  // why: entrada identificada não pede formulário (a pessoa já é conhecida de quem enviou o link)
+  if (entryState) return false;
   if (!shareSlug || !shareFeatures.leadCapture || !startStepActive(demo?.startStep)) return false;
   return !readStoredLead();
 }
@@ -822,7 +873,13 @@ async function boot() {
     focusOnOpen: !isEmbed,
   });
 
+  try {
+    entryState = await resolveEntry(route);
+  } catch {
+    entryState = null;
+  }
   tracker = startTracking(route);
+  showEntryNotice();
 
   replayTour = () => {
     selectedIndex = 0;
@@ -845,7 +902,7 @@ async function boot() {
     });
   };
 
-  const stored = shareSlug ? readStoredLead() : null;
+  const stored = shareSlug && !entryState ? readStoredLead() : null;
   if (stored?.leadId) {
     fixedState.lead = { leadId: stored.leadId, name: stored.name || "" };
     window.__GF_LEAD = { slug: shareSlug, leadId: stored.leadId, consent: true };

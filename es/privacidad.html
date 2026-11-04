@@ -49,14 +49,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/188/css/theme.css" />
-  <link rel="stylesheet" href="/a/188/css/shell.css" />
-  <link rel="stylesheet" href="/a/188/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/189/css/theme.css" />
+  <link rel="stylesheet" href="/a/189/css/shell.css" />
+  <link rel="stylesheet" href="/a/189/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/188/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/188/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/189/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/189/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidad</span>
     </div>
     <div class="topbar-appearance">
@@ -73,7 +73,7 @@
   <main class="page legal">
     <h1 data-i18n="privacy.h1">Política de Privacidad</h1>
     <p class="lead" data-i18n="privacy.lead">Aquí explicamos, con lenguaje directo, qué datos trata GuiaFlow, por qué, dónde se guardan y cómo los controlas.</p>
-    <p class="legal-updated" data-i18n="privacy.updated">Última actualización: 2 de noviembre de 2026</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Última actualización: 4 de noviembre de 2026</p>
     <section class="card" id="resumo">
       <h2 data-i18n="privacy.resumo.title">En resumen</h2>
       <ul>
@@ -186,9 +186,16 @@
         <li data-i18n="privacy.analytics.li3">un identificador de visita aleatorio, que vive solo en la memoria de la página y desaparece al cerrarla;</li>
         <li data-i18n="privacy.analytics.li4">un código para estimar visitantes únicos, calculado en el servidor a partir de la IP, el navegador y el enlace con un valor aleatorio que cambia cada día y se borra. La IP y el navegador no se guardan, y una vez borrado el valor del día el código no permite saber quién fue el visitante.</li>
       </ul>
-      <p data-i18n="privacy.analytics.p3">No usamos cookies ni guardamos nada en el navegador del visitante para esto. Si el navegador envía la señal “No rastrear” (DNT) o Global Privacy Control (GPC), el reproductor no envía ningún dato. Las visitas del propio autor abiertas desde el editor como vista previa tampoco cuentan.</p>
+      <p data-i18n="privacy.analytics.p3">No usamos cookies ni guardamos nada en el navegador del visitante para esto. Si el navegador envía la señal “No rastrear” (DNT) o Global Privacy Control (GPC), el reproductor no envía ningún dato (la excepción son los enlaces identificados de capacitación, descritos abajo). Las visitas del propio autor abiertas desde el editor como vista previa tampoco cuentan.</p>
       <p data-i18n="privacy.analytics.p4">Si el visitante completa el paso inicial del tour y marca la casilla de consentimiento, la visita queda vinculada a ese contacto, y el análisis muestra al autor cuántas visitas vinieron de personas que dejaron su contacto. Sin ese consentimiento, la visita no se vincula a nadie.</p>
       <p data-i18n-html="privacy.analytics.p5">Aquí también <strong>el autor del tour es el responsable</strong> y <strong>GuiaFlow es el encargado</strong>, que trata estos datos solo para generar el análisis del autor. La base legal es el interés legítimo del autor en entender el uso de su propio tour (art. 7, IX, de la LGPD), con el mínimo de datos; el vínculo con un contacto depende del consentimiento dado en el paso inicial (art. 7, I). Los datos de cada visita se guardan 90 días; los totales por día (en horario de Brasilia), 25 meses. Todo se borra antes si el autor elimina el enlace. Para ejercer tus derechos, habla con el autor del tour o escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+    <section class="card" id="treinamento-identificado">
+      <h2 data-i18n="privacy.entry.title">Capacitación con enlace identificado</h2>
+      <p data-i18n="privacy.entry.p1">Una empresa que usa GuiaFlow (por ejemplo, a través de LeadPronto o de la API de GuiaFlow) puede enviar a una persona un enlace de tour que ya la identifica, con un código de la persona en el sistema de la empresa, sin nombre ni correo. Al abrir ese enlace, el player muestra una sola vez el aviso “Tu progreso en esta capacitación se registra para” el nombre de la empresa, sin formulario.</p>
+      <p data-i18n="privacy.entry.p2">En ese caso registramos, vinculados a ese código, el inicio, los pasos vistos, el porcentaje completado (hitos de 25%, 50%, 75% y 100%) y la finalización, además de los eventos del análisis de visitas descrito arriba. Esos eventos van a la empresa por el webhook firmado que configuró y, si el enlace vino de LeadPronto, a LeadPronto. El enlace vale como máximo 30 días y el código sale de la barra de direcciones en cuanto se abre la página.</p>
+      <p data-i18n="privacy.entry.p3">La base legal es la ejecución de un contrato o el interés legítimo de la empresa en la capacitación que ofrece (art. 7, V y IX, de la LGPD; art. 6.1.b y f del RGPD). Por eso, en los enlaces identificados el progreso se registra aunque el navegador envíe “No rastrear” (DNT) o GPC; las visitas sin enlace identificado siguen respetando esas señales. La empresa es la responsable y GuiaFlow, el encargado.</p>
+      <p data-i18n-html="privacy.entry.p4">Los datos de cada sesión se guardan 90 días y se borran antes si la empresa borra el enlace. Un enlace inválido o vencido abre el tour normal, sin identificar a nadie. Para ejercer tus derechos, habla con la empresa que envió el enlace o escribe a <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
     </section>
     <section class="card" id="videos-incorporados">
       <h2 data-i18n="privacy.videos.title">Videos de YouTube y Vimeo en los tours</h2>
@@ -341,8 +348,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/188/js/i18n.js";
-    import "./a/188/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/189/js/i18n.js";
+    import "./a/189/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
