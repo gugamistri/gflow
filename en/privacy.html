@@ -49,14 +49,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/188/css/theme.css" />
-  <link rel="stylesheet" href="/a/188/css/shell.css" />
-  <link rel="stylesheet" href="/a/188/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/189/css/theme.css" />
+  <link rel="stylesheet" href="/a/189/css/shell.css" />
+  <link rel="stylesheet" href="/a/189/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/188/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/188/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/189/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/189/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacy</span>
     </div>
     <div class="topbar-appearance">
@@ -73,7 +73,7 @@
   <main class="page legal">
     <h1 data-i18n="privacy.h1">Privacy Policy</h1>
     <p class="lead" data-i18n="privacy.lead">Here we explain, in plain language, what data GuiaFlow processes, why, where it is kept, and how you control it.</p>
-    <p class="legal-updated" data-i18n="privacy.updated">Last updated: November 2, 2026</p>
+    <p class="legal-updated" data-i18n="privacy.updated">Last updated: November 4, 2026</p>
     <section class="card" id="resumo">
       <h2 data-i18n="privacy.resumo.title">In short</h2>
       <ul>
@@ -186,9 +186,16 @@
         <li data-i18n="privacy.analytics.li3">a random visit identifier that lives only in the page's memory and disappears when the page is closed;</li>
         <li data-i18n="privacy.analytics.li4">a code to estimate unique visitors, computed on the server from the IP address, the browser and the link together with a random value that changes every day and is deleted. The IP address and browser are not stored, and once the day's value is deleted the code cannot reveal who the visitor was.</li>
       </ul>
-      <p data-i18n="privacy.analytics.p3">We do not use cookies or store anything in the visitor's browser for this. If the browser sends the “Do Not Track” (DNT) or Global Privacy Control (GPC) signal, the player sends no data at all. The author's own visits opened from the editor as a preview are not counted either.</p>
+      <p data-i18n="privacy.analytics.p3">We do not use cookies or store anything in the visitor's browser for this. If the browser sends the “Do Not Track” (DNT) or Global Privacy Control (GPC) signal, the player sends no data at all (the exception is identified training links, described below). The author's own visits opened from the editor as a preview are not counted either.</p>
       <p data-i18n="privacy.analytics.p4">If the visitor fills in the tour's start step and ticks the consent box, the visit is linked to that contact, and the analytics show the author how many visits came from people who left their contact. Without that consent, the visit is not linked to anyone.</p>
       <p data-i18n-html="privacy.analytics.p5">Here too <strong>the tour author is the controller</strong> and <strong>GuiaFlow is the processor</strong>, processing this data only to produce the author's analytics. The legal basis is the author's legitimate interest in understanding how their own tour is used (art. 7, IX, of Brazil's LGPD), with minimal data; linking a visit to a contact relies on the consent given in the start step (art. 7, I). Per-visit data is kept for 90 days; daily totals (Brasília time) for 25 months. Everything is deleted earlier if the author deletes the link. To exercise your rights, contact the tour author or write to <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+    <section class="card" id="treinamento-identificado">
+      <h2 data-i18n="privacy.entry.title">Training through an identified link</h2>
+      <p data-i18n="privacy.entry.p1">A company that uses GuiaFlow (for example, through LeadPronto or the GuiaFlow API) can send a person a tour link that already identifies them, by a code for that person in the company's system, with no name or email. When the link opens, the player shows a one-time notice, “Your progress in this training is recorded for” followed by the company name, with no form.</p>
+      <p data-i18n="privacy.entry.p2">In that case we record, tied to that code, the start, the steps viewed, the percentage completed (milestones at 25%, 50%, 75% and 100%) and completion, plus the visit analytics events described above. These events go to the company through the signed webhook it set up and, if the link came from LeadPronto, to LeadPronto. The link is valid for at most 30 days and the code is removed from the address bar as soon as the page opens.</p>
+      <p data-i18n="privacy.entry.p3">The legal basis is performance of a contract or the company's legitimate interest in the training it provides (LGPD art. 7, V and IX; GDPR art. 6(1)(b) and (f)). For that reason, on identified links progress is recorded even if the browser sends “Do Not Track” (DNT) or GPC; visits without an identified link keep honoring those signals. The company is the controller and GuiaFlow is the processor.</p>
+      <p data-i18n-html="privacy.entry.p4">Each session's data is kept for 90 days and is deleted sooner if the company deletes the link. An invalid or expired link opens the normal tour without identifying anyone. To exercise your rights, contact the company that sent the link or write to <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
     </section>
     <section class="card" id="videos-incorporados">
       <h2 data-i18n="privacy.videos.title">YouTube and Vimeo videos in tours</h2>
@@ -341,8 +348,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/188/js/i18n.js";
-    import "./a/188/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/189/js/i18n.js";
+    import "./a/189/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

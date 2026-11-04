@@ -8,6 +8,7 @@ import { t, getLocale } from "./i18n.js";
 import { cloudFetch } from "./cloudConfig.js";
 import { formatLeadPhone, leadPhoneE164, leadsToCsv } from "./fixedSteps.js";
 import {
+  WEBHOOK_EVENT_TYPES,
   WEBHOOK_HELP,
   WEBHOOK_RECIPES,
   generateWebhookSecret,
@@ -39,6 +40,7 @@ import {
   LP_HELP,
   leadProntoProblem,
   leadProntoReturnKey,
+  LP_EVENT_TYPES,
   normalizeLeadPronto,
   normalizeShareList,
   planLeadProntoSave,
@@ -192,6 +194,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   let lpAll = true;
   let lpEnabled = false;
   let lpTourPick = new Set();
+  let lpEvents = new Set(LP_EVENT_TYPES);
   let lpBusy = false;
   let lpReady = false;
   let returnNotice = null;
@@ -252,6 +255,12 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     lpConnect: $("btn-leads-lp-connect"),
     lpSave: $("btn-leads-lp-save"),
     lpRemove: $("btn-leads-lp-disconnect"),
+    lpRotateKey: $("btn-leads-lp-rotate-key"),
+    lpEntryKey: $("leads-lp-entry-key"),
+    lpEventInputs: [...document.querySelectorAll("[data-lp-event]")],
+    whEventInputs: [...document.querySelectorAll("[data-webhook-event]")],
+    whHistory: $("leads-webhook-history"),
+    whHistoryList: $("leads-webhook-history-list"),
     deliveryList: $("delivery-list"),
     deliveryDetail: $("delivery-detail"),
     deliveryBack: $("btn-delivery-back"),
@@ -485,8 +494,30 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     for (const btn of [e.save, e.test, e.rotate, e.remove, e.reveal]) {
       if (btn) btn.disabled = webhookBusy;
     }
+    const events = webhook?.events || ["lead.created"];
+    for (const input of e.whEventInputs || []) {
+      input.checked = events.includes(input.dataset.webhookEvent);
+      input.disabled = webhookBusy;
+    }
     paintDelivery();
+    paintHistory();
     paintCards();
+  }
+
+  /** Últimas 20 entregas do webhook do link (tipo, data, resultado). */
+  function paintHistory() {
+    const e = els();
+    if (!e.whHistory || !e.whHistoryList) return;
+    const rows = webhook?.history || [];
+    e.whHistory.hidden = !rows.length;
+    e.whHistoryList.replaceChildren();
+    for (const row of rows) {
+      const li = el("li", `leads-webhook-history-row is-${row.state}`);
+      const status = row.httpStatus ? String(row.httpStatus) : row.error || "—";
+      const state = t(`leads.webhook.historyState.${row.state}`);
+      li.textContent = `${row.at ? formatDate(row.at) : "—"} · ${row.eventType || "—"} · ${state} (${status})`;
+      e.whHistoryList.append(li);
+    }
   }
 
   /** Linhas de "últimas entregas" de um destino ([] quando ainda não há nada a mostrar). */
@@ -543,7 +574,8 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
   }
 
   function applyWebhook(next, { secret } = {}) {
-    webhook = next;
+    // why: o PUT não devolve o histórico; mantém o que o GET trouxe
+    webhook = next && !(next.history || []).length && webhook?.history?.length ? { ...next, history: webhook.history } : next;
     if (secret) {
       secretDraft = secret;
       secretVisible = true;
@@ -678,8 +710,14 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       enabled: Boolean(e.enabled?.checked),
       secret: secretDraft,
       secretDirty,
-      events: webhook?.events,
+      events: readWebhookEvents(e),
     };
+  }
+
+  function readWebhookEvents(e) {
+    const inputs = e.whEventInputs || [];
+    if (!inputs.length) return webhook?.events;
+    return WEBHOOK_EVENT_TYPES.filter((type) => inputs.some((input) => input.dataset.webhookEvent === type && input.checked));
   }
 
   async function submitWebhook({ rotateSecret = false } = {}) {
@@ -1332,6 +1370,22 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     node.textContent = "";
   }
 
+  function paintLpEntryKey() {
+    const node = els().lpEntryKey;
+    if (!node) return;
+    const key = lpLinked() ? lp?.entryKey : null;
+    if (!lpLinked()) {
+      node.textContent = "";
+      return;
+    }
+    if (!key) {
+      node.textContent = t("leads.lp.entryKeyNone");
+      return;
+    }
+    const when = key.deliveredAt || key.createdAt;
+    node.textContent = t(`leads.lp.entryKey.${key.state}`, { kid: key.kid, date: when ? formatDate(when) : "—" });
+  }
+
   function paintLpDelivery() {
     const node = els().lpDelivery;
     if (!node) return;
@@ -1347,6 +1401,12 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.lpConnect.disabled = lpBusy || !lpReady || missing;
     if (e.lpSave) e.lpSave.hidden = !linked;
     if (e.lpRemove) e.lpRemove.hidden = !linked;
+    if (e.lpRotateKey) e.lpRotateKey.hidden = !linked;
+    for (const input of e.lpEventInputs || []) {
+      input.checked = lpEvents.has(input.dataset.lpEvent);
+      input.disabled = lpBusy;
+    }
+    paintLpEntryKey();
     if (e.lpControls) e.lpControls.hidden = !linked;
     if (e.lpEnabled) {
       e.lpEnabled.checked = lpEnabled;
@@ -1357,7 +1417,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       e.lpAll.disabled = lpBusy;
     }
     if (e.lpHelp) e.lpHelp.href = LP_HELP[getLocale()] || LP_HELP.pt;
-    for (const btn of [e.lpSave, e.lpRemove]) {
+    for (const btn of [e.lpSave, e.lpRemove, e.lpRotateKey]) {
       if (btn) btn.disabled = lpBusy;
     }
     if (e.lpHint) e.lpHint.hidden = !lpAll || !lpLinked();
@@ -1409,6 +1469,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     lpAll = !next || next.tours == null;
     lpTourPick = new Set(Array.isArray(next?.tours) ? next.tours : []);
     lpEnabled = Boolean(next?.enabled);
+    lpEvents = new Set(Array.isArray(next?.events) ? next.events : LP_EVENT_TYPES);
     paintLp();
   }
 
@@ -1484,6 +1545,7 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
       enabled: lpEnabled,
       allTours: lpAll,
       tours: [...lpTourPick],
+      events: [...lpEvents],
     });
     if (plan.error) {
       setLpMessage(t("leads.lp.errTours"), true);
@@ -1504,6 +1566,22 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     else await loadLeadPronto();
     if (!els().lpStatus?.classList.contains("is-error")) setLpMessage(t("leads.lp.saved"));
     toast?.(t("leads.lp.saved"), 3200);
+  }
+
+  async function rotateLpKey() {
+    if (lpBusy || !lpLinked()) return;
+    if (!window.confirm(t("leads.lp.confirmRotateKey"))) return;
+    lpBusy = true;
+    paintLp();
+    const res = await cloudFetch("/integrations/leadpronto/entry-key/rotate", { method: "POST", body: "{}" });
+    lpBusy = false;
+    if (!res.ok) {
+      paintLp();
+      handleLpProblem(res, "leads.lp.errRotateKey");
+      return;
+    }
+    await loadLeadPronto();
+    setLpMessage(t("leads.lp.rotatedKey"));
   }
 
   async function removeLp() {
@@ -1595,6 +1673,13 @@ export function createLeadsDialog({ getSlug, toast, onPaywall } = {}) {
     e.lpConnect?.addEventListener("click", () => void connectLeadPronto());
     e.lpSave?.addEventListener("click", () => void submitLp());
     e.lpRemove?.addEventListener("click", () => void removeLp());
+    e.lpRotateKey?.addEventListener("click", () => void rotateLpKey());
+    for (const input of e.lpEventInputs || []) {
+      input.addEventListener("change", () => {
+        if (input.checked) lpEvents.add(input.dataset.lpEvent);
+        else lpEvents.delete(input.dataset.lpEvent);
+      });
+    }
     e.lpEnabled?.addEventListener("change", () => {
       lpEnabled = Boolean(e.lpEnabled.checked);
     });

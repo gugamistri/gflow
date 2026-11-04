@@ -109,6 +109,38 @@ function last4Of(raw) {
   return tail.slice(-4);
 }
 
+/** Tipos que o dono pode ligar no webhook do link (F1: session.* do treinamento). */
+export const WEBHOOK_EVENT_TYPES = Object.freeze([
+  "lead.created",
+  "lead.session_completed",
+  "session.started",
+  "session.progress",
+  "session.completed",
+]);
+
+/** Linha do histórico (últimas 20 entregas do GET /shares/:slug/webhook). */
+export function normalizeHistoryRow(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const eventType = typeof raw.eventType === "string" ? raw.eventType : "";
+  const state = typeof raw.status === "string" ? raw.status : "";
+  const httpStatus = firstNumber(raw.lastStatus, raw.httpStatus);
+  const at = String(raw.deliveredAt || raw.createdAt || "");
+  if (!eventType && !at) return null;
+  return {
+    id: String(raw.msgId || raw.id || ""),
+    eventType,
+    state: state === "delivered" || state === "failed" || state === "pending" ? state : state || "pending",
+    attempts: firstNumber(raw.attempts),
+    httpStatus,
+    error: typeof raw.lastError === "string" ? raw.lastError : "",
+    at,
+  };
+}
+
+export function normalizeHistory(list) {
+  return (Array.isArray(list) ? list : []).map(normalizeHistoryRow).filter(Boolean).slice(0, 20);
+}
+
 /** Objeto do GET/PUT, ou null quando o link ainda não tem webhook. */
 export function normalizeWebhook(data) {
   if (!data || typeof data !== "object") return null;
@@ -136,6 +168,7 @@ export function normalizeWebhook(data) {
     consecutiveFailures: failures,
     autoDisabled: Boolean(raw.autoDisabled || raw.auto_disabled || status === "auto_disabled" || raw.disabledReason === "failures" || raw.disabled_reason === "failures"),
     lastDelivery: normalizeDelivery(raw.lastDelivery || raw.last_delivery || raw.delivery || data.lastDelivery),
+    history: normalizeHistory(data.deliveries || raw.deliveries),
   };
 }
 
@@ -146,11 +179,16 @@ export function normalizeTestResult(data) {
   return normalizeDelivery(nested && typeof nested === "object" ? { ...src, ...nested } : src);
 }
 
+function cleanEvents(events) {
+  const list = Array.isArray(events) ? WEBHOOK_EVENT_TYPES.filter((type) => events.includes(type)) : [];
+  return list.length ? list : ["lead.created"];
+}
+
 export function webhookSaveBody({ url, enabled, secret, events, rotateSecret } = {}) {
   const body = {
     url: String(url || "").trim(),
     enabled: Boolean(enabled),
-    events: Array.isArray(events) && events.length ? events : ["lead.created"],
+    events: cleanEvents(events),
   };
   if (rotateSecret) body.rotateSecret = true;
   else if (secret) body.secret = String(secret).trim();

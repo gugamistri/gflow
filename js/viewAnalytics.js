@@ -23,11 +23,12 @@ export function privacySignal({ dnt, windowDnt, msDnt, gpc } = {}) {
 }
 
 /** Só /p, só com a Cloud, nunca com DNT/GPC, nunca na pré-visualização do autor (?preview=1). */
-export function shouldTrack({ dnt, windowDnt, msDnt, gpc, kind, cloudEnabled, flags, search } = {}) {
+export function shouldTrack({ dnt, windowDnt, msDnt, gpc, kind, cloudEnabled, flags, search, identified = false } = {}) {
   if (kind !== "permanent") return false;
   if (!cloudEnabled) return false;
   if (flags && flags.analytics === false) return false;
-  if (privacySignal({ dnt, windowDnt, msDnt, gpc })) return false;
+  // why: entrada identificada (F1) registra o progresso por contrato/legítimo interesse, com aviso; a anônima respeita DNT/GPC
+  if (identified !== true && privacySignal({ dnt, windowDnt, msDnt, gpc })) return false;
   if (isPreview(search)) return false;
   return true;
 }
@@ -181,10 +182,12 @@ export function createViewTracker({
   mediaEvents = true,
   now = () => (typeof performance !== "undefined" ? performance.now() : Date.now()),
   uuid = () => uuidV4(),
+  sessionId: givenSessionId = null,
   setTimer = (fn, ms) => setInterval(fn, ms),
   clearTimer = (id) => clearInterval(id),
 } = {}) {
-  const sessionId = uuid();
+  // why: a entrada identificada prende o id da sessão na Cloud antes do primeiro evento
+  const sessionId = typeof givenSessionId === "string" && givenSessionId ? givenSessionId : uuid();
   const queue = [];
   // why: mídia em fila separada → corpo separado (compatível com servidor que ainda não conhece)
   const mediaQueue = [];

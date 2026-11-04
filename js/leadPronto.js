@@ -2,7 +2,8 @@
  * Conector LeadPronto da conta (Pro). Contrato da sessão, o mesmo da API v1:
  *   GET  /integrations/leadpronto/start   (Accept: application/json → authorizeUrl)
  *   GET  /integrations/leadpronto         status: config_missing | disconnected | connected | disabled
- *   PUT  /integrations/leadpronto         { tours: null | string[], enabled: boolean }
+ *   PUT  /integrations/leadpronto         { tours: null | string[], enabled: boolean, events?: null | string[] }
+ *   POST /integrations/leadpronto/entry-key/rotate   gira a chave de entrada (a anterior vale 30 dias)
  *   DELETE /integrations/leadpronto
  * tours null envia todos os tours da conta. A volta do OAuth é
  * /editor?leadpronto=connected ou ?leadpronto=error&reason=…
@@ -87,6 +88,31 @@ function deliveriesOf(raw, data) {
   return one ? [one] : [];
 }
 
+/** Tipos que a conexão pode enviar (F1). null no servidor = todos. */
+export const LP_EVENT_TYPES = Object.freeze(["lead.created", "session.started", "session.progress", "session.completed"]);
+
+export function lpEventsOf(raw) {
+  if (!raw || raw.events == null || !Array.isArray(raw.events)) return [...LP_EVENT_TYPES];
+  return LP_EVENT_TYPES.filter((type) => raw.events.includes(type));
+}
+
+/** Chave de entrada (só metadados; a chave em si nunca chega ao editor). */
+export function entryKeyOf(raw) {
+  const key = raw?.entryKey;
+  if (!key || typeof key !== "object" || typeof key.kid !== "string") return null;
+  const delivery = key.delivery && typeof key.delivery === "object" ? key.delivery : {};
+  const state = ["delivered", "pending", "failed"].includes(delivery.status) ? delivery.status : "pending";
+  return {
+    kid: key.kid,
+    createdAt: String(key.createdAt || ""),
+    state,
+    deliveredAt: String(delivery.deliveredAt || ""),
+    attempts: firstNumber(delivery.attempts),
+    previousKid: typeof key.previousKid === "string" ? key.previousKid : "",
+    previousValidUntil: String(key.previousValidUntil || ""),
+  };
+}
+
 /** Estado do GET, ou null quando o corpo não traz um status conhecido. */
 export function normalizeLeadPronto(data) {
   const raw = connectorOf(data);
@@ -106,6 +132,8 @@ export function normalizeLeadPronto(data) {
     consecutiveFailures: failures,
     autoDisabled,
     deliveries: deliveriesOf(raw, data),
+    events: lpEventsOf(raw),
+    entryKey: entryKeyOf(raw),
   };
 }
 
@@ -127,9 +155,12 @@ export function readAuthorizeUrl(data) {
 }
 
 /** { error: "tours" } ou { body } pronto para o PUT. */
-export function planLeadProntoSave({ enabled, allTours, tours } = {}) {
+export function planLeadProntoSave({ enabled, allTours, tours, events } = {}) {
   const on = enabled !== false;
-  if (allTours) return { body: { enabled: on, tours: null } };
+  // why: todos marcados = null (tipos novos entram sozinhos); sem events no plano, o servidor mantém o que tinha
+  const picked = Array.isArray(events) ? LP_EVENT_TYPES.filter((type) => events.includes(type)) : undefined;
+  const withEvents = (body) => (picked === undefined ? body : { ...body, events: picked.length === LP_EVENT_TYPES.length ? null : picked });
+  if (allTours) return { body: withEvents({ enabled: on, tours: null }) };
   const slugs = [];
   const seen = new Set();
   for (const item of Array.isArray(tours) ? tours : []) {
@@ -139,7 +170,7 @@ export function planLeadProntoSave({ enabled, allTours, tours } = {}) {
     slugs.push(slug);
   }
   if (!slugs.length) return { error: "tours" };
-  return { body: { enabled: on, tours: slugs } };
+  return { body: withEvents({ enabled: on, tours: slugs }) };
 }
 
 /** "paywall" | "auth" | "config" | "tours" | "generic" | "". */
