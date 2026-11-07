@@ -141,3 +141,9 @@ test("landing: card Galeria abre a galeria de exemplo publicada", async () => {
     assert.match(html, new RegExp(`href="https://guiaflow\\.pro/p/${LANDING_GALLERY_SLUG}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
   }
 });
+
+test("landing: sem selo do Product Hunt no hero (pt/en/es)", () => {
+  for (const [loc, html] of [["pt", landing], ["en", read("en.html")], ["es", read("es.html")]]) {
+    assert.equal(/class="hero-ph"|api\.producthunt\.com\/widgets/.test(html), false, `${loc}: selo removido`);
+  }
+});
