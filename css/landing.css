@@ -1279,11 +1279,6 @@ section {
   }
 }
 
-/* Selo Product Hunt no hero: tamanho fixo (sem pulo de layout) */
-.hero-ph { display: inline-block; margin-top: 20px; line-height: 0; border-radius: 10px; }
-.hero-ph img { display: block; width: 250px; height: 54px; max-width: 100%; }
-.hero-ph:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
-
 /* Menu de idioma com bandeira (mesmo padrão do editor) */
 .locale-menu { position: relative; margin-left: auto; }
 .locale-menu > summary { list-style: none; }
