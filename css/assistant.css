@@ -497,3 +497,10 @@
     display: none;
   }
 }
+
+.assistant-modal .asst-hint[data-attention="1"] {
+  color: var(--ns-ink);
+  background: color-mix(in srgb, var(--ns-accent) 10%, var(--ns-panel));
+  border-radius: 8px;
+  padding: 8px 10px;
+}

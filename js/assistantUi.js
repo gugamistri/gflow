@@ -432,7 +432,10 @@ export function createAssistantUi(ctx) {
     }
     const access = await ctx.aiAccess();
     if (access === "none") {
-      setNotice(t("assistant.ai.locked"));
+      // why: a mesma frase já está ao lado do botão; destaca em vez de repetir no topo.
+      const hint = dialog?.querySelector("[data-asst-ai-notice]");
+      if (hint) hint.dataset.attention = "1";
+      else setNotice(t("assistant.ai.locked"));
       return;
     }
     busy = "ai";
