@@ -3,7 +3,7 @@
  * landing-i18n.js pelo mesmo catálogo/seletor do editor (ns-locale), como a /ajuda.
  * Preços saem de paywall.js — a mesma fonte do diálogo Pro do editor.
  */
-import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, t } from "./i18n.js";
+import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, normalizeLocaleTag, t } from "./i18n.js";
 import { landingCatalogs } from "./landing-i18n.js";
 import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js";
 
@@ -28,16 +28,22 @@ export function landingDemoUrl(slug = LANDING_DEMO_SLUG, origin = LANDING_DEMO_O
   return `${origin}/p/${encodeURIComponent(clean)}?embed=1`;
 }
 
-/** Link do card "Galeria": /p/<slug> da galeria de exemplo, ou "" para manter o editor. */
-export function landingGalleryHref(slug = LANDING_GALLERY_SLUG, origin = LANDING_DEMO_ORIGIN) {
+/**
+ * Link do card "Galeria": /p/<slug> da galeria de exemplo, ou "" para manter o editor.
+ * /en e /es levam ?lang= para o chrome do player (o conteúdo do tour não é traduzido).
+ */
+export function landingGalleryHref(slug = LANDING_GALLERY_SLUG, origin = LANDING_DEMO_ORIGIN, locale = "pt") {
   const clean = String(slug || "").trim();
   if (!DEMO_SLUG_RE.test(clean)) return "";
-  return `${origin}/p/${encodeURIComponent(clean)}`;
+  const url = `${origin}/p/${encodeURIComponent(clean)}`;
+  const lang = normalizeLocaleTag(locale);
+  if (lang === "en" || lang === "es") return `${url}?lang=${lang}`;
+  return url;
 }
 
 function mountGalleryExample() {
   const link = document.querySelector("[data-gallery-example]");
-  const href = landingGalleryHref();
+  const href = landingGalleryHref(LANDING_GALLERY_SLUG, LANDING_DEMO_ORIGIN, getLocale());
   if (!link || !href) return;
   link.href = href;
   link.setAttribute("data-i18n", "lp.paths.gallery.view");
