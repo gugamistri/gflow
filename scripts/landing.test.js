@@ -24,10 +24,10 @@ test("landing: redirecionamento para /editor roda antes de qualquer CSS", () => 
 
 test("landing: SEO, canônico na raiz e og:image própria", () => {
   assert.match(landing, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/"/);
-  assert.match(landing, /<meta property="og:image" content="https:\/\/guiaflow\.pro\/brand\/og-landing\.png"/);
+  assert.match(landing, /<meta property="og:image" content="https:\/\/guiaflow\.pro\/brand\/og-landing-v2\.png"/);
   assert.match(landing, /<meta name="twitter:card" content="summary_large_image"/);
   assert.equal(/noindex/.test(landing), false);
-  const png = readFileSync(new URL("brand/og-landing.png", root));
+  const png = readFileSync(new URL("brand/og-landing-v2.png", root));
   assert.equal(png.readUInt32BE(16), 1200);
   assert.equal(png.readUInt32BE(20), 630);
 });
@@ -94,7 +94,7 @@ test("demo de exemplo: slug numa constante só (LeadPronto), sem o Demo RCV, pla
   assert.equal(landingDemoUrl("leadpronto-abc123"), "https://guiaflow.pro/p/leadpronto-abc123?embed=1");
 });
 
-test("landing: posicionamento galeria + guia nas três línguas, sem anunciar o assistente", () => {
+test("landing: posicionamento galeria + guia e o assistente nas três línguas", () => {
   const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
   const hero = { pt: /Transforme telas e fotos/, en: /Turn screens and photos/, es: /Convierte pantallas y fotos/ };
   for (const [loc, html] of Object.entries(pages)) {
@@ -102,7 +102,7 @@ test("landing: posicionamento galeria + guia nas três línguas, sem anunciar o 
     assert.match(h1, hero[loc], `${loc}: H1`);
     assert.match(html, /id="dois-caminhos"/, `${loc}: seção dois caminhos`);
     assert.match(html, /id="usos"/, `${loc}: seção usos`);
-    assert.match(html, /href="\/editor\?novo=galeria"/, `${loc}: CTA da galeria`);
+    assert.match(html, /href="https:\/\/guiaflow\.pro\/p\/[a-z0-9-]+" data-gallery-example/, `${loc}: CTA da galeria de exemplo`);
     for (const n of [10, 11, 12]) assert.match(html, new RegExp(`data-i18n="lp\\.faq\\.q${n}"`), `${loc}: FAQ ${n}`);
     assert.match(html, /id="criar-com-ajuda"/, `${loc}: card do assistente`);
     assert.match(html, /href="\/editor\?novo=ajuda"/, `${loc}: CTA do assistente`);
@@ -131,11 +131,13 @@ test("landing: og:image por idioma em 1200x630", () => {
   }
 });
 
-test("landing: galeria de exemplo troca de destino só pelo slug", async () => {
+test("landing: card Galeria abre a galeria de exemplo publicada", async () => {
   const { landingGalleryHref, LANDING_GALLERY_SLUG } = await import("../js/landing.js");
-  assert.equal(LANDING_GALLERY_SLUG, "", "até o Gustavo aprovar, o card aponta para o editor");
+  assert.equal(LANDING_GALLERY_SLUG, "exemplo-colchao-galeria-de-produto-844901", "galeria de exemplo publicada");
   assert.equal(landingGalleryHref(""), "");
   assert.equal(landingGalleryHref("colchoes-exemplo-1a2b"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
   assert.equal(landingGalleryHref("../x"), "");
-  assert.match(landing, /href="\/editor\?novo=galeria" data-gallery-example/);
+  for (const [loc, html, label] of [["pt", landing, "Ver galeria"], ["en", read("en.html"), "See a gallery"], ["es", read("es.html"), "Ver una galería"]]) {
+    assert.match(html, new RegExp(`href="https://guiaflow\\.pro/p/${LANDING_GALLERY_SLUG}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
+  }
 });

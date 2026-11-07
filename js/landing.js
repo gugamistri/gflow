@@ -18,7 +18,7 @@ export const LANDING_DEMO_ORIGIN = "https://guiaflow.pro";
  * why: vazio = o botão "Criar uma galeria" abre o editor já em galeria (/editor?novo=galeria).
  *      Quando o Gustavo publicar a galeria de exemplo, ponha o slug aqui: o botão vira "Ver galeria" → /p/<slug>.
  */
-export const LANDING_GALLERY_SLUG = "";
+export const LANDING_GALLERY_SLUG = "exemplo-colchao-galeria-de-produto-844901";
 const DEMO_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/;
 
 /** URL do embed (?embed=1) ou "" se o slug estiver vazio ou fora do formato de /p. */
