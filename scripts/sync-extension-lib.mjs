@@ -8,6 +8,7 @@ export const EXTENSION_LIB_FILES = [
   "i18n.js",
   "collabI18n.js",
   "commentsI18n.js",
+  "assistantI18n.js",
   "settingsI18n.js",
   "videoI18n.js",
   "releaseNotes.js",

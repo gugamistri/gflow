@@ -4,7 +4,7 @@
 
 [![smithery badge](https://img.shields.io/badge/Smithery-guiaflow-FF5601)](https://smithery.ai/servers/gmistrinelli/guiaflow)
 
-**Criador de demos interativas e tours guiados de produto, gratuito e open source — alternativa ao Arcade, Supademo e Storylane.**
+**Transforme telas e fotos em apresentações que seus clientes podem explorar: guias interativos e galerias de fotos. Gratuito e open source — alternativa ao Arcade, Supademo e Storylane.**
 
 Experimente em **[guiaflow.pro](https://guiaflow.pro)** · Integrações: [guiaflow.pro/integracoes](https://guiaflow.pro/integracoes)
 

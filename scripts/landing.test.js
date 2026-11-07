@@ -24,10 +24,10 @@ test("landing: redirecionamento para /editor roda antes de qualquer CSS", () => 
 
 test("landing: SEO, canônico na raiz e og:image própria", () => {
   assert.match(landing, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/"/);
-  assert.match(landing, /<meta property="og:image" content="https:\/\/guiaflow\.pro\/brand\/og-landing\.png"/);
+  assert.match(landing, /<meta property="og:image" content="https:\/\/guiaflow\.pro\/brand\/og-landing-v2\.png"/);
   assert.match(landing, /<meta name="twitter:card" content="summary_large_image"/);
   assert.equal(/noindex/.test(landing), false);
-  const png = readFileSync(new URL("brand/og-landing.png", root));
+  const png = readFileSync(new URL("brand/og-landing-v2.png", root));
   assert.equal(png.readUInt32BE(16), 1200);
   assert.equal(png.readUInt32BE(20), 630);
 });
@@ -85,9 +85,59 @@ test("demo de exemplo: slug numa constante só (LeadPronto), sem o Demo RCV, pla
   assert.equal((js.match(/export const LANDING_DEMO_SLUG = /g) || []).length, 1);
   const { landingDemoUrl } = await import("../js/landing.js");
   assert.match(js, /export const LANDING_DEMO_SLUG = "leadpronto-9e0052";/);
-  assert.match(html, /\/a\/\d+\/brand\/hero-leadpronto\.webp" width="1200" height="787"/);
+  assert.match(html, /\/a\/\d+\/brand\/hero-galeria\.webp" width="1200" height="787"/);
+  assert.match(html, /\/a\/\d+\/brand\/hero-guia\.webp" width="800" height="500"/);
+  assert.equal(/hero-leadpronto|lp\.mock\.toast/.test(html), false, "hero sem a captura do LeadPronto nem o aviso de lead");
   assert.equal(landingDemoUrl(""), "");
   assert.equal(landingDemoUrl("../x"), "");
   assert.equal(landingDemoUrl("javascript:alert(1)"), "");
   assert.equal(landingDemoUrl("leadpronto-abc123"), "https://guiaflow.pro/p/leadpronto-abc123?embed=1");
+});
+
+test("landing: posicionamento galeria + guia e o assistente nas três línguas", () => {
+  const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
+  const hero = { pt: /Transforme telas e fotos/, en: /Turn screens and photos/, es: /Convierte pantallas y fotos/ };
+  for (const [loc, html] of Object.entries(pages)) {
+    const h1 = html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1] || "";
+    assert.match(h1, hero[loc], `${loc}: H1`);
+    assert.match(html, /id="dois-caminhos"/, `${loc}: seção dois caminhos`);
+    assert.match(html, /id="usos"/, `${loc}: seção usos`);
+    assert.match(html, /href="https:\/\/guiaflow\.pro\/p\/[a-z0-9-]+" data-gallery-example/, `${loc}: CTA da galeria de exemplo`);
+    for (const n of [10, 11, 12]) assert.match(html, new RegExp(`data-i18n="lp\\.faq\\.q${n}"`), `${loc}: FAQ ${n}`);
+    assert.match(html, /id="criar-com-ajuda"/, `${loc}: card do assistente`);
+    assert.match(html, /href="\/editor\?novo=ajuda"/, `${loc}: CTA do assistente`);
+    assert.match(html, /data-i18n="lp\.faq\.q13"/, `${loc}: FAQ do assistente`);
+    assert.equal(/do-demo-ao-lead/.test(html), false, `${loc}: seção antiga removida`);
+  }
+});
+
+test("landing: assistente grátis; IA com a chave do usuário ou a IA do GuiaFlow no Pro, nas três línguas", () => {
+  const body = { pt: /grátis[^<]*própria chave[^<]*Pro/i, en: /free[^<]*own key[^<]*Pro/i, es: /gratis[^<]*propia clave[^<]*Pro/i };
+  const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
+  for (const [loc, html] of Object.entries(pages)) {
+    const card = html.match(/data-i18n="lp\.assist\.body">([^<]*)</)?.[1] || "";
+    assert.match(card, body[loc], `${loc}: texto do card`);
+  }
+  const help = { pt: read("ajuda.html"), en: read("en/help.html"), es: read("es/ayuda.html") };
+  for (const [loc, html] of Object.entries(help)) assert.match(html, /id="criar-com-ajuda"/, `${loc}: ajuda`);
+});
+
+test("landing: og:image por idioma em 1200x630", () => {
+  for (const [file, png] of [["en.html", "og-landing-en.png"], ["es.html", "og-landing-es.png"]]) {
+    assert.match(read(file), new RegExp(`<meta property="og:image" content="https://guiaflow\\.pro/brand/${png.replace(".", "\\.")}"`));
+    const buf = readFileSync(new URL(`brand/${png}`, root));
+    assert.equal(buf.readUInt32BE(16), 1200);
+    assert.equal(buf.readUInt32BE(20), 630);
+  }
+});
+
+test("landing: card Galeria abre a galeria de exemplo publicada", async () => {
+  const { landingGalleryHref, LANDING_GALLERY_SLUG } = await import("../js/landing.js");
+  assert.equal(LANDING_GALLERY_SLUG, "exemplo-colchao-galeria-de-produto-844901", "galeria de exemplo publicada");
+  assert.equal(landingGalleryHref(""), "");
+  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
+  assert.equal(landingGalleryHref("../x"), "");
+  for (const [loc, html, label] of [["pt", landing, "Ver galeria"], ["en", read("en.html"), "See a gallery"], ["es", read("es.html"), "Ver una galería"]]) {
+    assert.match(html, new RegExp(`href="https://guiaflow\\.pro/p/${LANDING_GALLERY_SLUG}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
+  }
 });

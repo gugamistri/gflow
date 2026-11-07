@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title data-i18n="doc.title.editor">GuiaFlow — Editor</title>
-  <meta name="description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
+  <meta name="description" content="Transforme telas e fotos em galerias e guias interativos. Grátis no navegador, sem cadastro; envie um link ou um HTML." />
   <link rel="canonical" href="https://guiaflow.pro/editor" />
   <meta name="robots" content="noindex, follow" />
   <meta name="theme-color" content="#1A4D6D" />
@@ -12,7 +12,7 @@
   <meta property="og:site_name" content="GuiaFlow" />
   <meta property="og:title" content="GuiaFlow" />
   <meta property="og:url" content="https://guiaflow.pro/editor" />
-  <meta property="og:description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
+  <meta property="og:description" content="Transforme telas e fotos em galerias e guias interativos. Grátis no navegador, sem cadastro; envie um link ou um HTML." />
   <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
@@ -20,7 +20,7 @@
   <meta property="og:image:alt" content="GuiaFlow — Crie tours guiados interativos" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="GuiaFlow" />
-  <meta name="twitter:description" content="Mostre o seu produto passo a passo: capture as telas, destaque o clique e narre. Envie um link ou um HTML — quem abre percorre o tour ou assiste." />
+  <meta name="twitter:description" content="Transforme telas e fotos em galerias e guias interativos. Grátis no navegador, sem cadastro; envie um link ou um HTML." />
   <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
   <script>
     (function () {
@@ -73,14 +73,15 @@
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script async src="https://tally.so/widgets/embed.js"></script>
-  <link rel="stylesheet" href="a/189/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="a/189/css/theme.css" />
-  <link rel="stylesheet" href="a/189/css/shell.css" />
-  <link rel="stylesheet" href="a/189/css/player.css" />
-  <link rel="stylesheet" href="a/189/css/editor.css" />
-  <link rel="stylesheet" href="a/189/css/settings.css" />
-  <link rel="stylesheet" href="a/189/css/collab.css" />
-  <link rel="stylesheet" href="a/189/css/comments.css" />
+  <link rel="stylesheet" href="a/190/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="a/190/css/theme.css" />
+  <link rel="stylesheet" href="a/190/css/shell.css" />
+  <link rel="stylesheet" href="a/190/css/player.css" />
+  <link rel="stylesheet" href="a/190/css/editor.css" />
+  <link rel="stylesheet" href="a/190/css/settings.css" />
+  <link rel="stylesheet" href="a/190/css/collab.css" />
+  <link rel="stylesheet" href="a/190/css/assistant.css" />
+  <link rel="stylesheet" href="a/190/css/comments.css" />
 </head>
 <body class="is-booting">
   <header class="topbar">
@@ -97,6 +98,10 @@
             <button type="button" class="more-item" id="btn-menu-new" data-menu-action="new">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
               <span data-i18n="menu.new">Novo</span>
+            </button>
+            <button type="button" class="more-item" id="btn-menu-assistant" data-assistant-entry>
+              <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+              <span data-i18n="assistant.entry">Criar com ajuda</span>
             </button>
             <button type="button" class="more-item" id="btn-menu-import" data-menu-action="import">
               <svg class="btn-ico" aria-hidden="true"><use href="#i-import"></use></svg>
@@ -165,7 +170,7 @@
         </div>
       </details>
     <div class="topbar-brand">
-      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/189/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/189/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
+      <span class="logo logo-brand" aria-label="GuiaFlow"><img class="logo-full" src="a/190/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/190/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></span>
       <nav class="topbar-nav" id="topbar-nav-editor" hidden aria-label="Projeto">
         <span class="topbar-agent-tag" id="topbar-agent-tag" hidden data-i18n="agent.tag" title="Criado por um agente de IA via API/MCP" data-i18n-title="agent.tagTitle">criado por agente</span>
         <details class="menu-panel file-panel" id="file-panel">
@@ -215,7 +220,7 @@
           </div>
         </details>
       </nav>
-      <span class="topbar-title" id="topbar-title">Crie tours com capturas e narração</span>
+      <span class="topbar-title" id="topbar-title">Galerias e guias a partir de telas e fotos</span>
     </div>
     <div class="topbar-tools">
       <div class="topbar-actions" id="topbar-actions-editor" hidden>
@@ -480,7 +485,7 @@
     aria-busy="true"
     aria-live="polite"
   >
-    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/189/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/189/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
+    <p class="boot-splash-brand" aria-hidden="true"><img class="brand-on-light" src="a/190/brand/logo-light.svg" alt="" width="177" height="36" /><img class="brand-on-dark" src="a/190/brand/logo-dark.svg" alt="" width="177" height="36" /></p>
     <p class="boot-splash-text" data-i18n="boot.loading">Carregando…</p>
     <div class="boot-progress" aria-hidden="true">
       <span class="boot-progress-bar"></span>
@@ -539,7 +544,7 @@
     <div class="library-header">
       <div>
         <h1 data-i18n="library.title">Projetos</h1>
-        <p data-i18n="library.lead">Monte um tour interativo: capturas, destaques e narração passo a passo.</p>
+        <p data-i18n="library.lead">Monte uma galeria de fotos ou um guia interativo a partir de telas e fotos.</p>
         <p class="local-save" id="local-save-library" hidden>
           <button type="button" class="local-save-chip" data-local-save-open data-i18n="billing.localSave">Salvo só neste navegador</button>
           <span class="local-save-tip" role="tooltip" data-i18n="billing.localSaveTip">Se limpar o cache ou os dados do site, os projetos deste navegador somem.</span>
@@ -568,6 +573,13 @@
           <svg class="btn-ico"><use href="#i-plus"></use></svg>
         </span>
         <span data-i18n="topbar.newProject">Novo projeto</span>
+      </button>
+      <button type="button" class="library-action-card library-assistant-card" id="btn-assistant" data-assistant-entry>
+        <span class="library-action-icon" aria-hidden="true">
+          <svg class="btn-ico"><use href="#i-sparkles"></use></svg>
+        </span>
+        <span><span data-i18n="assistant.entry">Criar com ajuda</span> <span class="asst-free-badge" data-i18n="assistant.freeBadge">Grátis</span></span>
+        <span class="library-assistant-hint" data-i18n="assistant.entryHint">Crie sua apresentação com ajuda. Conte o que quer mostrar; você revisa antes de aplicar e publicar.</span>
       </button>
       <button type="button" class="library-import-hint" id="library-import-hint" hidden data-i18n="library.importHint">
         Para trazer um projeto, use Importar no menu.
@@ -1140,7 +1152,7 @@
     <div class="studio-modal-body cloud-login" id="cloud-login">
       <div class="account-dialog-head">
         <div class="dialog-title-row">
-          <img class="dialog-mark" src="a/189/brand/symbol-simple.svg" alt="" width="28" height="28" />
+          <img class="dialog-mark" src="a/190/brand/symbol-simple.svg" alt="" width="28" height="28" />
           <h3 id="account-dialog-title" data-i18n="account.signIn">Entrar</h3>
         </div>
         <button type="button" class="btn btn-icon" id="btn-account-dialog-close" aria-label="Fechar" data-i18n-aria="canvas.close">
@@ -2356,6 +2368,44 @@
       <label><span data-i18n="modal.name">Nome</span>
         <input type="text" id="new-project-name" placeholder="Ex.: Demo onboarding" data-i18n-placeholder="modal.newProjectPlaceholder" required maxlength="80" />
       </label>
+      <fieldset class="mode-picker new-project-kind" id="new-project-kind">
+        <legend data-i18n="newProject.kind">O que você vai criar?</legend>
+        <label class="mode-option">
+          <input type="radio" name="new-project-kind" value="guide" checked />
+          <span class="mode-option-text">
+            <span class="mode-option-title" data-i18n="newProject.kind.guide">Guia</span>
+            <span class="mode-option-hint" data-i18n="newProject.kind.guideHint">Processo ou software, passo a passo</span>
+          </span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="new-project-kind" value="produto" />
+          <span class="mode-option-text">
+            <span class="mode-option-title" data-i18n="newProject.kind.produto">Galeria: produto</span>
+            <span class="mode-option-hint" data-i18n="newProject.kind.galleryHint">Fotos por seções, para explorar</span>
+          </span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="new-project-kind" value="empreendimento" />
+          <span class="mode-option-text">
+            <span class="mode-option-title" data-i18n="newProject.kind.empreendimento">Galeria: imóvel</span>
+            <span class="mode-option-hint" data-i18n="newProject.kind.galleryHint">Fotos por seções, para explorar</span>
+          </span>
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="new-project-kind" value="veiculo" />
+          <span class="mode-option-text">
+            <span class="mode-option-title" data-i18n="newProject.kind.veiculo">Galeria: veículo</span>
+            <span class="mode-option-hint" data-i18n="newProject.kind.galleryHint">Fotos por seções, para explorar</span>
+          </span>
+        </label>
+      </fieldset>
+      <p class="new-project-assist" data-assistant-entry-hint>
+        <span data-i18n="newProject.assistHint">Prefere ajuda para montar? O assistente organiza fotos ou telas com você, grátis.</span>
+        <button type="button" class="btn btn-sm" data-assistant-entry data-assistant-from-new>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+          <span data-i18n="assistant.entry">Criar com ajuda</span>
+        </button>
+      </p>
       <p class="theme-section-label" data-i18n="modal.initialTheme">Tema inicial</p>
       <div class="theme-presets" id="new-project-themes"></div>
       <div class="studio-modal-actions">
@@ -2690,8 +2740,8 @@
     </symbol>
   </svg>
 
-  <script src="a/189/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="a/189/js/app.js"></script>
+  <script src="a/190/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="a/190/js/app.js"></script>
 <div class="alt-pop" id="alt-pop" role="dialog" aria-labelledby="alt-pop-title" hidden>
   <label class="alt-pop-field" id="wrap-alt"><span id="alt-pop-title" data-i18n="props.alt">Texto alternativo da imagem</span>
     <textarea id="prop-alt" rows="3" maxlength="300" aria-describedby="prop-alt-hint"></textarea>
