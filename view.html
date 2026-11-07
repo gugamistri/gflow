@@ -21,16 +21,12 @@
   <script>
     (function () {
       try {
-        var stored = localStorage.getItem("ns-locale");
-        var langs = navigator.languages || (navigator.language ? [navigator.language] : []);
-        var pick = stored;
-        if (!pick) {
-          for (var i = 0; i < langs.length; i++) {
-            var p = String(langs[i] || "").toLowerCase().split("-")[0];
-            if (p === "pt" || p === "es" || p === "en") { pick = p; break; }
-          }
+        var q = new URLSearchParams(location.search).get("lang") || "";
+        var pick = String(q).toLowerCase().split("-")[0];
+        if (pick !== "pt" && pick !== "es" && pick !== "en") {
+          pick = String(navigator.language || "").toLowerCase().split("-")[0];
         }
-        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "en";
+        if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "pt";
         document.documentElement.lang = pick === "pt" ? "pt-BR" : pick;
       } catch (e) {}
     })();
@@ -69,18 +65,18 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/190/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/190/css/theme.css" />
-  <link rel="stylesheet" href="/a/190/css/shell.css" />
-  <link rel="stylesheet" href="/a/190/css/player.css" />
+  <link rel="stylesheet" href="/a/191/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/191/css/theme.css" />
+  <link rel="stylesheet" href="/a/191/css/shell.css" />
+  <link rel="stylesheet" href="/a/191/css/player.css" />
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/190/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/190/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/191/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/191/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title" data-i18n="view.loading">Carregando o tour…</span>
     </div>
-    <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com" target="_blank" rel="noopener" hidden><img src="/a/190/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
+    <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com" target="_blank" rel="noopener" hidden><img src="/a/191/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
   </header>
 
   <main id="view-editor" class="view view-editor is-presenting">
@@ -144,7 +140,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/190/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/190/js/viewApp.js"></script>
+  <script src="/a/191/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/191/js/viewApp.js"></script>
 </body>
 </html>

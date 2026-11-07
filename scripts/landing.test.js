@@ -96,13 +96,24 @@ test("demo de exemplo: slug numa constante só (LeadPronto), sem o Demo RCV, pla
 
 test("landing: posicionamento galeria + guia e o assistente nas três línguas", () => {
   const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
-  const hero = { pt: /Transforme telas e fotos/, en: /Turn screens and photos/, es: /Convierte pantallas y fotos/ };
+  const hero = {
+    pt: /Uma demo vale mais que mil reuniões\./,
+    en: /One demo is worth a thousand meetings\./,
+    es: /Una demo vale más que mil reuniones\./,
+  };
+  const sub = {
+    pt: /Seu cliente não quer mais uma reunião\. Ele quer ver o produto\./,
+    en: /Your customer doesn't want another meeting\. They want to see the product\./,
+    es: /Tu cliente no quiere otra reunión\. Quiere ver el producto\./,
+  };
   for (const [loc, html] of Object.entries(pages)) {
     const h1 = html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1] || "";
     assert.match(h1, hero[loc], `${loc}: H1`);
+    const heroSub = html.match(/class="hero-sub"[^>]*>([^<]*)</)?.[1] || "";
+    assert.match(heroSub, sub[loc], `${loc}: subtítulo`);
     assert.match(html, /id="dois-caminhos"/, `${loc}: seção dois caminhos`);
     assert.match(html, /id="usos"/, `${loc}: seção usos`);
-    assert.match(html, /href="https:\/\/guiaflow\.pro\/p\/[a-z0-9-]+" data-gallery-example/, `${loc}: CTA da galeria de exemplo`);
+    assert.match(html, /href="https:\/\/guiaflow\.pro\/p\/[a-z0-9-]+(?:\?lang=(?:en|es))?" data-gallery-example/, `${loc}: CTA da galeria de exemplo`);
     for (const n of [10, 11, 12]) assert.match(html, new RegExp(`data-i18n="lp\\.faq\\.q${n}"`), `${loc}: FAQ ${n}`);
     assert.match(html, /id="criar-com-ajuda"/, `${loc}: card do assistente`);
     assert.match(html, /href="\/editor\?novo=ajuda"/, `${loc}: CTA do assistente`);
@@ -136,9 +147,18 @@ test("landing: card Galeria abre a galeria de exemplo publicada", async () => {
   assert.equal(LANDING_GALLERY_SLUG, "exemplo-colchao-galeria-de-produto-844901", "galeria de exemplo publicada");
   assert.equal(landingGalleryHref(""), "");
   assert.equal(landingGalleryHref("colchoes-exemplo-1a2b"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
+  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "pt"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
+  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "en"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b?lang=en");
+  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "es"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b?lang=es");
+  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "en-US"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b?lang=en");
+  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "fr"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
   assert.equal(landingGalleryHref("../x"), "");
-  for (const [loc, html, label] of [["pt", landing, "Ver galeria"], ["en", read("en.html"), "See a gallery"], ["es", read("es.html"), "Ver una galería"]]) {
-    assert.match(html, new RegExp(`href="https://guiaflow\\.pro/p/${LANDING_GALLERY_SLUG}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
+  for (const [loc, html, label, query] of [
+    ["pt", landing, "Ver galeria", ""],
+    ["en", read("en.html"), "See a gallery", "\\?lang=en"],
+    ["es", read("es.html"), "Ver una galería", "\\?lang=es"],
+  ]) {
+    assert.match(html, new RegExp(`href="https://guiaflow\\.pro/p/${LANDING_GALLERY_SLUG}${query}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
   }
 });
 

@@ -4907,6 +4907,27 @@ export function resolveLocale(languages) {
   return "en";
 }
 
+/**
+ * Idioma da interface do player público (/p e /v).
+ * Ordem: ?lang= (pt|en|es) > navigator.language > pt.
+ * A landing /en e /es manda o idioma no link da galeria de exemplo.
+ * Não usa a preferência salva do editor nem o idioma do conteúdo do tour.
+ * @param {{ search?: string, language?: string }} [input]
+ */
+export function resolvePlayerUiLocale({ search = "", language = "" } = {}) {
+  let params;
+  try {
+    params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
+  } catch {
+    params = new URLSearchParams();
+  }
+  const fromQuery = normalizeLocaleTag(params.get("lang"));
+  if (fromQuery) return fromQuery;
+  const fromNav = normalizeLocaleTag(language);
+  if (fromNav) return fromNav;
+  return "pt";
+}
+
 function readStoredLocale() {
   try {
     const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
