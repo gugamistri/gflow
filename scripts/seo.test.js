@@ -89,10 +89,10 @@ test("home e ajuda têm título, descrição, canônico e Open Graph", () => {
 
   const ajuda = read("ajuda.html");
   assert.match(ajuda, /<title[^>]*>[^<]*GuiaFlow[^<]*<\/title>/);
-  assert.match(ajuda, /<meta name="description" content="Como gravar um demo no GuiaFlow:[^"]+"/);
+  assert.match(ajuda, /<meta name="description" content="Como criar uma galeria de fotos ou um guia interativo no GuiaFlow:[^"]+"/);
   assert.match(ajuda, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/ajuda"/);
-  assert.match(ajuda, /<meta property="og:title" content="Como gravar um demo interativo \(passo a passo\) — GuiaFlow"/);
-  assert.match(ajuda, /<meta property="og:description" content="Como gravar um demo no GuiaFlow:[^"]+"/);
+  assert.match(ajuda, /<meta property="og:title" content="Como criar uma galeria ou um guia interativo — GuiaFlow"/);
+  assert.match(ajuda, /<meta property="og:description" content="Como criar uma galeria de fotos ou um guia interativo no GuiaFlow:[^"]+"/);
   assert.match(ajuda, /<meta property="og:url" content="https:\/\/guiaflow\.pro\/ajuda"/);
   assert.equal(/nuvem/i.test(ajuda.slice(0, ajuda.indexOf("</head>"))), false);
   assert.equal(ajuda.includes("ajuda.html"), false);

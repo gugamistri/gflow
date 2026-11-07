@@ -91,3 +91,18 @@ test("demo de exemplo: slug numa constante só (LeadPronto), sem o Demo RCV, pla
   assert.equal(landingDemoUrl("javascript:alert(1)"), "");
   assert.equal(landingDemoUrl("leadpronto-abc123"), "https://guiaflow.pro/p/leadpronto-abc123?embed=1");
 });
+
+test("landing: posicionamento galeria + guia nas três línguas, sem anunciar o assistente", () => {
+  const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
+  const hero = { pt: /Transforme telas e fotos/, en: /Turn screens and photos/, es: /Convierte pantallas y fotos/ };
+  for (const [loc, html] of Object.entries(pages)) {
+    const h1 = html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1] || "";
+    assert.match(h1, hero[loc], `${loc}: H1`);
+    assert.match(html, /id="dois-caminhos"/, `${loc}: seção dois caminhos`);
+    assert.match(html, /id="usos"/, `${loc}: seção usos`);
+    assert.match(html, /href="\/editor\?novo=galeria"/, `${loc}: CTA da galeria`);
+    for (const n of [10, 11, 12]) assert.match(html, new RegExp(`data-i18n="lp\\.faq\\.q${n}"`), `${loc}: FAQ ${n}`);
+    assert.equal(/assistente|assistant|asistente/i.test(html), false, `${loc}: o assistente fica fora da página pública`);
+    assert.equal(/do-demo-ao-lead/.test(html), false, `${loc}: seção antiga removida`);
+  }
+});

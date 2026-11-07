@@ -193,7 +193,10 @@ import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from 
 import { setCaptions } from "./playerControls.js";
 import { resolveContent } from "./tour-schema/i18n.js";
 import { MAX_TARGET_LANGS, langAudioPlan, langLabel, projectI18n, translationStatus } from "./tour-schema/i18n.js";
-import { listHostedVoices } from "./hosted.js";
+import { HOSTED_AI_PATH, listHostedVoices } from "./hosted.js";
+import { assistantEnabled } from "./assistant.js";
+import { createAssistantUi } from "./assistantUi.js";
+import { setPlaybackMode, templateScaffold } from "./tour-schema/playbackMode.js";
 import { listCartesiaVoices } from "./cartesia.js";
 import { readCartesiaKey } from "./cartesia-store.js";
 import { applyTranslations, batchItems, buildTranslateMessages, hostedTranslateRequest, parseTranslateResult } from "./tour-schema/translate.js";
@@ -2239,6 +2242,36 @@ function consumeProIntent() {
   showUpgradeDialog({ feature: "account" });
 }
 
+/** /editor?novo=galeria (botão "Criar uma galeria" da landing): abre a biblioteca com o
+ * diálogo de novo projeto já no tipo certo e tira o parâmetro da barra para um F5 não reabrir. */
+const NEW_INTENT_KIND = {
+  galeria: "produto",
+  gallery: "produto",
+  produto: "produto",
+  imovel: "empreendimento",
+  veiculo: "veiculo",
+  guia: "guide",
+  guide: "guide",
+};
+
+function consumeNewProjectIntent() {
+  let url;
+  try {
+    url = new URL(location.href);
+  } catch {
+    return;
+  }
+  const kind = NEW_INTENT_KIND[String(url.searchParams.get("novo") || "").toLowerCase()];
+  if (!url.searchParams.has("novo")) return;
+  url.searchParams.delete("novo");
+  applyCloudAuthHref(url.toString());
+  if (!kind) return;
+  showLibrary();
+  openNewProjectDialog();
+  const radio = document.querySelector(`input[name="new-project-kind"][value="${kind}"]`);
+  if (radio) radio.checked = true;
+}
+
 async function consumeBillingReturn() {
   const found = readBillingReturn(location.href);
   if (!isCloudEnabled() || !found.kind) return;
@@ -3171,9 +3204,103 @@ async function closeProject() {
   showLibrary();
 }
 
+/** Nome da cena do modelo no idioma da interface (o modelo em tour-schema guarda o pt). */
+function templateSceneName(template, n, fallback = "") {
+  const key = `template.scene.${template}.${n}`;
+  const value = t(key);
+  return value && value !== key ? value : fallback;
+}
+
+/**
+ * Tipo do projeto novo: Guia (padrão, como antes) ou Galeria com as cenas do modelo
+ * (produto, imóvel, veículo). why: Galeria é o padrão desses modelos, igual ao create_tour do MCP.
+ */
+function applyNewProjectKind(created, kind) {
+  const scaffold = kind && kind !== "guide" ? templateScaffold(kind) : null;
+  if (!scaffold || scaffold.mode !== "gallery") return created;
+  created.playback = setPlaybackMode(created.playback, "gallery");
+  const labels = {};
+  for (const sc of scaffold.scenes) labels[String(sc.scene)] = templateSceneName(scaffold.template, sc.scene, sc.name);
+  created.sceneLabels = labels;
+  return created;
+}
+
+let assistantUi = null;
+
+function assistantFlagOn() {
+  try {
+    return assistantEnabled({ search: location.search, storage: localStorage });
+  } catch {
+    return false;
+  }
+}
+
+function paintAssistantEntry() {
+  const on = assistantFlagOn();
+  for (const el of document.querySelectorAll("[data-assistant-entry]")) el.hidden = !on;
+}
+
+async function assistantAiAccess() {
+  if (isCloudEnabled() && getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
+    await refreshEntitlement();
+  }
+  if (prefersHostedGeneration()) return "hosted";
+  if (editor.hasByokLlm?.()) return "byok";
+  return "none";
+}
+
+function openAssistant() {
+  if (!assistantFlagOn()) return;
+  if (!assistantUi) {
+    assistantUi = createAssistantUi({
+      t,
+      getLocale,
+      toast,
+      aiAccess: assistantAiAccess,
+      async completeHosted(prompt) {
+        const result = await cloudFetch(HOSTED_AI_PATH, { method: "POST", body: JSON.stringify({ prompt }) });
+        if (!result.ok) return { ok: false, handled: presentHostedFailure(result, "hostedAi") };
+        rememberHostedUsage(result.data?.usage);
+        return { ok: true, text: String(result.data?.result || "") };
+      },
+      async completeByok(prompt) {
+        const res = await editor.byokLlmComplete([{ role: "user", content: prompt }], { maxTokens: 2048 });
+        return res?.ok ? { ok: true, text: String(res.content || "") } : { ok: false };
+      },
+      async createProject(build) {
+        const preset = getPreset(resolveAppearanceMode(appearancePreference)) || THEME_PRESETS[0];
+        const base = createEmptyProject({ name: t("default.newProject"), theme: cloneTheme(preset.colors, { presetId: preset.id }) });
+        const next = build(base);
+        await putProject(next);
+        renderLibrary();
+        return { id: next.id, name: next.name };
+      },
+      async projectExists(id) {
+        return Boolean(await getProject(id));
+      },
+      async openProject(id) {
+        if (project?.id === id) return;
+        if (project) await closeProject();
+        await openProject(id);
+      },
+      openPreview() {
+        enterPresentation({ from: 0 });
+      },
+      openShare() {
+        const panel = document.querySelector("#topbar-actions-editor .export-panel");
+        if (panel) panel.open = true;
+      },
+      sceneName: templateSceneName,
+    });
+  }
+  void assistantUi.open();
+}
+
 function openNewProjectDialog() {
   selectedNewThemeId = resolveAppearanceMode(appearancePreference);
   document.getElementById("new-project-name").value = "";
+  const guide = document.querySelector('input[name="new-project-kind"][value="guide"]');
+  if (guide) guide.checked = true;
   renderNewProjectThemes();
   document.getElementById("modal-new-project").showModal();
 }
@@ -3550,6 +3677,13 @@ function bindChrome() {
   document.getElementById("btn-new-project").addEventListener("click", () => {
     openNewProjectDialog();
   });
+  for (const el of document.querySelectorAll("[data-assistant-entry]")) {
+    el.addEventListener("click", () => {
+      document.getElementById("more-panel")?.removeAttribute("open");
+      openAssistant();
+    });
+  }
+  paintAssistantEntry();
 
   document.getElementById("btn-cancel-new-project").addEventListener("click", () => {
     document.getElementById("modal-new-project").close();
@@ -3564,6 +3698,7 @@ function bindChrome() {
       name,
       theme: cloneTheme(preset.colors, { presetId: preset.id }),
     });
+    applyNewProjectKind(created, document.querySelector('input[name="new-project-kind"]:checked')?.value);
     await putProject(created);
     document.getElementById("modal-new-project").close();
     await openProject(created.id);
@@ -5055,6 +5190,7 @@ async function boot() {
     signalGuiaReady();
     handleJoinHash();
     window.addEventListener("hashchange", handleJoinHash);
+    consumeNewProjectIntent();
     showStashedAuthError();
     if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
     else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });

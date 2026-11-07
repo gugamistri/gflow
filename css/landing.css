@@ -635,6 +635,39 @@ section {
   }
 }
 
+.grid-2,
+.grid-4 {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 760px) {
+  .grid-2,
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.path {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.card.path p {
+  margin-bottom: 18px;
+}
+
+.path .btn {
+  margin-top: auto;
+}
+
 .card {
   background: var(--bg);
   border: 1px solid var(--line);

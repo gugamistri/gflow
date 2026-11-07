@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title data-i18n="doc.title.help">How to record an interactive demo (step by step) — GuiaFlow</title>
-  <meta name="description" content="How to record a demo in GuiaFlow: install the extension, capture the screens and build the tour with highlight, click and narration." />
+  <title data-i18n="doc.title.help">How to create a gallery or an interactive guide — GuiaFlow</title>
+  <meta name="description" content="How to create a photo gallery or an interactive guide in GuiaFlow: pick the mode, upload photos or capture screens with the extension and build the presentation." />
   <!-- i18n-alternates -->
   <link rel="canonical" href="https://guiaflow.pro/en/help" />
   <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/ajuda" />
@@ -15,16 +15,16 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="GuiaFlow" />
   <meta property="og:locale" content="en_US" />
-  <meta property="og:title" content="How to record an interactive demo (step by step) — GuiaFlow" />
-  <meta property="og:description" content="How to record a demo in GuiaFlow: install the extension, capture the screens and build the tour with highlight, click and narration." />
+  <meta property="og:title" content="How to create a gallery or an interactive guide — GuiaFlow" />
+  <meta property="og:description" content="How to create a photo gallery or an interactive guide in GuiaFlow: pick the mode, upload photos or capture screens with the extension and build the presentation." />
   <meta property="og:url" content="https://guiaflow.pro/en/help" />
   <meta property="og:image" content="https://guiaflow.pro/brand/og-image.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="GuiaFlow — Create interactive guided tours" />
+  <meta property="og:image:alt" content="GuiaFlow — Interactive galleries and guides" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="How to record an interactive demo (step by step) — GuiaFlow" />
+  <meta name="twitter:title" content="How to create a gallery or an interactive guide — GuiaFlow" />
   <meta name="twitter:image" content="https://guiaflow.pro/brand/og-image.png" />
   <meta name="theme-color" content="#1A4D6D" />
   <script>
@@ -68,14 +68,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/189/css/theme.css" />
-  <link rel="stylesheet" href="/a/189/css/shell.css" />
-  <link rel="stylesheet" href="/a/189/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/190/css/theme.css" />
+  <link rel="stylesheet" href="/a/190/css/shell.css" />
+  <link rel="stylesheet" href="/a/190/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/189/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/189/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/190/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/190/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="help.manual">Manual</span>
     </div>
     <div class="topbar-appearance">
@@ -91,8 +91,17 @@
   </header>
 
   <main class="page">
-    <h1 data-i18n="help.h1">How to record a demo</h1>
-    <p class="lead" data-i18n="help.lead">The extension photographs the product screen. The editor turns that into a tour with highlight, click, and narration.</p>
+    <h1 data-i18n="help.h1">How to create a gallery or a guide</h1>
+    <p class="lead" data-i18n="help.lead">GuiaFlow turns screens and photos into presentations your customers can explore. Choose a gallery to show photos and a guide to explain a process step by step.</p>
+
+    <section class="card" id="galeria-ou-guia">
+      <h2 data-i18n="help.modesTitle">Gallery or guide</h2>
+      <ul>
+        <li data-i18n-html="help.modesGallery"><strong>Gallery</strong>: for a product, real estate or a vehicle. Upload photos with <strong>+ Images</strong> and organize them into sections. Viewers browse freely, with zoom and thumbnails, no balloons or narration.</li>
+        <li data-i18n-html="help.modesGuide"><strong>Guide</strong>: for processes and software. Capture screens with the extension (step by step below) or upload screenshots. Each step gets a highlight, text and, if you want, narration.</li>
+      </ul>
+      <p data-i18n-html="help.modesHow">To start, click <strong>New project</strong> in the library and choose what you're creating. To switch later, open the gear menu and use <strong>Display mode</strong>.</p>
+    </section>
 
     <section class="card" id="desktop">
       <h2 data-i18n="help.desktopTitle">Desktop app</h2>
@@ -202,7 +211,7 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/189/js/i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/190/js/i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));

@@ -22,8 +22,8 @@ export const LOCALES = ["pt", "en", "es"];
 const HREFLANG = { pt: "pt-BR", en: "en", es: "es" };
 const OG_LOCALE = { pt: "pt_BR", en: "en_US", es: "es_ES" };
 const IMG_ALT = {
-  en: "GuiaFlow — Create interactive guided tours",
-  es: "GuiaFlow — Crea tours guiados interactivos",
+  en: "GuiaFlow — Interactive galleries and guides",
+  es: "GuiaFlow — Galerías y guías interactivas",
 };
 
 for (const loc of ["es", "en"]) Object.assign(catalogs[loc], landingCatalogs[loc] || {});
@@ -36,10 +36,10 @@ export const PAGES = [
     lastmod: "2026-10-26",
     meta: {
       en: {
-        description: "Turn your client's product into an interactive demo from screenshots. Free in the browser, open source, with leads in LeadPronto, RD Station or HubSpot.",
+        description: "Turn screens and photos into presentations your customers can explore: galleries for products, real estate and vehicles, and interactive guides for processes and software. Free in the browser, no sign-up.",
       },
       es: {
-        description: "Demo interactivo del producto de tu cliente, a partir de capturas. Gratis en el navegador, open source, con leads en LeadPronto, RD Station o HubSpot.",
+        description: "Convierte pantallas y fotos en presentaciones que tus clientes pueden explorar: galerías para productos, inmuebles y vehículos, y guías interactivas para procesos y software. Gratis en el navegador, sin registro.",
       },
     },
     heroOg: true,
@@ -50,8 +50,8 @@ export const PAGES = [
     slugs: { en: "/help", es: "/ayuda" },
     lastmod: "2026-10-12",
     meta: {
-      en: { description: "How to record a demo in GuiaFlow: install the extension, capture the screens and build the tour with highlight, click and narration." },
-      es: { description: "Cómo grabar un demo en GuiaFlow: instala la extensión, captura las pantallas y arma el tour con resaltado, clic y narración." },
+      en: { description: "How to create a photo gallery or an interactive guide in GuiaFlow: pick the mode, upload photos or capture screens with the extension and build the presentation." },
+      es: { description: "Cómo crear una galería de fotos o una guía interactiva en GuiaFlow: elige el modo, sube fotos o captura pantallas con la extensión y arma la presentación." },
     },
   },
   {
