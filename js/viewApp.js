@@ -4,10 +4,10 @@
 import { applyTheme, normalizeSteps, resolveImageSrc } from "./store.js";
 import { ensureNarration, ensurePlayback } from "./playback.js";
 import { createPlayer } from "./player.js";
-import { getLocale, initLocale, applyI18n, setLocale, SUPPORTED_LOCALES, t } from "./i18n.js";
-import { applyDocumentLang, createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
+import { getLocale, applyI18n, resolvePlayerUiLocale, setLocale, t } from "./i18n.js";
+import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from "./langMenu.js";
 import { setCaptions } from "./playerControls.js";
-import { baseLang, langLabel, resolveContent } from "./tour-schema/i18n.js";
+import { langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource, uuidV4 } from "./viewAnalytics.js";
 import { consumeEntryToken, entryResult, markNoticeSeen, noticeAlreadySeen, privacyNoticeUrl } from "./identifiedEntry.js";
@@ -741,11 +741,6 @@ export function viewForLang(source, state) {
   return resolveContent(source, state.text, { audioLang: state.audio });
 }
 
-function langChromeLocale(lang) {
-  const base = baseLang(lang);
-  return SUPPORTED_LOCALES.includes(base) ? base : "en";
-}
-
 function applyLangState(next, { initial = false } = {}) {
   const prev = langState;
   langState = next;
@@ -759,10 +754,8 @@ function applyLangState(next, { initial = false } = {}) {
   }
   demo = viewForLang(sourceDemo, next);
   storeLangs(shareSlug || viewRoute()?.id || "v", next);
-  // why: botões e rótulos do player seguem o idioma do texto quando há catálogo (§4.1)
-  setLocale(langChromeLocale(next.text), { persist: false });
+  // why: o chrome (botões, rótulos, <html lang>) fica no idioma da interface; o texto do tour não é traduzido aqui
   applyI18n(document);
-  applyDocumentLang(next.text);
   if (!initial) applyShareTitle(demo.name || "");
   langMenu?.paint();
   const fallback = next.audio !== "none" && demo.audioFallback?.length;
@@ -795,8 +788,14 @@ function mountLangMenu(tries = 30) {
   else if (tries > 0) requestAnimationFrame(() => mountLangMenu(tries - 1));
 }
 
+function bootUiLocale() {
+  const search = typeof location !== "undefined" ? location.search : "";
+  const language = typeof navigator !== "undefined" ? navigator.language || "" : "";
+  return setLocale(resolvePlayerUiLocale({ search, language }), { persist: false });
+}
+
 async function boot() {
-  initLocale();
+  bootUiLocale();
   applyI18n(document);
 
   const shareBoot = bootMeta();
