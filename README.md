@@ -5,7 +5,7 @@
 [![smithery badge](https://img.shields.io/badge/Smithery-guiaflow-FF5601)](https://smithery.ai/servers/gmistrinelli/guiaflow)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Free, open-source interactive product demo & guided tour builder — alternative to Arcade, Supademo, Storylane.**
+**Turn screens and photos into presentations your customers can explore: interactive guided tours and photo galleries. Free and open source — an alternative to Arcade, Supademo, Storylane.**
 
 Try it at **[guiaflow.pro](https://guiaflow.pro/en)** · Editor: [guiaflow.pro/editor](https://guiaflow.pro/editor) · Integrations: [guiaflow.pro/en/integrations](https://guiaflow.pro/en/integrations)
 

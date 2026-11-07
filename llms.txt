@@ -1,6 +1,6 @@
 # GuiaFlow
 
-> GuiaFlow turns product screenshots into interactive guided tours (highlight + click + text + optional narration), published as a permanent link (https://guiaflow.pro/p/...) or embedded on a site. The editor is open source (MIT) and runs in the browser with no account and no credit card; the hosted services — permanent links, GuiaFlow AI and narration, link analytics and the MCP server / REST API below — are part of the paid Pro plan. AI agents build and publish tours through the MCP server or REST API (Pro). Interface and copy default to Brazilian Portuguese; Spanish and English are supported.
+> GuiaFlow turns screens and photos into presentations people can explore: interactive guided tours from product screenshots (highlight + click + text + optional narration) for processes and software, and photo galleries (gallery mode: full-screen photos with sections, zoom and thumbnails) for products, real estate and vehicles. Both are published as a permanent link (https://guiaflow.pro/p/...) or embedded on a site. The editor is open source (MIT) and runs in the browser with no account and no credit card; the hosted services — permanent links, GuiaFlow AI and narration, link analytics and the MCP server / REST API below — are part of the paid Pro plan. AI agents build and publish tours through the MCP server or REST API (Pro). Interface and copy default to Brazilian Portuguese; Spanish and English are supported.
 
 ## Connect
 
