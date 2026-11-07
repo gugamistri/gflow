@@ -36,9 +36,11 @@ export const PAGES = [
     lastmod: "2026-10-26",
     meta: {
       en: {
+        ogImage: "/brand/og-landing-en.png",
         description: "Turn screens and photos into presentations your customers can explore: galleries for products, real estate and vehicles, and interactive guides for processes and software. Free in the browser, no sign-up.",
       },
       es: {
+        ogImage: "/brand/og-landing-es.png",
         description: "Convierte pantallas y fotos en presentaciones que tus clientes pueden explorar: galerías para productos, inmuebles y vehículos, y guías interactivas para procesos y software. Gratis en el navegador, sin registro.",
       },
     },
@@ -396,6 +398,10 @@ export function renderLocale(srcHtml, page, loc, read = defaultRead) {
   const ogDesc = meta.ogDescription || meta.description;
   html = replaceMeta(html, "property", "og:description", ogDesc);
   html = replaceMeta(html, "name", "twitter:description", ogDesc);
+  if (meta.ogImage) {
+    html = replaceMeta(html, "property", "og:image", `${ORIGIN}${meta.ogImage}`);
+    html = replaceMeta(html, "name", "twitter:image", `${ORIGIN}${meta.ogImage}`);
+  }
   html = replaceMeta(html, "property", "og:image:alt", ogAlt);
   html = replaceMeta(html, "name", "twitter:image:alt", ogAlt);
   html = replaceMeta(html, "property", "og:url", absUrl(localePath(page, loc)));

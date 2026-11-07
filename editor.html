@@ -99,7 +99,7 @@
               <svg class="btn-ico" aria-hidden="true"><use href="#i-plus"></use></svg>
               <span data-i18n="menu.new">Novo</span>
             </button>
-            <button type="button" class="more-item" id="btn-menu-assistant" data-assistant-entry hidden>
+            <button type="button" class="more-item" id="btn-menu-assistant" data-assistant-entry>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
               <span data-i18n="assistant.entry">Criar com ajuda</span>
             </button>
@@ -574,11 +574,11 @@
         </span>
         <span data-i18n="topbar.newProject">Novo projeto</span>
       </button>
-      <button type="button" class="library-action-card library-assistant-card" id="btn-assistant" data-assistant-entry hidden>
+      <button type="button" class="library-action-card library-assistant-card" id="btn-assistant" data-assistant-entry>
         <span class="library-action-icon" aria-hidden="true">
           <svg class="btn-ico"><use href="#i-sparkles"></use></svg>
         </span>
-        <span><span data-i18n="assistant.entry">Criar com ajuda</span> <span class="pro-badge"><svg class="pro-badge-crown" aria-hidden="true"><use href="#i-crown"></use></svg><span data-i18n="billing.badge">Pro</span></span></span>
+        <span><span data-i18n="assistant.entry">Criar com ajuda</span> <span class="asst-free-badge" data-i18n="assistant.freeBadge">Grátis</span></span>
         <span class="library-assistant-hint" data-i18n="assistant.entryHint">Crie sua apresentação com ajuda. Conte o que quer mostrar; você revisa antes de aplicar e publicar.</span>
       </button>
       <button type="button" class="library-import-hint" id="library-import-hint" hidden data-i18n="library.importHint">
@@ -2399,6 +2399,13 @@
           </span>
         </label>
       </fieldset>
+      <p class="new-project-assist" data-assistant-entry-hint>
+        <span data-i18n="newProject.assistHint">Prefere ajuda para montar? O assistente organiza fotos ou telas com você, grátis.</span>
+        <button type="button" class="btn btn-sm" data-assistant-entry data-assistant-from-new>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
+          <span data-i18n="assistant.entry">Criar com ajuda</span>
+        </button>
+      </p>
       <p class="theme-section-label" data-i18n="modal.initialTheme">Tema inicial</p>
       <div class="theme-presets" id="new-project-themes"></div>
       <div class="studio-modal-actions">

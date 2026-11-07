@@ -257,6 +257,14 @@
               "@type": "Answer",
               "text": "Não. Você decide se quer incluir captura e qual será o próximo passo de quem vê."
             }
+          },
+          {
+            "@type": "Question",
+            "name": "O assistente “Criar com ajuda” é pago?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Não. O assistente é grátis e funciona sem conta. As sugestões com IA usam a sua própria chave de IA (sem custo no GuiaFlow) ou a IA do GuiaFlow, inclusa no Pro. Sem IA, você monta tudo à mão e revisa antes de publicar."
+            }
           }
         ]
       }
@@ -301,22 +309,28 @@
           <a class="hero-ph" href="https://www.producthunt.com/products/guiaflow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-guiaflow" target="_blank" rel="noopener noreferrer"><img alt="GuiaFlow - Build interactive product tours, free and open source | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1279489&amp;theme=dark&amp;t=1792018080502" loading="lazy" decoding="async" /></a>
         </div>
         <div class="hero-art" aria-hidden="true">
-          <div class="mock">
-            <div class="mock-bar"><span></span><span></span><span></span><i>app.leadpronto.ai</i></div>
+          <div class="mock mock-gallery">
+            <div class="mock-bar"><span></span><span></span><span></span><i data-i18n="lp.mock.bar">Galeria · Colchão Exemplo</i></div>
             <div class="mock-shot">
-              <img src="/a/190/brand/hero-leadpronto.webp" width="1200" height="787" alt="Passo de um demo interativo no GuiaFlow: destaque no painel do LeadPronto com o cartão do passo e o botão de avançar" data-i18n-alt="lp.hero.artAlt" fetchpriority="high" decoding="async" />
+              <img src="/a/190/brand/hero-galeria.webp" width="1200" height="787" alt="Ilustração do GuiaFlow: uma galeria de fotos de um colchão com seções e miniaturas, e um guia passo a passo com destaque e balão sobre a tela de um sistema" data-i18n-alt="lp.hero.artAlt" fetchpriority="high" decoding="async" />
+              <span class="mock-count" data-i18n="lp.mock.count">1 de 5</span>
+              <span class="mock-zoom"></span>
+            </div>
+            <div class="mock-chips"><span class="is-on" data-i18n="lp.mock.s1">Visão geral</span><span data-i18n="lp.mock.s2">Detalhes</span><span data-i18n="lp.mock.s3">Em uso</span><span data-i18n="lp.mock.s4">Medidas</span></div>
+          </div>
+          <div class="mock mock-guide">
+            <div class="mock-guide-shot">
+              <img src="/a/190/brand/hero-guia.webp" width="800" height="500" alt="" decoding="async" />
               <span class="mock-target"></span>
               <span class="mock-hotspot"></span>
               <div class="mock-pop">
-                <small data-i18n="lp.mock.step">Passo 1 de 11</small>
-                <strong data-i18n="lp.mock.title">Integração Meta</strong>
-                <span class="mock-desc" data-i18n="lp.mock.desc">Capture leads de anúncios do Facebook e Instagram direto no funil.</span>
-                <span class="mock-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <small data-i18n="lp.mock.step">Guia · Passo 2 de 3</small>
+                <strong data-i18n="lp.mock.title">Clique em Salvar</strong>
+                <span class="mock-desc" data-i18n="lp.mock.desc">O cliente entra no topo da lista.</span>
                 <em data-i18n="lp.mock.next">Próximo →</em>
               </div>
             </div>
           </div>
-          <div class="mock-toast"><span class="dot"></span><span data-i18n="lp.mock.toast">Novo lead: ana@empresa.com</span></div>
         </div>
       </div>
     </section>
@@ -332,7 +346,7 @@
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg></span>
             <h3 data-i18n="lp.paths.gallery.title">Galeria: deixe os detalhes à vista</h3>
             <p data-i18n="lp.paths.gallery.body">Organize fotos por seções e deixe cada pessoa explorar no próprio ritmo.</p>
-            <a class="btn btn-ghost" href="/editor?novo=galeria" data-i18n="lp.paths.gallery.cta">Criar uma galeria</a>
+            <a class="btn btn-ghost" href="/editor?novo=galeria" data-gallery-example data-i18n="lp.paths.gallery.cta">Criar uma galeria</a>
           </article>
           <article class="card case path">
             <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/><path d="M13 9l3 3-3 3"/></svg></span>
@@ -340,6 +354,15 @@
             <p data-i18n="lp.paths.guide.body">Use capturas de tela e textos para orientar quem precisa conhecer um produto ou executar uma tarefa.</p>
             <a class="btn btn-ghost" href="#demo" data-i18n="lp.paths.guide.cta">Ver guia</a>
           </article>
+        </div>
+        <article class="card assist-card" id="criar-com-ajuda">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></span>
+          <div>
+            <p class="eyebrow" data-i18n="lp.assist.eyebrow">Novo</p>
+            <h3 data-i18n="lp.assist.title">Crie com ajuda</h3>
+            <p data-i18n="lp.assist.body">Conte seu objetivo, organize os materiais e revise as sugestões antes de aplicar e publicar. O assistente é grátis; a parte de IA funciona com a sua própria chave, sem custo no GuiaFlow, ou com a IA do GuiaFlow inclusa no Pro.</p>
+          </div>
+          <a class="btn btn-primary" href="/editor?novo=ajuda" data-i18n="lp.assist.cta">Criar com ajuda</a>
         </div>
       </div>
     </section>
@@ -547,6 +570,7 @@
               <li data-i18n="lp.plan.free.f4">Final com WhatsApp ou link</li>
               <li data-i18n="lp.plan.free.f5">IA e narração com a sua chave</li>
               <li data-i18n="lp.plan.free.f6">Sem conta e sem cartão</li>
+              <li data-i18n="lp.plan.free.f7">Assistente “Criar com ajuda”</li>
             </ul>
             <a class="btn btn-ghost btn-block" href="/editor" data-i18n="lp.plan.free.cta">Abrir o editor</a>
           </article>
@@ -639,6 +663,10 @@
           <details>
             <summary data-i18n="lp.faq.q12">Preciso captar contatos?</summary>
             <p data-i18n="lp.faq.a12">Não. Você decide se quer incluir captura e qual será o próximo passo de quem vê.</p>
+          </details>
+          <details>
+            <summary data-i18n="lp.faq.q13">O assistente “Criar com ajuda” é pago?</summary>
+            <p data-i18n="lp.faq.a13">Não. O assistente é grátis e funciona sem conta. As sugestões com IA usam a sua própria chave de IA (sem custo no GuiaFlow) ou a IA do GuiaFlow, inclusa no Pro. Sem IA, você monta tudo à mão e revisa antes de publicar.</p>
           </details>
           <details>
             <summary data-i18n="lp.faq.q1">Onde ficam os meus dados?</summary>

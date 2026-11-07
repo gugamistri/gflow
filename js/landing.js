@@ -13,6 +13,12 @@ import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js
  */
 export const LANDING_DEMO_SLUG = "leadpronto-9e0052";
 export const LANDING_DEMO_ORIGIN = "https://guiaflow.pro";
+/**
+ * Galeria de exemplo do card "Galeria" em #dois-caminhos: slug de um link permanente publicado (/p/<slug>).
+ * why: vazio = o botão "Criar uma galeria" abre o editor já em galeria (/editor?novo=galeria).
+ *      Quando o Gustavo publicar a galeria de exemplo, ponha o slug aqui: o botão vira "Ver galeria" → /p/<slug>.
+ */
+export const LANDING_GALLERY_SLUG = "";
 const DEMO_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/;
 
 /** URL do embed (?embed=1) ou "" se o slug estiver vazio ou fora do formato de /p. */
@@ -20,6 +26,22 @@ export function landingDemoUrl(slug = LANDING_DEMO_SLUG, origin = LANDING_DEMO_O
   const clean = String(slug || "").trim();
   if (!DEMO_SLUG_RE.test(clean)) return "";
   return `${origin}/p/${encodeURIComponent(clean)}?embed=1`;
+}
+
+/** Link do card "Galeria": /p/<slug> da galeria de exemplo, ou "" para manter o editor. */
+export function landingGalleryHref(slug = LANDING_GALLERY_SLUG, origin = LANDING_DEMO_ORIGIN) {
+  const clean = String(slug || "").trim();
+  if (!DEMO_SLUG_RE.test(clean)) return "";
+  return `${origin}/p/${encodeURIComponent(clean)}`;
+}
+
+function mountGalleryExample() {
+  const link = document.querySelector("[data-gallery-example]");
+  const href = landingGalleryHref();
+  if (!link || !href) return;
+  link.href = href;
+  link.setAttribute("data-i18n", "lp.paths.gallery.view");
+  link.textContent = t("lp.paths.gallery.view");
 }
 
 function mountDemo() {
@@ -257,6 +279,7 @@ function boot() {
   installCatalogs();
   initLocale();
   mountDemo();
+  mountGalleryExample();
   if (getLocale() !== "pt") applyI18n(document);
   paintPrices();
   bindLocaleSelect(document.getElementById("locale-select"), () => paintPrices());

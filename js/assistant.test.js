@@ -45,13 +45,15 @@ function mattressDraft() {
   return d;
 }
 
-test("assistente: desligado por padrão; ?assistant=1 liga e lembra, ?assistant=0 desliga", () => {
+test("assistente: ligado por padrão; ?assistant=0 desliga e lembra, ?assistant=1 volta; kill switch geral", () => {
   const storage = memStorage();
-  assert.equal(assistantEnabled({ search: "", storage }), false);
-  assert.equal(assistantEnabled({ search: "?assistant=1", storage }), true);
   assert.equal(assistantEnabled({ search: "", storage }), true);
   assert.equal(assistantEnabled({ search: "?assistant=0", storage }), false);
   assert.equal(assistantEnabled({ search: "", storage }), false);
+  assert.equal(assistantEnabled({ search: "?assistant=1", storage }), true);
+  assert.equal(assistantEnabled({ search: "", storage }), true);
+  assert.equal(assistantEnabled({ search: "?assistant=1", storage, defaultOn: false }), false);
+  assert.equal(assistantEnabled({ search: "" }), true);
 });
 
 test("assistente: recomenda Galeria para colchões e Guia para software", () => {

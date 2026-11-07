@@ -2252,6 +2252,8 @@ const NEW_INTENT_KIND = {
   veiculo: "veiculo",
   guia: "guide",
   guide: "guide",
+  ajuda: "assistant",
+  help: "assistant",
 };
 
 function consumeNewProjectIntent() {
@@ -2267,6 +2269,12 @@ function consumeNewProjectIntent() {
   applyCloudAuthHref(url.toString());
   if (!kind) return;
   showLibrary();
+  if (kind === "assistant") {
+    // why: /editor?novo=ajuda vem do card "Crie com ajuda" da landing; com o kill switch desligado, cai no novo projeto.
+    if (assistantFlagOn()) openAssistant();
+    else openNewProjectDialog();
+    return;
+  }
   openNewProjectDialog();
   const radio = document.querySelector(`input[name="new-project-kind"][value="${kind}"]`);
   if (radio) radio.checked = true;
@@ -3237,7 +3245,7 @@ function assistantFlagOn() {
 
 function paintAssistantEntry() {
   const on = assistantFlagOn();
-  for (const el of document.querySelectorAll("[data-assistant-entry]")) el.hidden = !on;
+  for (const el of document.querySelectorAll("[data-assistant-entry], [data-assistant-entry-hint]")) el.hidden = !on;
 }
 
 async function assistantAiAccess() {
@@ -3291,6 +3299,11 @@ function openAssistant() {
         if (panel) panel.open = true;
       },
       sceneName: templateSceneName,
+      openAiKeySettings(onDone) {
+        // why: a chave do usuário (BYOK) fica nas Configurações; ao fechar, o assistente relê o acesso à IA.
+        document.dispatchEvent(new CustomEvent("gf-open-browser-keys", { cancelable: true }));
+        document.getElementById("modal-settings")?.addEventListener("close", () => onDone?.(), { once: true });
+      },
     });
   }
   void assistantUi.open();
@@ -3680,6 +3693,7 @@ function bindChrome() {
   for (const el of document.querySelectorAll("[data-assistant-entry]")) {
     el.addEventListener("click", () => {
       document.getElementById("more-panel")?.removeAttribute("open");
+      if (el.hasAttribute("data-assistant-from-new")) document.getElementById("modal-new-project")?.close();
       openAssistant();
     });
   }

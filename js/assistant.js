@@ -28,8 +28,12 @@ export const NOTE_MAX = 600;
 export const FACTS_MAX = 2000;
 export const BRIEF_MAX = 500;
 
-/** Liga/desliga pela URL (?assistant=1 / ?assistant=0) e lembra no navegador. Desligado por padrão. */
-export function assistantEnabled({ search = "", storage = null } = {}) {
+/** Interruptor geral: false tira o assistente do editor para todo mundo (kill switch). */
+export const ASSISTANT_DEFAULT_ON = true;
+
+/** Ligado por padrão. ?assistant=0 desliga neste navegador (e lembra); ?assistant=1 volta ao padrão. */
+export function assistantEnabled({ search = "", storage = null, defaultOn = ASSISTANT_DEFAULT_ON } = {}) {
+  if (!defaultOn) return false;
   let q = null;
   try {
     q = new URLSearchParams(search).get("assistant");
@@ -37,17 +41,17 @@ export function assistantEnabled({ search = "", storage = null } = {}) {
     q = null;
   }
   try {
-    if (q === "1") storage?.setItem(ASSISTANT_FLAG_KEY, "1");
-    else if (q === "0") storage?.removeItem(ASSISTANT_FLAG_KEY);
+    if (q === "0") storage?.setItem(ASSISTANT_FLAG_KEY, "0");
+    else if (q === "1") storage?.removeItem(ASSISTANT_FLAG_KEY);
   } catch {
     /* storage bloqueado: vale só a URL */
   }
-  if (q === "1") return true;
   if (q === "0") return false;
+  if (q === "1") return true;
   try {
-    return storage?.getItem(ASSISTANT_FLAG_KEY) === "1";
+    return storage?.getItem(ASSISTANT_FLAG_KEY) !== "0";
   } catch {
-    return false;
+    return true;
   }
 }
 

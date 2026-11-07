@@ -309,10 +309,11 @@ export function createAssistantUi(ctx) {
       ${gapsBlock()}
       <div class="asst-ai">
         <button type="button" class="btn" data-asst-ai ${busy === "ai" || !open ? "disabled" : ""}>
-          <span class="pro-badge"><span>Pro 👑</span></span>
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-sparkles"></use></svg>
           <span>${esc(t(hasSuggestions || draft.items.some((it) => it.origin === "ai") ? "assistant.ai.regen" : "assistant.ai.suggest"))}</span>
         </button>
         <p class="asst-hint" data-asst-ai-notice></p>
+        <button type="button" class="btn btn-sm" data-asst-key hidden>${esc(t("assistant.ai.useKey"))}</button>
       </div>
       <ol class="asst-items">${draft.items.map(itemCard).join("")}</ol>`;
   }
@@ -380,7 +381,7 @@ export function createAssistantUi(ctx) {
     dialog.innerHTML = `
       <div class="studio-modal-body assistant-body">
         <header class="asst-head">
-          <h3 id="assistant-title">${esc(t("assistant.title"))} <span class="pro-badge"><span>Pro 👑</span></span></h3>
+          <h3 id="assistant-title">${esc(t("assistant.title"))} <span class="asst-free-badge">${esc(t("assistant.freeBadge"))}</span></h3>
           <button type="button" class="btn btn-ghost btn-icon" data-asst-close aria-label="${esc(t("assistant.close"))}" title="${esc(t("assistant.close"))}">✕</button>
         </header>
         ${stagesNav()}
@@ -398,6 +399,8 @@ export function createAssistantUi(ctx) {
     if (!el) return;
     const access = await ctx.aiAccess();
     el.textContent = access === "hosted" ? t("assistant.ai.notice") : access === "byok" ? t("assistant.ai.noticeByok") : t("assistant.ai.locked");
+    const keyBtn = dialog?.querySelector("[data-asst-key]");
+    if (keyBtn) keyBtn.hidden = access !== "none";
   }
 
   async function addFiles(files) {
@@ -533,6 +536,7 @@ export function createAssistantUi(ctx) {
       return render();
     }
     if (el.matches("[data-asst-ai]")) return void runAi();
+    if (el.matches("[data-asst-key]")) return void ctx.openAiKeySettings?.(() => void paintAiNotice());
     if (el.matches("[data-asst-apply]")) return void apply();
     if (el.dataset.asstOpen) return void openTarget(el.dataset.asstOpen);
     if (el.matches("[data-asst-restart]")) {

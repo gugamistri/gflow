@@ -504,3 +504,37 @@
   border-radius: 8px;
   padding: 8px 10px;
 }
+
+.asst-free-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
+  color: var(--ns-accent-dark);
+  background: color-mix(in srgb, var(--ns-accent) 14%, var(--ns-panel));
+}
+
+.asst-ai [data-asst-key] {
+  justify-self: start;
+}
+
+.new-project-assist {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  color: var(--ns-ink);
+  background: color-mix(in srgb, var(--ns-accent) 8%, var(--ns-panel));
+}
+
+.new-project-assist[hidden] {
+  display: none;
+}
