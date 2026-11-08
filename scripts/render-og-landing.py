@@ -81,39 +81,86 @@ def draw_line(draw, xy, text, font, fill, tracking):
     return x
 
 
-def neutral(rgb):
+# Coluna do título: abaixo da sobrancelha, acima do rodapé.
+FILL_TOP = 168
+FILL_BOTTOM = 544
+
+
+def content(rgb):
     r, g, b = rgb[:3]
-    return abs(r - g) < 18 and abs(g - b) < 18
+    return r >= 30 or g >= 30 or b >= 30
 
 
-def erase_headline(im):
-    """Apaga o título antigo. A foto começa perto de x=690; o balão é mais baixo e à direita."""
+def illustration_edges(im):
+    """x em que a arte da direita começa, por linha. Letras do título antigo ficam de fora."""
+    w, h = im.size
+    px = im.load()
+    seen = bytearray(w * h)
+    illus = bytearray(w * h)
+
+    def index(x, y):
+        return y * w + x
+
+    for y in range(h):
+        for x in range(w):
+            i = index(x, y)
+            if seen[i]:
+                continue
+            seen[i] = 1
+            if not content(px[x, y]):
+                continue
+            stack = [(x, y)]
+            comp = []
+            reaches = x >= 700
+            while stack:
+                cx, cy = stack.pop()
+                comp.append((cx, cy))
+                for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                    if nx < 0 or ny < 0 or nx >= w or ny >= h:
+                        continue
+                    j = index(nx, ny)
+                    if seen[j]:
+                        continue
+                    seen[j] = 1
+                    if not content(px[nx, ny]):
+                        continue
+                    if nx >= 700:
+                        reaches = True
+                    stack.append((nx, ny))
+            if reaches:
+                for cx, cy in comp:
+                    illus[index(cx, cy)] = 1
+    edges = []
+    for y in range(h):
+        edge = w
+        row = y * w
+        for x in range(w):
+            if illus[row + x]:
+                edge = x
+                break
+        edges.append(edge)
+    return edges
+
+
+def clear_text_column(im):
+    """Pinta a coluna à esquerda da ilustração com o fundo limpo, do logo ao rodapé."""
     px = im.load()
     w, h = im.size
-    kill = []
-    for y in range(168, 472):
-        for x in range(48, 650):
-            r, g, b = px[x, y][:3]
-            if r > 220 and g > 220 and b > 220:
-                kill.append((x, y))
-    killed = set(kill)
-    halo = []
-    for x, y in kill:
-        for dy in range(-2, 3):
-            for dx in range(-2, 3):
-                xx, yy = x + dx, y + dy
-                if (xx, yy) in killed or not (0 <= xx < w and 168 <= yy < 472 and xx < 660):
-                    continue
-                if neutral(px[xx, yy]) and px[xx, yy][0] > 36:
-                    halo.append((xx, yy))
-                    killed.add((xx, yy))
-    for x, y in kill + halo:
-        px[x, y] = BG
+    edges = illustration_edges(im)
+    bg = [px[16, y] for y in range(h)]
+    for y in range(FILL_TOP, min(FILL_BOTTOM, h)):
+        limit = min(edges[y], 680)
+        color = bg[y]
+        for x in range(limit):
+            px[x, y] = color
+    return edges
 
 
 def render(spec, title_font, sub_font):
     im = Image.open(spec["src"]).convert("RGB")
-    erase_headline(im)
+    edges = clear_text_column(im)
+    band = edges[FILL_TOP:FILL_BOTTOM]
+    print(f"  borda da arte x={min(band)}–{max(band)}")
     draw = ImageDraw.Draw(im)
     tracking = -0.6
     lines = wrap(title_font, spec["title"], 560, tracking)
