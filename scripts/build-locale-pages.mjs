@@ -36,11 +36,11 @@ export const PAGES = [
     lastmod: "2026-10-26",
     meta: {
       en: {
-        ogImage: "/brand/og-landing-en.png",
+        ogImage: "/brand/og-landing-en-v3.png",
         description: "Turn screens and photos into presentations your customers can explore: galleries for products, real estate and vehicles, and interactive guides for processes and software. Free in the browser, no sign-up.",
       },
       es: {
-        ogImage: "/brand/og-landing-es.png",
+        ogImage: "/brand/og-landing-es-v3.png",
         description: "Convierte pantallas y fotos en presentaciones que tus clientes pueden explorar: galerías para productos, inmuebles y vehículos, y guías interactivas para procesos y software. Gratis en el navegador, sin registro.",
       },
     },

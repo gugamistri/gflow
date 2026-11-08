@@ -24,10 +24,10 @@ test("landing: redirecionamento para /editor roda antes de qualquer CSS", () => 
 
 test("landing: SEO, canônico na raiz e og:image própria", () => {
   assert.match(landing, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/"/);
-  assert.match(landing, /<meta property="og:image" content="https:\/\/guiaflow\.pro\/brand\/og-landing-v2\.png"/);
+  assert.match(landing, /<meta property="og:image" content="https:\/\/guiaflow\.pro\/brand\/og-landing-v3\.png"/);
   assert.match(landing, /<meta name="twitter:card" content="summary_large_image"/);
   assert.equal(/noindex/.test(landing), false);
-  const png = readFileSync(new URL("brand/og-landing-v2.png", root));
+  const png = readFileSync(new URL("brand/og-landing-v3.png", root));
   assert.equal(png.readUInt32BE(16), 1200);
   assert.equal(png.readUInt32BE(20), 630);
 });
@@ -134,7 +134,7 @@ test("landing: assistente grátis; IA com a chave do usuário ou a IA do GuiaFlo
 });
 
 test("landing: og:image por idioma em 1200x630", () => {
-  for (const [file, png] of [["en.html", "og-landing-en.png"], ["es.html", "og-landing-es.png"]]) {
+  for (const [file, png] of [["en.html", "og-landing-en-v3.png"], ["es.html", "og-landing-es-v3.png"]]) {
     assert.match(read(file), new RegExp(`<meta property="og:image" content="https://guiaflow\\.pro/brand/${png.replace(".", "\\.")}"`));
     const buf = readFileSync(new URL(`brand/${png}`, root));
     assert.equal(buf.readUInt32BE(16), 1200);
