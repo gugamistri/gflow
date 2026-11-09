@@ -1,6 +1,8 @@
-# Proposta: conectar o agente de IA ao GuiaFlow
+# Assistente: conectar o agente de IA ao GuiaFlow
 
-Não implementar neste PR. O objetivo é o caminho mais curto para a pessoa dizer «conecte o Claude, o Codex, o Cursor… ao GuiaFlow» e criar o primeiro tour. A página [Integrações](https://guiaflow.pro/integracoes) e o diálogo de chaves já ensinam o servidor; o que falta é um assistente curto, no momento de criar o projeto, com um passo por cliente e um estado de «conectado».
+Implementado no editor (`js/mcpConnect.js`, `js/mcpConnectUi.js`, cartão `#btn-agent-connect` e diálogo `#modal-agent-connect`). O caminho é o mais curto para a pessoa dizer «conecte o Claude, o Codex, o Cursor… ao GuiaFlow» e criar o primeiro tour. A página [Integrações](https://guiaflow.pro/integracoes) continua com o passo a passo; o ChatGPT na web aponta para Plugins → Add custom MCP server.
+
+Os monogramas dos cartões são letras neutras. Não há logo oficial: a licença das marcas não autoriza copiá-las aqui.
 
 Servidor, já no ar: `https://app.guiaflow.pro/mcp` (Streamable HTTP, OAuth 2.1 com PKCE, registro dinâmico de cliente e Client ID Metadata Documents). Metadados: `https://app.guiaflow.pro/.well-known/oauth-protected-resource/mcp`. Plano Pro. A chave `gf_live_…` continua existindo para script; não é o caminho deste assistente.
 
@@ -40,10 +42,10 @@ Diálogo no padrão `studio-modal`. Textos em `js/i18n.js` (pt, en, es) e cópia
 
 Grade com um cliente por cartão e um estado:
 
-- **Conectado** — o `GET /api-keys` reconhece aquele produto e há `lastUsedAt` ou um uso recente com sucesso.
-- **Aguardando login** — a pessoa clicou no passo 2 nesta sessão e ainda não houve uso. O diálogo consulta de novo o `GET /api-keys` enquanto estiver aberto e para ao fechar. Não há como saber que o deep link foi só clicado.
-- **Não conectado**.
-- **Indisponível no plano** — `canCreate === false` ou HTTP 402. O mesmo convite ao Pro do diálogo de chaves. Sem este passo o resto não funciona.
+- **Conectado · usado há X** — a consulta reconhece aquele produto e há `lastSeenAt` (ou `lastUsedAt`).
+- **Não conectado** — sem item, ou a API ainda não expõe a lista.
+- **Verificar conexão** — depois do gesto, repete a consulta. Não há como saber que o deep link foi só clicado.
+- **Plano** — HTTP 402 mostra o convite ao Pro. Os passos continuam visíveis.
 
 ### 2. Um gesto por cliente
 
@@ -208,40 +210,32 @@ OAuth é descoberto sozinho no 401, sem bloco `oauth` no JSON, para servidor que
 
 ## Como saber que conectou
 
-Hoje o editor só consegue três sinais, todos indiretos:
+O clique num deep link não chega ao GuiaFlow. «Conectado» só existe depois que o aplicativo abre o servidor (`initialize` do MCP, no máximo a cada 10 minutos). Quem não está logado vê o pedido de entrada antes do diálogo. **Verificar conexão** repete o `GET /api-keys` e explica que é preciso ter usado o GuiaFlow naquele aplicativo ao menos uma vez.
 
-1. `apps[]` no `GET /api-keys`: um cliente OAuth autorizou. O nome não é um id estável de produto.
-2. `recent[]`: alguma chamada passou, com o `client` que a API gravou.
-3. `createdBy.kind === "agent"` num projeto: um agente já criou um tour. É histórico. Mostrar como «você já criou um tour por agente», não como «conectado».
+`createdBy.kind === "agent"` num projeto continua sendo histórico («você já tem um tour criado por agente»), não o selo do cartão.
 
-O clique num deep link não chega ao GuiaFlow. «Conectado» só existe depois do login OAuth ou de uma chamada autenticada.
+### Contrato que o editor lê
 
-### O que mudaria em guiaflow-cloud
+Não existe `GET /v1/me/mcp-clients`. O editor chama só `GET /api-keys`, com o JWT da sessão. A resposta ganha `mcpClients`. Campo ausente ou lista vazia: sem selo. 401 pede para entrar de novo. 402 mostra o convite ao Pro. Nuvem desligada: o assistente abre sem selo.
 
-Este checkout não contém esse repositório. O contrato que o editor já fala é `GET /api-keys`. Estender essa resposta, em vez de criar outra rota.
-
-No tratamento do MCP (`apps/api/src/routes/mcp.js` e o que grava o token OAuth em `routes/oauth.js` / `routes/api-keys.js`):
-
-- No `initialize`, gravar `clientInfo.name` e `clientInfo.version` no token ou na chave que autenticou a sessão (`lastClient`).
-- No OAuth, gravar o `client_id` e, quando for URL de CIMD, a URL inteira. A OpenAI documenta identidades estáveis (`https://chatgpt.com/oauth/client.json` para o ChatGPT e `https://chatgpt.com/oauth/codex/client.json` ou `https://chatgpt.com/oauth/codex/<callback_id>/client.json` para o Codex). O Claude manda a identidade publicada dele ou um cliente registrado na hora; guardar o valor cru e mapear no servidor quando a URL for conhecida. Não adivinhar o produto pelo nome de exibição.
-- Normalizar para um id: `claude`, `claude-code`, `chatgpt`, `codex`, `cursor`, `vscode`, `windsurf`, `gemini` ou `unknown`. Cursor, VS Code, Windsurf e Gemini CLI não publicam, nas páginas acima, uma URL de CIMD fixa. Neles o sinal bom é o `clientInfo.name` do `initialize`, não o nome que a pessoa vê.
-
-Campo novo em cada item de `apps` e, se der, em `keys`:
+A gravação acontece no `initialize` do MCP, com throttle de 10 minutos (guiaflow-cloud PR #96, ainda não no ar). Por isso **Verificar conexão** avisa que o aplicativo precisa ter aberto e usado o GuiaFlow ao menos uma vez, e que a atualização pode levar até 10 minutos.
 
 ```json
 {
-  "product": "cursor",
-  "via": "oauth",
-  "lastClient": "Cursor",
-  "lastUsedAt": "2026-11-09T12:00:00.000Z"
+  "mcpClients": [
+    {
+      "product": "cursor",
+      "displayName": "Cursor",
+      "lastSeenAt": "2026-11-09T12:00:00.000Z",
+      "via": "oauth"
+    }
+  ]
 }
 ```
 
-`product: "unknown"` continua aparecendo em Apps conectados, sem acender um cartão do assistente.
+`product` é `claude`, `claude-code`, `chatgpt`, `codex`, `cursor`, `vscode`, `windsurf`, `gemini-cli` ou `other`. `via` é `oauth` ou `api_key`. Uma linha por produto. `other` usa o `displayName` cru e pode repetir, um cartão por nome. O selo é «Conectado · usado há X» quando há `lastSeenAt`.
 
-Chave de API criada à mão não identifica o produto. Sem `lastClient` de um `initialize`, o assistente diz «há uma chave em uso», não «o Cursor está conectado».
-
-Nada disso substitui a etiqueta `createdBy`. Ela segue sendo escrita na criação do tour, como hoje.
+Quem já tem um cliente cai no prompt desse, com **Trocar de agente**.
 
 ## Textos de interface
 

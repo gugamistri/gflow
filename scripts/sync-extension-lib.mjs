@@ -11,6 +11,7 @@ export const EXTENSION_LIB_FILES = [
   "assistantI18n.js",
   "settingsI18n.js",
   "videoI18n.js",
+  "mcpConnectI18n.js",
   "releaseNotes.js",
 ];
 
