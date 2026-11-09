@@ -173,6 +173,7 @@ import { createLeadsDialog } from "./leadsDialog.js";
 import { leadProntoReturnKey, readLeadProntoReturn, stripLeadProntoReturn } from "./leadPronto.js";
 import { hubspotReturnNotice, readHubspotReturn, stripHubspotReturn } from "./hubspot.js";
 import { createApiKeysDialog, agentTagInfo } from "./apiKeysDialog.js";
+import { createMcpConnectDialog } from "./mcpConnectUi.js";
 import { createSettingsDialog, takeSettingsReturn } from "./settingsDialog.js";
 import {
   ALL_CLIENTS,
@@ -633,6 +634,13 @@ const leadsDialog = createLeadsDialog({
 });
 
 const apiKeysDialog = createApiKeysDialog({ toast, onUpgrade: () => showUpgradeDialog() });
+const mcpConnectDialog = createMcpConnectDialog({
+  toast,
+  onUpgrade: () => showUpgradeDialog(),
+  onSignIn: () => showAccountDialog(),
+  onOpenKeys: () => apiKeysDialog.open(),
+  hasAgentTour: () => (readIndex().projects || []).some((p) => p.agent),
+});
 
 // GUI-33: clientes/marcas do workspace. Sem login a lista é vazia e nada muda no editor.
 const clientsStore = createClientsStore({
@@ -1317,6 +1325,7 @@ function cloudShareEnabled() {
 }
 
 let accountDialogWantsPublish = false;
+let openMcpAfterLogin = false;
 let billingView = { status: "idle" };
 let billingEntitlement = emptyEntitlement();
 let billingTicket = 0;
@@ -3693,6 +3702,19 @@ function bindChrome() {
   document.getElementById("btn-new-project").addEventListener("click", () => {
     openNewProjectDialog();
   });
+  const requestMcpConnect = () => {
+    document.getElementById("more-panel")?.removeAttribute("open");
+    document.getElementById("modal-new-project")?.close();
+    if (isCloudEnabled() && !getCloudAccount().signedIn) {
+      openMcpAfterLogin = true;
+      showAccountDialog();
+      toast(t("agentConnect.needSignIn"), 4200);
+      return;
+    }
+    mcpConnectDialog.open();
+  };
+  document.getElementById("btn-agent-connect")?.addEventListener("click", requestMcpConnect);
+  document.getElementById("btn-agent-connect-from-new")?.addEventListener("click", requestMcpConnect);
   for (const el of document.querySelectorAll("[data-assistant-entry]")) {
     el.addEventListener("click", () => {
       document.getElementById("more-panel")?.removeAttribute("open");
@@ -4617,6 +4639,7 @@ function bindChrome() {
   async function signOutAccount() {
     clearCloudPublishIntent();
     accountDialogWantsPublish = false;
+    openMcpAfterLogin = false;
     closeAccountMenus();
     resetBillingView();
     await collab?.endSessionQuietly?.();
@@ -4632,7 +4655,9 @@ function bindChrome() {
     const publishNow = accountDialogWantsPublish;
     const resume = pendingHostedResume;
     const feature = pendingHostedFeature;
+    const openMcp = openMcpAfterLogin;
     accountDialogWantsPublish = false;
+    openMcpAfterLogin = false;
     pendingHostedResume = null;
     pendingHostedFeature = "";
     closeAccountDialog();
@@ -4659,6 +4684,7 @@ function bindChrome() {
       await runCloudPublish();
       return;
     }
+    if (openMcp) mcpConnectDialog.open();
     await resumeCloudPublishAfterLogin({ delay: 0 });
   }
 
@@ -5154,6 +5180,7 @@ async function boot() {
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();
+    mcpConnectDialog.repaint?.();
   };
   bindLocaleSelect(document.getElementById("locale-select"), onLocaleChange);
   bindLocaleSelect(document.getElementById("settings-locale"), onLocaleChange);
