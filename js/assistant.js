@@ -625,11 +625,33 @@ export function stageIndex(stage) {
 /** Até onde o usuário pode ir: cada etapa exige a anterior pronta; voltar é sempre livre. */
 export function reachableStage(draft) {
   if (!String(draft.brief.goal || "").trim()) return "brief";
+  if (draft.cta.kind !== "none" && !ctaValid(draft.cta)) return "brief";
   if (!draft.materials.length) return "materials";
   if (!draft.mode) return "mode";
   if (!draft.items.length) return "structure";
   if (!draft.applied) return "review";
   return "publish";
+}
+
+/**
+ * Campos que impedem sair da etapa atual.
+ * reason → chave i18n `assistant.field.<reason>` (required, materials, ctaWa, ctaUrl).
+ */
+export function stageFieldErrors(draft, stage = draft.stage) {
+  const errors = [];
+  if (stage === "brief") {
+    if (!String(draft.brief.goal || "").trim()) errors.push({ field: "goal", reason: "required" });
+    if (draft.cta.kind !== "none" && !ctaValid(draft.cta)) {
+      const empty = !String(draft.cta.value || "").trim();
+      errors.push({
+        field: "cta.value",
+        reason: empty ? "required" : draft.cta.kind === "whatsapp" ? "ctaWa" : "ctaUrl",
+      });
+    }
+  } else if (stage === "materials") {
+    if (!draft.materials.length) errors.push({ field: "materials", reason: "materials" });
+  }
+  return errors;
 }
 
 /** Rascunho lido do armazenamento: só campos conhecidos, materiais com imagem válida. */
