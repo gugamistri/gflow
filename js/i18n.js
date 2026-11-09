@@ -11,6 +11,7 @@ import { COMMENTS_STRINGS } from "./commentsI18n.js";
 import { ASSISTANT_STRINGS } from "./assistantI18n.js";
 import { SETTINGS_STRINGS } from "./settingsI18n.js";
 import { VIDEO_STRINGS } from "./videoI18n.js";
+import { MCP_CONNECT_STRINGS } from "./mcpConnectI18n.js";
 
 export const catalogs = {
   pt: {
@@ -4880,6 +4881,7 @@ for (const loc of Object.keys(COMMENTS_STRINGS)) Object.assign(catalogs[loc], CO
 for (const loc of Object.keys(ASSISTANT_STRINGS)) Object.assign(catalogs[loc], ASSISTANT_STRINGS[loc]);
 for (const loc of Object.keys(SETTINGS_STRINGS)) Object.assign(catalogs[loc], SETTINGS_STRINGS[loc]);
 for (const loc of Object.keys(VIDEO_STRINGS)) Object.assign(catalogs[loc], VIDEO_STRINGS[loc]);
+for (const loc of Object.keys(MCP_CONNECT_STRINGS)) Object.assign(catalogs[loc], MCP_CONNECT_STRINGS[loc]);
 
 let currentLocale = "en";
 
