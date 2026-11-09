@@ -1,17 +1,16 @@
 /**
- * Editor: "Modo de exibição" do tour (Tour guiado | Galeria), em ⚙ Preferências do projeto e no menu ▾ do Preview.
- * Os dois controles mostram o mesmo valor (`playback.mode`); trocar marca o projeto como alterado.
+ * Editor: "Modo de exibição" do tour (Tour guiado | Galeria), só em ⚙ Preferências do projeto.
+ * Trocar o rádio grava `playback.mode` e marca o projeto como alterado.
+ * O selo no botão Preview só mostra que a prévia será a galeria; não troca o modo.
  */
 import { playbackMode, setPlaybackMode } from "./tour-schema/playbackMode.js";
 
 export const PLAYBACK_MODE_RADIO = 'input[name="playback-mode"]';
-export const PLAYBACK_MODE_MENU = "[data-playback-mode]";
 
-/** Pinta rádios, itens do menu e o selo do Preview com o modo do tour. */
+/** Pinta os rádios do ⚙ e o selo do Preview com o modo do tour. */
 export function paintPlaybackMode(doc, demo, t = (k) => k) {
   const mode = playbackMode(demo?.playback);
   for (const input of doc.querySelectorAll(PLAYBACK_MODE_RADIO)) input.checked = input.value === mode;
-  for (const item of doc.querySelectorAll(PLAYBACK_MODE_MENU)) item.setAttribute("aria-checked", item.dataset.playbackMode === mode ? "true" : "false");
   const badge = doc.getElementById("preview-mode-badge");
   if (badge) {
     badge.hidden = mode !== "gallery";
@@ -42,12 +41,6 @@ export function bindPlaybackModeControls(doc, { getDemo, onChanged, t = (k) => k
   for (const input of doc.querySelectorAll(PLAYBACK_MODE_RADIO)) {
     input.addEventListener("change", () => {
       if (input.checked) set(input.value);
-    });
-  }
-  for (const item of doc.querySelectorAll(PLAYBACK_MODE_MENU)) {
-    item.addEventListener("click", () => {
-      set(item.dataset.playbackMode);
-      item.closest("details")?.removeAttribute("open");
     });
   }
 }
