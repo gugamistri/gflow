@@ -36,8 +36,8 @@ test("videoStage: autoplay ao mostrar, com som só se pedir e cai para mudo; sem
 
 test("player: passo de vídeo sem título/descrição no balão (só navegação), autoplay e som do tour", () => {
   const src = read("./player.js");
-  assert.match(src, /title: isVid \? "" : popoverTitleHtml\(/);
-  assert.match(src, /description: isVid \? "" : popoverBodyHtml\(/);
+  assert.match(src, /title: isVid \|\| hideBalloon \? "" : popoverTitleHtml\(/);
+  assert.match(src, /description: isVid \|\| hideBalloon \? "" : popoverBodyHtml\(/);
   assert.match(src, /side: isVid \? "bottom"/);
   assert.match(src, /paintVideoNav\(isVideo\);/);
   assert.match(src, /video\.show\(step, \{ index: activeIndex, interactive: true, autoplay: true, sound: videoSound\(\) \}\)/);
@@ -57,7 +57,7 @@ test("Galeria e HTML offline: vídeo toca sozinho (http/https); slide de vídeo 
   assert.match(sp, /youtube-nocookie\.com\/embed\//);
   assert.match(sp, /autoplay=1&mute=" \+ mute \+ "&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3/);
   assert.match(sp, /autoplay=1&muted=" \+ mute \+ "&playsinline=1&dnt=1&title=0&byline=0&portrait=0/);
-  assert.match(sp, /title: stepVideoLink\(step\) \? "" : gfEscapeHtml\(/);
+  assert.match(sp, /title: stepVideoLink\(step\) \|\| popoverIsHidden\(step\) \? "" : gfEscapeHtml\(/);
   assert.match(sp, /classList\.toggle\("is-video-nav", isVid\)/);
   assert.match(sp, /mountVideo: \(host, step\) => \{\s*if \(!canEmbedVideo\(\)\) return null;/);
   assert.match(sp, /syncVideoLink\(null\);/);

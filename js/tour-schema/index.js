@@ -16,3 +16,5 @@ export * from "./collabSteps.js";
 export * from "./video.js";
 export * from "./richText.js";
 export * from "./playbackMode.js";
+export * from "./clickTransition.js";
+export * from "./popoverVisibility.js";

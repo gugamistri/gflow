@@ -125,6 +125,24 @@
   min-height: 36px;
 }
 
+/* Balão do passo desligado: só a navegação (← N de X →) e o fechar. O destaque continua focável. */
+.driver-popover.demo-popover.is-nav-only .driver-popover-title,
+.driver-popover.demo-popover.is-nav-only .driver-popover-description,
+.driver-popover.demo-popover.is-nav-only .driver-popover-arrow,
+.driver-popover.demo-popover.is-nav-only .gf-details-toggle {
+  display: none !important;
+}
+
+.driver-popover.demo-popover.is-nav-only .driver-popover-footer {
+  margin-top: 0 !important;
+}
+
+/* Durante o círculo da troca de tela o balão anterior não pode aparecer. */
+.driver-popover.demo-popover.is-reveal-hidden {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .driver-overlay {
   z-index: 1000000008 !important;
 }

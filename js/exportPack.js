@@ -765,6 +765,7 @@ async function exportVideoMediaRecorder(demo, { onProgress, canvas, signal, imag
 /**
  * Exporta o filme. `quality`/`fps` só valem com `pro: true` (mesma regra da marca d'água);
  * sem Pro sai no padrão 1080p30 8 Mbps.
+ * Pendência: `step.transition.fromClick` (círculo a partir do clique) ainda não entra no quadro.
  */
 export async function exportVideo(
   demo,

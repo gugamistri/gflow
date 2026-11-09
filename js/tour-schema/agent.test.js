@@ -97,3 +97,52 @@ test("themeFromAgentInput aceita font sozinha, com preset e recusa id desconheci
   assert.match(themeFontFaceCss("lato", "/fonts/"), /lato-latin-700\.woff2/);
   assert.equal(themeFontFaceCss("default"), "");
 });
+
+test("transition é opcional: sem o campo o passo não muda, com o campo preserva", () => {
+  const created = applyAgentStepInput({
+    title: "Salvar",
+    text: "Grava o pedido.",
+    highlight: { x: 0.1, y: 0.2, width: 0.3, height: 0.1 },
+    click: { x: 0.2, y: 0.24 },
+  });
+  assert.equal(created.ok, true);
+  assert.equal(Object.hasOwn(created.step, "transition"), false);
+  const before = structuredClone(created.step);
+  const same = applyAgentStepInput({ text: "Grava o pedido." }, before);
+  assert.equal(same.ok, true);
+  assert.equal(Object.hasOwn(same.step, "transition"), false);
+  assert.deepEqual(same.step, before);
+  assert.equal(stepForAgent(same.step, 0).transition, undefined);
+
+  const on = applyAgentStepInput({ transition: { fromClick: true, ms: 450 } }, created.step);
+  assert.equal(on.ok, true);
+  assert.deepEqual(on.step.transition, { fromClick: true, ms: 450 });
+  assert.equal(on.step.popover.title, "Salvar");
+  const kept = applyAgentStepInput({ title: "Salvar agora" }, on.step);
+  assert.deepEqual(kept.step.transition, { fromClick: true, ms: 450 });
+  assert.deepEqual(stepForAgent(kept.step, 1).transition, { fromClick: true, ms: 450 });
+
+  const bare = applyAgentStepInput({ transition: { fromClick: true } }, created.step);
+  assert.deepEqual(bare.step.transition, { fromClick: true });
+  const capped = applyAgentStepInput({ transition: { fromClick: true, ms: 900 } });
+  assert.equal(capped.ok, true);
+  assert.equal(capped.step.transition.ms, 600);
+  assert.match(capped.warnings.join(" "), /600/);
+  const off = applyAgentStepInput({ transition: null }, on.step);
+  assert.equal(Object.hasOwn(off.step, "transition"), false);
+  const bad = applyAgentStepInput({ transition: { fromClick: true, ms: -1 } });
+  assert.equal(bad.ok, false);
+  assert.equal(bad.step, null);
+  assert.equal(bad.errors.some((e) => e.field === "transition.ms"), true);
+});
+
+test("showPopover ausente não esconde o balão", () => {
+  const created = applyAgentStepInput({ title: "A" });
+  assert.equal(created.step.popover.hidden, undefined);
+  assert.equal(stepForAgent(created.step, 0).showPopover, undefined);
+  const off = applyAgentStepInput({ showPopover: false }, created.step);
+  assert.equal(off.step.popover.hidden, true);
+  assert.equal(off.step.popover.title, "A");
+  const back = applyAgentStepInput({ showPopover: true }, off.step);
+  assert.equal(Object.hasOwn(back.step.popover, "hidden"), false);
+});
