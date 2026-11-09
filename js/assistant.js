@@ -121,6 +121,37 @@ export function checkMaterialFile(file, count = 0) {
   return { ok: true };
 }
 
+/** Arquivos de um DataTransfer/clipboard (drag-and-drop ou colar). */
+export function listTransferFiles(data) {
+  const out = [];
+  if (data?.files?.length) {
+    for (const file of data.files) if (file) out.push(file);
+  }
+  if (!out.length && data?.items) {
+    for (const item of data.items) {
+      if (item?.kind !== "file") continue;
+      const file = typeof item.getAsFile === "function" ? item.getAsFile() : null;
+      if (file) out.push(file);
+    }
+  }
+  return out;
+}
+
+/**
+ * Separa imagens aceitas dos rejeitados (tipo/tamanho/limite), na ordem.
+ * Útil para drop/colar: avisar o que não entra e seguir com o que entra.
+ */
+export function partitionMaterialFiles(files, count = 0) {
+  const accepted = [];
+  const rejected = [];
+  for (const file of files || []) {
+    const check = checkMaterialFile(file, count + accepted.length);
+    if (check.ok) accepted.push(file);
+    else rejected.push({ file, reason: check.reason });
+  }
+  return { accepted, rejected };
+}
+
 /** Só data: de imagem entra no rascunho (nada de URL remota ou SVG com script). */
 export function isSafeImageDataUrl(value) {
   return /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(String(value || ""));
