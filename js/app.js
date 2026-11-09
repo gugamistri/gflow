@@ -1335,6 +1335,7 @@ let upgradeTierPreset = "";
 let upgradeEmail = "";
 let upgradeEmailNote = false;
 let upgradeHandoffToLogin = false;
+let loginHandoffToUpgrade = false;
 let subscriptionRecord = null;
 let subscriptionPhase = "loading";
 let subscriptionBusy = false;
@@ -1710,7 +1711,7 @@ function paintAccount() {
   if (menuSignIn) menuSignIn.hidden = !enabled || signedIn;
   if (chip) {
     // why (GUI-32): o chip da Conta só tem a conta (Configurações e Sair); Ajuda, Modo e Idioma ficam no ☰.
-    // Sem login, entra pelo botão Assinar / Entrar (no celular, pelo ☰).
+    // Sem login, entra pelo botão Entrar (no celular, pelo ☰).
     chip.hidden = !enabled || !signedIn;
     chip.classList.toggle("is-anon", !signedIn);
     const block = document.getElementById("account-signed-in");
@@ -2673,6 +2674,8 @@ function showAccountDialog({ publish = false } = {}) {
   const dialog = document.getElementById("modal-account");
   if (!dialog) return;
   setCloudLoginStatus("");
+  const magicHint = document.getElementById("cloud-magic-hint");
+  if (magicHint) magicHint.hidden = true;
   if (!dialog.open) dialog.showModal();
   document.getElementById("cloud-email")?.focus();
 }
@@ -4506,7 +4509,8 @@ function bindChrome() {
     document.getElementById("btn-account-signin")?.click();
   });
   document.getElementById("btn-account-signin")?.addEventListener("click", () => {
-    showUpgradeDialog({ feature: "account" });
+    // why: entrada genérica (topo/menu) abre o login; planos ficam no CTA "Conheça o Pro" e nos gatilhos de feature.
+    showAccountDialog();
   });
   document.getElementById("btn-account-signout")?.addEventListener("click", () => {
     void signOutAccount();
@@ -4574,6 +4578,11 @@ function bindChrome() {
     const input = document.getElementById("cloud-email");
     if (input && email && !input.value) input.value = email;
   });
+  document.getElementById("btn-account-discover-pro")?.addEventListener("click", () => {
+    loginHandoffToUpgrade = true;
+    closeAccountDialog();
+    showUpgradeDialog({ feature: "account" });
+  });
   document.getElementById("modal-upgrade")?.addEventListener("close", () => {
     if (upgradeHandoffToLogin) {
       upgradeHandoffToLogin = false;
@@ -4623,6 +4632,10 @@ function bindChrome() {
     closeAccountDialog();
   });
   document.getElementById("modal-account")?.addEventListener("close", () => {
+    if (loginHandoffToUpgrade) {
+      loginHandoffToUpgrade = false;
+      return;
+    }
     accountDialogWantsPublish = false;
     pendingHostedResume = null;
     pendingHostedFeature = "";
@@ -4741,6 +4754,8 @@ function bindChrome() {
     const email = document.getElementById("cloud-email")?.value || "";
     const button = document.getElementById("btn-cloud-magic");
     if (button) button.disabled = true;
+    const magicHint = document.getElementById("cloud-magic-hint");
+    if (magicHint) magicHint.hidden = false;
     setCloudLoginStatus("");
     try {
       const result = await requestMagicLink(email);
