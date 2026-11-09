@@ -4,7 +4,6 @@ import { createClickFxController } from "./clickFx.js";
 import { clearClickReveals, playClickReveal } from "./clickReveal.js";
 import { clickRevealPlan, previewClickTransitionRequested } from "./tour-schema/clickTransition.js";
 import { popoverIsHidden } from "./tour-schema/popoverVisibility.js";
-import { playTypeReplay, typeReplayPlan } from "./typeReplay.js";
 import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
 import { renderRichText } from "./tour-schema/richText.js";
 import {
@@ -1101,8 +1100,6 @@ export function createPlayer(ctx) {
             const current = steps[activeIndex];
             const drv = navOpts.driver;
             try {
-              await playTypeReplay(els.image, typeReplayPlan(current, { reducedMotion: prefersReducedMotion() }));
-              if (token !== driveToken) return;
               await animateClick(current);
               if (token !== driveToken) return;
               const nextPos = playlistPos + 1;

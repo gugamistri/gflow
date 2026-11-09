@@ -2258,70 +2258,6 @@ return { createGallery, galleryCaption, gallerySections };
     });
   }
 
-  function typeReplayPlan(step) {
-    const raw = step && step.actions;
-    if (!Array.isArray(raw)) return null;
-    const actions = [];
-    for (const item of raw) {
-      if (!item || item.kind !== "type") continue;
-      const text = String(item.text || "").slice(0, 200);
-      const x = Number(item.x);
-      const y = Number(item.y);
-      if (!text || !Number.isFinite(x) || !Number.isFinite(y)) continue;
-      actions.push({ text: text, x: x, y: y });
-    }
-    if (!actions.length) return null;
-    return { reducedMotion: prefersReducedMotion(), actions: actions };
-  }
-
-  async function replayTyping(step) {
-    const plan = typeReplayPlan(step);
-    const img = els.image;
-    if (!plan || !img || !img.parentElement || img.clientWidth < 2) return;
-    const layer = document.createElement("div");
-    layer.className = "gf-type-replay";
-    layer.setAttribute("aria-hidden", "true");
-    layer.style.position = "absolute";
-    layer.style.left = img.offsetLeft + "px";
-    layer.style.top = img.offsetTop + "px";
-    layer.style.width = img.clientWidth + "px";
-    layer.style.height = img.clientHeight + "px";
-    layer.style.pointerEvents = "none";
-    layer.style.zIndex = "6";
-    layer.style.overflow = "hidden";
-    img.parentElement.appendChild(layer);
-    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    try {
-      for (const action of plan.actions) {
-        const chip = document.createElement("div");
-        chip.style.position = "absolute";
-        chip.style.left = action.x + "%";
-        chip.style.top = action.y + "%";
-        chip.style.transform = "translate(0, -50%)";
-        chip.style.maxWidth = "70%";
-        chip.style.padding = "2px 6px";
-        chip.style.background = "rgba(255,255,255,.94)";
-        chip.style.color = "#0f172a";
-        chip.style.font = "600 15px/1.3 Arial, sans-serif";
-        chip.style.borderRadius = "4px";
-        chip.style.whiteSpace = "pre";
-        layer.appendChild(chip);
-        if (plan.reducedMotion) {
-          chip.textContent = action.text;
-          continue;
-        }
-        const stepMs = Math.max(12, Math.round(Math.min(1100, Math.max(160, action.text.length * 28)) / action.text.length));
-        for (let i = 1; i <= action.text.length; i += 1) {
-          chip.textContent = action.text.slice(0, i);
-          await wait(stepMs);
-        }
-      }
-      await wait(plan.reducedMotion ? 160 : 90);
-    } finally {
-      layer.remove();
-    }
-  }
-
   async function animateClick(step) {
     if (step.type === "slide" || step.simulateClick === false || stepVideoLink(step)) return;
     await clickFx.animateTo(clickTarget(step), { pressHotspot: true });
@@ -2416,7 +2352,6 @@ return { createGallery, galleryCaption, gallerySections };
             const current = steps[activeIndex];
             const drv = optsNext.driver;
             try {
-              await replayTyping(current);
               await animateClick(current);
               const nextIndex = activeIndex + 1;
               const reveal = nextIndex < steps.length ? revealPlanFor(current, steps[nextIndex]) : null;

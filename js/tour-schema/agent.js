@@ -12,7 +12,6 @@ import { normalizeRichText } from "./richText.js";
 import { applyVideoToStep, normalizeStepVideo, parseVideoUrl, removeVideoFromStep, videoWatchUrl } from "./video.js";
 import { readStepTransition } from "./clickTransition.js";
 import { popoverWithBalloon } from "./popoverVisibility.js";
-import { normalizeStepActions } from "./typeActions.js";
 
 export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
 export const POPOVER_SIDES = Object.freeze(["top", "bottom", "left", "right", "over"]);
@@ -183,16 +182,7 @@ export function applyAgentStepInput(input = {}, base = null) {
   if (input.showPopover !== undefined) {
     if (typeof input.showPopover !== "boolean") {
       errors.push(issue("showPopover", "showPopover precisa ser true ou false. Omita para manter o balão visível."));
-    }     else step.popover = popoverWithBalloon(step.popover, input.showPopover);
-  }
-  if (input.actions !== undefined) {
-    if (input.actions === null) delete step.actions;
-    else {
-      const read = normalizeStepActions(input.actions);
-      if (!read.ok) errors.push(issue("actions", read.message));
-      else if (read.actions) step.actions = read.actions;
-      else delete step.actions;
-    }
+    } else step.popover = popoverWithBalloon(step.popover, input.showPopover);
   }
 
   const rect = readUnitRect(input.highlight, "highlight", errors, warnings);
@@ -282,13 +272,7 @@ export function stepForAgent(step, index) {
     ...videoForAgent(step),
     ...transitionForAgent(step),
     ...balloonForAgent(step),
-    ...actionsForAgent(step),
   };
-}
-
-function actionsForAgent(step) {
-  const read = normalizeStepActions(step?.actions);
-  return read.ok && read.actions ? { actions: read.actions } : {};
 }
 
 function balloonForAgent(step) {

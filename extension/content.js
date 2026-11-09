@@ -6,59 +6,6 @@
 
   let active = false;
   let awaitingHotspot = false;
-  let recordTyping = false;
-  let typingStarted = 0;
-  const typed = new Map();
-
-  function fieldIsSensitive(field) {
-    if (!field || typeof field !== "object") return true;
-    const type = String(field.type || "").toLowerCase();
-    if (type === "password") return true;
-    const tokens = String(field.autocomplete || "").toLowerCase().split(/[\s,]+/).filter(Boolean);
-    if (tokens.some((token) => token === "current-password" || token === "new-password" || token === "one-time-code" || token.startsWith("cc-"))) return true;
-    if (/(password|passwd|senha|pwd|cvv|cvc|csc|cc-?number|cc-?csc|cc-?exp|cc-?name|cardnumber|card-number|cart[aã]o|creditcard|debitcard)/i.test(`${field.name || ""} ${field.id || ""}`)) return true;
-    return false;
-  }
-
-  function rememberTyping(event) {
-    if (!recordTyping || !active) return;
-    const el = event.target;
-    if (!el || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA")) return;
-    const field = {
-      type: el.type || "",
-      autocomplete: el.getAttribute("autocomplete") || "",
-      name: el.getAttribute("name") || "",
-      id: el.id || "",
-    };
-    const key = field.id || field.name || el.tagName;
-    if (fieldIsSensitive(field)) {
-      typed.delete(key);
-      return;
-    }
-    const text = String(el.value || "").slice(0, 200);
-    if (!text) {
-      typed.delete(key);
-      return;
-    }
-    const rect = el.getBoundingClientRect();
-    const vw = window.innerWidth || 1;
-    const vh = window.innerHeight || 1;
-    if (!typingStarted) typingStarted = Date.now();
-    typed.set(key, {
-      t: Date.now() - typingStarted,
-      kind: "type",
-      text,
-      x: Math.max(0, Math.min(100, Math.round(((rect.left + rect.width / 2) / vw) * 1000) / 10)),
-      y: Math.max(0, Math.min(100, Math.round(((rect.top + rect.height / 2) / vh) * 1000) / 10)),
-    });
-  }
-
-  function takeTyping() {
-    const actions = recordTyping ? [...typed.values()] : [];
-    typed.clear();
-    typingStarted = 0;
-    return actions.length ? actions : undefined;
-  }
 
   const host = document.createElement("div");
   host.setAttribute("data-guia-capture", "");
@@ -265,11 +212,6 @@
     }
     active = true;
     awaitingHotspot = Boolean(state.awaitingHotspot);
-    if (state.recordTyping !== true) {
-      recordTyping = false;
-      typed.clear();
-      typingStarted = 0;
-    } else recordTyping = true;
     mount();
     ui = { ...uiFallback, ...(state.ui || {}) };
     title.textContent = ui.title;
@@ -323,15 +265,13 @@
     if (action === "capture") {
       // hazard: the bar is painted in the tab, so it must be hidden before the screenshot
       hideForShot();
-      send({ type: "CAPTURE_FROM_PAGE", title: document.title, url: location.href, typing: takeTyping() });
+      send({ type: "CAPTURE_FROM_PAGE", title: document.title, url: location.href });
     }
     if (action === "create") send({ type: "CREATE_PROJECT" });
     if (action === "append") send({ type: "APPEND_TO_PROJECT" });
     if (action === "undo") send({ type: "UNDO" });
     if (action === "cancel") send({ type: "CANCEL" });
   });
-
-  document.addEventListener("input", rememberTyping, true);
 
   document.addEventListener(
     "pointerdown",
@@ -346,7 +286,6 @@
         vh: window.innerHeight,
         title: document.title,
         url: location.href,
-        typing: takeTyping(),
       };
       if (awaitingHotspot) {
         send(payload);

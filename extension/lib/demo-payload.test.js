@@ -77,7 +77,6 @@ test("payload liga cada passo à imagem embutida", () => {
   assert.equal(payload.steps[0].image, "custom:img-a");
   assert.equal(payload.customImages["img-a"].dataUrl, "data:image/jpeg;base64,aaa");
   assert.deepEqual(payload.steps[0].clickPoint, { x: 25, y: 40 });
-  assert.equal(payload.steps[0].actions, undefined);
   assert.equal(payload.steps[0].popover.description, t("editor.editExplain"));
   assert.equal(payload.theme.presetId, "documento");
 });
@@ -121,22 +120,6 @@ test("captura sem imagem falha antes de gerar JSON", () => {
       }),
     /Captura incompleta/
   );
-});
-
-test("digitação vai no passo e senha é omitida", () => {
-  const payload = buildDemoPayload({
-    name: "x",
-    shots: [{
-      dataUrl: "data:image/jpeg;base64,AA",
-      imageId: "i",
-      stepId: "s",
-      actions: [
-        { t: 0, kind: "type", text: "norte", x: 10, y: 20 },
-        { t: 1, kind: "type", text: "segredo", x: 1, y: 2, field: { type: "password" } },
-      ],
-    }],
-  });
-  assert.deepEqual(payload.steps[0].actions, [{ t: 0, kind: "type", text: "norte", x: 10, y: 20 }]);
 });
 
 test("captura com clique na borda: clique fica dentro do destaque", () => {
