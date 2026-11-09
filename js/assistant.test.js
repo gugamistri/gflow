@@ -22,6 +22,8 @@ import {
   recommendMode,
   regenerableItems,
   rejectSuggestion,
+  listTransferFiles,
+  partitionMaterialFiles,
   reachableStage,
   reviveDraft,
   stageFieldErrors,
@@ -300,4 +302,50 @@ test("assistente UI: Continuar mostra erro no campo; não fica disabled em silê
   assert.match(css, /\.asst-field-error/);
   assert.match(css, /aria-invalid="true"/);
   assert.match(css, /\.asst-req/);
+});
+
+
+test("assistente: listTransferFiles e partitionMaterialFiles no drop/colar", () => {
+  const img = { name: "a.png", type: "image/png", size: 1000 };
+  const img2 = { name: "b.jpg", type: "image/jpeg", size: 2000 };
+  const pdf = { name: "x.pdf", type: "application/pdf", size: 1000 };
+  const huge = { name: "big.png", type: "image/png", size: 16 * 1024 * 1024 };
+  assert.deepEqual(listTransferFiles({ files: [img, pdf] }), [img, pdf]);
+  assert.deepEqual(
+    listTransferFiles({
+      files: [],
+      items: [
+        { kind: "file", getAsFile: () => img2 },
+        { kind: "string", getAsFile: () => null },
+      ],
+    }),
+    [img2]
+  );
+  assert.deepEqual(listTransferFiles({ files: [], items: [] }), []);
+  const part = partitionMaterialFiles([img, pdf, huge, img2], 0);
+  assert.deepEqual(part.accepted, [img, img2]);
+  assert.equal(part.rejected.length, 2);
+  assert.equal(part.rejected[0].reason, "type");
+  assert.equal(part.rejected[1].reason, "size");
+  const full = partitionMaterialFiles([img], 30);
+  assert.equal(full.accepted.length, 0);
+  assert.equal(full.rejected[0].reason, "tooMany");
+});
+
+test("assistente UI: zona de arrastar imagens na etapa Materiais", () => {
+  const ui = readFileSync(new URL("./assistantUi.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../css/assistant.css", import.meta.url), "utf8");
+  const i18n = readFileSync(new URL("./assistantI18n.js", import.meta.url), "utf8");
+  assert.match(ui, /data-asst-drop/);
+  assert.match(ui, /onDragOver/);
+  assert.match(ui, /onDrop/);
+  assert.match(ui, /onPaste/);
+  assert.match(ui, /listTransferFiles/);
+  assert.match(ui, /partitionMaterialFiles/);
+  assert.match(ui, /assistant\.materials\.dropHint/);
+  assert.match(css, /\.asst-dropzone/);
+  assert.match(css, /is-dragover/);
+  assert.match(i18n, /Arraste imagens aqui ou clique para escolher/);
+  assert.match(i18n, /Drag images here or click to choose/);
+  assert.match(i18n, /Arrastra imágenes aquí o haz clic para elegir/);
 });
