@@ -227,14 +227,14 @@ test("HTML offline: cópia inline idêntica ao módulo e mesmo resultado", () =>
     assert.equal(gf.richTextHtml(s), richTextHtml(s));
   }
   assert.match(src, /gfRichText\.renderRichText\(els\.slideBody, step\.popover\?\.description \|\| ""\)/);
-  assert.match(src, /description: (?:stepVideoLink\(step\) \? "" : )?gfRichText\.richTextHtml\(step\.popover\?\.description \|\| ""\)/);
+  assert.match(src, /description: stepVideoLink\(step\) \|\| popoverIsHidden\(step\) \? "" : gfRichText\.richTextHtml\(step\.popover\?\.description \|\| ""\)/);
   assert.doesNotMatch(src, /slideBody\.(innerHTML|textContent) = step\.popover/);
 });
 
 test("fiação: player, cartões inicial/final, editor e export usam o módulo", () => {
   const player = read("./player.js");
   assert.match(player, /renderRichText\(els\.slideBody, step\.popover\?\.description \|\| ""\)/);
-  assert.match(player, /description: (?:isVid \? "" : )?popoverBodyHtml\(step\.popover\?\.description \|\| ""\)/);
+  assert.match(player, /description: isVid \|\| hideBalloon \? "" : popoverBodyHtml\(step\.popover\?\.description \|\| ""\)/);
   assert.match(read("./htmlText.js"), /return richTextHtml\(text\);/);
   const view = read("./fixedStepsView.js");
   assert.equal((view.match(/append\(richBody\(bodyText\)\)/g) || []).length, 2);

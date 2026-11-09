@@ -1,6 +1,9 @@
 import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
+import { clearClickReveals, playClickReveal } from "./clickReveal.js";
+import { clickRevealPlan, previewClickTransitionRequested } from "./tour-schema/clickTransition.js";
+import { popoverIsHidden } from "./tour-schema/popoverVisibility.js";
 import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
 import { renderRichText } from "./tour-schema/richText.js";
 import {
@@ -275,6 +278,30 @@ export function createPlayer(ctx) {
   /** Passo com vídeo: o balão vira só a navegação (← N de X →), fora do vídeo e sem texto. */
   function paintVideoNav(isVideo) {
     document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-video-nav", Boolean(isVideo)));
+  }
+
+  /** Balão oculto: some título e texto; ficam as setas, o progresso e o fechar. */
+  function paintBalloonNav(step) {
+    const hidden = popoverIsHidden(step);
+    document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-nav-only", hidden));
+    const hotspot = els.hotspot;
+    if (!hotspot) return;
+    if (hidden) {
+      hotspot.tabIndex = 0;
+      hotspot.setAttribute("role", "button");
+      hotspot.dataset.balloonNav = "1";
+      hotspot.setAttribute("aria-label", step?.popover?.title || step?.label || t("player.next"));
+    } else if (hotspot.dataset.balloonNav === "1") {
+      hotspot.removeAttribute("role");
+      hotspot.removeAttribute("aria-label");
+      hotspot.removeAttribute("tabindex");
+      delete hotspot.dataset.balloonNav;
+    }
+  }
+
+  /** Esconde o balão que ainda descreve o passo anterior enquanto a imagem nova abre. */
+  function setRevealPopoverHidden(on) {
+    document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-reveal-hidden", Boolean(on)));
   }
 
   /** Um bloco só por passo: o rodapé ganha "Detalhes" (aria-expanded) quando há título e texto. */
@@ -738,7 +765,21 @@ export function createPlayer(ctx) {
     }
   }
 
-  async function showStepVisual(step, { speak = false } = {}) {
+  function revealPlan(fromStep, nextStep) {
+    let preview = false;
+    try {
+      preview = previewClickTransitionRequested(window.location.search);
+    } catch {
+      preview = false;
+    }
+    return clickRevealPlan(fromStep, {
+      preview,
+      reducedMotion: prefersReducedMotion(),
+      nextIsImage: Boolean(nextStep && nextStep.type !== "slide" && nextStep.image && !stepVideo(nextStep)),
+    });
+  }
+
+  async function showStepVisual(step, { speak = false, reveal = null } = {}) {
     return new Promise((resolve) => {
       const demo = getDemo();
       ensureNarration(demo);
@@ -782,6 +823,30 @@ export function createPlayer(ctx) {
       const src = resolveImageSrc(getDemo(), step.image);
       setBackdrop(src);
       if (els.image) els.image.alt = stepImageAlt(step);
+      if (reveal && src && !stepVid) {
+        const token = driveToken;
+        els.hotspot.style.visibility = "hidden";
+        playClickReveal(els.image, src, reveal, { cancelled: () => token !== driveToken }).then((ok) => {
+          if (els.hotspot) els.hotspot.style.visibility = "";
+          if (token !== driveToken) {
+            resolve();
+            return;
+          }
+          if (ok) {
+            if (els.missing) els.missing.hidden = true;
+            placeHotspot(step.hotspot);
+            resolve();
+            return;
+          }
+          bindImage(els.image, src, (loaded) => {
+            if (els.missing) els.missing.hidden = loaded || Boolean(stepVid);
+            if (loaded) placeHotspot(step.hotspot);
+            else els.hotspot.hidden = true;
+            resolve();
+          });
+        });
+        return;
+      }
       bindImage(els.image, src, (ok) => {
         if (els.missing) els.missing.hidden = ok || Boolean(stepVid);
         if (stepVid) {
@@ -994,15 +1059,18 @@ export function createPlayer(ctx) {
         labelCloseButton(popover?.closeButton, t(ctx.closeLabelKey || "player.closeTour"));
         const isSlide = steps[activeIndex]?.type === "slide";
         const isVideo = Boolean(stepVideo(steps[activeIndex]));
+        const hideBalloon = popoverIsHidden(steps[activeIndex]);
         paintSlideNav(isSlide);
         paintVideoNav(isVideo);
+        paintBalloonNav(steps[activeIndex]);
         decoratePopoverA11y(popover);
         decorateStepDetails(popover, isVideo ? null : steps[activeIndex]);
         const stepTitle = steps[activeIndex]?.popover?.title || steps[activeIndex]?.label || "";
         announce(
           t("player.announceStep", { current: playlistPos + 1, total: playOrder.length, title: stepTitle }).replace(/:\s*$/, "")
         );
-        focusStepHeading(popover, isSlide, isVideo);
+        if (hideBalloon && !isSlide && !isVideo) popover?.nextButton?.focus?.({ preventScroll: true });
+        else focusStepHeading(popover, isSlide, isVideo);
         requestAnimationFrame(() => syncChromeVars());
         armAutoplay();
       },
@@ -1016,12 +1084,13 @@ export function createPlayer(ctx) {
         const step = steps[stepIndex];
         // why: passo com vídeo — nenhum texto nosso (título/descrição); o balão é só a navegação, embaixo
         const isVid = Boolean(stepVideo(step));
+        const hideBalloon = popoverIsHidden(step);
         return {
           element: step.type === "slide" ? "#canvas-slide" : isVid ? `#${VIDEO_STAGE_ID}` : "#hotspot",
           popover: {
           // why: driver.js usa innerHTML; o texto do autor entra escapado (nunca vira marcação)
-          title: isVid ? "" : popoverTitleHtml(step.popover?.title || step.label || ""),
-          description: isVid ? "" : popoverBodyHtml(step.popover?.description || ""),
+          title: isVid || hideBalloon ? "" : popoverTitleHtml(step.popover?.title || step.label || ""),
+          description: isVid || hideBalloon ? "" : popoverBodyHtml(step.popover?.description || ""),
           side: isVid ? "bottom" : step.popover?.side || "bottom",
           align: isVid ? "center" : step.popover?.align || "center",
           onNextClick: async (_el, _step, navOpts) => {
@@ -1034,6 +1103,7 @@ export function createPlayer(ctx) {
               await animateClick(current);
               if (token !== driveToken) return;
               const nextPos = playlistPos + 1;
+              const reveal = nextPos < playOrder.length ? revealPlan(current, steps[playOrder[nextPos]]) : null;
               if (nextPos >= playOrder.length) {
                 lifecycle.complete();
                 drv.destroy();
@@ -1043,18 +1113,21 @@ export function createPlayer(ctx) {
                 setProgress(t("player.doneStatus"));
                 return;
               }
+              if (reveal) setRevealPopoverHidden(true);
               playlistPos = nextPos;
               activeIndex = playOrder[playlistPos];
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(stepProgress());
-              await showStepVisual(steps[activeIndex], { speak: true });
+              await showStepVisual(steps[activeIndex], { speak: true, reveal });
               if (token !== driveToken) return;
               reportStep(steps, playlistPos, playOrder.length);
               await prepareStepCamera(steps[activeIndex]);
               if (token !== driveToken) return;
               drv.moveNext();
+              setRevealPopoverHidden(false);
               await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
+              setRevealPopoverHidden(false);
               animating = false;
             }
           },
@@ -1094,6 +1167,7 @@ export function createPlayer(ctx) {
         stopSubtitle();
         setProgress(t("player.stopped"));
         clickFx.reset();
+        clearClickReveals();
         clearZoom({ animate: false });
         driverObj = null;
         animating = false;
@@ -1144,6 +1218,7 @@ export function createPlayer(ctx) {
       driverObj = null;
     }
     clickFx.reset();
+    clearClickReveals();
     clearZoom({ animate: false });
     restoreCaptionEl();
     animating = false;
@@ -1461,6 +1536,13 @@ export function createPlayer(ctx) {
     }
 
     els.slide?.addEventListener("click", onHighlightClick);
+    els.hotspot?.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      if (!driverObj || !isPresenting() || animating) return;
+      if (!popoverIsHidden(getDemo()?.steps?.[activeIndex])) return;
+      e.preventDefault();
+      clickDriverNext();
+    });
 
     // why: clicar no destaque (hotspot / marcador de clique) = Próximo, em todo player.
     // Em captura na janela: o recorte do Driver tem folga e o cursor simulado não recebe clique.
