@@ -730,3 +730,7 @@ p.agent-client-status.is-on {
 .asst-materials-add .asst-field-error {
   margin-top: 8px;
 }
+
+.asst-label-text {
+  display: inline;
+}

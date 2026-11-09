@@ -238,7 +238,7 @@ export function createAssistantUi(ctx) {
     const cta = draft.cta;
     const ctaValueLabel = t(cta.kind === "whatsapp" ? "assistant.cta.wa" : "assistant.cta.url");
     return `
-      <label>${esc(t("assistant.brief.goal"))}${reqMark()}
+      <label><span class="asst-label-text">${esc(t("assistant.brief.goal"))}${reqMark()}</span>
         <textarea rows="3" maxlength="500" data-asst-field="goal" required aria-required="true" placeholder="${esc(t("assistant.brief.goalPh"))}"${fieldAttrs("goal")}>${esc(draft.brief.goal)}</textarea>
         ${fieldErrorHtml("goal")}
       </label>
@@ -257,7 +257,7 @@ export function createAssistantUi(ctx) {
           ${["none", "whatsapp", "link"].map((k) => `<label class="asst-seg-opt"><input type="radio" name="asst-cta" value="${k}" data-asst-cta-kind ${cta.kind === k ? "checked" : ""} /><span>${esc(t(`assistant.cta.${k}`))}</span></label>`).join("")}
         </div>
         ${cta.kind === "none" ? "" : `
-        <label>${esc(ctaValueLabel)}${reqMark()}
+        <label><span class="asst-label-text">${esc(ctaValueLabel)}${reqMark()}</span>
           <input type="${cta.kind === "whatsapp" ? "tel" : "url"}" data-asst-cta="value" required aria-required="true" value="${esc(cta.value)}" ${cta.kind === "whatsapp" ? 'inputmode="tel" placeholder="+55 11 91234-5678"' : 'placeholder="https://"'} ${fieldAttrs("cta.value")} />
           ${fieldErrorHtml("cta.value")}
         </label>
@@ -297,7 +297,7 @@ export function createAssistantUi(ctx) {
     const matErr = errorMap().get("materials");
     const matErrId = "asst-err-materials";
     return `
-      <p class="asst-lead">${esc(t("assistant.materials.lead"))}${reqMark()}</p>
+      <p class="asst-lead"><span class="asst-label-text">${esc(t("assistant.materials.lead"))}${reqMark()}</span></p>
       <div class="asst-materials-add${matErr ? " is-invalid" : ""}">
         <button type="button" class="btn" data-asst-add ${matErr ? `aria-invalid="true" aria-describedby="${matErrId}"` : ""}>${esc(t("assistant.materials.add"))}</button>
         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden data-asst-file />
