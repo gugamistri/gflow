@@ -63,6 +63,9 @@ function paint(state, tab) {
   appendBtn.disabled = !hasShots;
   undoBtn.disabled = !hasShots;
 
+  const typingEl = document.getElementById("record-typing");
+  if (typingEl && document.activeElement !== typingEl) typingEl.checked = state?.recordTyping === true;
+
   if (document.activeElement !== originEl) {
     originEl.value = state?.editorOrigin || DEFAULT_EDITOR_ORIGIN;
   }
@@ -207,6 +210,13 @@ bindLocaleSelect(document.getElementById("locale-select"), () => {
 
 originEl.addEventListener("change", () => {
   persistOrigin().then(() => refresh());
+});
+
+document.getElementById("record-typing").addEventListener("change", async () => {
+  const on = document.getElementById("record-typing").checked;
+  const tab = await activeTab();
+  const state = await send({ type: "SET_RECORD_TYPING", recordTyping: on });
+  paint({ ...state, restricted: false }, tab);
 });
 
 document.getElementById("start").addEventListener("click", async () => {

@@ -1,4 +1,5 @@
 import { captureExtension } from "./capture-image.js";
+import { clipStoredActions } from "./sensitive-field.js";
 import { t } from "./i18n.js";
 /**
  * Monta o JSON que o editor importa (steps + customImages).
@@ -99,6 +100,7 @@ export function buildDemoPayload({ name, shots }) {
     const label = shot.label || t("ext.defaultStep", { n: index + 1 });
     const point = shot.clickPoint || { x: 47, y: 44 };
     const hotspot = hotspotAround(point);
+    const actions = clipStoredActions(shot.actions);
     customImages[shot.imageId] = {
       name: shot.name || `passo-${index + 1}.${captureExtension(shot.dataUrl)}`,
       dataUrl: shot.dataUrl,
@@ -120,6 +122,7 @@ export function buildDemoPayload({ name, shots }) {
       },
       simulateClick: true,
       onNext: "advance",
+      ...(actions ? { actions } : {}),
     });
   }
 

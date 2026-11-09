@@ -1,5 +1,6 @@
 import { captureFileName, optimizeCaptureDataUrl } from "./lib/capture-image.js";
 import { buildDemoPayload, hostLabel, nextClickAction, pointFromClick, suggestCaptureName } from "./lib/demo-payload.js";
+import { clipStoredActions } from "./lib/sensitive-field.js";
 import {
   DEFAULT_EDITOR_ORIGIN,
   originToMatchPattern,
@@ -86,6 +87,7 @@ async function loadSettings() {
   settings = {
     editorOrigin: resolveEditorOrigin(raw.editorOrigin),
     projectName: typeof raw.projectName === "string" ? raw.projectName : "",
+    recordTyping: raw.recordTyping === true,
   };
   return settings;
 }
@@ -99,6 +101,7 @@ async function saveSettings(next) {
   settings = {
     editorOrigin: resolveEditorOrigin(next.editorOrigin),
     projectName: String(next.projectName || "").trim(),
+    recordTyping: next.recordTyping != null ? next.recordTyping === true : settings?.recordTyping === true,
   };
   await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
   return settings;
@@ -113,6 +116,7 @@ function publicState(extra = {}) {
     awaitingHotspot: Boolean(last?.awaitingHotspot),
     editorOrigin: settings?.editorOrigin || DEFAULT_EDITOR_ORIGIN,
     projectName: settings?.projectName || "",
+    recordTyping: settings?.recordTyping === true,
     suggestedName: suggestProjectName(),
     locale: getLocale(),
     ui: captureUi(),
@@ -317,6 +321,10 @@ async function captureShot(tab, meta, { withClick }) {
     } else {
       dataUrl = encoded.dataUrl;
     }
+    if (settings?.recordTyping === true && session.shots.length) {
+      const actions = clipStoredActions(meta?.typing);
+      if (actions) session.shots[session.shots.length - 1].actions = actions;
+    }
     const stepNumber = session.shots.length + 1;
     session.shots.push({
       imageId: randId("img-"),
@@ -345,6 +353,10 @@ async function captureShot(tab, meta, { withClick }) {
 }
 
 async function markHotspot(meta) {
+  if (settings?.recordTyping === true && session.shots.length) {
+    const actions = clipStoredActions(meta?.typing);
+    if (actions) session.shots[session.shots.length - 1].actions = actions;
+  }
   const last = session.shots[session.shots.length - 1];
   const point = pointFromClick(meta);
   if (!last || !point) return publicState({ ok: false, error: t("ext.badClick") });
@@ -586,7 +598,13 @@ async function handle(msg, sender) {
       return captureShot(tab, { title: tab.title, url: tab.url }, { withClick: false });
     }
     case "CAPTURE_FROM_PAGE":
-      return captureShot(sender.tab, { title: msg.title, url: sender.tab?.url }, { withClick: false });
+      return captureShot(sender.tab, { title: msg.title, url: sender.tab?.url, typing: msg.typing }, { withClick: false });
+    case "SET_RECORD_TYPING": {
+      await saveSettings({ ...settings, recordTyping: msg.recordTyping === true });
+      const state = publicState();
+      await broadcast(state);
+      return state;
+    }
     case "PAGE_CLICK":
       return onPageClick(msg, sender);
     case "UNDO":

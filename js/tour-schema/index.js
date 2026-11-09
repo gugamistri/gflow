@@ -18,3 +18,4 @@ export * from "./richText.js";
 export * from "./playbackMode.js";
 export * from "./clickTransition.js";
 export * from "./popoverVisibility.js";
+export * from "./typeActions.js";
