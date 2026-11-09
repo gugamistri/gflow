@@ -12,6 +12,7 @@ GuiaFlow's tour format in plain JS (no DOM), used by the editor, the player, and
 | `richText.js` | light text formatting stored as markers, never HTML: `**bold**`, `*italic*`, `++underline++`, `- ` list lines (one level). Parser, DOM render (createElement only), `richTextHtml` for driver.js (escaped segments), `stripRichText` for TTS/captions/AI/alt/canvas, `normalizeRichText` for AI/agent input, toolbar edit helpers |
 | `playbackMode.js` | display mode `playback.mode`: `"guided"` (default: balloons, highlights, autoplay, narration) or `"gallery"` (full-screen photo carousel for real estate, vehicles, products, catalogs); tour templates (`TOUR_TEMPLATES`: software, empreendimento, veiculo, produto) with starting mode and suggested scenes |
 | `agent.js` | agent/API input: 0..1 coordinates, `video` (YouTube/Vimeo URL or null), LLM-readable errors, pre-publish checks |
+| `clickTransition.js` | optional `step.transition`: `{ fromClick: true, ms?: number }` — reveal the next screen from the click (guided player only) |
 
 This directory is the source. guiaflow-cloud keeps a copy in `packages/tour-schema/` (`npm run sync:tour-schema`); a test there checks that the copy matches the commit recorded in `SOURCE`.
 
@@ -30,6 +31,14 @@ alt stay plain text. Rules that keep old tours unchanged: an unmatched marker is
 `*` next to a letter or digit never opens or closes italic (`5*10*2`), markers do not cross lines and need non-space text
 right inside, and `\*`, `\+`, `\-`, `\\` are literal. Text without markers renders exactly like before (escaped, `\n` → `<br>`).
 The offline HTML player has an inline copy (`node scripts/sync-rich-text.mjs` in gflow; `js/richText.test.js` checks it).
+
+## Click transition (`step.transition`)
+
+Optional. Absent, `null`, or without `fromClick: true` means the guided player swaps the screenshot immediately, as before.
+`{ fromClick: true }` reveals the next image from this step's `clickPoint` (circle clip, default 400 ms, capped at 600).
+`ms: 0` stores the field but does not animate. The editor keeps the object on the step; the properties form does not write it.
+Preview-only override, not saved: `?transition=click`. `prefers-reduced-motion: reduce` skips the animation.
+Not in the MP4 export yet (`js/exportPack.js`). Gallery mode ignores it.
 
 ## Display mode (`playback.mode`)
 

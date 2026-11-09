@@ -1,6 +1,8 @@
 import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
+import { clearClickReveals, playClickReveal } from "./clickReveal.js";
+import { clickRevealPlan, previewClickTransitionRequested } from "./tour-schema/clickTransition.js";
 import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
 import { renderRichText } from "./tour-schema/richText.js";
 import {
@@ -738,7 +740,21 @@ export function createPlayer(ctx) {
     }
   }
 
-  async function showStepVisual(step, { speak = false } = {}) {
+  function revealPlan(fromStep, nextStep) {
+    let preview = false;
+    try {
+      preview = previewClickTransitionRequested(window.location.search);
+    } catch {
+      preview = false;
+    }
+    return clickRevealPlan(fromStep, {
+      preview,
+      reducedMotion: prefersReducedMotion(),
+      nextIsImage: Boolean(nextStep && nextStep.type !== "slide" && nextStep.image && !stepVideo(nextStep)),
+    });
+  }
+
+  async function showStepVisual(step, { speak = false, reveal = null } = {}) {
     return new Promise((resolve) => {
       const demo = getDemo();
       ensureNarration(demo);
@@ -782,6 +798,30 @@ export function createPlayer(ctx) {
       const src = resolveImageSrc(getDemo(), step.image);
       setBackdrop(src);
       if (els.image) els.image.alt = stepImageAlt(step);
+      if (reveal && src && !stepVid) {
+        const token = driveToken;
+        els.hotspot.style.visibility = "hidden";
+        playClickReveal(els.image, src, reveal, { cancelled: () => token !== driveToken }).then((ok) => {
+          if (els.hotspot) els.hotspot.style.visibility = "";
+          if (token !== driveToken) {
+            resolve();
+            return;
+          }
+          if (ok) {
+            if (els.missing) els.missing.hidden = true;
+            placeHotspot(step.hotspot);
+            resolve();
+            return;
+          }
+          bindImage(els.image, src, (loaded) => {
+            if (els.missing) els.missing.hidden = loaded || Boolean(stepVid);
+            if (loaded) placeHotspot(step.hotspot);
+            else els.hotspot.hidden = true;
+            resolve();
+          });
+        });
+        return;
+      }
       bindImage(els.image, src, (ok) => {
         if (els.missing) els.missing.hidden = ok || Boolean(stepVid);
         if (stepVid) {
@@ -1034,6 +1074,7 @@ export function createPlayer(ctx) {
               await animateClick(current);
               if (token !== driveToken) return;
               const nextPos = playlistPos + 1;
+              const reveal = nextPos < playOrder.length ? revealPlan(current, steps[playOrder[nextPos]]) : null;
               if (nextPos >= playOrder.length) {
                 lifecycle.complete();
                 drv.destroy();
@@ -1047,7 +1088,7 @@ export function createPlayer(ctx) {
               activeIndex = playOrder[playlistPos];
               if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
               setProgress(stepProgress());
-              await showStepVisual(steps[activeIndex], { speak: true });
+              await showStepVisual(steps[activeIndex], { speak: true, reveal });
               if (token !== driveToken) return;
               reportStep(steps, playlistPos, playOrder.length);
               await prepareStepCamera(steps[activeIndex]);
@@ -1094,6 +1135,7 @@ export function createPlayer(ctx) {
         stopSubtitle();
         setProgress(t("player.stopped"));
         clickFx.reset();
+        clearClickReveals();
         clearZoom({ animate: false });
         driverObj = null;
         animating = false;
@@ -1144,6 +1186,7 @@ export function createPlayer(ctx) {
       driverObj = null;
     }
     clickFx.reset();
+    clearClickReveals();
     clearZoom({ animate: false });
     restoreCaptionEl();
     animating = false;

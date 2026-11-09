@@ -10,6 +10,7 @@ import { THEME_COLOR_KEYS, THEME_PRESETS, cloneTheme, getPreset } from "./theme.
 import { THEME_FONT_IDS, isThemeFontId } from "./fonts.js";
 import { normalizeRichText } from "./richText.js";
 import { applyVideoToStep, normalizeStepVideo, parseVideoUrl, removeVideoFromStep, videoWatchUrl } from "./video.js";
+import { readStepTransition } from "./clickTransition.js";
 
 export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
 export const POPOVER_SIDES = Object.freeze(["top", "bottom", "left", "right", "over"]);
@@ -99,7 +100,7 @@ function readUnitRect(raw, field, errors, warnings) {
 
 /**
  * Aplica a entrada de um agente sobre um passo (novo ou existente).
- * @param {object} input {title, text, label, narrationScript, type, scene, highlight, click, popoverSide, popoverAlign, simulateClick, alt, altDecorative}
+ * @param {object} input {title, text, label, narrationScript, type, scene, highlight, click, popoverSide, popoverAlign, simulateClick, alt, altDecorative, transition}
  * @param {object} [base] passo atual (update) — campos ausentes ficam como estão
  * @returns {{ ok: boolean, step: object|null, warnings: string[], errors: {field:string,message:string,hint?:string}[] }}
  */
@@ -168,6 +169,14 @@ export function applyAgentStepInput(input = {}, base = null) {
     else step.popover.align = input.popoverAlign;
   }
   if (input.simulateClick != null) step.simulateClick = input.simulateClick !== false;
+  // why: opcional — sem o campo o player segue a troca instantânea. null apaga.
+  if (input.transition !== undefined) {
+    const read = readStepTransition(input.transition);
+    warnings.push(...read.warnings);
+    if (!read.ok) errors.push(...read.errors);
+    else if (read.transition) step.transition = read.transition;
+    else delete step.transition;
+  }
 
   const rect = readUnitRect(input.highlight, "highlight", errors, warnings);
   const click = readUnitPoint(input.click, "click", errors);
@@ -254,7 +263,13 @@ export function stepForAgent(step, index) {
     popoverSide: step.popover?.side || "bottom",
     popoverAlign: step.popover?.align || "center",
     ...videoForAgent(step),
+    ...transitionForAgent(step),
   };
+}
+
+function transitionForAgent(step) {
+  const read = readStepTransition(step?.transition);
+  return read.ok && read.transition ? { transition: read.transition } : {};
 }
 
 function videoForAgent(step) {

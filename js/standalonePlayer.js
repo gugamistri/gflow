@@ -1102,6 +1102,212 @@ return { createGallery, galleryCaption, gallerySections };
   const NEXT_ARROW_SVG =
     '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 3.5L13.5 8L9 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+  // Cópia da decisão em js/tour-schema/clickTransition.js (este arquivo não importa módulos).
+  // Pendência: o MP4 não usa este círculo.
+  const CLICK_TRANSITION_DEFAULT_MS = 400;
+  const CLICK_TRANSITION_MAX_MS = 600;
+  const CLICK_REVEAL_EASING = "cubic-bezier(0.2, 0, 0.2, 1)";
+
+  function readStepTransition(raw) {
+    const warnings = [];
+    const errors = [];
+    if (raw == null) return { ok: true, transition: null, warnings, errors };
+    if (typeof raw !== "object" || Array.isArray(raw)) {
+      errors.push({ field: "transition", message: "transition precisa ser { fromClick: true, ms?: number } ou null." });
+      return { ok: false, transition: null, warnings, errors };
+    }
+    if (raw.fromClick !== true) {
+      if (raw.fromClick != null && raw.fromClick !== false) {
+        errors.push({ field: "transition.fromClick", message: "fromClick só aceita true. Omita transition para a troca de tela de sempre." });
+        return { ok: false, transition: null, warnings, errors };
+      }
+      return { ok: true, transition: null, warnings, errors };
+    }
+    const transition = { fromClick: true };
+    if (raw.ms != null) {
+      if (typeof raw.ms !== "number" || !Number.isFinite(raw.ms) || raw.ms < 0) {
+        errors.push({ field: "transition.ms", message: "ms precisa ser um número de 0 a 600 (milissegundos). O padrão é 400." });
+        return { ok: false, transition: null, warnings, errors };
+      }
+      const ms = Math.round(raw.ms);
+      if (ms > CLICK_TRANSITION_MAX_MS) {
+        warnings.push("transition.ms foi limitado a " + CLICK_TRANSITION_MAX_MS + ".");
+        transition.ms = CLICK_TRANSITION_MAX_MS;
+      } else transition.ms = ms;
+    }
+    return { ok: true, transition, warnings, errors };
+  }
+
+  function previewClickTransitionRequested(search) {
+    const raw = String(search ?? "");
+    const q = raw.startsWith("?") ? raw.slice(1) : raw;
+    try {
+      return new URLSearchParams(q).get("transition") === "click";
+    } catch {
+      return false;
+    }
+  }
+
+  function clickRevealPlan(step, opts) {
+    const preview = opts && opts.preview === true;
+    const reducedMotion = Boolean(opts && opts.reducedMotion);
+    const nextIsImage = !opts || opts.nextIsImage !== false;
+    if (reducedMotion || !nextIsImage) return null;
+    if (!step || step.type === "slide") return null;
+    const pt = step.clickPoint;
+    if (!pt || typeof pt.x !== "number" || !Number.isFinite(pt.x) || typeof pt.y !== "number" || !Number.isFinite(pt.y)) return null;
+    const own = readStepTransition(step.transition);
+    const enabled = Boolean(own.ok && own.transition && own.transition.fromClick);
+    if (!enabled && !preview) return null;
+    let ms = CLICK_TRANSITION_DEFAULT_MS;
+    if (enabled && own.transition.ms != null) ms = own.transition.ms;
+    if (ms <= 0) return null;
+    return {
+      xPct: Math.min(100, Math.max(0, pt.x)),
+      yPct: Math.min(100, Math.max(0, pt.y)),
+      ms: Math.min(CLICK_TRANSITION_MAX_MS, ms),
+    };
+  }
+
+  function clickRevealCircle(xPct, yPct, width, height) {
+    const w = Math.max(0, width);
+    const h = Math.max(0, height);
+    const x = (Math.min(100, Math.max(0, xPct)) / 100) * w;
+    const y = (Math.min(100, Math.max(0, yPct)) / 100) * h;
+    const r = Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y)));
+    return {
+      x: x,
+      y: y,
+      r: r,
+      from: "circle(0px at " + x + "px " + y + "px)",
+      to: "circle(" + r + "px at " + x + "px " + y + "px)",
+    };
+  }
+
+  let revealEpoch = 0;
+
+  function cancelClickReveal() {
+    revealEpoch += 1;
+    document.querySelectorAll("img.gf-click-reveal").forEach((el) => el.remove());
+  }
+
+  function prefersReducedMotion() {
+    return Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  function revealPlanFor(fromStep, nextStep) {
+    let preview = false;
+    try { preview = previewClickTransitionRequested(window.location.search); } catch { preview = false; }
+    const nextIsImage = Boolean(nextStep && nextStep.type !== "slide" && nextStep.image && !stepVideoLink(nextStep));
+    return clickRevealPlan(fromStep, { preview: preview, reducedMotion: prefersReducedMotion(), nextIsImage: nextIsImage });
+  }
+
+  function playClickReveal(img, src, plan) {
+    const epoch = revealEpoch;
+    const cancelled = () => epoch !== revealEpoch;
+    return new Promise((resolve) => {
+      if (!img || !src || !plan || !(plan.ms > 0) || cancelled()) {
+        resolve(false);
+        return;
+      }
+      const parent = img.parentElement;
+      const w = img.clientWidth;
+      const h = img.clientHeight;
+      if (!parent || w < 2 || h < 2) {
+        resolve(false);
+        return;
+      }
+      const clip = clickRevealCircle(plan.xPct, plan.yPct, w, h);
+      const overlay = document.createElement("img");
+      overlay.className = "gf-click-reveal";
+      overlay.alt = "";
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.draggable = false;
+      overlay.style.position = "absolute";
+      overlay.style.left = img.offsetLeft + "px";
+      overlay.style.top = img.offsetTop + "px";
+      overlay.style.width = w + "px";
+      overlay.style.height = h + "px";
+      overlay.style.maxWidth = "none";
+      overlay.style.maxHeight = "none";
+      overlay.style.margin = "0";
+      overlay.style.objectFit = "fill";
+      overlay.style.pointerEvents = "none";
+      overlay.style.zIndex = "4";
+      overlay.style.clipPath = clip.from;
+      const veil = document.querySelector(".driver-overlay");
+      const veilOpacity = veil ? veil.style.opacity : "";
+      if (veil) veil.style.opacity = "0";
+      let settled = false;
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        if (veil) veil.style.opacity = veilOpacity;
+        overlay.remove();
+        resolve(ok);
+      };
+      const paintBase = () => {
+        if (cancelled()) {
+          finish(false);
+          return;
+        }
+        const painted = () => finish(true);
+        if (img.getAttribute("src") === src && img.complete && img.naturalWidth > 0) {
+          img.hidden = false;
+          painted();
+          return;
+        }
+        img.onload = () => {
+          img.hidden = false;
+          painted();
+        };
+        img.onerror = () => finish(false);
+        img.hidden = false;
+        img.src = src;
+      };
+      const grow = () => {
+        if (cancelled()) {
+          finish(false);
+          return;
+        }
+        let grew = false;
+        const done = () => {
+          if (grew) return;
+          grew = true;
+          paintBase();
+        };
+        try {
+          const anim = overlay.animate(
+            [{ clipPath: clip.from }, { clipPath: clip.to }],
+            { duration: plan.ms, easing: CLICK_REVEAL_EASING, fill: "forwards" }
+          );
+          const timer = setTimeout(done, plan.ms + 80);
+          anim.finished.then(() => {
+            clearTimeout(timer);
+            done();
+          }).catch(() => {
+            clearTimeout(timer);
+            done();
+          });
+        } catch {
+          overlay.style.clipPath = clip.to;
+          done();
+        }
+      };
+      const loadTimer = setTimeout(() => finish(false), 4000);
+      overlay.onerror = () => {
+        clearTimeout(loadTimer);
+        finish(false);
+      };
+      overlay.onload = () => {
+        clearTimeout(loadTimer);
+        grow();
+      };
+      parent.appendChild(overlay);
+      overlay.src = src;
+    });
+  }
+
   function applyTheme(theme) {
     if (!theme) return;
     const root = document.documentElement;
@@ -1944,7 +2150,7 @@ return { createGallery, galleryCaption, gallerySections };
     slideEl.dataset.valign = valign === "top" || valign === "bottom" ? valign : "center";
   }
 
-  async function showStepVisual(step, speak) {
+  async function showStepVisual(step, speak, reveal) {
     return new Promise((resolve) => {
       narration.enterStep(step, !!speak);
       if (step.type === "slide") {
@@ -1994,22 +2200,35 @@ return { createGallery, galleryCaption, gallerySections };
         });
       };
 
-      if (!src) {
-        done(false);
+      const loadPlain = () => {
+        if (!src) {
+          done(false);
+          return;
+        }
+        els.image.onload = () => {
+          els.image.hidden = false;
+          done(true);
+        };
+        els.image.onerror = () => done(false);
+        if (els.image.getAttribute("src") === src && els.image.complete && els.image.naturalWidth) {
+          els.image.hidden = false;
+          done(true);
+        } else {
+          els.image.hidden = true;
+          els.image.src = src;
+        }
+      };
+
+      if (reveal && src && !stepVideoLink(step)) {
+        els.hotspot.style.visibility = "hidden";
+        playClickReveal(els.image, src, reveal).then((ok) => {
+          els.hotspot.style.visibility = "";
+          if (ok) done(true);
+          else loadPlain();
+        });
         return;
       }
-      els.image.onload = () => {
-        els.image.hidden = false;
-        done(true);
-      };
-      els.image.onerror = () => done(false);
-      if (els.image.getAttribute("src") === src && els.image.complete && els.image.naturalWidth) {
-        els.image.hidden = false;
-        done(true);
-      } else {
-        els.image.hidden = true;
-        els.image.src = src;
-      }
+      loadPlain();
     });
   }
 
@@ -2030,6 +2249,7 @@ return { createGallery, galleryCaption, gallerySections };
       driverObj = null;
     }
     clickFx.reset();
+    cancelClickReveal();
     clearZoom(false);
     restoreCaption();
     animating = false;
@@ -2107,6 +2327,7 @@ return { createGallery, galleryCaption, gallerySections };
             try {
               await animateClick(current);
               const nextIndex = activeIndex + 1;
+              const reveal = nextIndex < steps.length ? revealPlanFor(current, steps[nextIndex]) : null;
               if (nextIndex >= steps.length) {
                 drv.destroy();
                 driverObj = null;
@@ -2116,7 +2337,7 @@ return { createGallery, galleryCaption, gallerySections };
               }
               activeIndex = nextIndex;
               setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
-              await showStepVisual(steps[activeIndex], true);
+              await showStepVisual(steps[activeIndex], true, reveal);
               await prepareStepCamera();
               drv.moveNext();
               await zoomAfterHighlightVisible(steps[activeIndex]);
@@ -2149,6 +2370,7 @@ return { createGallery, galleryCaption, gallerySections };
         syncVideoLink(null);
         setProgress(gfT("player.stopped"));
         clickFx.reset();
+        cancelClickReveal();
         clearZoom(false);
       },
     });
