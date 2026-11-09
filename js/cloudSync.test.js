@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   bytesToDataUrl,
@@ -6,8 +7,12 @@ import {
   dehydrate,
   hydrate,
   mergeCustomThemes,
+  projectToSyncPayload,
+  readMeta,
   restoreFromPublishedLinks,
   SYNC_META_KEY,
+  syncMetaKey,
+  writeMeta,
 } from "./cloudSync.js";
 
 function memoryStorage() {
@@ -317,7 +322,8 @@ test("offline: a fila fica no localStorage e sobe quando a rede volta", async ()
   await a.sync.enable("ana@example.com");
   assert.equal(a.sync.getState().phase, "offline");
   assert.equal(cloud.projects.size, 0);
-  assert.ok(JSON.parse(storage.getItem(SYNC_META_KEY)).dirty.p1);
+  assert.ok(JSON.parse(storage.getItem(syncMetaKey("ana@example.com"))).dirty.p1);
+  assert.equal(storage.getItem(SYNC_META_KEY), null);
   a.sync.disable();
   online = true;
   const again = engine({ ...cloud, request }, store, storage);
@@ -362,6 +368,175 @@ test("restaurar dos links publicados cria projeto só para link sem projeto", as
   assert.equal(restored.name, "Tour A");
   assert.equal(restored.cloudShare.slug, "tour-a1");
   assert.match(restored.steps[0].image, /^data:image\/png;base64,/);
+});
+
+test("perder o estado não cria outro projeto (cloudId ou o mesmo nome e conteúdo)", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const storage = memoryStorage();
+  const a = engine(cloud, store, storage);
+  await a.sync.enable("ana@example.com");
+  assert.equal(cloud.projects.size, 1);
+  const remoteId = [...cloud.projects.keys()][0];
+  const saved = await store.getProject("p1");
+  assert.equal(saved.cloudId, remoteId);
+  assert.equal(projectToSyncPayload(saved).cloudId, undefined);
+  const posts = () => cloud.calls.filter((c) => c === "POST /projects").length;
+  const afterFirst = posts();
+
+  // o mapa sumiu, mas o registro local ainda tem o id remoto
+  storage.map.clear();
+  [...cloud.projects.values()][0].clientId = null;
+  const b = engine(cloud, store, storage);
+  await b.sync.enable("ana@example.com");
+  assert.equal(cloud.projects.size, 1);
+  assert.equal(posts(), afterFirst);
+  assert.equal([...cloud.projects.values()][0].id, remoteId);
+
+  // sem cloudId e sem clientId: o conteúdo igual ainda vincula e faz PATCH
+  const local = await store.getProject("p1");
+  delete local.cloudId;
+  await store.putProject(local, { silent: true });
+  storage.map.clear();
+  const c = engine(cloud, store, storage);
+  await c.sync.enable("ana@example.com");
+  assert.equal(cloud.projects.size, 1, "nome + hash não pode gerar POST");
+  assert.equal(posts(), afterFirst);
+  assert.equal((await store.getProject("p1")).cloudId, remoteId);
+});
+
+test("troca de conta guarda o estado de cada uma e não duplica ao voltar", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const storage = memoryStorage();
+  const a = engine(cloud, store, storage);
+  await a.sync.enable("ana@example.com");
+  a.sync.disable();
+  const anaRaw = storage.getItem(syncMetaKey("ana@example.com"));
+  assert.equal(JSON.parse(anaRaw).remote.p1.id, [...cloud.projects.keys()][0]);
+  const posts = cloud.calls.filter((c) => c === "POST /projects").length;
+
+  const biaStore = fakeStore([localProject("p9", 9)]);
+  const b = engine(cloud, biaStore, storage);
+  await b.sync.enable("bia@example.com");
+  assert.equal(b.sync.getMeta().account, "bia@example.com");
+  assert.equal(storage.getItem(syncMetaKey("ana@example.com")), anaRaw);
+  assert.equal(cloud.projects.size, 2);
+
+  const back = engine(cloud, store, storage);
+  await back.sync.enable("ana@example.com");
+  assert.equal(back.sync.getMeta().remote.p1.id, JSON.parse(anaRaw).remote.p1.id);
+  assert.equal(cloud.calls.filter((c) => c === "POST /projects").length, posts + 1);
+  assert.equal(cloud.projects.size, 2);
+});
+
+test("sessão sem e-mail não liga nem troca a conta do sync", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const storage = memoryStorage();
+  const off = engine(cloud, store, storage);
+  await off.sync.enable("");
+  await off.sync.enable("conta");
+  assert.equal(off.sync.isEnabled(), false);
+  assert.equal(cloud.projects.size, 0);
+  assert.equal(storage.map.size, 0);
+
+  const a = engine(cloud, store, storage);
+  await a.sync.enable("ana@example.com");
+  const before = storage.getItem(syncMetaKey("ana@example.com"));
+  assert.equal(cloud.projects.size, 1);
+  await a.sync.enable("");
+  await a.sync.enable("conta");
+  assert.equal(a.sync.isEnabled(), true);
+  assert.equal(a.sync.getMeta().account, "ana@example.com");
+  assert.equal(storage.getItem(syncMetaKey("ana@example.com")), before);
+  assert.equal(storage.getItem(syncMetaKey("conta")), null);
+  assert.equal(cloud.projects.size, 1);
+
+  const src = readFileSync(new URL("./app.js", import.meta.url), "utf8");
+  const body = src.slice(src.indexOf("function reconcileSync()"), src.indexOf("function syncStatusText()"));
+  assert.equal(body.includes('account.email || "conta"'), false);
+  assert.match(body, /cloudSync\.enable\(email\)/);
+  assert.match(body, /if \(!email\) return/);
+});
+
+test("duas abas não criam o mesmo projeto duas vezes", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const storage = memoryStorage();
+  const a = engine(cloud, store, storage);
+  const b = engine(cloud, store, storage);
+  await Promise.all([a.sync.enable("ana@example.com"), b.sync.enable("ana@example.com")]);
+  assert.equal(cloud.projects.size, 1);
+  assert.equal(cloud.calls.filter((c) => c === "POST /projects").length, 1);
+  assert.equal(a.sync.getMeta().remote.p1.id, b.sync.getMeta().remote.p1.id);
+});
+
+test("navigator.locks: a segunda aba espera e relê o estado em vez de criar", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const storage = memoryStorage();
+  let chain = Promise.resolve();
+  const locks = {
+    request(_name, _opts, callback) {
+      const run = chain.then(() => callback());
+      chain = run.then(() => {}, () => {});
+      return run;
+    },
+  };
+  const a = engine(cloud, store, storage, { locks });
+  const b = engine(cloud, store, storage, { locks });
+  await Promise.all([a.sync.enable("ana@example.com"), b.sync.enable("ana@example.com")]);
+  assert.equal(cloud.projects.size, 1);
+  assert.equal(cloud.calls.filter((c) => c === "POST /projects").length, 1);
+  assert.equal(a.sync.getMeta().remote.p1.id, b.sync.getMeta().remote.p1.id);
+});
+
+test("pull com clientId reutiliza esse id e não chama createProjectId", async () => {
+  const cloud = fakeCloud();
+  const origin = fakeStore([localProject("p1", 1)]);
+  await engine(cloud, origin).sync.enable("ana@example.com");
+  let minted = 0;
+  const fresh = fakeStore([]);
+  const realCreate = fresh.createProjectId;
+  fresh.createProjectId = () => {
+    minted += 1;
+    return realCreate();
+  };
+  await engine(cloud, fresh).sync.enable("ana@example.com");
+  assert.equal(minted, 0);
+  assert.ok(await fresh.getProject("p1"));
+  assert.equal((await fresh.getProject("p1")).cloudId, [...cloud.projects.keys()][0]);
+  assert.equal(cloud.projects.size, 1);
+});
+
+test("chave antiga migra só quando a conta é a mesma", () => {
+  const storage = memoryStorage();
+  const legacy = {
+    v: 1,
+    account: "ana@example.com",
+    cursor: "2026-10-11T12:00:00.000Z",
+    initialDone: true,
+    remote: { p1: { id: "srv-1", rev: 2, hash: "h" } },
+    dirty: {},
+    pendingDeletes: {},
+  };
+  storage.setItem(SYNC_META_KEY, JSON.stringify(legacy));
+  const ana = readMeta(storage, "ana@example.com");
+  assert.equal(ana.remote.p1.id, "srv-1");
+  assert.equal(ana.initialDone, true);
+  assert.equal(storage.getItem(SYNC_META_KEY), null);
+  assert.equal(JSON.parse(storage.getItem(syncMetaKey("ana@example.com"))).remote.p1.rev, 2);
+
+  const otherStorage = memoryStorage();
+  otherStorage.setItem(SYNC_META_KEY, JSON.stringify({ ...legacy, account: "bia@example.com" }));
+  const other = readMeta(otherStorage, "ana@example.com");
+  assert.equal(other.initialDone, false);
+  assert.deepEqual(other.remote, {});
+  assert.ok(otherStorage.getItem(SYNC_META_KEY));
+  writeMeta(otherStorage, other);
+  assert.equal(JSON.parse(otherStorage.getItem(syncMetaKey("ana@example.com"))).account, "ana@example.com");
+  assert.ok(otherStorage.getItem(SYNC_META_KEY), "conta diferente não consome a chave antiga");
 });
 
 test("temas: união por id; a versão local ganha quando foi ela que mudou", () => {
