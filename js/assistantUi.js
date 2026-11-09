@@ -18,8 +18,10 @@ import {
   editItem,
   editSuggestion,
   findGaps,
+  listTransferFiles,
   markApplied,
   moveMaterial,
+  partitionMaterialFiles,
   projectFromDraft,
   recommendMode,
   regenerableItems,
@@ -97,6 +99,7 @@ export function createAssistantUi(ctx) {
   let applying = false;
   /** @type {{field: string, reason: string}[]} */
   let fieldErrors = [];
+  let dropActive = false;
 
   function save(now = false) {
     clearTimeout(saveTimer);
@@ -125,7 +128,15 @@ export function createAssistantUi(ctx) {
     dialog.addEventListener("click", onClick);
     dialog.addEventListener("input", onInput);
     dialog.addEventListener("change", onChange);
-    dialog.addEventListener("close", () => save(true));
+    dialog.addEventListener("dragenter", onDragEnter, false);
+    dialog.addEventListener("dragover", onDragOver, false);
+    dialog.addEventListener("dragleave", onDragLeave, false);
+    dialog.addEventListener("drop", onDrop, false);
+    dialog.addEventListener("paste", onPaste);
+    dialog.addEventListener("close", () => {
+      dropActive = false;
+      save(true);
+    });
     dialog.addEventListener("cancel", () => save(true));
     return dialog;
   }
@@ -214,6 +225,7 @@ export function createAssistantUi(ctx) {
     if (next === "structure" || next === "review") rebuild();
     draft.stage = next;
     fieldErrors = [];
+    dropActive = false;
     setNotice("");
     save();
     render();
@@ -296,10 +308,13 @@ export function createAssistantUi(ctx) {
       : `<p class="asst-empty">${esc(t("assistant.materials.empty"))}</p>`;
     const matErr = errorMap().get("materials");
     const matErrId = "asst-err-materials";
+    const hintId = "asst-drop-hint";
+    const described = [hintId, matErr ? matErrId : ""].filter(Boolean).join(" ");
     return `
       <p class="asst-lead"><span class="asst-label-text">${esc(t("assistant.materials.lead"))}${reqMark()}</span></p>
-      <div class="asst-materials-add${matErr ? " is-invalid" : ""}">
-        <button type="button" class="btn" data-asst-add ${matErr ? `aria-invalid="true" aria-describedby="${matErrId}"` : ""}>${esc(t("assistant.materials.add"))}</button>
+      <div class="asst-dropzone asst-materials-add${matErr ? " is-invalid" : ""}${dropActive ? " is-dragover" : ""}" data-asst-drop>
+        <p class="asst-drop-hint" id="${hintId}">${esc(t("assistant.materials.dropHint"))}</p>
+        <button type="button" class="btn" data-asst-add aria-describedby="${described}" ${matErr ? 'aria-invalid="true"' : ""}>${esc(t("assistant.materials.add"))}</button>
         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden data-asst-file />
         ${matErr ? `<p class="asst-field-error" id="${matErrId}" role="alert">${esc(errorMsg(matErr.reason))}</p>` : ""}
       </div>
@@ -479,25 +494,32 @@ export function createAssistantUi(ctx) {
   }
 
   async function addFiles(files) {
-    for (const file of [...files]) {
-      const check = checkMaterialFile(file, draft.materials.length);
-      if (!check.ok) {
-        const key = check.reason === "type" ? "assistant.materials.errType" : check.reason === "size" ? "assistant.materials.errSize" : "assistant.materials.errMany";
-        setNotice(t(key, { name: file.name }), "error");
-        if (check.reason === "tooMany") break;
-        continue;
-      }
+    const before = draft.materials.length;
+    const { accepted, rejected } = partitionMaterialFiles(files, before);
+    let lastErr = "";
+    for (const file of accepted) {
       try {
         const dataUrl = await readFileAsDataUrl(file);
         const size = await imageSize(dataUrl);
-        if (!addMaterial(draft, { name: file.name, dataUrl, ...size })) setNotice(t("assistant.materials.errType", { name: file.name }), "error");
+        if (!addMaterial(draft, { name: file.name, dataUrl, ...size })) lastErr = t("assistant.materials.errType", { name: file.name });
       } catch {
-        setNotice(t("assistant.materials.errType", { name: file.name }), "error");
+        lastErr = t("assistant.materials.errType", { name: file.name });
       }
     }
+    if (rejected.length) {
+      const mixed = accepted.length > 0 || draft.materials.length > before;
+      const onlyType = rejected.every((r) => r.reason === "type");
+      if (mixed && onlyType) lastErr = t("assistant.materials.dropIgnore");
+      else {
+        const first = rejected[0];
+        const key = first.reason === "type" ? "assistant.materials.errType" : first.reason === "size" ? "assistant.materials.errSize" : "assistant.materials.errMany";
+        lastErr = t(key, { name: first.file?.name || "" });
+      }
+    }
+    if (lastErr) setNotice(lastErr, "error");
     if (draft.materials.length) {
       fieldErrors = fieldErrors.filter((e) => e.field !== "materials");
-      if (!fieldErrors.length) notice = { text: "", tone: "" };
+      if (!fieldErrors.length && !lastErr) notice = { text: "", tone: "" };
     }
     const keep = notice;
     save();
@@ -586,8 +608,59 @@ export function createAssistantUi(ctx) {
     else if (kind === "share") ctx.openShare();
   }
 
+  function transferHasFiles(data) {
+    if (data?.files?.length) return true;
+    if (data?.items) return [...data.items].some((item) => item.kind === "file");
+    return false;
+  }
+
+  function setDropActive(on) {
+    if (dropActive === on) return;
+    dropActive = on;
+    dialog?.querySelector("[data-asst-drop]")?.classList.toggle("is-dragover", on);
+  }
+
+  function onDragEnter(e) {
+    if (draft?.stage !== "materials" || !transferHasFiles(e.dataTransfer)) return;
+    e.preventDefault();
+    setDropActive(true);
+  }
+
+  function onDragOver(e) {
+    if (draft?.stage !== "materials" || !transferHasFiles(e.dataTransfer)) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    setDropActive(true);
+  }
+
+  function onDragLeave(e) {
+    if (!dropActive || !dialog) return;
+    const next = e.relatedTarget;
+    if (next && dialog.contains(next)) return;
+    setDropActive(false);
+  }
+
+  async function onDrop(e) {
+    if (draft?.stage !== "materials") return;
+    if (!transferHasFiles(e.dataTransfer)) return;
+    e.preventDefault();
+    setDropActive(false);
+    const files = listTransferFiles(e.dataTransfer);
+    if (files.length) await addFiles(files);
+  }
+
+  async function onPaste(e) {
+    if (draft?.stage !== "materials" || !dialog?.open) return;
+    const files = listTransferFiles(e.clipboardData);
+    if (!files.length) return;
+    // why: se só há texto na área, deixa o campo (nota/ficha) colar normalmente
+    e.preventDefault();
+    await addFiles(files);
+  }
+
   function onClick(e) {
-    const el = e.target.closest("button, [data-asst-add]");
+
+    const el = e.target.closest("button, [data-asst-add], [data-asst-drop]");
     if (!el || !draft) return;
     if (el.matches("[data-asst-close]")) {
       save(true);
@@ -605,7 +678,9 @@ export function createAssistantUi(ctx) {
       dialog.querySelector('[data-asst-field="goal"]')?.focus();
       return;
     }
-    if (el.matches("[data-asst-add]")) {
+    if (el.matches("[data-asst-add]") || el.closest("[data-asst-drop]")) {
+      // why: a zona inteira abre o seletor; o botão continua sendo o alvo de teclado
+      if (el.closest("textarea, input, label, [data-asst-note], [data-asst-field]")) return;
       dialog.querySelector("[data-asst-file]")?.click();
       return;
     }

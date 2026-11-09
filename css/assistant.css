@@ -734,3 +734,39 @@ p.agent-client-status.is-on {
 .asst-label-text {
   display: inline;
 }
+
+.asst-dropzone {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px;
+  border: 1.5px dashed color-mix(in srgb, var(--ns-ink) 22%, var(--ns-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ns-surface) 70%, var(--ns-panel));
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.asst-drop-hint {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--ns-muted);
+  line-height: 1.4;
+}
+
+.asst-dropzone.is-dragover {
+  border-color: var(--ns-accent);
+  border-style: solid;
+  background: color-mix(in srgb, var(--ns-accent) 12%, var(--ns-panel));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ns-accent) 22%, transparent);
+}
+
+.asst-dropzone.is-dragover .asst-drop-hint {
+  color: var(--ns-ink);
+}
+
+.asst-dropzone.is-invalid {
+  border-color: var(--ns-danger);
+}
