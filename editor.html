@@ -112,7 +112,7 @@
           <div class="more-group more-group-actions">
             <button type="button" class="more-item compact-only" id="btn-menu-account" data-menu-action="signin" hidden>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-user"></use></svg>
-              <span data-i18n="account.subscribeOrSignIn">Assinar / Entrar</span>
+              <span data-i18n="account.signIn">Entrar</span>
             </button>
             <button type="button" class="more-item more-item-moved compact-only" id="btn-menu-moved-results" data-moved-to="publish" data-moved-group hidden>
               <svg class="btn-ico" aria-hidden="true"><use href="#i-chart"></use></svg>
@@ -457,7 +457,7 @@
         <input type="file" id="import-file" accept="application/json,.json" hidden />
       </div>
       <div class="account-slot" id="account-slot" hidden>
-        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.subscribeOrSignIn">Assinar / Entrar</button>
+        <button type="button" class="btn btn-ghost" id="btn-account-signin" data-i18n="account.signIn">Entrar</button>
         <details class="account-chip" id="account-chip" hidden>
           <summary class="account-chip-toggle" id="account-chip-toggle" aria-label="Conta" data-i18n-aria="account.menu">
             <span class="account-avatar" id="account-avatar" aria-hidden="true"></span>
@@ -1191,9 +1191,13 @@
       </div>
       <form id="cloud-magic-form">
         <button type="submit" class="btn" id="btn-cloud-magic" data-i18n="share.cloud.send">Entrar sem senha</button>
-        <p class="cloud-login-hint" data-i18n="share.cloud.magicHint">Sem senha ou primeira vez: enviamos um link para o email. Também cria a conta.</p>
+        <p class="cloud-login-hint" id="cloud-magic-hint" data-i18n="share.cloud.magicHint" hidden>Se este e-mail já tem GuiaFlow&nbsp;Pro, enviamos um link para entrar.</p>
       </form>
       <p id="cloud-login-status" class="cloud-login-status" role="status"></p>
+      <p class="cloud-login-upsell" id="cloud-login-upsell">
+        <span data-i18n="account.noAccount">Ainda não tem conta?</span>
+        <button type="button" class="cloud-login-upsell-btn" id="btn-account-discover-pro" data-i18n="account.discoverPro">Conheça o GuiaFlow&nbsp;Pro</button>
+      </p>
       <details id="cloud-paste-fallback" class="cloud-login-extra cloud-paste-fallback">
         <summary data-i18n="share.cloud.pasteLabel">O link abriu noutro aparelho?</summary>
         <label>
