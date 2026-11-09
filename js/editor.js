@@ -4808,7 +4808,7 @@ export function createEditor(ctx) {
       el.addEventListener("change", applyNarrationPanel);
     });
 
-    // why: Gustavo perguntou onde fica — ⚙ Preferências do projeto (topo) e o menu ▾ do Preview
+    // why: o modo é do projeto — só o ⚙ Preferências (o menu do Preview só escolhe de onde tocar)
     bindPlaybackModeControls(document, {
       getDemo,
       t,

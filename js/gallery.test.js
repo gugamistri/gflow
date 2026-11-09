@@ -444,12 +444,19 @@ test("CSS: tela cheia, foco visível, alvos de 44px, retrato/deitado e movimento
   assert.match(css, /\.gf-gal-stage \* \{\s*touch-action: none;/);
 });
 
-test("editor: 'Modo de exibição' em ⚙ e no menu do Preview; trocar grava playback.mode", () => {
+test("editor: 'Modo de exibição' só no ⚙; o menu do Preview não troca o modo", () => {
   const html = read("../editor.html");
   assert.match(html, /<fieldset class="mode-picker" id="playback-mode">\s*<legend data-i18n="mode.label">Modo de exibição<\/legend>/);
   assert.ok(html.indexOf('id="playback-mode"') < html.indexOf('id="theme-panel"'), "primeira coisa do ⚙");
-  assert.match(html, /role="menuitemradio" aria-checked="true" data-playback-mode="guided"/);
-  assert.match(html, /role="menuitemradio" aria-checked="false" data-playback-mode="gallery"/);
+  const preview = html.slice(html.indexOf('id="preview-panel"'), html.indexOf('id="toolbar-pos"'));
+  assert.equal(preview.includes("data-playback-mode"), false);
+  assert.equal(preview.includes("mode.label"), false);
+  assert.match(preview, /id="btn-preview-here"/);
+  assert.match(preview, /id="btn-preview-start"/);
+  assert.match(preview, /id="btn-preview-auto"/);
+  const appMenu = html.slice(html.indexOf('id="more-panel"'), html.indexOf('class="topbar-brand"'));
+  assert.equal(appMenu.includes("playback-mode"), false);
+  assert.match(html, /id="new-project-kind"/);
   assert.match(read("./editor.js"), /bindPlaybackModeControls\(document, \{/);
   for (const loc of ["pt", "es", "en"]) {
     for (const k of ["mode.label", "mode.guided", "mode.gallery", "mode.guidedHint", "mode.galleryHint", "mode.changed", "gallery.counter", "gallery.announce", "gallery.showAll"]) {
@@ -463,7 +470,6 @@ test("editor: 'Modo de exibição' em ⚙ e no menu do Preview; trocar grava pla
   assert.equal(applyPlaybackMode(demo, "guided"), true);
   assert.deepEqual(demo.playback, { defaultHoldSeconds: 6 });
 
-  // os dois controles mostram o mesmo valor e um muda o outro
   const doc = fakeDoc();
   const radios = ["guided", "gallery"].map((v) => {
     const r = doc.createElement("input");
@@ -472,25 +478,27 @@ test("editor: 'Modo de exibição' em ⚙ e no menu do Preview; trocar grava pla
     doc.body.append(r);
     return r;
   });
-  const items = ["guided", "gallery"].map((v) => {
-    const b = doc.createElement("button");
-    b.dataset.playbackMode = v;
-    doc.body.append(b);
-    return b;
-  });
-  doc.querySelectorAll = (sel) => doc.body.querySelectorAll(sel.replace('input[name="playback-mode"]', 'input[name="playback-mode"]'));
-  doc.getElementById = () => null;
+  const badge = doc.createElement("span");
+  badge.id = "preview-mode-badge";
+  doc.body.append(badge);
+  doc.querySelectorAll = (sel) => doc.body.querySelectorAll(sel);
+  doc.getElementById = (id) => (id === "preview-mode-badge" ? badge : null);
   const tour = { playback: {} };
   const changed = [];
-  paintPlaybackMode(doc, tour);
+  const t = (k) => (k === "mode.gallery" ? "Galeria" : k);
+  paintPlaybackMode(doc, tour, t);
   assert.deepEqual(radios.map((r) => r.checked), [true, false]);
-  bindPlaybackModeControls(doc, { getDemo: () => tour, onChanged: (m) => changed.push(m) });
-  items[1].fire("click");
+  assert.equal(badge.hidden, true);
+  bindPlaybackModeControls(doc, { getDemo: () => tour, onChanged: (m) => changed.push(m), t });
+  radios[1].checked = true;
+  radios[1].fire("change");
   assert.equal(tour.playback.mode, "gallery");
   assert.deepEqual(radios.map((r) => r.checked), [false, true]);
-  assert.deepEqual(items.map((b) => b.getAttribute("aria-checked")), ["false", "true"]);
+  assert.equal(badge.hidden, false);
+  assert.equal(badge.textContent, "Galeria");
   radios[0].checked = true;
   radios[0].fire("change");
   assert.equal(tour.playback.mode, undefined);
+  assert.equal(badge.hidden, true);
   assert.deepEqual(changed, ["gallery", "guided"]);
 });
