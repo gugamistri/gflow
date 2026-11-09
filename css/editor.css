@@ -2201,6 +2201,39 @@ dialog.subscription-modal {
   text-align: center;
 }
 
+.cloud-login-hint[hidden] {
+  display: none;
+}
+
+.cloud-login-upsell {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--ns-muted);
+}
+
+.cloud-login-upsell-btn {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ns-accent);
+  font: inherit;
+  font-size: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.cloud-login-upsell-btn:hover,
+.cloud-login-upsell-btn:focus-visible {
+  color: var(--ns-ink);
+  outline: none;
+}
+
 .cloud-login-status:empty {
   display: none;
 }
@@ -2229,9 +2262,9 @@ dialog.subscription-modal {
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--ns-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
+  color: color-mix(in srgb, var(--ns-muted) 78%, transparent);
+  font-size: 0.68rem;
+  font-weight: 500;
   line-height: 1.35;
   list-style: none;
 }

@@ -68,7 +68,9 @@ test("o diálogo de entrada não mostra o host da API", () => {
   assert.ok(panel.indexOf('id="btn-cloud-password"') < panel.indexOf("cloud-login-or"));
   assert.match(panel, /Entrar sem senha/);
   assert.match(panel, />ou</);
-  assert.match(panel, /Também cria a conta/);
+  assert.match(panel, /id="cloud-magic-hint"[^>]*hidden/);
+  assert.match(panel, /id="btn-account-discover-pro"/);
+  assert.match(panel, /Ainda não tem conta\?/);
   assert.equal(panel.includes("cloud-password-fallback"), false);
   assert.equal(/nuvem/i.test(panel), false);
   assert.match(panel, /O link abriu noutro aparelho/);
@@ -107,7 +109,19 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(catalogs.pt["billing.subscribe"], "Assinar Pro");
   assert.equal(catalogs.pt["billing.subscribeMonthly"], "Assinar Pro mensal");
   assert.equal(catalogs.pt["billing.subscribeAnnual"], "Assinar Pro anual");
-  assert.equal(catalogs.pt["account.subscribeOrSignIn"], "Assinar / Entrar");
+  assert.equal(catalogs.pt["account.subscribeOrSignIn"], "Entrar");
+  assert.equal(catalogs.pt["account.signIn"], "Entrar");
+  assert.equal(catalogs.en["account.signIn"], "Sign in");
+  assert.equal(catalogs.es["account.signIn"], "Entrar");
+  assert.equal(catalogs.en["account.subscribeOrSignIn"], "Sign in");
+  assert.equal(catalogs.es["account.subscribeOrSignIn"], "Entrar");
+  assert.equal(catalogs.pt["account.noAccount"], "Ainda não tem conta?");
+  assert.equal(catalogs.en["account.noAccount"], "Don't have an account yet?");
+  assert.equal(catalogs.es["account.noAccount"], "¿Aún no tienes cuenta?");
+  assert.equal(catalogs.pt["account.discoverPro"], "Conheça o GuiaFlow\u00a0Pro");
+  assert.equal(catalogs.en["account.discoverPro"], "Discover GuiaFlow\u00a0Pro");
+  assert.equal(catalogs.es["account.discoverPro"], "Conoce GuiaFlow\u00a0Pro");
+
   assert.equal(catalogs.pt["billing.planCloud"], "GuiaFlow\u00a0Pro");
   assert.equal(catalogs.pt["billing.badge"], "Pro");
   assert.equal(catalogs.pt["billing.title"], "GuiaFlow\u00a0Pro");
@@ -158,7 +172,8 @@ test("a cópia de assinatura não diz nuvem e o diálogo oferece Mensal e Anual"
   assert.equal(/name="billing-interval" value="year" checked/.test(dialog), false);
   assert.match(dialog, /paywall-benefits/);
   assert.equal(/grátis|gratis/i.test(dialog), false);
-  assert.match(html, /Assinar \/ Entrar/);
+  assert.match(html, /id="btn-account-signin"[^>]*data-i18n="account\.signIn">Entrar</);
+  assert.equal(/Assinar \/ Entrar/.test(html), false);
   assert.match(html, /Salvo só neste navegador/);
 });
 
