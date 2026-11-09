@@ -1186,6 +1186,32 @@ return { createGallery, galleryCaption, gallerySections };
 
   let revealEpoch = 0;
 
+  function popoverIsHidden(step) {
+    return Boolean(step && step.type !== "slide" && step.popover && step.popover.hidden === true);
+  }
+
+  function setRevealPopoverHidden(on) {
+    document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-reveal-hidden", Boolean(on)));
+  }
+
+  function paintBalloonNav(step) {
+    const hidden = popoverIsHidden(step);
+    document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-nav-only", hidden));
+    const hotspot = document.getElementById("player-hotspot");
+    if (!hotspot) return;
+    if (hidden) {
+      hotspot.tabIndex = 0;
+      hotspot.setAttribute("role", "button");
+      hotspot.dataset.balloonNav = "1";
+      hotspot.setAttribute("aria-label", (step && step.popover && step.popover.title) || (step && step.label) || gfT("player.next"));
+    } else if (hotspot.dataset.balloonNav === "1") {
+      hotspot.removeAttribute("role");
+      hotspot.removeAttribute("aria-label");
+      hotspot.removeAttribute("tabindex");
+      delete hotspot.dataset.balloonNav;
+    }
+  }
+
   function cancelClickReveal() {
     revealEpoch += 1;
     document.querySelectorAll("img.gf-click-reveal").forEach((el) => el.remove());
@@ -2307,15 +2333,16 @@ return { createGallery, galleryCaption, gallerySections };
         // passo com vídeo: o balão é só a navegação (← N de X →), sem texto
         const isVid = Boolean(stepVideoLink(steps[activeIndex]));
         document.querySelectorAll(".driver-popover").forEach((el) => el.classList.toggle("is-video-nav", isVid));
+        paintBalloonNav(steps[activeIndex]);
         armAutoplay();
       },
       steps: steps.map((step) => ({
         element: step.type === "slide" ? "#player-slide" : stepVideoLink(step) ? "#player-video" : "#player-hotspot",
         popover: {
           // why: driver.js usa innerHTML; o texto do autor entra escapado (mesma regra de htmlText.js)
-          title: stepVideoLink(step) ? "" : gfEscapeHtml(step.popover?.title || step.label || ""),
+          title: stepVideoLink(step) || popoverIsHidden(step) ? "" : gfEscapeHtml(step.popover?.title || step.label || ""),
           // formatação leve montada em tags fixas; o texto do autor sai escapado (cópia de richText.js)
-          description: stepVideoLink(step) ? "" : gfRichText.richTextHtml(step.popover?.description || ""),
+          description: stepVideoLink(step) || popoverIsHidden(step) ? "" : gfRichText.richTextHtml(step.popover?.description || ""),
           side: stepVideoLink(step) ? "bottom" : step.popover?.side || "bottom",
           align: stepVideoLink(step) ? "center" : step.popover?.align || "center",
           onNextClick: async (_el, _step, optsNext) => {
@@ -2335,13 +2362,16 @@ return { createGallery, galleryCaption, gallerySections };
                 setProgress(gfT("player.doneStatus"));
                 return;
               }
+              if (reveal) setRevealPopoverHidden(true);
               activeIndex = nextIndex;
               setProgress(gfT("player.stepOf", { current: activeIndex + 1, total: steps.length }));
               await showStepVisual(steps[activeIndex], true, reveal);
               await prepareStepCamera();
               drv.moveNext();
+              setRevealPopoverHidden(false);
               await zoomAfterHighlightVisible(steps[activeIndex]);
             } finally {
+              setRevealPopoverHidden(false);
               animating = false;
             }
           },

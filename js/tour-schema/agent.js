@@ -11,6 +11,7 @@ import { THEME_FONT_IDS, isThemeFontId } from "./fonts.js";
 import { normalizeRichText } from "./richText.js";
 import { applyVideoToStep, normalizeStepVideo, parseVideoUrl, removeVideoFromStep, videoWatchUrl } from "./video.js";
 import { readStepTransition } from "./clickTransition.js";
+import { popoverWithBalloon } from "./popoverVisibility.js";
 
 export const STEP_LIMITS = Object.freeze({ title: 120, text: 1200, label: 120, caption: 3000, alt: 300, maxSteps: 200 });
 export const POPOVER_SIDES = Object.freeze(["top", "bottom", "left", "right", "over"]);
@@ -177,6 +178,12 @@ export function applyAgentStepInput(input = {}, base = null) {
     else if (read.transition) step.transition = read.transition;
     else delete step.transition;
   }
+  // why: ausente = balão visível. false grava popover.hidden; true apaga a chave.
+  if (input.showPopover !== undefined) {
+    if (typeof input.showPopover !== "boolean") {
+      errors.push(issue("showPopover", "showPopover precisa ser true ou false. Omita para manter o balão visível."));
+    } else step.popover = popoverWithBalloon(step.popover, input.showPopover);
+  }
 
   const rect = readUnitRect(input.highlight, "highlight", errors, warnings);
   const click = readUnitPoint(input.click, "click", errors);
@@ -264,7 +271,12 @@ export function stepForAgent(step, index) {
     popoverAlign: step.popover?.align || "center",
     ...videoForAgent(step),
     ...transitionForAgent(step),
+    ...balloonForAgent(step),
   };
+}
+
+function balloonForAgent(step) {
+  return step?.popover?.hidden === true ? { showPopover: false } : {};
 }
 
 function transitionForAgent(step) {

@@ -135,3 +135,14 @@ test("transition é opcional: sem o campo o passo não muda, com o campo preserv
   assert.equal(bad.step, null);
   assert.equal(bad.errors.some((e) => e.field === "transition.ms"), true);
 });
+
+test("showPopover ausente não esconde o balão", () => {
+  const created = applyAgentStepInput({ title: "A" });
+  assert.equal(created.step.popover.hidden, undefined);
+  assert.equal(stepForAgent(created.step, 0).showPopover, undefined);
+  const off = applyAgentStepInput({ showPopover: false }, created.step);
+  assert.equal(off.step.popover.hidden, true);
+  assert.equal(off.step.popover.title, "A");
+  const back = applyAgentStepInput({ showPopover: true }, off.step);
+  assert.equal(Object.hasOwn(back.step.popover, "hidden"), false);
+});

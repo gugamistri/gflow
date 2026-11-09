@@ -39,6 +39,11 @@ Optional. Absent, `null`, or without `fromClick: true` means the guided player s
 `ms: 0` stores the field but does not animate. The editor keeps the object on the step; the properties form does not write it.
 Preview-only override, not saved: `?transition=click`. `prefers-reduced-motion: reduce` skips the animation.
 Not in the MP4 export yet (`js/exportPack.js`). Gallery mode ignores it.
+`prefers-reduced-motion: reduce` skips the circle. While it runs, the previous step's balloon is hidden.
+
+## Balloon (`popover.hidden`)
+
+Optional. Absent means the guided player shows the balloon, as before. `popover.hidden: true` (agent input `showPopover: false`) hides the title and text. The footer (previous / progress / next) and the close button stay, and the highlight becomes a button named with the step title. Slides ignore the flag. The editor checkbox "Show balloon" is on by default and deletes the key when checked.
 
 ## Display mode (`playback.mode`)
 
