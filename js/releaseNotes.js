@@ -5,9 +5,10 @@
  *      0.4.0 fecha a Fase 1: menus, Configurações com abas, Clientes/marcas, Captura · Compartilhar · Resultados
  *      e o contexto de captura nos Contatos (GUI-25 a GUI-33). Minor porque muda onde as coisas ficam.
  *      0.5.0 (30/10): vídeo nos passos, legenda da narração, slides sem "CENA X", texto com formatação e modo Galeria.
+ *      0.6.0 (9/11): Criar com ajuda (grátis), Criar com meu agente de IA e Mostrar balão por passo.
  */
-export const RELEASE_NOTES_VERSION = "0.5.0";
-export const RELEASE_NOTES_DATE = "2026-10-30";
+export const RELEASE_NOTES_VERSION = "0.6.0";
+export const RELEASE_NOTES_DATE = "2026-11-09";
 export const RELEASE_NOTES_DISMISS_KEY = "ns-release-notes-dismissed";
 
 /** Mês e ano da versão, no idioma da interface. */
@@ -38,6 +39,9 @@ export function shouldShowReleaseNotes({ dismissedVersion, currentVersion } = {}
 export const RELEASE_NOTE_TAGS = Object.freeze(["new", "feature", "fix"]);
 
 export const RELEASE_NOTE_ENTRIES = Object.freeze([
+  { key: "createHelp", tag: "new", date: "2026-11-09", icon: "text", help: "editor", editor: "0.6.0", ext: null },
+  { key: "agentConnect", tag: "new", date: "2026-11-09", icon: "bell", help: "editor", editor: "0.6.0", ext: null },
+  { key: "showBalloon", tag: "feature", date: "2026-11-09", icon: "caption", help: "editor", editor: "0.6.0", ext: null },
   { key: "extensionNews", tag: "new", date: "2026-11-01", icon: "bell", help: "gravar", editor: null, ext: "0.3.0" },
   { key: "stepVideo", tag: "feature", date: "2026-10-30", icon: "video", help: "editor", editor: "0.5.0", ext: "0.3.0" },
   { key: "narrationCaption", tag: "fix", date: "2026-10-30", icon: "caption", help: "editor", editor: "0.5.0", ext: "0.3.0" },
