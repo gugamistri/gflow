@@ -33,7 +33,7 @@ export const PAGES = [
   {
     src: "index.html",
     path: "",
-    lastmod: "2026-10-26",
+    lastmod: "2026-11-09",
     meta: {
       en: {
         ogImage: "/brand/og-landing-en-v3.png",
