@@ -13,6 +13,12 @@ export { bytesToDataUrl, dataUrlToBytes, sha256Hex };
 
 export const SYNC_META_KEY = "guiaflow.sync.v1";
 export const ASSET_PREFIX = "asset:";
+
+/** Estado separado por conta. A chave antiga (sem e-mail) só existe para migrar. */
+export function syncMetaKey(account) {
+  const key = String(account || "").trim().toLowerCase();
+  return key ? `${SYNC_META_KEY}:${key}` : SYNC_META_KEY;
+}
 const MEDIA_MIN_CHARS = 512;
 const CURSOR_OVERLAP_MS = 60 * 1000;
 const DATA_URL_RE = /^data:((?:image|audio|video)\/[a-z0-9.+-]+)(;[^,]*)?,/i;
@@ -90,15 +96,16 @@ export async function hydrate(value, fetchAsset) {
 
 /* ---------- projeto ↔ payload ---------- */
 
-/** O que sobe: o registro local sem id, sem o link temporário (writeToken) e sem updatedAt. */
+/** O que sobe: o registro local sem id, sem cloudId, sem o link temporário (writeToken) e sem updatedAt. */
 export function projectToSyncPayload(project) {
-  const { id: _id, share: _share, updatedAt: _updatedAt, ...rest } = project || {};
+  const { id: _id, share: _share, updatedAt: _updatedAt, cloudId: _cloudId, ...rest } = project || {};
   return rest;
 }
 
 export function syncPayloadToProject(payload, { id, name, updatedAt } = {}) {
   const project = { ...(payload || {}) };
   delete project.share;
+  delete project.cloudId;
   project.id = id;
   if (name) project.name = name;
   if (!Array.isArray(project.steps)) project.steps = [];
@@ -154,19 +161,38 @@ export function emptyMeta(account = "") {
 }
 
 export function readMeta(storage, account) {
+  const key = String(account || "").trim().toLowerCase();
   try {
-    const raw = storage?.getItem(SYNC_META_KEY);
+    let raw = key ? storage?.getItem(syncMetaKey(key)) : null;
+    if (!raw && key) {
+      const legacy = storage?.getItem(SYNC_META_KEY);
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        // why: a chave única antiga zerava quando o e-mail mudava; só herda se a conta for a mesma
+        if (parsed && parsed.v === 1 && parsed.account === key) {
+          raw = legacy;
+          try {
+            storage.setItem(syncMetaKey(key), legacy);
+            storage.removeItem(SYNC_META_KEY);
+          } catch {
+            /* se a chave nova não couber, segue lendo a antiga nesta sessão */
+          }
+        }
+      }
+    }
     const data = raw ? JSON.parse(raw) : null;
-    if (!data || data.v !== 1 || data.account !== account) return emptyMeta(account);
-    return { ...emptyMeta(account), ...data };
+    if (!data || data.v !== 1 || data.account !== key) return emptyMeta(key);
+    return { ...emptyMeta(key), ...data };
   } catch {
-    return emptyMeta(account);
+    return emptyMeta(key);
   }
 }
 
 export function writeMeta(storage, meta) {
+  const key = String(meta?.account || "").trim().toLowerCase();
+  if (!key) return;
   try {
-    storage?.setItem(SYNC_META_KEY, JSON.stringify(meta));
+    storage?.setItem(syncMetaKey(key), JSON.stringify(meta));
   } catch {
     /* cota cheia: a sincronização segue, só perde o estado ao recarregar */
   }
@@ -199,6 +225,7 @@ export function createCloudSync(deps) {
     debounceMs = 2500,
     pollMs = 60 * 1000,
     now = () => Date.now(),
+    locks = typeof navigator !== "undefined" ? navigator.locks : null,
   } = deps;
 
   let meta = null;
@@ -207,6 +234,8 @@ export function createCloudSync(deps) {
   let again = false;
   let timer = null;
   let poll = null;
+  let lockHeld = false;
+  let serverList = null;
   const assetCache = new Map();
   let state = { phase: "off", done: 0, total: 0, error: "" };
 
@@ -215,8 +244,120 @@ export function createCloudSync(deps) {
     onStatus({ ...state, lastSyncAt: meta?.lastSyncAt || null });
   }
 
+  let refreshStorageLock = () => {};
+
   function save() {
-    if (meta) writeMeta(storage, meta);
+    refreshStorageLock();
+    if (!meta?.account) return;
+    // why: outra aba pode ter gravado o mapa enquanto esta só marcou dirty; sem o merge a chave inteira volta atrás
+    if (!lockHeld) {
+      const fresh = readMeta(storage, meta.account);
+      meta.remote = { ...fresh.remote, ...meta.remote };
+      for (const [localId, link] of Object.entries(fresh.remote || {})) {
+        if (link?.id && meta.pendingDeletes?.[link.id]) delete meta.remote[localId];
+      }
+      meta.dirty = { ...fresh.dirty, ...meta.dirty };
+      meta.pendingDeletes = { ...fresh.pendingDeletes, ...meta.pendingDeletes };
+      meta.media = { ...fresh.media, ...meta.media };
+      meta.collabBlocked = { ...(fresh.collabBlocked || {}), ...(meta.collabBlocked || {}) };
+      if (fresh.initialDone) meta.initialDone = true;
+      if ((fresh.cursor || "") > (meta.cursor || "")) meta.cursor = fresh.cursor;
+      if ((fresh.lastSyncAt || "") > (meta.lastSyncAt || "")) meta.lastSyncAt = fresh.lastSyncAt;
+      if ((fresh.settingsRevision || 0) > (meta.settingsRevision || 0)) meta.settingsRevision = fresh.settingsRevision;
+      if (fresh.settingsDirty) meta.settingsDirty = true;
+    }
+    writeMeta(storage, meta);
+  }
+
+  function reloadMeta() {
+    if (!meta?.account) return;
+    meta = readMeta(storage, meta.account);
+  }
+
+  /**
+   * Uma aba por vez. navigator.locks espera a outra; sem a API, uma trava no
+   * localStorage com confirmação (no Node a confirmação é imediata: um só processo).
+   */
+  async function withSyncLock(fn) {
+    if (lockHeld) return fn();
+    const name = `guiaflow-sync:${meta?.account || "off"}`;
+    if (locks && typeof locks.request === "function") {
+      return locks.request(name, { mode: "exclusive" }, async () => {
+        lockHeld = true;
+        try {
+          return await fn();
+        } finally {
+          lockHeld = false;
+        }
+      });
+    }
+    if (!storage) {
+      lockHeld = true;
+      try {
+        return await fn();
+      } finally {
+        lockHeld = false;
+      }
+    }
+    return withStorageLock(name, fn);
+  }
+
+  async function withStorageLock(name, fn) {
+    const key = `${SYNC_META_KEY}:lock:${name}`;
+    const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const ttl = 10 * 60 * 1000;
+    const deadline = Date.now() + 30 * 1000;
+    const settleMs = typeof document !== "undefined" ? 40 : 0;
+    while (Date.now() < deadline) {
+      let cur = null;
+      try {
+        cur = JSON.parse(storage.getItem(key) || "null");
+      } catch {
+        cur = null;
+      }
+      if (!cur || !(cur.until > Date.now())) {
+        try {
+          storage.setItem(key, JSON.stringify({ token, until: Date.now() + ttl }));
+        } catch {
+          break;
+        }
+        if (settleMs) await new Promise((resolve) => setTimeout(resolve, settleMs));
+        let check = null;
+        try {
+          check = JSON.parse(storage.getItem(key) || "null");
+        } catch {
+          check = null;
+        }
+        if (check?.token === token) {
+          const touch = () => {
+            try {
+              const held = JSON.parse(storage.getItem(key) || "null");
+              if (held?.token === token) storage.setItem(key, JSON.stringify({ token, until: Date.now() + ttl }));
+            } catch {
+              /* a outra aba segue quando o prazo vence */
+            }
+          };
+          lockHeld = true;
+          const prevTouch = refreshStorageLock;
+          refreshStorageLock = touch;
+          try {
+            return await fn();
+          } finally {
+            refreshStorageLock = prevTouch;
+            lockHeld = false;
+            try {
+              const end = JSON.parse(storage.getItem(key) || "null");
+              if (end?.token === token) storage.removeItem(key);
+            } catch {
+              storage.removeItem?.(key);
+            }
+          }
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+    schedule(1000);
+    return null;
   }
 
   function localIdFor(remoteId) {
@@ -292,21 +433,119 @@ export function createCloudSync(deps) {
     return copy;
   }
 
+  async function stampCloudId(localId, remoteId) {
+    if (!localId || !remoteId) return;
+    const project = await store.getProject(localId);
+    if (!project || project.cloudId === remoteId) return;
+    project.cloudId = remoteId;
+    await store.putProject(project, { silent: true, keepUpdatedAt: true });
+  }
+
+  async function ensureServerList() {
+    if (serverList) return serverList;
+    const res = await request("/projects", { method: "GET" });
+    if (!res.ok) throw syncError(res);
+    serverList = (Array.isArray(res.data?.projects) ? res.data.projects : []).filter((item) => item && !item.deletedAt);
+    return serverList;
+  }
+
+  function noteServerProject(saved, { name, payload, clientId } = {}) {
+    if (!serverList || !saved?.id) return;
+    const row = {
+      id: saved.id,
+      clientId: saved.clientId ?? clientId ?? null,
+      name: saved.name || name,
+      revision: saved.revision,
+      deletedAt: null,
+      payload: saved.payload || payload,
+    };
+    const index = serverList.findIndex((item) => item.id === saved.id);
+    if (index >= 0) serverList[index] = { ...serverList[index], ...row };
+    else serverList.push(row);
+  }
+
+  function remoteTaken(remoteId, localId) {
+    for (const [id, link] of Object.entries(meta.remote || {})) {
+      if (id !== localId && link?.id === remoteId) return true;
+    }
+    return false;
+  }
+
+  /** Liga um projeto sem vínculo a um que já está na lista desta conta. Não cria. */
+  async function matchUnlinked(project, hash) {
+    const list = await ensureServerList();
+    const cloudId = project?.cloudId || "";
+    if (cloudId) {
+      const byId = list.find((item) => item.id === cloudId);
+      if (byId && !remoteTaken(byId.id, project.id)) return byId;
+    }
+    const clientHit = list.find((item) => item.clientId && item.clientId === project.id && !remoteTaken(item.id, project.id));
+    if (clientHit) return clientHit;
+    const name = String(project.name || "Projeto").slice(0, 200);
+    for (const item of list) {
+      if (!item?.id || item.name !== name || remoteTaken(item.id, project.id)) continue;
+      let payload = item.payload;
+      let revision = item.revision;
+      if (!payload) {
+        const full = await request(`/projects/${encodeURIComponent(item.id)}`, { method: "GET" });
+        if (!full.ok) continue;
+        payload = full.data?.project?.payload;
+        revision = full.data?.project?.revision;
+      }
+      if (stableHash(payload) !== hash) continue;
+      return { ...item, revision, payload };
+    }
+    return null;
+  }
+
+  async function resolvedLink(localId, project, hash) {
+    let link = meta.remote[localId];
+    if (!link?.id && project?.cloudId) {
+      const listed = (await ensureServerList()).find((item) => item.id === project.cloudId);
+      if (listed && !remoteTaken(listed.id, localId)) {
+        link = { id: listed.id, rev: listed.revision, hash: "" };
+        meta.remote[localId] = link;
+      }
+    }
+    if (link?.id && link.rev == null) {
+      const listed = (await ensureServerList()).find((item) => item.id === link.id);
+      if (!listed || remoteTaken(listed.id, localId)) {
+        delete meta.remote[localId];
+        link = null;
+      } else {
+        link = { id: listed.id, rev: listed.revision, hash: link.hash || "" };
+        meta.remote[localId] = link;
+      }
+    }
+    if (!link?.id) {
+      const match = await matchUnlinked(project, hash);
+      if (match) {
+        // hash vazio de propósito: o PATCH abaixo grava o vínculo em vez de um POST
+        link = { id: match.id, rev: match.revision, hash: "" };
+        meta.remote[localId] = link;
+        await stampCloudId(localId, match.id);
+        save();
+      }
+    }
+    return link || null;
+  }
+
   async function pushProject(localId) {
     const project = await store.getProject(localId);
     if (!project || collabOwned(localId)) {
       delete meta.dirty[localId];
       return;
     }
-    if (skipProject(project) && !meta.remote[localId]) {
+    if (skipProject(project) && !meta.remote[localId] && !project.cloudId) {
       delete meta.dirty[localId];
       return;
     }
     const { payload, assets } = await dehydrate(projectToSyncPayload(project), assetCache);
     const hash = stableHash(payload);
-    const link = meta.remote[localId];
+    let link = await resolvedLink(localId, project, hash);
     if (link && link.hash === hash) {
       delete meta.dirty[localId];
+      save();
       return;
     }
     await uploadMissing(assets);
@@ -343,14 +582,23 @@ export function createCloudSync(deps) {
       return;
     }
     if (!res.ok && res.status === 404 && link) {
+      if (serverList) serverList = serverList.filter((item) => item.id !== link.id);
       delete meta.remote[localId];
-      res = await request("/projects", { method: "POST", body: JSON.stringify({ name, payload, clientId: localId }) });
+      const match = await matchUnlinked({ ...project, cloudId: "" }, hash);
+      res = match
+        ? await request(`/projects/${encodeURIComponent(match.id)}`, {
+            method: "PATCH",
+            body: JSON.stringify({ name, payload, revision: match.revision }),
+          })
+        : await request("/projects", { method: "POST", body: JSON.stringify({ name, payload, clientId: localId }) });
     }
     if (!res.ok) throw syncError(res);
     const saved = res.data?.project;
     meta.remote[localId] = { id: saved.id, rev: saved.revision, hash };
     delete meta.dirty[localId];
+    noteServerProject(saved, { name, payload, clientId: localId });
     save();
+    await stampCloudId(localId, saved.id);
   }
 
   async function cachedFetchAsset(sha) {
@@ -368,16 +616,30 @@ export function createCloudSync(deps) {
     const res = await request(since ? `/projects?since=${encodeURIComponent(since)}` : "/projects", { method: "GET" });
     if (!res.ok) throw syncError(res);
     const items = Array.isArray(res.data?.projects) ? res.data.projects : [];
-    const localIds = new Set((await store.listAllProjects()).map((p) => p.id));
+    const locals = await store.listAllProjects();
+    const localIds = new Set(locals.map((p) => p.id));
+    const byCloudId = new Map();
+    for (const project of locals) {
+      if (project?.cloudId && !byCloudId.has(project.cloudId)) byCloudId.set(project.cloudId, project.id);
+    }
     let changed = 0;
     for (const item of items) {
-      let localId = localIdFor(item.id);
+      const fromCloud = byCloudId.get(item.id);
+      let localId = localIdFor(item.id) || null;
+      if (!localId && fromCloud && (!meta.remote[fromCloud] || meta.remote[fromCloud].id === item.id)) {
+        localId = fromCloud;
+      }
       if (!localId && item.clientId && localIds.has(item.clientId) && !meta.remote[item.clientId]) {
         // mesmo projeto já está aqui (id local = clientId): adota sem baixar de novo
         localId = item.clientId;
         if (item.deletedAt) continue;
         meta.remote[localId] = { id: item.id, rev: item.revision, hash: "" };
         meta.dirty[localId] = true;
+        await stampCloudId(localId, item.id);
+        continue;
+      }
+      if (!localId && item.clientId && localIds.has(item.clientId) && meta.remote[item.clientId]?.id && meta.remote[item.clientId].id !== item.id) {
+        // o id local já pertence a outro remoto; não inventa um terceiro
         continue;
       }
       if (item.deletedAt) {
@@ -404,12 +666,14 @@ export function createCloudSync(deps) {
         throw syncError(full);
       }
       const payload = await hydrate(full.data.project.payload || {}, cachedFetchAsset);
-      const id = localId || (item.clientId && !localIds.has(item.clientId) ? item.clientId : store.createProjectId());
+      // clientId, quando existe, é o id local. Id aleatório só para projeto antigo sem clientId.
+      const id = localId || item.clientId || store.createProjectId();
       const project = syncPayloadToProject(payload, {
         id,
         name: full.data.project.name,
         updatedAt: Date.parse(full.data.project.updatedAt),
       });
+      project.cloudId = item.id;
       await store.putProject(project, { silent: true, keepUpdatedAt: true });
       localIds.add(id);
       const { payload: clean } = await dehydrate(projectToSyncPayload(project), assetCache);
@@ -445,6 +709,8 @@ export function createCloudSync(deps) {
   }
 
   async function runOnce() {
+    reloadMeta();
+    serverList = null;
     if (!meta.initialDone) {
       for (const project of await store.listAllProjects()) {
         if (!meta.remote[project.id] && !skipProject(project)) meta.dirty[project.id] = true;
@@ -482,11 +748,15 @@ export function createCloudSync(deps) {
     }
     running = (async () => {
       try {
-        do {
-          again = false;
-          await runOnce();
-        } while (again && enabled);
-        setStatus({ phase: "synced", error: "" });
+        let ran = false;
+        await withSyncLock(async () => {
+          ran = true;
+          do {
+            again = false;
+            await runOnce();
+          } while (again && enabled);
+        });
+        if (ran && enabled) setStatus({ phase: "synced", error: "" });
       } catch (err) {
         if (err?.code === "subscription_required" || err?.status === 402) {
           enabled = false;
@@ -511,6 +781,8 @@ export function createCloudSync(deps) {
 
   function enable(account) {
     const key = String(account || "").trim().toLowerCase();
+    // why: "conta" (sessão sem e-mail) alternava a chave e zerava o mapa, e o próximo sync fazia POST de tudo
+    if (!key || !key.includes("@")) return Promise.resolve({ ...state, lastSyncAt: meta?.lastSyncAt || null });
     if (enabled && meta?.account === key) return syncNow();
     meta = readMeta(storage, key);
     enabled = true;

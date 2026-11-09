@@ -1606,7 +1606,10 @@ function syncWanted() {
 function reconcileSync() {
   const account = getCloudAccount();
   if (syncWanted()) {
-    cloudSync.enable(account.email || "conta");
+    const email = String(account.email || "").trim();
+    // why: sem e-mail a chave de sync não tem conta; o fallback "conta" zerava o mapa e duplicava projetos
+    if (!email) return;
+    cloudSync.enable(email);
     return;
   }
   // why: carregando o plano não desliga; só sem sessão ou com plano confirmado sem Pro
