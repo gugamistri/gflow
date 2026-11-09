@@ -1,3 +1,4 @@
+import { popoverWithBalloon } from "./tour-schema/popoverVisibility.js";
 import {
   IMAGE_CATALOG,
   createStepId,
@@ -341,6 +342,7 @@ export function createEditor(ctx) {
     labelSide: document.getElementById("label-side"),
     labelAlign: document.getElementById("label-align"),
     propSimulate: document.getElementById("prop-simulate-click"),
+    propShowPopover: document.getElementById("prop-show-popover"),
     wrapSimulate: document.getElementById("wrap-simulate"),
     propZoom: document.getElementById("prop-zoom-highlight"),
     wrapZoom: document.getElementById("wrap-zoom"),
@@ -786,6 +788,7 @@ export function createEditor(ctx) {
       els.propHold.placeholder = String(demo.playback.defaultHoldSeconds);
     }
     els.propSimulate.checked = step.simulateClick !== false;
+    if (els.propShowPopover) els.propShowPopover.checked = step.popover?.hidden !== true;
     if (els.propZoom) els.propZoom.checked = step.zoomHighlight === true;
     syncSideAlignControls(step);
     syncPropsSections(step);
@@ -796,6 +799,7 @@ export function createEditor(ctx) {
       const isVideo = isVideoMedia(step);
       document.getElementById("wrap-simulate")?.toggleAttribute("hidden", isVideo);
       document.getElementById("wrap-zoom")?.toggleAttribute("hidden", isVideo);
+      document.getElementById("wrap-show-popover")?.toggleAttribute("hidden", isVideo || step.type === "slide");
     }
     syncNarrationPanel();
     syncCaptionAudio();
@@ -2410,12 +2414,16 @@ export function createEditor(ctx) {
     writeHoldFromInput(step, options?.clampHold !== false);
     const isSlide = step.type === "slide";
     const typeChanged = wasSlide !== isSlide;
-    step.popover = {
-      title,
-      description: els.propDescription.value,
-      side: isSlide || typeChanged ? step.popover?.side || "bottom" : readChoice(els.propSide, "bottom"),
-      align: isSlide || typeChanged ? step.popover?.align || "center" : readChoice(els.propAlign, "center"),
-    };
+    const showBalloon = els.propShowPopover ? els.propShowPopover.checked : step.popover?.hidden !== true;
+    step.popover = popoverWithBalloon(
+      {
+        title,
+        description: els.propDescription.value,
+        side: isSlide || typeChanged ? step.popover?.side || "bottom" : readChoice(els.propSide, "bottom"),
+        align: isSlide || typeChanged ? step.popover?.align || "center" : readChoice(els.propAlign, "center"),
+      },
+      isSlide ? true : showBalloon,
+    );
     if (isSlide && !typeChanged) {
       step.layout = {
         align: readChoice(els.propAlign, "start"),
@@ -4757,7 +4765,7 @@ export function createEditor(ctx) {
 
   function bindForm() {
     bindAltChip();
-    [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate, els.propZoom, els.propAlt, els.propAltDecorative].forEach((el) => {
+    [els.propTitle, els.propDescription, els.propCaption, els.propShowCaption, els.propSimulate, els.propShowPopover, els.propZoom, els.propAlt, els.propAltDecorative].forEach((el) => {
       if (!el) return;
       el.addEventListener("input", applyFormToStep);
       el.addEventListener("change", applyFormToStep);

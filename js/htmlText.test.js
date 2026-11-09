@@ -43,8 +43,8 @@ test("cores do tema em style=: só formatos de cor", () => {
 
 test("player (preview, /p, /v, embed) passa título e texto pelo escape antes do driver.js", () => {
   const src = read("./player.js");
-  assert.match(src, /title: (?:isVid \? "" : )?popoverTitleHtml\(step\.popover\?\.title \|\| step\.label \|\| ""\)/);
-  assert.match(src, /description: (?:isVid \? "" : )?popoverBodyHtml\(step\.popover\?\.description \|\| ""\)/);
+  assert.match(src, /title: isVid \|\| hideBalloon \? "" : popoverTitleHtml\(step\.popover\?\.title \|\| step\.label \|\| ""\)/);
+  assert.match(src, /description: isVid \|\| hideBalloon \? "" : popoverBodyHtml\(step\.popover\?\.description \|\| ""\)/);
   assert.doesNotMatch(src, /description: \(step\.popover\?\.description \|\| ""\)\.replace/);
 });
 
@@ -53,9 +53,9 @@ test("player do HTML offline usa a mesma regra (cópia inline) e o seletor de pa
   const fn = src.slice(src.indexOf("function gfEscapeHtml("), src.indexOf("}\n", src.indexOf("function gfEscapeHtml(")) + 1);
   const gfEscapeHtml = new Function(`${fn}; return gfEscapeHtml;`)();
   for (const p of PAYLOADS) assert.equal(gfEscapeHtml(p), escapeHtml(p));
-  assert.match(src, /title: (?:stepVideoLink\(step\) \? "" : )?gfEscapeHtml\(step\.popover\?\.title \|\| step\.label \|\| ""\)/);
+  assert.match(src, /title: stepVideoLink\(step\) \|\| popoverIsHidden\(step\) \? "" : gfEscapeHtml\(step\.popover\?\.title \|\| step\.label \|\| ""\)/);
   // texto do balão: formatação leve da cópia inline de richText.js (tags fixas + texto escapado)
-  assert.match(src, /description: (?:stepVideoLink\(step\) \? "" : )?gfRichText\.richTextHtml\(step\.popover\?\.description \|\| ""\)/);
+  assert.match(src, /description: stepVideoLink\(step\) \|\| popoverIsHidden\(step\) \? "" : gfRichText\.richTextHtml\(step\.popover\?\.description \|\| ""\)/);
   assert.match(src, /const label = gfEscapeHtml\(step\.popover\?\.title/);
   assert.doesNotMatch(src, /description: \(step\.popover\?\.description \|\| ""\)\.replace/);
 });
