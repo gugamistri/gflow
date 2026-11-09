@@ -9173,7 +9173,7 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   height: 22px;
 }
 
-/* ---- Modo de exibição (Tour guiado | Galeria): ⚙ Preferências do projeto e menu ▾ do Preview ---- */
+/* ---- Modo de exibição (Tour guiado | Galeria): só ⚙ Preferências do projeto ---- */
 .mode-picker {
   display: grid;
   gap: 6px;
@@ -9228,29 +9228,6 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
 .mode-option-hint {
   font-size: 0.8rem;
   color: var(--ns-muted);
-}
-
-.menu-group-label {
-  margin: 6px 0 2px;
-  padding: 6px 12px 0;
-  border-top: 1px solid var(--ns-border);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--ns-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.mode-menu-item .mode-check {
-  display: inline-block;
-  width: 16px;
-  text-align: center;
-}
-
-.mode-menu-item[aria-checked="true"] .mode-check::before {
-  content: "✓";
-  font-weight: 700;
-  color: var(--ns-accent-dark);
 }
 
 .preview-mode-badge {
