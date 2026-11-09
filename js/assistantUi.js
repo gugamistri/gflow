@@ -28,6 +28,7 @@ import {
   reachableStage,
   reviewSummary,
   sceneOptions,
+  stageFieldErrors,
   stageIndex,
   updateBrief,
   updateCta,
@@ -94,6 +95,8 @@ export function createAssistantUi(ctx) {
   let notice = { text: "", tone: "" };
   let saveTimer = 0;
   let applying = false;
+  /** @type {{field: string, reason: string}[]} */
+  let fieldErrors = [];
 
   function save(now = false) {
     clearTimeout(saveTimer);
@@ -135,17 +138,82 @@ export function createAssistantUi(ctx) {
     buildStructure(draft, { factsTitle: factsTitle(), untitled: t("assistant.structure.untitled") });
   }
 
+  function errorMsg(reason) {
+    return t(`assistant.field.${reason}`);
+  }
+
+  function errorMap() {
+    return new Map(fieldErrors.map((e) => [e.field, e]));
+  }
+
+  function fieldAttrs(field) {
+    const err = errorMap().get(field);
+    if (!err) return "";
+    const id = `asst-err-${field.replace(/\./g, "-")}`;
+    return ` aria-invalid="true" aria-describedby="${id}" class="is-invalid"`;
+  }
+
+  function fieldErrorHtml(field) {
+    const err = errorMap().get(field);
+    if (!err) return "";
+    const id = `asst-err-${field.replace(/\./g, "-")}`;
+    return `<p class="asst-field-error" id="${id}" role="alert">${esc(errorMsg(err.reason))}</p>`;
+  }
+
+  function reqMark() {
+    return ` <span class="asst-req" aria-hidden="true">*</span><span class="visually-hidden">(${esc(t("assistant.field.requiredLabel"))})</span>`;
+  }
+
+  function focusFirstError() {
+    const first = fieldErrors[0];
+    if (!first || !dialog) return;
+    let el = null;
+    if (first.field === "goal") el = dialog.querySelector('[data-asst-field="goal"]');
+    else if (first.field === "cta.value") el = dialog.querySelector('[data-asst-cta="value"]');
+    else if (first.field === "materials") el = dialog.querySelector("[data-asst-add]");
+    if (!el) return;
+    el.focus?.();
+    el.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  }
+
+  function showStageErrors(stage) {
+    fieldErrors = stageFieldErrors(draft, stage);
+    if (!fieldErrors.length) return false;
+    setNotice(t("assistant.field.formNotice"), "error");
+    render();
+    focusFirstError();
+    return true;
+  }
+
+  function clearFieldError(field) {
+    if (!fieldErrors.some((e) => e.field === field)) return;
+    fieldErrors = fieldErrors.filter((e) => e.field !== field);
+    // why: re-render só o necessário via render completo para manter aria-describedby sincronizado
+    const keep = notice;
+    render();
+    if (keep.text && fieldErrors.length) setNotice(keep.text, keep.tone);
+    else if (!fieldErrors.length) setNotice("");
+  }
+
   function goTo(stage) {
     const target = stageIndex(stage);
+    const current = stageIndex(draft.stage);
+    // why: avançar com campo obrigatório vazio mostra erro no campo; voltar é livre
+    if (target > current && showStageErrors(draft.stage)) return;
     const max = stageIndex(reachableStage(draft));
-    // why: voltar é livre; avançar só até a etapa liberada (a anterior pronta)
-    const next = ASSISTANT_STAGES[Math.min(target, Math.max(max, stageIndex(draft.stage)))];
+    const next = ASSISTANT_STAGES[Math.min(target, Math.max(max, current))];
+    if (next === draft.stage && target > current) {
+      // etapa seguinte ainda bloqueada por etapa anterior (ex.: CTA inválido com goal ok)
+      showStageErrors(reachableStage(draft) === "brief" && draft.stage !== "brief" ? "brief" : draft.stage);
+      return;
+    }
     if (next === "mode" && !draft.mode) {
       const reco = recommendMode(draft);
       chooseMode(draft, { ...reco, by: "recommendation" });
     }
     if (next === "structure" || next === "review") rebuild();
     draft.stage = next;
+    fieldErrors = [];
     setNotice("");
     save();
     render();
@@ -168,9 +236,11 @@ export function createAssistantUi(ctx) {
 
   function viewBrief() {
     const cta = draft.cta;
+    const ctaValueLabel = t(cta.kind === "whatsapp" ? "assistant.cta.wa" : "assistant.cta.url");
     return `
-      <label>${esc(t("assistant.brief.goal"))}
-        <textarea rows="3" maxlength="500" data-asst-field="goal" placeholder="${esc(t("assistant.brief.goalPh"))}">${esc(draft.brief.goal)}</textarea>
+      <label><span class="asst-label-text">${esc(t("assistant.brief.goal"))}${reqMark()}</span>
+        <textarea rows="3" maxlength="500" data-asst-field="goal" required aria-required="true" placeholder="${esc(t("assistant.brief.goalPh"))}"${fieldAttrs("goal")}>${esc(draft.brief.goal)}</textarea>
+        ${fieldErrorHtml("goal")}
       </label>
       <div class="asst-ideas" role="group" aria-label="${esc(t("assistant.brief.ideas"))}">
         ${IDEAS.map(([id, key]) => `<button type="button" class="btn btn-sm asst-chip" data-asst-idea="${id}">${esc(t(key))}</button>`).join("")}
@@ -187,8 +257,9 @@ export function createAssistantUi(ctx) {
           ${["none", "whatsapp", "link"].map((k) => `<label class="asst-seg-opt"><input type="radio" name="asst-cta" value="${k}" data-asst-cta-kind ${cta.kind === k ? "checked" : ""} /><span>${esc(t(`assistant.cta.${k}`))}</span></label>`).join("")}
         </div>
         ${cta.kind === "none" ? "" : `
-        <label>${esc(t(cta.kind === "whatsapp" ? "assistant.cta.wa" : "assistant.cta.url"))}
-          <input type="${cta.kind === "whatsapp" ? "tel" : "url"}" data-asst-cta="value" value="${esc(cta.value)}" ${cta.kind === "whatsapp" ? 'inputmode="tel" placeholder="+55 11 91234-5678"' : 'placeholder="https://"'} />
+        <label><span class="asst-label-text">${esc(ctaValueLabel)}${reqMark()}</span>
+          <input type="${cta.kind === "whatsapp" ? "tel" : "url"}" data-asst-cta="value" required aria-required="true" value="${esc(cta.value)}" ${cta.kind === "whatsapp" ? 'inputmode="tel" placeholder="+55 11 91234-5678"' : 'placeholder="https://"'} ${fieldAttrs("cta.value")} />
+          ${fieldErrorHtml("cta.value")}
         </label>
         <label>${esc(t("assistant.cta.buttonLabel"))}
           <input type="text" maxlength="40" data-asst-cta="label" value="${esc(cta.label)}" />
@@ -223,10 +294,15 @@ export function createAssistantUi(ctx) {
             </div>
           </li>`).join("")}</ul>`
       : `<p class="asst-empty">${esc(t("assistant.materials.empty"))}</p>`;
+    const matErr = errorMap().get("materials");
+    const matErrId = "asst-err-materials";
     return `
-      <p class="asst-lead">${esc(t("assistant.materials.lead"))}</p>
-      <div><button type="button" class="btn" data-asst-add>${esc(t("assistant.materials.add"))}</button>
-      <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden data-asst-file /></div>
+      <p class="asst-lead"><span class="asst-label-text">${esc(t("assistant.materials.lead"))}${reqMark()}</span></p>
+      <div class="asst-materials-add${matErr ? " is-invalid" : ""}">
+        <button type="button" class="btn" data-asst-add ${matErr ? `aria-invalid="true" aria-describedby="${matErrId}"` : ""}>${esc(t("assistant.materials.add"))}</button>
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden data-asst-file />
+        ${matErr ? `<p class="asst-field-error" id="${matErrId}" role="alert">${esc(errorMsg(matErr.reason))}</p>` : ""}
+      </div>
       ${list}
       <label>${esc(t("assistant.materials.facts"))}
         <textarea rows="4" maxlength="2000" data-asst-field="facts" placeholder="${esc(t("assistant.materials.factsPh"))}">${esc(draft.facts)}</textarea>
@@ -364,12 +440,11 @@ export function createAssistantUi(ctx) {
     const back = i > 0 && draft.stage !== "publish" ? `<button type="button" class="btn" data-asst-back>${esc(t("assistant.back"))}</button>` : "";
     let next = "";
     if (draft.stage === "review") {
-      const gate = canApply(draft);
-      next = `<button type="button" class="btn btn-primary" data-asst-apply ${!gate.ok || applying ? "disabled" : ""}>${esc(t(applying ? "assistant.review.applying" : "assistant.review.apply"))}</button>`;
+      // why: botão fica clicável para repetir o aviso das pendências (não some em silêncio)
+      next = `<button type="button" class="btn btn-primary" data-asst-apply ${applying ? "disabled" : ""}>${esc(t(applying ? "assistant.review.applying" : "assistant.review.apply"))}</button>`;
     } else if (draft.stage !== "publish") {
       const target = ASSISTANT_STAGES[i + 1];
-      const allowed = stageIndex(reachableStage(draft)) >= i + 1 || (draft.stage === "structure");
-      next = `<button type="button" class="btn btn-primary" data-asst-go="${target}" ${allowed ? "" : "disabled"}>${esc(t("assistant.next"))}</button>`;
+      next = `<button type="button" class="btn btn-primary" data-asst-go="${target}">${esc(t("assistant.next"))}</button>`;
     }
     return `<div class="studio-modal-actions asst-actions"><span class="asst-saved">${esc(t("assistant.saved"))}</span>${back}${next}</div>`;
   }
@@ -420,6 +495,10 @@ export function createAssistantUi(ctx) {
         setNotice(t("assistant.materials.errType", { name: file.name }), "error");
       }
     }
+    if (draft.materials.length) {
+      fieldErrors = fieldErrors.filter((e) => e.field !== "materials");
+      if (!fieldErrors.length) notice = { text: "", tone: "" };
+    }
     const keep = notice;
     save();
     render();
@@ -467,7 +546,12 @@ export function createAssistantUi(ctx) {
   async function apply() {
     if (applying) return;
     const gate = canApply(draft);
-    if (!gate.ok) return;
+    if (!gate.ok) {
+      setNotice(t(`assistant.review.blocked.${gate.reason}`), "error");
+      render();
+      dialog?.querySelector(".asst-gaps, .asst-flag[role='alert'], [data-asst-notice]")?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+      return;
+    }
     applying = true;
     render();
     try {
@@ -564,7 +648,8 @@ export function createAssistantUi(ctx) {
     if (el.dataset.asstField) {
       updateBrief(draft, { [el.dataset.asstField]: el.value });
       save();
-      refreshFooter();
+      if (el.dataset.asstField === "goal" && String(el.value || "").trim()) clearFieldError("goal");
+      else refreshFooter();
       return;
     }
     if (el.dataset.asstNote) {
@@ -575,6 +660,11 @@ export function createAssistantUi(ctx) {
     if (el.dataset.asstCta) {
       updateCta(draft, { [el.dataset.asstCta]: el.value });
       save();
+      if (el.dataset.asstCta === "value") {
+        const still = stageFieldErrors(draft, "brief").some((e) => e.field === "cta.value");
+        if (!still) clearFieldError("cta.value");
+        else refreshFooter();
+      } else refreshFooter();
       return;
     }
     if (el.dataset.asstItem) {

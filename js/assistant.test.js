@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   acceptSuggestion,
   addMaterial,
@@ -21,7 +22,9 @@ import {
   recommendMode,
   regenerableItems,
   rejectSuggestion,
+  reachableStage,
   reviveDraft,
+  stageFieldErrors,
   unsupportedClaims,
   updateBrief,
   updateCta,
@@ -243,4 +246,58 @@ test("assistente: rascunho persiste no IndexedDB e some ao descartar", async () 
   assert.deepEqual(await loadDraft(indexedDB), d);
   await clearDraft(indexedDB);
   assert.equal(await loadDraft(indexedDB), null);
+});
+
+
+test("assistente: campos obrigatórios da etapa com mensagem; CTA inválido trava no briefing", () => {
+  const d = createDraft();
+  assert.equal(reachableStage(d), "brief");
+  assert.deepEqual(stageFieldErrors(d, "brief"), [{ field: "goal", reason: "required" }]);
+  updateBrief(d, { goal: "Mostrar a linha de colchões" });
+  assert.equal(reachableStage(d), "materials");
+  assert.deepEqual(stageFieldErrors(d, "brief"), []);
+  updateCta(d, { kind: "whatsapp", value: "" });
+  assert.equal(reachableStage(d), "brief");
+  assert.deepEqual(stageFieldErrors(d, "brief"), [{ field: "cta.value", reason: "required" }]);
+  updateCta(d, { kind: "whatsapp", value: "119999" });
+  assert.equal(stageFieldErrors(d, "brief")[0].reason, "ctaWa");
+  updateCta(d, { kind: "link", value: "http://example.com" });
+  assert.equal(stageFieldErrors(d, "brief")[0].reason, "ctaUrl");
+  updateCta(d, { kind: "link", value: "https://example.com/loja" });
+  assert.equal(reachableStage(d), "materials");
+  assert.deepEqual(stageFieldErrors(d, "materials"), [{ field: "materials", reason: "materials" }]);
+  addMaterial(d, { name: "foto.jpg", dataUrl: PNG, width: 800, height: 600 });
+  assert.deepEqual(stageFieldErrors(d, "materials"), []);
+  assert.equal(reachableStage(d), "mode");
+});
+
+test("assistente: i18n dos erros de campo em pt/en/es", async () => {
+  const { ASSISTANT_STRINGS } = await import("./assistantI18n.js");
+  for (const loc of ["pt", "en", "es"]) {
+    assert.equal(typeof ASSISTANT_STRINGS[loc]["assistant.field.required"], "string");
+    assert.ok(ASSISTANT_STRINGS[loc]["assistant.field.required"].length > 0);
+    assert.equal(typeof ASSISTANT_STRINGS[loc]["assistant.field.materials"], "string");
+    assert.equal(typeof ASSISTANT_STRINGS[loc]["assistant.field.formNotice"], "string");
+  }
+  assert.equal(ASSISTANT_STRINGS.pt["assistant.field.required"], "Preencha este campo");
+  assert.equal(ASSISTANT_STRINGS.en["assistant.field.required"], "Fill in this field");
+  assert.equal(ASSISTANT_STRINGS.es["assistant.field.required"], "Completa este campo");
+});
+
+
+test("assistente UI: Continuar mostra erro no campo; não fica disabled em silêncio", () => {
+  const ui = readFileSync(new URL("./assistantUi.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../css/assistant.css", import.meta.url), "utf8");
+  assert.match(ui, /stageFieldErrors/);
+  assert.match(ui, /aria-invalid="true"/);
+  assert.match(ui, /asst-field-error/);
+  assert.match(ui, /assistant\.field\.formNotice/);
+  assert.match(ui, /focusFirstError/);
+  assert.match(ui, /reqMark\(\)/);
+  // Continuar e Aplicar ficam clicáveis para disparar o feedback
+  assert.match(ui, /data-asst-go="\$\{target\}">\$\{esc\(t\("assistant\.next"\)\)\}/);
+  assert.match(ui, /data-asst-apply \$\{applying \? "disabled" : ""\}/);
+  assert.match(css, /\.asst-field-error/);
+  assert.match(css, /aria-invalid="true"/);
+  assert.match(css, /\.asst-req/);
 });

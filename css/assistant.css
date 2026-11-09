@@ -697,3 +697,40 @@ p.agent-client-status.is-on {
 .new-project-assist[hidden] {
   display: none;
 }
+
+/* Validação de campos obrigatórios (Criar com ajuda) */
+.asst-req {
+  color: var(--ns-danger);
+  font-weight: 700;
+  margin-inline-start: 2px;
+}
+
+.asst-field-error {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ns-danger);
+  line-height: 1.35;
+}
+
+.asst-body textarea.is-invalid,
+.asst-body input.is-invalid,
+.studio-modal-body .asst-body textarea[aria-invalid="true"],
+.studio-modal-body .asst-body input[aria-invalid="true"] {
+  border-color: var(--ns-danger);
+  outline-color: var(--ns-danger);
+}
+
+.asst-materials-add.is-invalid .btn {
+  border-color: var(--ns-danger);
+  color: var(--ns-danger);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ns-danger) 35%, transparent);
+}
+
+.asst-materials-add .asst-field-error {
+  margin-top: 8px;
+}
+
+.asst-label-text {
+  display: inline;
+}
