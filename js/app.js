@@ -3289,14 +3289,23 @@ function openAssistant() {
       getLocale,
       toast,
       aiAccess: assistantAiAccess,
-      async completeHosted(prompt) {
-        const result = await cloudFetch(HOSTED_AI_PATH, { method: "POST", body: JSON.stringify({ prompt }) });
+      async completeHosted(prompt, { images = [] } = {}) {
+        const body = { prompt };
+        if (images.length) body.images = images;
+        const result = await cloudFetch(HOSTED_AI_PATH, { method: "POST", body: JSON.stringify(body) });
         if (!result.ok) return { ok: false, handled: presentHostedFailure(result, "hostedAi") };
         rememberHostedUsage(result.data?.usage);
         return { ok: true, text: String(result.data?.result || "") };
       },
-      async completeByok(prompt) {
-        const res = await editor.byokLlmComplete([{ role: "user", content: prompt }], { maxTokens: 2048 });
+      async completeByok(prompt, { images = [] } = {}) {
+        const content = images.length
+          ? [{ type: "text", text: prompt }, ...images.map((url) => ({ type: "image_url", image_url: { url } }))]
+          : prompt;
+        let res = await editor.byokLlmComplete([{ role: "user", content }], { maxTokens: 2048 });
+        // why: se o modelo BYOK não aceita visão, tenta de novo só com texto
+        if (!res?.ok && images.length) {
+          res = await editor.byokLlmComplete([{ role: "user", content: prompt }], { maxTokens: 2048 });
+        }
         return res?.ok ? { ok: true, text: String(res.content || "") } : { ok: false };
       },
       async createProject(build) {
