@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "pro.guiaflow/guiaflow",
+  "title": "GuiaFlow",
+  "description": "Build interactive product demos: guided tours, lead capture, WhatsApp CTA, AI copy/voice, analytics.",
+  "version": "1.0.1",
+  "websiteUrl": "https://guiaflow.pro/ajuda/api",
+  "icons": [
+    {
+      "src": "https://guiaflow.pro/brand/app-icon-512.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"]
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/gugamistri/gflow",
+    "source": "github",
+    "id": "1384514642"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://app.guiaflow.pro/mcp"
+    }
+  ]
+}
