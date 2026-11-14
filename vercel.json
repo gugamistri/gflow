@@ -169,6 +169,15 @@
       ]
     },
     {
+      "source": "/.well-known/mcptry-verify.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
+      ]
+    },
+    {
       "source": "/sitemap.xml",
       "headers": [
         {
