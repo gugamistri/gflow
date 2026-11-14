@@ -5,6 +5,7 @@
  */
 
 import { cloudFetch } from "./cloudConfig.js";
+import { browserPrivacySignal, getAttribution } from "./attribution.js";
 import { buildCheckoutBody, formatPaywallAmount, paywallCurrency, readBillingReturn, stripBillingReturn } from "./paywall.js";
 
 export const BILLING_CHECKOUT_PATH = "/billing/checkout";
@@ -324,6 +325,9 @@ export async function startBillingCheckout(input, env) {
   const opts = typeof input === "string" ? { interval: input, currency: "usd" } : { currency: "usd", ...(input || {}) };
   const body = buildCheckoutBody(opts);
   if (!body) return { ok: false, error: "invalid_interval", message: "", unavailable: false };
+  // medição GTM: a origem da sessão vai para o checkout (upgrade_started/completed por utm_source)
+  const utm = browserPrivacySignal() ? null : getAttribution();
+  if (utm) body.utm = utm;
   const result = await cloudFetch(
     BILLING_CHECKOUT_PATH,
     {
