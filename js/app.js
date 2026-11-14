@@ -201,9 +201,12 @@ import { setPlaybackMode, templateScaffold } from "./tour-schema/playbackMode.js
 import { listCartesiaVoices } from "./cartesia.js";
 import { readCartesiaKey } from "./cartesia-store.js";
 import { applyTranslations, batchItems, buildTranslateMessages, hostedTranslateRequest, parseTranslateResult } from "./tour-schema/translate.js";
+import { captureAttribution, noteDemoSaved, projectMode, sendProductEvent, syncAccountAttribution } from "./attribution.js";
 
 let project = null;
 let captureGeneration = 0;
+// medição GTM: a landing já guardou os UTMs; quem chega direto no /editor?utm_… também conta
+captureAttribution();
 const captureClaims = createCaptureClaim();
 let selectedIndex = 0;
 let selectedNewThemeId = THEME_PRESETS[0].id;
@@ -522,6 +525,10 @@ function flushAutosave() {
   const snapshot = project;
   saveChain = saveChain
     .then(() => putProjectAndHistory(snapshot, history.exportStacks()))
+    .then(() => {
+      // medição GTM: demo_created no primeiro save com passo (uma vez por projeto, sem id no evento)
+      if (isCloudEnabled()) noteDemoSaved(snapshot, { fetchCloud: cloudFetch });
+    })
     .catch((err) => {
       toast(t("toast.autosaveFail"));
     });
@@ -1698,6 +1705,8 @@ function paintAccount() {
   const enabled = isCloudEnabled();
   const account = enabled ? getCloudAccount() : { signedIn: false, email: "" };
   const signedIn = Boolean(account.signedIn);
+  // medição GTM: a primeira origem (UTM) deste navegador vai para a conta (o servidor guarda só a primeira)
+  if (signedIn) void syncAccountAttribution({ fetchCloud: cloudFetch, account });
   const label = signedIn ? account.email || t("share.cloud.signedInAnon") : "";
   const slot = document.getElementById("account-slot");
   const signInBtn = document.getElementById("btn-account-signin");
@@ -4207,6 +4216,11 @@ function bindChrome() {
     clearCloudPublishIntent();
     void runCloudPublish();
   });
+  /** medição GTM: copiar link ou código de incorporar = demo compartilhada */
+  function noteShared() {
+    if (!isCloudEnabled()) return;
+    void sendProductEvent("demo_shared", { mode: projectMode(project) }, { fetchCloud: cloudFetch });
+  }
   async function copyShareField(id) {
     const field = document.getElementById(id);
     const url = field?.value || "";
@@ -4214,6 +4228,7 @@ function bindChrome() {
     try {
       await copyText(url);
       toast(t("toast.shareCopied"));
+      noteShared();
     } catch (err) {
       field?.focus();
       field?.select();
@@ -4483,6 +4498,7 @@ function bindChrome() {
     try {
       await copyText(code);
       toast(t(isLinkEmbedFlavor(embedFlavor) ? "embed.linkCopied" : "embed.copied"), 3200);
+      noteShared();
     } catch (err) {
       const field = document.getElementById("embed-code");
       field?.focus();

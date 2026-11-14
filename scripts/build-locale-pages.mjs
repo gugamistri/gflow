@@ -93,7 +93,7 @@ export const PAGES = [
     src: "privacidade.html",
     path: "/privacidade",
     slugs: { en: "/privacy", es: "/privacidad" },
-    lastmod: "2026-10-12",
+    lastmod: "2026-11-14",
     meta: {
       en: { description: "How GuiaFlow handles personal data: what stays in your browser, what we store in the Pro account, providers and your rights under the LGPD." },
       es: { description: "Cómo GuiaFlow trata los datos personales: lo que queda en tu navegador, lo que guardamos en la cuenta Pro, proveedores y tus derechos según la LGPD." },
