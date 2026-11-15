@@ -165,7 +165,6 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
       <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/205/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/205/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
-    <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com" target="_blank" rel="noopener" hidden><img src="/a/205/brand/symbol-simple.svg" alt="" width="14" height="14" /><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
   </header>
 
   <main id="view-editor" class="view view-editor is-presenting">
@@ -231,6 +230,7 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
 
   <script src="/a/205/vendor/driver/driver.js.iife.js"></script>
   <script type="module" src="/a/205/js/viewApp.js"></script>
+  <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=badge&amp;utm_medium=viewer&amp;utm_campaign=made-with" target="_blank" rel="noopener" hidden><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
 </body>
 </html>
 `;
