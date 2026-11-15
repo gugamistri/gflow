@@ -169,6 +169,54 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/termos" />
   </url>
   <url>
+    <loc>https://guiaflow.pro/exemplos/guia</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/exemplos/guia" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/exemplos/guia?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/exemplos/guia?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/exemplos/guia" />
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/exemplos/guia?lang=en</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/exemplos/guia" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/exemplos/guia?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/exemplos/guia?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/exemplos/guia" />
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/exemplos/guia?lang=es</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/exemplos/guia" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/exemplos/guia?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/exemplos/guia?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/exemplos/guia" />
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/exemplos/galeria</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/exemplos/galeria" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/exemplos/galeria?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/exemplos/galeria?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/exemplos/galeria" />
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/exemplos/galeria?lang=en</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/exemplos/galeria" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/exemplos/galeria?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/exemplos/galeria?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/exemplos/galeria" />
+  </url>
+  <url>
+    <loc>https://guiaflow.pro/exemplos/galeria?lang=es</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/exemplos/galeria" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://guiaflow.pro/exemplos/galeria?lang=en" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://guiaflow.pro/exemplos/galeria?lang=es" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/exemplos/galeria" />
+  </url>
+  <url>
     <loc>https://guiaflow.pro/integracoes/leadpronto</loc>
     <lastmod>2026-10-26</lastmod>
   </url>

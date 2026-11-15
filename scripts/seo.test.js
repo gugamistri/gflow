@@ -59,6 +59,31 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.equal(/nuvem/i.test(text), false);
 });
 
+test("sitemap inclui /exemplos/guia e /exemplos/galeria com hreflang em ?lang=", () => {
+  const text = read("sitemap.xml");
+  for (const id of ["guia", "galeria"]) {
+    const pt = `https://guiaflow.pro/exemplos/${id}`;
+    assert.ok(text.includes(`<loc>${pt}</loc>`), pt);
+    assert.ok(text.includes(`<loc>${pt}?lang=en</loc>`), `${pt}?lang=en`);
+    assert.ok(text.includes(`<loc>${pt}?lang=es</loc>`), `${pt}?lang=es`);
+    assert.ok(text.includes(`hreflang="pt-BR" href="${pt}"`));
+    assert.ok(text.includes(`hreflang="en" href="${pt}?lang=en"`));
+    assert.ok(text.includes(`hreflang="es" href="${pt}?lang=es"`));
+    assert.ok(text.includes(`hreflang="x-default" href="${pt}"`));
+  }
+  // why: a variante canônica de idioma nos exemplos é ?lang=, não o prefixo /en|/es
+  assert.equal(text.includes("/en/exemplos/"), false);
+  assert.equal(text.includes("/es/exemplos/"), false);
+});
+
+test("rodapé de /, /en e /es não aponta para /cortesia", () => {
+  for (const page of ["index.html", "en.html", "es.html"]) {
+    const html = read(page);
+    assert.equal(html.includes('href="/cortesia"'), false, page);
+    assert.equal(/\bCortesia\b/.test(html), false, page);
+  }
+});
+
 test("página do LeadPronto: canônica, hreflang PT e schema", () => {
   const html = read("integracoes/leadpronto.html");
   assert.match(html, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/integracoes\/leadpronto"/);

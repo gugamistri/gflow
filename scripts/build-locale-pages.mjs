@@ -122,6 +122,22 @@ export const EXTRA_PAGES = [
   { path: "/alternativa-getdemo", lastmod: "2026-11-15" },
 ];
 
+/**
+ * Exemplos públicos no player (/exemplos/:id). O idioma da UI segue ?lang=
+ * (pt|en|es); o prefixo /en ou /es no caminho também vale, mas os links da
+ * landing já usam a query, então o sitemap faz o mesmo.
+ */
+export const EXAMPLE_PAGES = [
+  { path: "/exemplos/guia", lastmod: "2026-11-15" },
+  { path: "/exemplos/galeria", lastmod: "2026-11-15" },
+];
+
+/** Caminho público do exemplo: PT canônico sem query; en/es com ?lang=. */
+export function exampleLocalePath(page, loc) {
+  if (loc === "pt") return page.path;
+  return `${page.path}?lang=${loc}`;
+}
+
 /** Caminho público (forma canônica: sem barra final; a raiz PT é "/"). */
 export function localePath(page, loc) {
   if (loc === "pt") return page.path || "/";
@@ -444,6 +460,13 @@ export function renderSitemap() {
       const alts = LOCALES.map((l) => `    <xhtml:link rel="alternate" hreflang="${HREFLANG[l]}" href="${absUrl(localePath(page, l))}" />`);
       alts.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${absUrl(localePath(page, "pt"))}" />`);
       urls.push(`  <url>\n    <loc>${absUrl(localePath(page, loc))}</loc>\n    <lastmod>${page.lastmod}</lastmod>\n${alts.join("\n")}\n  </url>`);
+    }
+  }
+  for (const page of EXAMPLE_PAGES) {
+    for (const loc of LOCALES) {
+      const alts = LOCALES.map((l) => `    <xhtml:link rel="alternate" hreflang="${HREFLANG[l]}" href="${absUrl(exampleLocalePath(page, l))}" />`);
+      alts.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${absUrl(exampleLocalePath(page, "pt"))}" />`);
+      urls.push(`  <url>\n    <loc>${absUrl(exampleLocalePath(page, loc))}</loc>\n    <lastmod>${page.lastmod}</lastmod>\n${alts.join("\n")}\n  </url>`);
     }
   }
   for (const page of EXTRA_PAGES) {
