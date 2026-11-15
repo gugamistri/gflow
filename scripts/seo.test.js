@@ -208,14 +208,16 @@ test("/.well-known/api-catalog e /openapi.json apontam para a API sem copiar o s
   assert.equal(header.headers.find((item) => item.key === "Content-Type").value, "application/linkset+json");
 });
 
-test("a landing mostra o demo real do LeadPronto no lugar do «em breve» (GUI-13)", () => {  const slug = read("js/landing.js").match(/LANDING_DEMO_SLUG = "([A-Za-z0-9][A-Za-z0-9_-]{0,80})"/);
-  assert.ok(slug, "LANDING_DEMO_SLUG não encontrado em js/landing.js");
+test("a landing mostra o guia empacotado no lugar do «em breve» (GUI-13)", () => {
+  const id = read("js/landing.js").match(/LANDING_DEMO_EXAMPLE = "([A-Za-z0-9][A-Za-z0-9_-]{0,40})"/);
+  assert.ok(id, "LANDING_DEMO_EXAMPLE não encontrado em js/landing.js");
+  assert.equal(id[1], "guia");
   for (const page of ["index.html", "en.html", "es.html"]) {
     const html = read(page);
     assert.equal(html.includes("chega em breve"), false, page);
     assert.equal(html.includes("coming soon"), false, page);
     assert.equal(html.includes("llega pronto"), false, page);
-    assert.match(html, new RegExp(`<a[^>]*class="btn btn-primary"[^>]*href="/p/${slug[1]}"`), page);
+    assert.match(html, new RegExp(`href="/exemplos/${id[1]}(?:\\?lang=(?:en|es))?" data-demo-example`), page);
   }
 });
 

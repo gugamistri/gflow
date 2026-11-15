@@ -3,57 +3,49 @@
  * landing-i18n.js pelo mesmo catálogo/seletor do editor (ns-locale), como a /ajuda.
  * Preços saem de paywall.js — a mesma fonte do diálogo Pro do editor.
  */
-import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, normalizeLocaleTag, t } from "./i18n.js";
+import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, t } from "./i18n.js";
 import { landingCatalogs } from "./landing-i18n.js";
 import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js";
 import { captureAttribution } from "./attribution.js";
+import { landingExampleHref } from "./exampleTours.js";
 
-/**
- * Demo de exemplo da seção #demo: slug de um link permanente publicado (/p/<slug>).
- * why: é o único lugar a trocar quando o tour de exemplo mudar; vazio = placeholder, sem iframe.
- */
-export const LANDING_DEMO_SLUG = "leadpronto-9e0052";
-export const LANDING_DEMO_ORIGIN = "https://guiaflow.pro";
-/**
- * Galeria de exemplo do card "Galeria" em #dois-caminhos: slug de um link permanente publicado (/p/<slug>).
- * why: vazio = o botão "Criar uma galeria" abre o editor já em galeria (/editor?novo=galeria).
- *      Quando o Gustavo publicar a galeria de exemplo, ponha o slug aqui: o botão vira "Ver galeria" → /p/<slug>.
- */
-export const LANDING_GALLERY_SLUG = "exemplo-colchao-galeria-de-produto-844901";
-const DEMO_SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/;
+/** Id do guia empacotado na seção #demo (data/demo.json, modo Tour guiado). */
+export const LANDING_DEMO_EXAMPLE = "guia";
+/** Id da galeria empacotada no card "Galeria" (data/examples/galeria-produto.json). */
+export const LANDING_GALLERY_EXAMPLE = "galeria";
 
-/** URL do embed (?embed=1) ou "" se o slug estiver vazio ou fora do formato de /p. */
-export function landingDemoUrl(slug = LANDING_DEMO_SLUG, origin = LANDING_DEMO_ORIGIN) {
-  const clean = String(slug || "").trim();
-  if (!DEMO_SLUG_RE.test(clean)) return "";
-  return `${origin}/p/${encodeURIComponent(clean)}?embed=1`;
+/** URL do iframe (?embed=1) do guia de exemplo, com ?lang= em /en e /es. */
+export function landingDemoUrl(id = LANDING_DEMO_EXAMPLE, locale = "pt") {
+  return landingExampleHref(id, { locale, embed: true });
 }
 
 /**
- * Link do card "Galeria": /p/<slug> da galeria de exemplo, ou "" para manter o editor.
- * /en e /es levam ?lang= para o chrome do player (o conteúdo do tour não é traduzido).
+ * Link do card "Galeria": /exemplos/galeria, com ?lang= em /en e /es
+ * para a interface e o conteúdo do player seguirem o idioma da página.
  */
-export function landingGalleryHref(slug = LANDING_GALLERY_SLUG, origin = LANDING_DEMO_ORIGIN, locale = "pt") {
-  const clean = String(slug || "").trim();
-  if (!DEMO_SLUG_RE.test(clean)) return "";
-  const url = `${origin}/p/${encodeURIComponent(clean)}`;
-  const lang = normalizeLocaleTag(locale);
-  if (lang === "en" || lang === "es") return `${url}?lang=${lang}`;
-  return url;
+export function landingGalleryHref(id = LANDING_GALLERY_EXAMPLE, locale = "pt") {
+  return landingExampleHref(id, { locale });
 }
 
 function mountGalleryExample() {
   const link = document.querySelector("[data-gallery-example]");
-  const href = landingGalleryHref(LANDING_GALLERY_SLUG, LANDING_DEMO_ORIGIN, getLocale());
+  const href = landingGalleryHref(LANDING_GALLERY_EXAMPLE, getLocale());
   if (!link || !href) return;
   link.href = href;
   link.setAttribute("data-i18n", "lp.paths.gallery.view");
   link.textContent = t("lp.paths.gallery.view");
 }
 
+function mountDemoOpen() {
+  const link = document.querySelector("[data-demo-example]");
+  const href = landingExampleHref(LANDING_DEMO_EXAMPLE, { locale: getLocale() });
+  if (!link || !href) return;
+  link.href = href;
+}
+
 function mountDemo() {
   const frame = document.getElementById("demo-frame");
-  const src = landingDemoUrl();
+  const src = landingDemoUrl(LANDING_DEMO_EXAMPLE, getLocale());
   if (!frame || !src) return;
   const iframe = document.createElement("iframe");
   iframe.src = src;
@@ -286,6 +278,7 @@ function boot() {
   installCatalogs();
   initLocale();
   mountDemo();
+  mountDemoOpen();
   mountGalleryExample();
   if (getLocale() !== "pt") applyI18n(document);
   paintPrices();
