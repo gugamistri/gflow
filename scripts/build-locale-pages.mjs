@@ -33,15 +33,17 @@ export const PAGES = [
   {
     src: "index.html",
     path: "",
-    lastmod: "2026-11-09",
+    lastmod: "2026-11-15",
     meta: {
       en: {
         ogImage: "/brand/og-landing-en-v3.png",
-        description: "Turn screens and photos into presentations your customers can explore: galleries for products, real estate and vehicles, and interactive guides for processes and software. Free in the browser, no sign-up.",
+        title: "Deliver a demo, not another meeting. — GuiaFlow",
+        description: "Build a guide or a product gallery — for your software or for your client. Start now: free, no sign-up and no sales call. Pro is US$ 7/month, or R$ 36/month in Brazil.",
       },
       es: {
         ogImage: "/brand/og-landing-es-v3.png",
-        description: "Convierte pantallas y fotos en presentaciones que tus clientes pueden explorar: galerías para productos, inmuebles y vehículos, y guías interactivas para procesos y software. Gratis en el navegador, sin registro.",
+        title: "Entrega una demo, no otra reunión. — GuiaFlow",
+        description: "Arma una guía o una galería de producto, para tu software o para el cliente de la agencia. Empieza ahora: gratis, sin registro y sin una llamada. Pro cuesta US$ 7 al mes, o R$ 36 al mes en Brasil.",
       },
     },
     heroOg: true,

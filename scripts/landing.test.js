@@ -100,14 +100,14 @@ test("demo de exemplo: guia empacotado em /exemplos/guia, sem iframe estático, 
 test("landing: posicionamento galeria + guia e o assistente nas três línguas", () => {
   const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
   const hero = {
-    pt: /Uma demo vale mais que mil reuniões\./,
-    en: /One demo is worth a thousand meetings\./,
-    es: /Una demo vale más que mil reuniones\./,
+    pt: /Entregue uma demo, não mais uma reunião\./,
+    en: /Deliver a demo, not another meeting\./,
+    es: /Entrega una demo, no otra reunión\./,
   };
   const sub = {
-    pt: /Seu cliente não quer mais uma reunião\. Ele quer ver o produto\./,
-    en: /Your customer doesn't want another meeting\. They want to see the product\./,
-    es: /Tu cliente no quiere otra reunión\. Quiere ver el producto\./,
+    pt: /Monte um guia ou uma galeria de produto — para o seu software ou para o cliente da agência\./,
+    en: /Build a guide or a product gallery — for your software or for your client\./,
+    es: /Arma una guía o una galería de producto, para tu software o para el cliente de la agencia\./,
   };
   for (const [loc, html] of Object.entries(pages)) {
     const h1 = html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1] || "";
@@ -168,5 +168,22 @@ test("landing: card Galeria abre o exemplo empacotado em /exemplos/galeria", asy
 test("landing: sem selo do Product Hunt no hero (pt/en/es)", () => {
   for (const [loc, html] of [["pt", landing], ["en", read("en.html")], ["es", read("es.html")]]) {
     assert.equal(/class="hero-ph"|api\.producthunt\.com\/widgets/.test(html), false, `${loc}: selo removido`);
+  }
+});
+
+test("landing: Ver um exemplo aponta para /exemplos/guia; Pro é Assinar o Pro, sem convite por feedback", () => {
+  const pages = {
+    pt: [landing, "Ver um exemplo", "Assinar o Pro", ""],
+    en: [read("en.html"), "See an example", "Subscribe to Pro", "\\?lang=en"],
+    es: [read("es.html"), "Ver un ejemplo", "Suscribirse a Pro", "\\?lang=es"],
+  };
+  for (const [loc, [html, example, subscribe, query]] of Object.entries(pages)) {
+    assert.match(
+      html,
+      new RegExp(`href="/exemplos/guia${query}" data-demo-example data-i18n="lp\\.hero\\.ctaSecondary">${example}</a>`),
+      `${loc}: CTA Ver um exemplo`,
+    );
+    assert.match(html, new RegExp(`href="/editor\\?pro=1" data-i18n="lp\\.plan\\.pro\\.cta">${subscribe}</a>`), `${loc}: CTA Assinar o Pro`);
+    assert.equal(/id="testers"|tester-form|em troca de feedback|in exchange for feedback|a cambio de feedback/.test(html), false, `${loc}: sem programa de testers`);
   }
 });

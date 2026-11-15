@@ -201,12 +201,14 @@ import { setPlaybackMode, templateScaffold } from "./tour-schema/playbackMode.js
 import { listCartesiaVoices } from "./cartesia.js";
 import { readCartesiaKey } from "./cartesia-store.js";
 import { applyTranslations, batchItems, buildTranslateMessages, hostedTranslateRequest, parseTranslateResult } from "./tour-schema/translate.js";
-import { captureAttribution, noteDemoSaved, projectMode, sendProductEvent, syncAccountAttribution } from "./attribution.js";
+import { captureAttribution, noteDemoSaved, noteEditorStarted, projectMode, sendProductEvent, syncAccountAttribution } from "./attribution.js";
 
 let project = null;
 let captureGeneration = 0;
 // medição GTM: a landing já guardou os UTMs; quem chega direto no /editor?utm_… também conta
 captureAttribution();
+// medição GTM: abertura do editor, uma vez por sessão (distinto de demo_created)
+noteEditorStarted({ fetchCloud: cloudFetch });
 const captureClaims = createCaptureClaim();
 let selectedIndex = 0;
 let selectedNewThemeId = THEME_PRESETS[0].id;
