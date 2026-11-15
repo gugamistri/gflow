@@ -20,7 +20,7 @@ A interface está em português, espanhol e inglês. O idioma segue o do navegad
 
 ## GuiaFlow Pro
 
-**GuiaFlow Pro** é o plano pago opcional: links permanentes, texto e narração (TTS) com IA hospedada, analytics, captura de leads, vídeo sem marca d'água e servidor MCP em `https://app.guiaflow.pro/mcp` — agentes de IA criam e publicam tours guiados interativos e demos de produto, para agências de marketing, consultorias de implementação e times de software pequeno. Planos em [guiaflow.pro](https://guiaflow.pro). Listagens: [mcptry](https://mcptry.com/servers/pro.guiaflow/guiaflow), [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=guiaflow), [Glama](https://glama.ai/mcp/connectors/pro.guiaflow/guiaflow).
+**GuiaFlow Pro** é o plano pago opcional, com assinatura direta: R$ 36/mês ou R$ 359/ano (US$ 7/mês ou US$ 69/ano). Inclui links permanentes (`/p/…`, não expiram), incorporação em sites, texto e narração (TTS) com IA inclusa, análise, captura de contatos, player e vídeo sem a marca GuiaFlow, projetos na conta e servidor MCP em `https://app.guiaflow.pro/mcp` — agentes de IA criam e publicam guias interativos e demos de produto, para agências de marketing, consultorias de implementação e times de software pequeno. Planos em [guiaflow.pro](https://guiaflow.pro/#precos). Listagens: [mcptry](https://mcptry.com/servers/pro.guiaflow/guiaflow), [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=guiaflow), [Glama](https://glama.ai/mcp/connectors/pro.guiaflow/guiaflow).
 
 ## Começar no navegador
 
@@ -60,9 +60,9 @@ No desktop, use **Capturar** no editor: abre uma janela com a página do produto
 ## Exportar
 
 - **HTML navegável** — um arquivo único com o tour
-- **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM)
-- **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias (requer Blob na Vercel)
-- **Link permanente** — no mesmo menu, no app publicado. Com sessão, mostra «Conectado como …» e publica direto. Sem sessão, o email de confirmação volta para guiaflow.pro. A base HTTP da nuvem fica só em `window.__GUIAFLOW_CLOUD__` (ver [`docs/CLOUD.pt-BR.md`](docs/CLOUD.pt-BR.md)).
+- **Vídeo MP4** — frames do tour via WebCodecs; se o encoder não existir, cai em `MediaRecorder` (pode sair WebM). No plano grátis o MP4 sai com a marca GuiaFlow; no Pro, sem marca
+- **Preview temporário** — no menu Compartilhar; publica um endereço curto `/v/…` só para ver o tour, por 7 dias em qualquer plano (requer Blob na Vercel)
+- **Link permanente** (`/p/…`) — só no Pro, no mesmo menu; não expira, com imagem de capa. Com sessão, mostra «Conectado como …» e publica direto. Sem sessão, o email de confirmação volta para guiaflow.pro. A base HTTP da nuvem fica só em `window.__GUIAFLOW_CLOUD__` (ver [`docs/CLOUD.pt-BR.md`](docs/CLOUD.pt-BR.md)).
 
 ## Testes
 

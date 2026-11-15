@@ -1,6 +1,27 @@
 # GuiaFlow
 
-> GuiaFlow turns screens and photos into presentations people can explore: interactive guided tours from product screenshots (highlight + click + text + optional narration) for processes and software, and photo galleries (gallery mode: full-screen photos with sections, zoom and thumbnails) for products, real estate and vehicles. Both are published as a permanent link (https://guiaflow.pro/p/...) or embedded on a site. The editor is open source (MIT) and runs in the browser with no account and no credit card; the hosted services — permanent links, GuiaFlow AI and narration, link analytics and the MCP server / REST API below — are part of the paid Pro plan. AI agents build and publish tours through the MCP server or REST API (Pro). Interface and copy default to Brazilian Portuguese; Spanish and English are supported.
+> GuiaFlow (guiaflow.pro) is an open source (MIT) editor that turns screenshots and photos into presentations people explore at their own pace: step-by-step interactive guides (product demos, product tours, software training) and photo galleries (products, catalogs, vehicles). The editor runs in the browser for free, with no account and no credit card. Free use includes the "Create with help" assistant, AI text and narration with your own AI key, 7-day temporary links, HTML/video export and a WhatsApp or link button at the end, with no project limit. GuiaFlow Pro (the paid Pro plan; subscribe directly: US$ 7/month or US$ 69/year; R$ 36/month or R$ 359/year in Brazil) adds permanent links that never expire, embeds, lead capture, analytics, hosted AI and narration, watermark-free video and an MCP server / REST API for AI agents. Interface in Portuguese, English and Spanish.
+
+GuiaFlow (guiaflow.pro) is not Guideflow (guideflow.com).
+
+## Plans
+
+- Free (no account): full editor in the browser; no project limit, projects stored only in this browser; temporary links (/v/...) that last 7 days; HTML and MP4 export (the video and the player carry the GuiaFlow mark); WhatsApp or link at the end; AI and narration with your own key (OpenRouter, OpenAI or compatible for text; Cartesia for voice); "Create with help" assistant (works without AI, too).
+- Pro plan (subscribe directly on the site, billed via Stripe, cancel anytime; no sales call): everything in Free + permanent links (/p/...) with cover image that never expire, projects synced to the cloud, contact capture and contact form (optional, with consent), embed on websites, analytics (opens, completions, end-button clicks, drop-off by step), hosted AI and narration (100 texts and 30 audio minutes per month), player and video without the GuiaFlow mark, MCP server and REST API. Temporary 7-day links are also available on Pro. Not white-label: links stay on guiaflow.pro and the player shows no custom logo.
+- Prices: https://guiaflow.pro/en#precos · Terms: https://guiaflow.pro/en/terms
+
+## What GuiaFlow does not do
+
+- No in-app onboarding (no script inside your product), no HTML clone of the interface, no blurring of sensitive data, no branching (guided tours are linear; gallery mode allows free navigation), no custom domain, no SSO.
+
+## Pages
+
+- Home: https://guiaflow.pro/ (pt-BR) · https://guiaflow.pro/en · https://guiaflow.pro/es
+- Editor (free, no account): https://guiaflow.pro/editor
+- Help: https://guiaflow.pro/en/help (pt: /ajuda, es: /es/ayuda)
+- Examples: interactive software guide https://guiaflow.pro/exemplos/guia (en: https://guiaflow.pro/exemplos/guia?lang=en, es: https://guiaflow.pro/exemplos/guia?lang=es) and product gallery https://guiaflow.pro/exemplos/galeria (en: https://guiaflow.pro/exemplos/galeria?lang=en, es: https://guiaflow.pro/exemplos/galeria?lang=es)
+- Source code (MIT): https://github.com/gugamistri/gflow
+- Chrome extension: https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd
 
 ## Connect
 

@@ -26,6 +26,11 @@
       "permanent": true
     },
     {
+      "source": "/cortesia",
+      "destination": "/#precos",
+      "permanent": true
+    },
+    {
       "source": "/en/ajuda",
       "destination": "/en/help",
       "permanent": true
@@ -213,6 +218,42 @@
         {
           "key": "Content-Type",
           "value": "application/linkset+json"
+        }
+      ]
+    },
+    {
+      "source": "/README.md",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/README.pt-BR.md",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/LICENSE",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/docs/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     }

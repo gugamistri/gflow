@@ -31,6 +31,8 @@ test("o redirect não pega guiaflow.pro e o rewrite /v continua", () => {
   for (const rule of redirects) {
     // why: slugs antigos en/es (/en/ajuda…) → slug localizado; valem em qualquer host, destino é caminho relativo
     if (/^\/(en|es)\//.test(rule.source) && rule.destination.startsWith("/")) continue;
+    // why: /cortesia deixa de ser a página de convite e aponta para a seção de preços, em qualquer host
+    if (rule.source === "/cortesia" && rule.destination === "/#precos" && rule.permanent === true) continue;
     const hosts = (rule.has || []).filter((cond) => cond.type === "host").map((cond) => cond.value);
     assert.ok(hosts.length > 0, "redirect sem host pegaria o domínio canônico");
     assert.equal(hosts.includes("guiaflow.pro"), false);
