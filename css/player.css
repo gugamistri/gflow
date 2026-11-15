@@ -28,47 +28,57 @@ body.view-share .topbar .logo {
   color: inherit;
 }
 
-/* why: link permanente (/p) é Pro — sem logo GuiaFlow; o autor pode ligar um crédito discreto */
+/* why: no player compartilhado a marca é só o texto «Feito com GuiaFlow»; o logo não aparece nem no plano grátis */
+body.view-share .topbar .logo,
 html.is-unbranded body.view-share .topbar .logo {
   display: none;
 }
 
+/* canto inferior esquerdo: fora dos controlos (topo direito) e visível quando a topbar some no telemóvel */
 .view-credit {
+  position: fixed;
+  left: max(10px, env(safe-area-inset-left, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  z-index: 2147483001;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  flex: none;
-  margin-left: auto;
-  padding: 3px 8px;
-  border-radius: 999px;
-  color: var(--ns-topbar-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
+  margin: 0;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(10, 22, 30, 0.48);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
-  opacity: 0.85;
-}
-
-.view-credit img {
-  width: 14px;
-  height: 14px;
+  opacity: 0.92;
+  pointer-events: auto;
 }
 
 .view-credit:hover,
 .view-credit:focus-visible {
   opacity: 1;
-  color: var(--ns-button-text);
-  background: color-mix(in srgb, var(--ns-topbar-muted) 16%, var(--ns-topbar));
+  color: #ffffff;
+  background: rgba(10, 22, 30, 0.72);
 }
 
 .view-credit:focus-visible {
-  outline: 2px solid var(--ns-topbar-muted);
-  outline-offset: 1px;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .view-credit[hidden] {
   display: none;
+}
+
+/* Galeria: não cobre miniaturas nem chips no fundo; fica no canto do palco, abaixo do cabeçalho */
+html.gf-gallery-open .view-credit {
+  top: calc(env(safe-area-inset-top, 0px) + 60px);
+  bottom: auto;
 }
 
 .view-share-status {
@@ -220,7 +230,7 @@ html.is-embed body.view-share .topbar-title {
 
 html.is-embed body.view-share .view-credit {
   padding: 2px 6px;
-  font-size: 0.68rem;
+  font-size: 0.625rem;
 }
 
 html.is-embed body.view-share .view-editor,
