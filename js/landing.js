@@ -6,7 +6,7 @@
 import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, t } from "./i18n.js";
 import { landingCatalogs } from "./landing-i18n.js";
 import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js";
-import { captureAttribution } from "./attribution.js";
+import { captureAttribution, noteLandingView } from "./attribution.js";
 import { landingExampleHref } from "./exampleTours.js";
 
 /** Id do guia empacotado na seção #demo (data/demo.json, modo Tour guiado). */
@@ -37,10 +37,10 @@ function mountGalleryExample() {
 }
 
 function mountDemoOpen() {
-  const link = document.querySelector("[data-demo-example]");
   const href = landingExampleHref(LANDING_DEMO_EXAMPLE, { locale: getLocale() });
-  if (!link || !href) return;
-  link.href = href;
+  if (!href) return;
+  // hero "Ver um exemplo" e o botão "Abrir o guia" da seção #demo
+  for (const link of document.querySelectorAll("[data-demo-example]")) link.href = href;
 }
 
 function mountDemo() {
@@ -157,123 +157,6 @@ function wireExtension() {
   arm();
 }
 
-/* ---------- Pedido de acesso Pro (testers) ---------- */
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export function readTesterForm(form) {
-  const data = new FormData(form);
-  const get = (k) => String(data.get(k) || "").trim();
-  return {
-    name: get("name"),
-    email: get("email"),
-    company: get("company"),
-    useCase: get("useCase"),
-    linkedin: get("linkedin"),
-    website: get("website"),
-    consent: data.get("consent") === "on",
-  };
-}
-
-export function validateTester(body) {
-  if (!body.name) return "name";
-  if (!EMAIL_RE.test(body.email)) return "email";
-  if (!body.company) return "company";
-  if (!body.useCase) return "useCase";
-  if (body.linkedin) {
-    try {
-      const url = new URL(body.linkedin);
-      if (url.protocol !== "https:" && url.protocol !== "http:") return "linkedin";
-      if (!/(^|\.)linkedin\.com$/i.test(url.hostname)) return "linkedin";
-    } catch {
-      return "linkedin";
-    }
-  }
-  if (!body.consent) return "consent";
-  return "";
-}
-
-function cloudBase() {
-  const raw = typeof window.__GUIAFLOW_CLOUD__ === "string" ? window.__GUIAFLOW_CLOUD__.trim() : "";
-  return raw.replace(/\/+$/, "");
-}
-
-function mailtoFallback(body) {
-  const subject = "Pedido de acesso GuiaFlow Pro (tester)";
-  const text = [
-    `Nome: ${body.name}`,
-    `E-mail: ${body.email}`,
-    `Empresa/produto: ${body.company}`,
-    `Uso: ${body.useCase}`,
-    `LinkedIn: ${body.linkedin || "-"}`,
-  ].join("\n");
-  return `mailto:contato@guiaflow.pro?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
-}
-
-function wireTesterForm() {
-  const form = document.getElementById("tester-form");
-  const status = document.getElementById("tf-status");
-  if (!form || !status) return;
-  const fieldIds = {
-    name: "tf-name",
-    email: "tf-email",
-    company: "tf-company",
-    useCase: "tf-usecase",
-    linkedin: "tf-linkedin",
-    consent: "tf-consent",
-  };
-  const say = (kind, html) => {
-    status.className = `form-status ${kind}`;
-    status.innerHTML = html;
-  };
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    for (const id of Object.values(fieldIds)) document.getElementById(id)?.removeAttribute("aria-invalid");
-    const body = readTesterForm(form);
-    const bad = validateTester(body);
-    if (bad) {
-      const el = document.getElementById(fieldIds[bad]);
-      el?.setAttribute("aria-invalid", "true");
-      el?.focus();
-      say("err", t(`lp.form.err.${bad}`));
-      return;
-    }
-    const base = cloudBase();
-    const button = form.querySelector('button[type="submit"]');
-    const fail = () => say("err", t("lp.form.err.send", { mailto: mailtoFallback(body).replace(/"/g, "%22") }));
-    if (!base) {
-      fail();
-      return;
-    }
-    button.disabled = true;
-    say("", t("lp.form.sending"));
-    try {
-      const res = await fetch(`${base}/api/pro-requests`, {
-        method: "POST",
-        headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({
-          ...body,
-          locale: getLocale(),
-          consentText: document.querySelector('[data-i18n-html="lp.form.consent"]')?.textContent?.trim() || "",
-        }),
-      });
-      if (res.status === 201 || res.ok) {
-        form.reset();
-        say("ok", t("lp.form.ok"));
-      } else if (res.status === 429) {
-        say("err", t("lp.form.err.rate"));
-      } else {
-        fail();
-      }
-    } catch {
-      fail();
-    } finally {
-      button.disabled = false;
-    }
-  });
-}
-
 function boot() {
   installCatalogs();
   initLocale();
@@ -284,9 +167,10 @@ function boot() {
   paintPrices();
   bindLocaleSelect(document.getElementById("locale-select"), () => paintPrices());
   wireExtension();
-  wireTesterForm();
+  // medição GTM: visita à home, uma vez por sessão (nada com DNT/GPC)
+  noteLandingView();
 }
 
 // medição GTM: guarda utm_* da visita (localStorage, 90 dias; nada com DNT/GPC)
 if (typeof document !== "undefined") captureAttribution();
-if (typeof document !== "undefined" && document.getElementById("tester-form")) boot();
+if (typeof document !== "undefined" && document.querySelector(".hero")) boot();
