@@ -2,7 +2,7 @@
 
 **English** | [Português](README.pt-BR.md)
 
-[![smithery badge](https://img.shields.io/badge/Smithery-guiaflow-FF5601)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+[![mcptry](https://img.shields.io/badge/mcptry-guiaflow-4F46E5)](https://mcptry.com/servers/pro.guiaflow/guiaflow)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Turn screens and photos into presentations your customers can explore: interactive guided tours and photo galleries. Free and open source — an alternative to Arcade, Supademo, Storylane.**
@@ -36,7 +36,7 @@ GuiaFlow is an editor and player for click-through product tours built from scre
 - **Analytics** for published tours
 - **Lead capture**
 - **No watermark** on exported video
-- **MCP server** at `https://app.guiaflow.pro/mcp` — let AI agents create and publish tours
+- **MCP server** at `https://app.guiaflow.pro/mcp` — AI agents create and publish interactive guided tours and product demos, for marketing agencies, implementation consultancies, and small software teams
 
 See [guiaflow.pro](https://guiaflow.pro/en) for plans and [`docs/CLOUD.md`](docs/CLOUD.md) for how the open editor talks to the hosted service.
 
@@ -98,7 +98,7 @@ The editor and player in this repository remain MIT and free. AI and narration w
 
 - Website: [https://guiaflow.pro/en](https://guiaflow.pro/en)
 - Integrations (MCP, API, embeds): [https://guiaflow.pro/en/integrations](https://guiaflow.pro/en/integrations)
-- MCP server: `https://app.guiaflow.pro/mcp` · [Smithery](https://smithery.ai/servers/gmistrinelli/guiaflow)
+- MCP server: `https://app.guiaflow.pro/mcp` · [mcptry](https://mcptry.com/servers/pro.guiaflow/guiaflow) · [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=guiaflow) · [Glama](https://glama.ai/mcp/connectors/pro.guiaflow/guiaflow)
 - Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd)
 
 ## License
