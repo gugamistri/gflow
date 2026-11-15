@@ -38,6 +38,7 @@ GuiaFlow is an editor and player for click-through product tours built from scre
 - **Analytics** for published tours
 - **Lead capture**
 - **No GuiaFlow mark** on the player and exported video
+- **Clients** — organize projects by client (name and logo) inside the editor. Not white-label: the client logo does not appear in the player, and links stay on guiaflow.pro
 - **Projects in your account** — synced to the cloud
 - **MCP server** at `https://app.guiaflow.pro/mcp` — AI agents create and publish interactive guided tours and product demos, for marketing agencies, implementation consultancies, and small software teams
 
