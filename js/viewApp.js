@@ -12,6 +12,7 @@ import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBL
 import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource, uuidV4 } from "./viewAnalytics.js";
 import { consumeEntryToken, entryResult, markNoticeSeen, noticeAlreadySeen, privacyNoticeUrl } from "./identifiedEntry.js";
 import { resolveShareMedia } from "./shareMedia.js";
+import { packagedExampleUrl } from "./exampleTours.js";
 import {
   BRAND_BADGE_HREF,
   brandBadge,
@@ -113,7 +114,24 @@ async function loadPermanent(slug) {
   return resolveShareMedia(parsed.tour, endpoint);
 }
 
+async function loadExample(id) {
+  const url = packagedExampleUrl(id);
+  if (!url) {
+    throw Object.assign(new Error("not_found"), { code: "not_found" });
+  }
+  const res = await fetch(url, { cache: "no-cache" });
+  if (!res.ok) {
+    throw Object.assign(new Error("not_found"), { code: "not_found" });
+  }
+  const data = await res.json().catch(() => null);
+  if (!data || typeof data !== "object" || !Array.isArray(data.steps) || !data.steps.length) {
+    throw Object.assign(new Error("not_found"), { code: "not_found" });
+  }
+  return data;
+}
+
 async function loadDemo(route) {
+  if (route.kind === "example") return loadExample(route.id);
   if (route.kind === "permanent") return loadPermanent(route.id);
   return loadTemporary(route.id);
 }
@@ -790,8 +808,9 @@ function mountLangMenu(tries = 30) {
 
 function bootUiLocale() {
   const search = typeof location !== "undefined" ? location.search : "";
+  const pathname = typeof location !== "undefined" ? location.pathname : "";
   const language = typeof navigator !== "undefined" ? navigator.language || "" : "";
-  return setLocale(resolvePlayerUiLocale({ search, language }), { persist: false });
+  return setLocale(resolvePlayerUiLocale({ search, pathname, language }), { persist: false });
 }
 
 async function boot() {

@@ -464,6 +464,13 @@ export function resolveContent(project, lang, { audioLang } = {}) {
     if (project.endStep) out.endStep = applyBag(project.endStep, "end", project.endStep.i18n?.[textLang], fallback, "end");
     const pn = project.i18nProject?.[textLang]?.name;
     if (pn) out.name = pn;
+    const sl = project.i18nProject?.[textLang]?.sceneLabels;
+    if (sl && typeof sl === "object") {
+      out.sceneLabels = { ...(project.sceneLabels || {}) };
+      for (const [key, value] of Object.entries(sl)) {
+        if (value != null && String(value).trim()) out.sceneLabels[key] = String(value);
+      }
+    }
   }
   return out;
 }

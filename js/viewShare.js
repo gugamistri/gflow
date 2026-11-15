@@ -1,7 +1,9 @@
 /**
- * Rota e carga do player compartilhado (/v temporário e /p permanente).
- * why: os dois links usam o mesmo tour; só a origem do JSON muda.
+ * Rota e carga do player compartilhado (/v temporário, /p permanente e /exemplos empacotados).
+ * why: os dois links publicados usam o mesmo tour; só a origem do JSON muda.
+ *      /exemplos/:id serve um JSON estático do repositório, sem publicar tour.
  */
+import { parseExampleRoute } from "./exampleTours.js";
 
 const TEMPORARY_ID = /\/v\/([A-Za-z0-9_-]{11}|[a-f0-9]{32})\/?$/i;
 const PERMANENT_SLUG = /\/p\/([A-Za-z0-9][A-Za-z0-9_-]{0,80})\/?$/;
@@ -19,6 +21,8 @@ export function parseViewRoute(pathname, boot) {
   }
   const temporary = path.match(TEMPORARY_ID);
   if (temporary) return { kind: "temporary", id: temporary[1] };
+  const example = parseExampleRoute(path);
+  if (example) return example;
   return null;
 }
 

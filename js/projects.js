@@ -30,10 +30,18 @@ const CLIPBOARD_STORE = "clipboard";
 const CLIPBOARD_KEY = "steps";
 const INDEX_KEY = "demo-studio-index-v2";
 const LEGACY_KEYS = ["interactive-demo-v1"];
-const DEFAULT_JSON_URL = "data/demo.json";
-/** Bump when data/demo.json muda — reinstala o tour de exemplo sem apagar outros projetos. */
-const SEED_REVISION = 4;
-export const STOCK_DEMO_NAME = "Como usar o Guia";
+/** Bump when os exemplos empacotados mudam — reinstala os intocados sem apagar outros projetos. */
+const SEED_REVISION = 5;
+export const STOCK_DEMOS = Object.freeze([
+  Object.freeze({ name: "Como usar o Guia", url: "data/demo.json" }),
+  Object.freeze({ name: "Luminária Arco Liana", url: "data/examples/galeria-produto.json" }),
+]);
+export const STOCK_DEMO_NAME = STOCK_DEMOS[0].name;
+const STOCK_DEMO_NAMES = new Set(STOCK_DEMOS.map((d) => d.name));
+
+export function isStockDemoName(name) {
+  return STOCK_DEMO_NAMES.has(name);
+}
 
 /**
  * Arquivos de mídia (Blob por sha256) num banco à parte.
@@ -717,12 +725,6 @@ function loadLegacyLocalStorage() {
   return null;
 }
 
-async function fetchDefaultDemo() {
-  const res = await fetch(DEFAULT_JSON_URL, { cache: "no-cache" });
-  if (!res.ok) throw new Error("Não foi possível carregar data/demo.json");
-  return res.json();
-}
-
 /** Reconstrói o índice a partir do que ainda existe no IndexedDB. */
 async function reconcileIndexFromIdb() {
   const stored = await listAllProjects();
@@ -750,49 +752,56 @@ async function reconcileIndexFromIdb() {
  * why: subir o exemplo intocado criaria a mesma cópia na conta de todo mundo; editado, ele vira do usuário e sincroniza.
  */
 export function isUntouchedStockDemo(project) {
-  return Boolean(project && project.name === STOCK_DEMO_NAME && !project.stockEdited);
+  return Boolean(project && isStockDemoName(project.name) && !project.stockEdited);
 }
 
-async function seedDefaultDemoProject({ replaceExisting = false, keepEdited = false } = {}) {
-  let legacy = loadLegacyLocalStorage();
-  let data = legacy?.data || null;
-  let fromLegacy = Boolean(data?.steps?.length);
+async function fetchStockDemo(url) {
+  const res = await fetch(url, { cache: "no-cache" });
+  if (!res.ok) throw new Error(`Não foi possível carregar ${url}`);
+  return res.json();
+}
 
-  if (!fromLegacy) {
-    data = await fetchDefaultDemo();
+async function seedOneStockDemo(stock, { replaceExisting = false, keepEdited = false, data = null } = {}) {
+  const payload = data || await fetchStockDemo(stock.url);
+  if (!payload?.steps?.length) {
+    throw new Error(`Demo padrão sem passos (${stock.url})`);
   }
-
-  if (!data?.steps?.length) {
-    throw new Error("Demo padrão sem passos");
-  }
-
-  const stockName = data.name || STOCK_DEMO_NAME;
+  const stockName = payload.name || stock.name;
   const index = readIndex();
-  const existingSummary = (index.projects || []).find((p) => p.name === stockName || p.name === STOCK_DEMO_NAME);
+  const existingSummary = (index.projects || []).find((p) => p.name === stockName || p.name === stock.name);
   const prev = existingSummary && replaceExisting ? await getProjectRecord(existingSummary.id) : null;
   // why: a atualização automática do exemplo não apaga o que o usuário editou nele
-  if (keepEdited && prev?.stockEdited) {
-    const kept = readIndex();
-    kept.seedRevision = SEED_REVISION;
-    kept.migrated = true;
-    writeIndex(kept);
-    return prev;
-  }
+  if (keepEdited && prev?.stockEdited) return prev;
+  if (existingSummary && !replaceExisting) return prev || (await getProjectRecord(existingSummary.id));
 
-  const project = demoPayloadToProject(data, {
+  const project = demoPayloadToProject(payload, {
     name: stockName,
     id: prev?.id,
   });
   if (prev?.createdAt) project.createdAt = prev.createdAt;
   project.sceneLabels = {
-    ...(data.sceneLabels && Object.keys(data.sceneLabels).length
-      ? data.sceneLabels
+    ...(payload.sceneLabels && Object.keys(payload.sceneLabels).length
+      ? payload.sceneLabels
       : DEFAULT_SCENE_LABELS),
   };
   if (!project.theme.presetId) {
     project.theme.presetId = THEME_PRESETS[0].id;
   }
   await putProject(project);
+  return project;
+}
+
+async function seedDefaultDemoProject({ replaceExisting = false, keepEdited = false } = {}) {
+  let legacy = loadLegacyLocalStorage();
+  let legacyData = legacy?.data || null;
+  const fromLegacy = Boolean(legacyData?.steps?.length);
+  const created = [];
+
+  for (const stock of STOCK_DEMOS) {
+    const data = stock === STOCK_DEMOS[0] && fromLegacy ? legacyData : null;
+    const project = await seedOneStockDemo(stock, { replaceExisting, keepEdited, data });
+    if (project) created.push(project);
+  }
 
   if (fromLegacy && legacy?.key) {
     try {
@@ -803,11 +812,11 @@ async function seedDefaultDemoProject({ replaceExisting = false, keepEdited = fa
   }
 
   const nextIndex = readIndex();
-  nextIndex.activeProjectId = nextIndex.activeProjectId || project.id;
+  nextIndex.activeProjectId = nextIndex.activeProjectId || created[0]?.id || null;
   nextIndex.migrated = true;
   nextIndex.seedRevision = SEED_REVISION;
   writeIndex(nextIndex);
-  return project;
+  return created[0] || null;
 }
 
 /**
