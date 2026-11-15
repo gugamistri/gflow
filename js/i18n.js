@@ -4925,13 +4925,13 @@ export function resolveLocale(languages) {
 }
 
 /**
- * Idioma da interface do player público (/p e /v).
- * Ordem: ?lang= (pt|en|es) > navigator.language > pt.
- * A landing /en e /es manda o idioma no link da galeria de exemplo.
+ * Idioma da interface do player público (/p, /v e /exemplos).
+ * Ordem: ?lang= (pt|en|es) > prefixo /en ou /es no caminho > navigator.language > pt.
+ * A landing /en e /es manda o idioma no link do exemplo.
  * Não usa a preferência salva do editor nem o idioma do conteúdo do tour.
- * @param {{ search?: string, language?: string }} [input]
+ * @param {{ search?: string, pathname?: string, language?: string }} [input]
  */
-export function resolvePlayerUiLocale({ search = "", language = "" } = {}) {
+export function resolvePlayerUiLocale({ search = "", pathname = "", language = "" } = {}) {
   let params;
   try {
     params = new URLSearchParams(String(search || "").replace(/^\?/, ""));
@@ -4940,6 +4940,8 @@ export function resolvePlayerUiLocale({ search = "", language = "" } = {}) {
   }
   const fromQuery = normalizeLocaleTag(params.get("lang"));
   if (fromQuery) return fromQuery;
+  const pathMatch = String(pathname || "").match(/^\/(en|es)(?:\/|$)/);
+  if (pathMatch) return pathMatch[1];
   const fromNav = normalizeLocaleTag(language);
   if (fromNav) return fromNav;
   return "pt";

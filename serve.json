@@ -1,8 +1,32 @@
 {
   "rewrites": [
-    { "source": "/a/:version/:path*", "destination": "/:path*" },
-    { "source": "/auth/callback", "destination": "/auth/callback.html" },
-    { "source": "/v/:id", "destination": "/view" },
-    { "source": "/p/:slug", "destination": "/view" }
+    {
+      "source": "/a/:version/:path*",
+      "destination": "/:path*"
+    },
+    {
+      "source": "/auth/callback",
+      "destination": "/auth/callback.html"
+    },
+    {
+      "source": "/v/:id",
+      "destination": "/view"
+    },
+    {
+      "source": "/p/:slug",
+      "destination": "/view"
+    },
+    {
+      "source": "/exemplos/:id",
+      "destination": "/view"
+    },
+    {
+      "source": "/en/exemplos/:id",
+      "destination": "/view"
+    },
+    {
+      "source": "/es/exemplos/:id",
+      "destination": "/view"
+    }
   ]
 }

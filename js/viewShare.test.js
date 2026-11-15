@@ -49,6 +49,11 @@ test("parseViewRoute distingue /v e /p", () => {
     id: "slug-permanente",
   });
   assert.equal(parseViewRoute("/ajuda", null), null);
+  assert.deepEqual(parseViewRoute("/exemplos/guia", null), { kind: "example", id: "guia", pathLocale: null });
+  assert.deepEqual(parseViewRoute("/en/exemplos/galeria/", null), { kind: "example", id: "galeria", pathLocale: "en" });
+  assert.deepEqual(parseViewRoute("/es/exemplos/guia", null), { kind: "example", id: "guia", pathLocale: "es" });
+  assert.equal(parseViewRoute("/exemplos/nao-existe", null), null);
+  assert.equal(parseViewRoute("/exemplos/../demo", null), null);
 });
 
 test("o payload permanente é o tour, e not_found não vira tour", () => {

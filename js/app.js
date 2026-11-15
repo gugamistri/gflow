@@ -33,7 +33,7 @@ import {
   listAllProjects,
   createProjectId,
   onLocalProjectChange,
-  STOCK_DEMO_NAME,
+  isStockDemoName,
   isUntouchedStockDemo,
 } from "./projects.js";
 import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
@@ -433,7 +433,7 @@ async function attachSavedHistory(state) {
 
 function onChange() {
   if (historyLock || !project) return;
-  if (project.name === STOCK_DEMO_NAME && !project.stockEdited) project.stockEdited = true;
+  if (isStockDemoName(project.name) && !project.stockEdited) project.stockEdited = true;
   if (collab?.isActive()) {
     // projeto colaborativo: ops vão para o servidor; history.js (snapshots) fica só no modo local
     collab.onLocalChange();

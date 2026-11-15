@@ -110,6 +110,10 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
         var q = new URLSearchParams(location.search).get("lang") || "";
         var pick = String(q).toLowerCase().split("-")[0];
         if (pick !== "pt" && pick !== "es" && pick !== "en") {
+          var path = String(location.pathname || "").match(/^\/(en|es)(?:\/|$)/);
+          if (path) pick = path[1];
+        }
+        if (pick !== "pt" && pick !== "es" && pick !== "en") {
           pick = String(navigator.language || "").toLowerCase().split("-")[0];
         }
         if (pick !== "pt" && pick !== "es" && pick !== "en") pick = "pt";
@@ -149,16 +153,16 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/204/vendor/driver/driver.css" />
-  <link rel="stylesheet" href="/a/204/css/theme.css" />
-  <link rel="stylesheet" href="/a/204/css/shell.css" />
-  <link rel="stylesheet" href="/a/204/css/player.css" />
+  <link rel="stylesheet" href="/a/205/vendor/driver/driver.css" />
+  <link rel="stylesheet" href="/a/205/css/theme.css" />
+  <link rel="stylesheet" href="/a/205/css/shell.css" />
+  <link rel="stylesheet" href="/a/205/css/player.css" />
   <script>window.__GF_SHARE = ${scriptJson({ id: id || null, name: name || null, missing: Boolean(missing), kind: permanent ? "permanent" : "temporary" })};</script>
 </head>
 <body class="view-share">
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/204/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/204/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/205/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/205/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" id="topbar-title">${missing ? escapeHtml("Este link não está mais disponível.") : safeName || "Carregando o tour…"}</span>
     </div>
   </header>
@@ -224,8 +228,8 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
 
   <div class="toast" id="toast" hidden></div>
 
-  <script src="/a/204/vendor/driver/driver.js.iife.js"></script>
-  <script type="module" src="/a/204/js/viewApp.js"></script>
+  <script src="/a/205/vendor/driver/driver.js.iife.js"></script>
+  <script type="module" src="/a/205/js/viewApp.js"></script>
   <a class="view-credit" id="view-credit" href="https://guiaflow.pro/?utm_source=badge&amp;utm_medium=viewer&amp;utm_campaign=made-with" target="_blank" rel="noopener" hidden><span data-i18n="view.credit">Feito com GuiaFlow</span></a>
 </body>
 </html>

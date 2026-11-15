@@ -124,3 +124,17 @@ test("langAudioPlan: only missing/stale with a translated caption; same text+voi
   setTranslation(p, { id: s.id, field: "caption", lang: "en", text: "Click New to start." });
   assert.equal(langAudioPlan(p, { langs: ["en"], stepIds: [s.id] }).length, 1, "stale");
 });
+
+test("resolveContent: sceneLabels e nome do projeto seguem o idioma", () => {
+  const t = tour();
+  t.sceneLabels = { 1: "Visão geral", 2: "Detalhes" };
+  addLang(t, "en");
+  t.i18nProject = { en: { name: "Arco Liana table lamp", sceneLabels: { 1: "Overview", 2: "Details" } } };
+  const en = resolveContent(t, "en");
+  assert.equal(en.name, "Arco Liana table lamp");
+  assert.deepEqual(en.sceneLabels, { 1: "Overview", 2: "Details" });
+  const pt = resolveContent(t, "pt-BR");
+  assert.equal(pt.name, "Demo");
+  assert.deepEqual(pt.sceneLabels, { 1: "Visão geral", 2: "Detalhes" });
+  assert.deepEqual(t.sceneLabels, { 1: "Visão geral", 2: "Detalhes" }, "a origem não muda");
+});
