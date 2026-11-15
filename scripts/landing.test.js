@@ -75,23 +75,26 @@ test("deep links seguem: /v, /p, /oembed, auth e os rodapés apontam para /edito
   assert.ok(JSON.parse(read("package.json")).build.files.includes("editor.html"));
 });
 
-test("demo de exemplo: slug numa constante só (LeadPronto), sem o Demo RCV, placeholder quando vazio", async () => {
+test("demo de exemplo: guia empacotado em /exemplos/guia, sem iframe estático, sem Demo RCV", async () => {
   const fs = await import("node:fs");
   const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const js = fs.readFileSync(new URL("../js/landing.js", import.meta.url), "utf8");
   assert.equal(/rcv/i.test(html) || /rcv/i.test(js), false, "landing sem Demo RCV");
-  assert.equal(/<iframe/i.test(html), false, "o iframe nasce do LANDING_DEMO_SLUG em landing.js");
+  assert.equal(/<iframe/i.test(html), false, "o iframe nasce do LANDING_DEMO_EXAMPLE em landing.js");
   assert.match(html, /id="demo-placeholder"/);
-  assert.equal((js.match(/export const LANDING_DEMO_SLUG = /g) || []).length, 1);
+  assert.equal((js.match(/export const LANDING_DEMO_EXAMPLE = /g) || []).length, 1);
   const { landingDemoUrl } = await import("../js/landing.js");
-  assert.match(js, /export const LANDING_DEMO_SLUG = "leadpronto-9e0052";/);
+  assert.match(js, /export const LANDING_DEMO_EXAMPLE = "guia";/);
   assert.match(html, /\/a\/\d+\/brand\/hero-galeria\.webp" width="1200" height="787"/);
   assert.match(html, /\/a\/\d+\/brand\/hero-guia\.webp" width="800" height="500"/);
   assert.equal(/hero-leadpronto|lp\.mock\.toast/.test(html), false, "hero sem a captura do LeadPronto nem o aviso de lead");
+  assert.equal(/exemplo-colchao|leadpronto-9e0052/.test(html), false, "landing sem o colchão publicado nem o guia LeadPronto");
   assert.equal(landingDemoUrl(""), "");
   assert.equal(landingDemoUrl("../x"), "");
   assert.equal(landingDemoUrl("javascript:alert(1)"), "");
-  assert.equal(landingDemoUrl("leadpronto-abc123"), "https://guiaflow.pro/p/leadpronto-abc123?embed=1");
+  assert.equal(landingDemoUrl("guia"), "/exemplos/guia?embed=1");
+  assert.equal(landingDemoUrl("guia", "en"), "/exemplos/guia?lang=en&embed=1");
+  assert.equal(landingDemoUrl("guia", "es"), "/exemplos/guia?lang=es&embed=1");
 });
 
 test("landing: posicionamento galeria + guia e o assistente nas três línguas", () => {
@@ -113,7 +116,7 @@ test("landing: posicionamento galeria + guia e o assistente nas três línguas",
     assert.match(heroSub, sub[loc], `${loc}: subtítulo`);
     assert.match(html, /id="dois-caminhos"/, `${loc}: seção dois caminhos`);
     assert.match(html, /id="usos"/, `${loc}: seção usos`);
-    assert.match(html, /href="https:\/\/guiaflow\.pro\/p\/[a-z0-9-]+(?:\?lang=(?:en|es))?" data-gallery-example/, `${loc}: CTA da galeria de exemplo`);
+    assert.match(html, /href="\/exemplos\/galeria(?:\?lang=(?:en|es))?" data-gallery-example/, `${loc}: CTA da galeria de exemplo`);
     for (const n of [10, 11, 12]) assert.match(html, new RegExp(`data-i18n="lp\\.faq\\.q${n}"`), `${loc}: FAQ ${n}`);
     assert.match(html, /id="criar-com-ajuda"/, `${loc}: card do assistente`);
     assert.match(html, /href="\/editor\?novo=ajuda"/, `${loc}: CTA do assistente`);
@@ -142,23 +145,23 @@ test("landing: og:image por idioma em 1200x630", () => {
   }
 });
 
-test("landing: card Galeria abre a galeria de exemplo publicada", async () => {
-  const { landingGalleryHref, LANDING_GALLERY_SLUG } = await import("../js/landing.js");
-  assert.equal(LANDING_GALLERY_SLUG, "exemplo-colchao-galeria-de-produto-844901", "galeria de exemplo publicada");
+test("landing: card Galeria abre o exemplo empacotado em /exemplos/galeria", async () => {
+  const { landingGalleryHref, LANDING_GALLERY_EXAMPLE } = await import("../js/landing.js");
+  assert.equal(LANDING_GALLERY_EXAMPLE, "galeria");
   assert.equal(landingGalleryHref(""), "");
-  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
-  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "pt"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
-  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "en"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b?lang=en");
-  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "es"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b?lang=es");
-  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "en-US"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b?lang=en");
-  assert.equal(landingGalleryHref("colchoes-exemplo-1a2b", "https://guiaflow.pro", "fr"), "https://guiaflow.pro/p/colchoes-exemplo-1a2b");
+  assert.equal(landingGalleryHref("galeria"), "/exemplos/galeria");
+  assert.equal(landingGalleryHref("galeria", "pt"), "/exemplos/galeria");
+  assert.equal(landingGalleryHref("galeria", "en"), "/exemplos/galeria?lang=en");
+  assert.equal(landingGalleryHref("galeria", "es"), "/exemplos/galeria?lang=es");
+  assert.equal(landingGalleryHref("galeria", "en-US"), "/exemplos/galeria?lang=en");
+  assert.equal(landingGalleryHref("galeria", "fr"), "/exemplos/galeria");
   assert.equal(landingGalleryHref("../x"), "");
   for (const [loc, html, label, query] of [
     ["pt", landing, "Ver galeria", ""],
     ["en", read("en.html"), "See a gallery", "\\?lang=en"],
     ["es", read("es.html"), "Ver una galería", "\\?lang=es"],
   ]) {
-    assert.match(html, new RegExp(`href="https://guiaflow\\.pro/p/${LANDING_GALLERY_SLUG}${query}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
+    assert.match(html, new RegExp(`href="/exemplos/${LANDING_GALLERY_EXAMPLE}${query}" data-gallery-example data-i18n="lp\\.paths\\.gallery\\.view">${label}</a>`), `${loc}: botão Ver galeria`);
   }
 });
 

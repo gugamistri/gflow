@@ -30,9 +30,17 @@ test("o shell do player lê ?lang= e navigator.language, com fallback pt", () =>
   for (const [name, html] of [["view.html", view], ["view-shell", shell]]) {
     const script = html.slice(html.indexOf("<script>"), html.indexOf("</script>"));
     assert.match(script, /URLSearchParams\(location\.search\)\.get\("lang"\)/, name);
+    assert.match(script, /location\.pathname/, name);
     assert.match(script, /navigator\.language/, name);
     assert.equal(/ns-locale/.test(script), false, name);
     assert.match(script, /pick = "pt"/, name);
     assert.match(script, /pick === "pt" \? "pt-BR" : pick/, name);
   }
+});
+
+test("resolvePlayerUiLocale: prefixo /en ou /es no caminho, depois do ?lang=", () => {
+  assert.equal(resolvePlayerUiLocale({ pathname: "/en/exemplos/guia", language: "pt-BR" }), "en");
+  assert.equal(resolvePlayerUiLocale({ pathname: "/es/exemplos/galeria", language: "en" }), "es");
+  assert.equal(resolvePlayerUiLocale({ search: "?lang=pt", pathname: "/en/exemplos/guia", language: "es" }), "pt");
+  assert.equal(resolvePlayerUiLocale({ pathname: "/exemplos/guia", language: "de" }), "pt");
 });

@@ -1,0 +1,235 @@
+{
+  "name": "Luminária Arco Liana",
+  "theme": {
+    "accent": "#b56a45",
+    "accentDark": "#8f5134",
+    "overlay": "#2a1c14",
+    "popoverBg": "#fffaf5",
+    "title": "#3a2418",
+    "text": "#4a3b32",
+    "button": "#3a2418",
+    "hotspot": "#b56a45"
+  },
+  "customImages": {},
+  "steps": [
+    {
+      "id": "step-arco-1",
+      "scene": 1,
+      "label": "Luminária Arco Liana",
+      "image": "/data/examples/galeria-arco-liana/01-visao-geral.webp",
+      "popover": {
+        "title": "Luminária Arco Liana",
+        "description": "Uma peça do Ateliê Véspera: cúpula de cerâmica, haste arqueada de bronze e base de nogueira. Conteúdo fictício, só para mostrar o modo Galeria do GuiaFlow.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "Luminária Arco Liana",
+      "showCaption": true,
+      "i18n": {
+        "en": {
+          "label": "Arco Liana table lamp",
+          "title": "Arco Liana table lamp",
+          "description": "A piece from Ateliê Véspera: a ceramic shade, an arched bronze stem and a walnut base. Fictional content, only to show GuiaFlow Gallery mode.",
+          "caption": "Arco Liana table lamp"
+        },
+        "es": {
+          "label": "Lámpara Arco Liana",
+          "title": "Lámpara Arco Liana",
+          "description": "Una pieza de Ateliê Véspera: cúpula de cerámica, vástago arqueado de bronce y base de nogal. Contenido de ficción, solo para mostrar el modo Galería de GuiaFlow.",
+          "caption": "Lámpara Arco Liana"
+        }
+      }
+    },
+    {
+      "id": "step-arco-2",
+      "scene": 2,
+      "label": "Cúpula de cerâmica",
+      "image": "/data/examples/galeria-arco-liana/02-cupula.webp",
+      "popover": {
+        "title": "Cúpula de cerâmica",
+        "description": "Acabamento fosco, feito à mão, com a irregularidade leve de uma peça artesanal.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "Cúpula de cerâmica",
+      "showCaption": true,
+      "i18n": {
+        "en": {
+          "label": "Ceramic shade",
+          "title": "Ceramic shade",
+          "description": "A matte, handmade finish, with the slight irregularity of a craft piece.",
+          "caption": "Ceramic shade"
+        },
+        "es": {
+          "label": "Cúpula de cerámica",
+          "title": "Cúpula de cerámica",
+          "description": "Acabado mate, hecho a mano, con la ligera irregularidad de una pieza artesanal.",
+          "caption": "Cúpula de cerámica"
+        }
+      }
+    },
+    {
+      "id": "step-arco-3",
+      "scene": 2,
+      "label": "Base de nogueira",
+      "image": "/data/examples/galeria-arco-liana/03-base.webp",
+      "popover": {
+        "title": "Base de nogueira",
+        "description": "Madeira maciça torneada e um interruptor discreto no topo da base.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "Base de nogueira",
+      "showCaption": true,
+      "i18n": {
+        "en": {
+          "label": "Walnut base",
+          "title": "Walnut base",
+          "description": "Solid turned wood and a discreet switch on top of the base.",
+          "caption": "Walnut base"
+        },
+        "es": {
+          "label": "Base de nogal",
+          "title": "Base de nogal",
+          "description": "Madera maciza torneada y un interruptor discreto en la parte superior de la base.",
+          "caption": "Base de nogal"
+        }
+      }
+    },
+    {
+      "id": "step-arco-4",
+      "scene": 3,
+      "label": "Na escrivaninha",
+      "image": "/data/examples/galeria-arco-liana/04-escrivaninha.webp",
+      "popover": {
+        "title": "Na escrivaninha",
+        "description": "Luz baixa e circunscrita, para leitura ou trabalho à tarde.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "Na escrivaninha",
+      "showCaption": true,
+      "i18n": {
+        "en": {
+          "label": "On the desk",
+          "title": "On the desk",
+          "description": "A low, contained light, for reading or afternoon work.",
+          "caption": "On the desk"
+        },
+        "es": {
+          "label": "En el escritorio",
+          "title": "En el escritorio",
+          "description": "Luz baja y contenida, para leer o trabajar por la tarde.",
+          "caption": "En el escritorio"
+        }
+      }
+    },
+    {
+      "id": "step-arco-5",
+      "scene": 3,
+      "label": "No quarto",
+      "image": "/data/examples/galeria-arco-liana/05-criado-mudo.webp",
+      "popover": {
+        "title": "No quarto",
+        "description": "Ao lado da cama, a cúpula dirige a luz para baixo e deixa o ambiente mais calmo.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "No quarto",
+      "showCaption": true,
+      "i18n": {
+        "en": {
+          "label": "By the bed",
+          "title": "By the bed",
+          "description": "Beside the bed, the shade directs the light downward and keeps the room calmer.",
+          "caption": "By the bed"
+        },
+        "es": {
+          "label": "En el dormitorio",
+          "title": "En el dormitorio",
+          "description": "Junto a la cama, la cúpula dirige la luz hacia abajo y deja el ambiente más calmado.",
+          "caption": "En el dormitorio"
+        }
+      }
+    },
+    {
+      "id": "step-arco-6",
+      "scene": 4,
+      "label": "Areia, terracota e musgo",
+      "image": "/data/examples/galeria-arco-liana/06-acabamentos.webp",
+      "popover": {
+        "title": "Areia, terracota e musgo",
+        "description": "Três acabamentos de cerâmica, a mesma base de nogueira. Altura 42 cm, cúpula 18 cm, soquete E27, LED 6 W. Medidas ilustrativas deste exemplo.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "Areia, terracota e musgo",
+      "showCaption": true,
+      "i18n": {
+        "en": {
+          "label": "Sand, terracotta and moss",
+          "title": "Sand, terracotta and moss",
+          "description": "Three ceramic finishes, the same walnut base. Height 42 cm, shade 18 cm, E27 socket, 6 W LED. Illustrative measurements for this example.",
+          "caption": "Sand, terracotta and moss"
+        },
+        "es": {
+          "label": "Arena, terracota y musgo",
+          "title": "Arena, terracota y musgo",
+          "description": "Tres acabados de cerámica, la misma base de nogal. Altura 42 cm, cúpula 18 cm, casquillo E27, LED 6 W. Medidas ilustrativas de este ejemplo.",
+          "caption": "Arena, terracota y musgo"
+        }
+      }
+    }
+  ],
+  "sceneLabels": {
+    "1": "Visão geral",
+    "2": "Detalhes",
+    "3": "Em uso",
+    "4": "Medidas e variações"
+  },
+  "playback": {
+    "mode": "gallery"
+  },
+  "narration": {
+    "enabled": false,
+    "voiceURI": "",
+    "rate": 1,
+    "background": null
+  },
+  "i18n": {
+    "v": 1,
+    "defaultLang": "pt-BR",
+    "langs": [
+      {
+        "lang": "en",
+        "locale": "en",
+        "enabled": true
+      },
+      {
+        "lang": "es",
+        "locale": "es",
+        "enabled": true
+      }
+    ]
+  },
+  "i18nProject": {
+    "en": {
+      "name": "Arco Liana table lamp",
+      "sceneLabels": {
+        "1": "Overview",
+        "2": "Details",
+        "3": "In use",
+        "4": "Sizes and finishes"
+      }
+    },
+    "es": {
+      "name": "Lámpara Arco Liana",
+      "sceneLabels": {
+        "1": "Vista general",
+        "2": "Detalles",
+        "3": "En uso",
+        "4": "Medidas y acabados"
+      }
+    }
+  }
+}
