@@ -6,6 +6,7 @@
 import { applyI18n, bindLocaleSelect, catalogs, getLocale, initLocale, normalizeLocaleTag, t } from "./i18n.js";
 import { landingCatalogs } from "./landing-i18n.js";
 import { formatPaywallAmount, paywallCurrency, paywallOffer } from "./paywall.js";
+import { captureAttribution } from "./attribution.js";
 
 /**
  * Demo de exemplo da seção #demo: slug de um link permanente publicado (/p/<slug>).
@@ -293,4 +294,6 @@ function boot() {
   wireTesterForm();
 }
 
+// medição GTM: guarda utm_* da visita (localStorage, 90 dias; nada com DNT/GPC)
+if (typeof document !== "undefined") captureAttribution();
 if (typeof document !== "undefined" && document.getElementById("tester-form")) boot();

@@ -35,11 +35,11 @@ test("textos legais existem nas três línguas, com os mesmos links e sem 'nuvem
       assert.deepEqual(tags(value), tags(legalCatalogs.pt[key]), `${loc} ${key}`);
     }
   }
-  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: November 4, 2026");
-  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 4 de noviembre de 2026");
+  assert.equal(legalCatalogs.en["privacy.updated"], "Last updated: November 14, 2026");
+  assert.equal(legalCatalogs.es["privacy.updated"], "Última actualización: 14 de noviembre de 2026");
   assert.equal(legalCatalogs.en["terms.updated"], "Last updated: October 11, 2026");
   assert.equal(legalCatalogs.es["terms.updated"], "Última actualización: 11 de octubre de 2026");
-  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 4 de novembro de 2026");
+  assert.equal(legalCatalogs.pt["privacy.updated"], "Última atualização: 14 de novembro de 2026");
 });
 
 test("o aviso do Pro não diz mais que os termos estão só em português", () => {
@@ -118,4 +118,17 @@ test("privacidade cita YouTube e Vimeo como terceiros que carregam ao abrir o pa
       assert.doesNotMatch(c[k], /clica no play|clicks play|clic en play/, `${loc} ${k}`);
     }
   }
+});
+
+test("privacidade explica a medição GTM: UTM 90 dias, DNT/GPC, primeira origem na conta, contagens sem dados pessoais", () => {
+  const checks = {
+    pt: [/90 dias/, /Não rastrear/, /GPC/, /uma única vez/, /sem dados pessoais/, /utm_source/],
+    en: [/90 days/, /Do Not Track/, /GPC/, /recorded once/, /no personal data/, /utm_source/],
+    es: [/90 días/, /No rastrear/, /GPC/, /una sola vez/, /sin datos personales/, /utm_source/],
+  };
+  for (const [loc, res] of Object.entries(checks)) {
+    const text = ["privacy.gtm.li1", "privacy.gtm.li2", "privacy.gtm.li3"].map((k) => legalCatalogs[loc][k]).join(" ");
+    for (const re of res) assert.match(text, re, `${loc} ${re}`);
+  }
+  assert.match(read("privacidade.html"), /id="medicao-guiaflow"/);
 });
