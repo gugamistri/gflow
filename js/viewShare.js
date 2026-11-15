@@ -28,7 +28,18 @@ export function permanentShareEndpoint(base, slug) {
 }
 
 /** Destino do selo: a landing, medida pela campanha. O apex só serve o editor. */
-export const BRAND_BADGE_HREF = "https://guiaflow.pro/?utm_source=selo&utm_medium=tour&utm_campaign=feito-com";
+export const BRAND_BADGE_HREF = "https://guiaflow.pro/?utm_source=badge&utm_medium=viewer&utm_campaign=made-with";
+
+/** Href do selo com as três UTMs exigidas e utm_content no idioma do player (pt, en ou es). */
+export function brandBadgeHref(locale) {
+  const loc = locale === "en" || locale === "es" ? locale : "pt";
+  return `${BRAND_BADGE_HREF}&utm_content=${loc}`;
+}
+
+/** Clique medido: precisa de Cloud própria e não dispara com DNT/GPC. */
+export function shouldSendBrandClick({ endpoint, privacy } = {}) {
+  return Boolean(endpoint) && !privacy;
+}
 
 /** Contador do selo no Cloud; sem nuvem configurada não há clique a contar. */
 export function brandClickEndpoint(base) {

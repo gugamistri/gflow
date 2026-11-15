@@ -9,13 +9,14 @@ import { createLangMenu, readStoredLangs, resolvePlayerLangs, storeLangs } from 
 import { setCaptions } from "./playerControls.js";
 import { langLabel, resolveContent } from "./tour-schema/i18n.js";
 import { CLOUD_EVENTS_PATH, getCloudBaseUrl, getCloudFlags, isCloudEnabled, PUBLISHED_CLOUD_BASE } from "./cloudConfig.js";
-import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, shortLocale, shouldTrack, trafficSource, uuidV4 } from "./viewAnalytics.js";
+import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttribution, privacySignal, shortLocale, shouldTrack, trafficSource, uuidV4 } from "./viewAnalytics.js";
 import { consumeEntryToken, entryResult, markNoticeSeen, noticeAlreadySeen, privacyNoticeUrl } from "./identifiedEntry.js";
 import { resolveShareMedia } from "./shareMedia.js";
 import {
-  BRAND_BADGE_HREF,
   brandBadge,
+  brandBadgeHref,
   brandClickEndpoint,
+  shouldSendBrandClick,
   decideEscape,
   embedShowsCover,
   parseEmbedOptions,
@@ -217,8 +218,11 @@ let brandClickSent = false;
 function sendBrandClick(kind) {
   if (brandClickSent) return;
   const endpoint = brandClickEndpoint(getCloudBaseUrl());
-  // why: instância sem nuvem própria não pode contar na nuvem de outra pessoa
-  if (!endpoint) return;
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  const win = typeof window !== "undefined" ? window : {};
+  const privacy = privacySignal({ dnt: nav.doNotTrack, windowDnt: win.doNotTrack, msDnt: nav.msDoNotTrack, gpc: nav.globalPrivacyControl });
+  // why: instância sem nuvem própria não pode contar na nuvem de outra pessoa; DNT/GPC também não conta
+  if (!shouldSendBrandClick({ endpoint, privacy })) return;
   brandClickSent = true;
   defaultSender(endpoint)(JSON.stringify({ v: 1, kind }), { beacon: true });
 }
@@ -229,7 +233,9 @@ function applyBrandBadge(route) {
   const badge = brandBadge(route?.kind, demo, shareServerBranding);
   credit.hidden = !badge.shown;
   if (!badge.shown) return;
-  credit.href = BRAND_BADGE_HREF;
+  credit.href = brandBadgeHref(getLocale());
+  credit.setAttribute("target", "_blank");
+  credit.setAttribute("rel", "noopener");
   if (!badge.measured) return;
   credit.addEventListener("click", () => sendBrandClick(badge.kind), { once: true });
 }

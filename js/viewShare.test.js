@@ -6,7 +6,9 @@ import { ASSET_PREFIX_RE } from "../scripts/asset-version.mjs";
 import {
   BRAND_BADGE_HREF,
   brandBadge,
+  brandBadgeHref,
   brandClickEndpoint,
+  shouldSendBrandClick,
   decideEscape,
   embedShowsCover,
   parseEmbedOptions,
@@ -134,11 +136,18 @@ test("selo Feito com GuiaFlow: visível no tour sem Pro, fora da contagem no cr�
 });
 
 test("selo Feito com GuiaFlow: destino com utm e contador no Cloud", () => {
-  assert.match(BRAND_BADGE_HREF, /^https:\/\/guiaflow\.pro\/\?utm_source=selo&utm_medium=tour&utm_campaign=feito-com$/);
+  assert.match(BRAND_BADGE_HREF, /^https:\/\/guiaflow\.pro\/\?utm_source=badge&utm_medium=viewer&utm_campaign=made-with$/);
+  assert.equal(brandBadgeHref("pt"), "https://guiaflow.pro/?utm_source=badge&utm_medium=viewer&utm_campaign=made-with&utm_content=pt");
+  assert.equal(brandBadgeHref("en"), "https://guiaflow.pro/?utm_source=badge&utm_medium=viewer&utm_campaign=made-with&utm_content=en");
+  assert.equal(brandBadgeHref("es"), "https://guiaflow.pro/?utm_source=badge&utm_medium=viewer&utm_campaign=made-with&utm_content=es");
+  assert.equal(brandBadgeHref("fr"), "https://guiaflow.pro/?utm_source=badge&utm_medium=viewer&utm_campaign=made-with&utm_content=pt");
   assert.equal(brandClickEndpoint("https://app.guiaflow.pro/"), "https://app.guiaflow.pro/api/brand-clicks");
   // why: instância sem nuvem não manda o clique para a nuvem de outra pessoa
   assert.equal(brandClickEndpoint(""), "");
   assert.equal(brandClickEndpoint(null), "");
+  assert.equal(shouldSendBrandClick({ endpoint: "https://app.guiaflow.pro/api/brand-clicks", privacy: false }), true);
+  assert.equal(shouldSendBrandClick({ endpoint: "https://app.guiaflow.pro/api/brand-clicks", privacy: true }), false);
+  assert.equal(shouldSendBrandClick({ endpoint: "", privacy: false }), false);
 });
 
 test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mantêm a marca", () => {  const permanent = renderViewPage({ id: "slug", name: "Tour fixo", origin: "https://guiaflow.pro", kind: "permanent" });
@@ -147,7 +156,7 @@ test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mant�
   assert.equal(permanent.includes("og:site_name"), false);
   assert.match(permanent, /id="view-credit"[^>]*hidden/);
   assert.match(permanent, /data-i18n="view\.credit">Feito com GuiaFlow</);
-  assert.match(permanent, /id="view-credit"[^>]*href="https:\/\/guiaflow\.pro\/\?utm_source=selo&amp;utm_medium=tour&amp;utm_campaign=feito-com"/);
+  assert.match(permanent, /id="view-credit"[^>]*href="https:\/\/guiaflow\.pro\/\?utm_source=badge&amp;utm_medium=viewer&amp;utm_campaign=made-with"/);
   const temporary = renderViewPage({ id: "tmp123", name: "Tour", origin: "https://guiaflow.pro", kind: "temporary" });
   assert.equal(temporary.includes("is-unbranded"), false);
   assert.match(temporary, /<title>Tour — GuiaFlow<\/title>/);
@@ -156,7 +165,32 @@ test("shell: /p nasce sem marca (sem piscar o logo); /v e link inexistente mant�
   const viewHtml = readFileSync(new URL("../view.html", import.meta.url), "utf8");
   assert.match(viewHtml, /\/\^\\\/p\\\/\/\.test\(location\.pathname\)\) document\.documentElement\.classList\.add\("is-unbranded"\)/);
   assert.match(viewHtml, /id="view-credit"[^>]*hidden/);
-  assert.match(viewHtml, /id="view-credit"[^>]*utm_source=selo/);
+  assert.match(viewHtml, /id="view-credit"[^>]*utm_source=badge/);
+  assert.equal(viewHtml.includes("symbol-simple.svg"), viewHtml.includes('class="logo-mark"'));
+  assert.match(viewHtml, /id="view-credit"[^>]*>\s*<span data-i18n="view\.credit">Feito com GuiaFlow<\/span>/);
+  // why: na apresentação no telemóvel a topbar some; o selo precisa ficar fora dela
+  assert.match(viewHtml, /<\/header>[\s\S]*id="view-credit"/);
+  assert.equal(/<header[\s\S]*id="view-credit"[\s\S]*<\/header>/.test(viewHtml), false);
+});
+
+test("selo no player grátis: logo escondido, texto no canto, i18n e clique medido só no grátis", () => {
+  const css = readFileSync(new URL("../css/player.css", import.meta.url), "utf8");
+  assert.match(css, /body\.view-share \.topbar \.logo,\s*html\.is-unbranded body\.view-share \.topbar \.logo \{\s*display: none;/);
+  assert.match(css, /\.view-credit \{[^}]*position: fixed/);
+  assert.match(css, /\.view-credit \{[^}]*bottom: max\(10px/);
+  assert.match(css, /html\.gf-gallery-open \.view-credit \{[^}]*top:/);
+  const i18n = readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
+  assert.match(i18n, /"view\.credit": "Feito com GuiaFlow"/);
+  assert.match(i18n, /"view\.credit": "Made with GuiaFlow"/);
+  assert.match(i18n, /"view\.credit": "Hecho con GuiaFlow"/);
+  const app = readFileSync(new URL("./viewApp.js", import.meta.url), "utf8");
+  assert.match(app, /credit\.href = brandBadgeHref\(getLocale\(\)\)/);
+  assert.match(app, /shouldSendBrandClick\(\{ endpoint, privacy \}\)/);
+  assert.match(app, /defaultSender\(endpoint\)\(JSON\.stringify\(\{ v: 1, kind \}\)/);
+  assert.equal(app.includes("BRAND_BADGE_HREF"), false);
+  assert.deepEqual(brandBadge("temporary", {}), { shown: true, kind: "temporary", measured: true });
+  assert.deepEqual(brandBadge("permanent", {}), { shown: false, kind: "permanent", measured: false });
+  assert.deepEqual(brandBadge("permanent", {}, "shown"), { shown: true, kind: "permanent", measured: true });
 });
 
 test("o endpoint do link permanente aponta para /api/shares", () => {
