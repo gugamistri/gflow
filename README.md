@@ -13,32 +13,35 @@ Try it at **[guiaflow.pro](https://guiaflow.pro/en)** · Editor: [guiaflow.pro/e
 
 ![Example tour](docs/tour.gif)
 
-GuiaFlow is an editor and player for click-through product tours built from screenshots, with highlights, simulated clicks, and narration. It ships with a Chrome extension to capture your product and a desktop app (Electron) with built-in capture.
+GuiaFlow is an editor and player for click-through product tours built from screenshots, with highlights, simulated clicks, and narration, plus a gallery mode for product photos. It ships with a Chrome extension to capture your product and a desktop app (Electron) with built-in capture. The free editor runs in the browser with no account, no card and no project limit.
 
 ## Features
 
 - **Screenshot-based interactive demos** — highlight (hotspot), simulated click, and step text on each screen
+- **Gallery mode** — full-screen product photos with sections, zoom, and thumbnails
 - **Chrome extension capture** — record your product flow in the browser and turn it into a tour
 - **Desktop app (Electron)** — built-in capture window, no extension needed
 - **Narration (BYOK)** — the free, open-source editor supports BYOK (bring your own AI key) for step text and voiceover: step text via OpenRouter, OpenAI, or any OpenAI-compatible endpoint (custom base URL), and voiceover via Cartesia. Keys are stored only in your browser (IndexedDB) and requests go straight from your browser to the provider
 - **Scenes, themes, and fonts** — group steps, pick a ready theme or customize it
 - **Start and end steps** — lead-capture intro step and closing CTAs (including WhatsApp)
-- **Export** — single-file navigable HTML, MP4 video, or a 7-day temporary preview link
+- **Export** — single-file navigable HTML, MP4 video (with the GuiaFlow mark on the free plan), or a 7-day temporary preview link (`/v/…`)
 - **Multilingual UI** — Portuguese, Spanish, and English
 - **Works offline / locally** — no account required; MIT licensed
 
 ## GuiaFlow Pro
 
-**GuiaFlow Pro** is the optional paid plan. The editor and player in this repo stay free and MIT forever.
+**GuiaFlow Pro** is the optional paid plan: US$ 7/month or US$ 69/year (R$ 36/mês or R$ 359/ano in Brazil), subscribed directly at [guiaflow.pro](https://guiaflow.pro/en#precos). The editor and player in this repo stay free and MIT forever.
 
-- **Permanent share links** for published tours
+- **Permanent share links** (`/p/…`) that never expire, with a cover image
+- **Embed** on websites and help centers
 - **Hosted AI text and TTS** — no API key needed in the browser
 - **Analytics** for published tours
 - **Lead capture**
-- **No watermark** on exported video
+- **No GuiaFlow mark** on the player and exported video
+- **Projects in your account** — synced to the cloud
 - **MCP server** at `https://app.guiaflow.pro/mcp` — AI agents create and publish interactive guided tours and product demos, for marketing agencies, implementation consultancies, and small software teams
 
-See [guiaflow.pro](https://guiaflow.pro/en) for plans and [`docs/CLOUD.md`](docs/CLOUD.md) for how the open editor talks to the hosted service.
+See [guiaflow.pro](https://guiaflow.pro/en#precos) for plans and [`docs/CLOUD.md`](docs/CLOUD.md) for how the open editor talks to the hosted service.
 
 ## Getting started in the browser
 
@@ -80,9 +83,9 @@ On desktop, use **Capturar** (Capture) in the editor: it opens a window with the
 ## Export
 
 - **Navigable HTML** — a single file with the tour
-- **MP4 video** — tour frames via WebCodecs; if the encoder is missing, falls back to `MediaRecorder` (may produce WebM)
-- **Temporary preview** — in the Share menu; publishes a short `/v/…` address just for viewing the tour, for 7 days (requires Blob on Vercel)
-- **Permanent link** — in the same menu, on the published app. With a session it shows "Connected as …" and publishes directly. Without a session, the confirmation email returns to guiaflow.pro. The cloud HTTP base lives only in `window.__GUIAFLOW_CLOUD__` (see [`docs/CLOUD.md`](docs/CLOUD.md)).
+- **MP4 video** — tour frames via WebCodecs; if the encoder is missing, falls back to `MediaRecorder` (may produce WebM). The free plan's export carries the GuiaFlow mark; Pro exports without it
+- **Temporary preview** — in the Share menu; publishes a short `/v/…` address just for viewing the tour, for 7 days on every plan (requires Blob on Vercel)
+- **Permanent link** (`/p/…`) — Pro only, in the same menu; never expires, with a cover image. With a session it shows "Connected as …" and publishes directly. Without a session, the confirmation email returns to guiaflow.pro. The cloud HTTP base lives only in `window.__GUIAFLOW_CLOUD__` (see [`docs/CLOUD.md`](docs/CLOUD.md)).
 
 ## Tests
 
@@ -99,6 +102,7 @@ The editor and player in this repository remain MIT and free. AI and narration w
 - Website: [https://guiaflow.pro/en](https://guiaflow.pro/en)
 - Integrations (MCP, API, embeds): [https://guiaflow.pro/en/integrations](https://guiaflow.pro/en/integrations)
 - MCP server: `https://app.guiaflow.pro/mcp` · [mcptry](https://mcptry.com/servers/pro.guiaflow/guiaflow) · [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=guiaflow) · [Glama](https://glama.ai/mcp/connectors/pro.guiaflow/guiaflow)
+- Help: [https://guiaflow.pro/en/help](https://guiaflow.pro/en/help)
 - Chrome extension: [Chrome Web Store](https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd)
 
 ## License
