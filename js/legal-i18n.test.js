@@ -122,9 +122,9 @@ test("privacidade cita YouTube e Vimeo como terceiros que carregam ao abrir o pa
 
 test("privacidade explica a medição GTM: UTM 90 dias, DNT/GPC, primeira origem na conta, contagens sem dados pessoais", () => {
   const checks = {
-    pt: [/90 dias/, /Não rastrear/, /GPC/, /uma única vez/, /sem dados pessoais/, /utm_source/],
-    en: [/90 days/, /Do Not Track/, /GPC/, /recorded once/, /no personal data/, /utm_source/],
-    es: [/90 días/, /No rastrear/, /GPC/, /una sola vez/, /sin datos personales/, /utm_source/],
+    pt: [/90 dias/, /Não rastrear/, /GPC/, /uma única vez/, /sem dados pessoais/, /utm_source/, /página inicial/, /editor foi aberto/],
+    en: [/90 days/, /Do Not Track/, /GPC/, /recorded once/, /no personal data/, /utm_source/, /landing-page visits/, /editor openings/],
+    es: [/90 días/, /No rastrear/, /GPC/, /una sola vez/, /sin datos personales/, /utm_source/, /página de inicio/, /se abrió el editor/],
   };
   for (const [loc, res] of Object.entries(checks)) {
     const text = ["privacy.gtm.li1", "privacy.gtm.li2", "privacy.gtm.li3"].map((k) => legalCatalogs[loc][k]).join(" ");

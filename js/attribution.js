@@ -1,7 +1,7 @@
 /**
  * Medição de aquisição (plano GTM), primeiro-partido e sem PII.
  * - captureAttribution: guarda utm_source/medium/campaign/content da URL em localStorage (90 dias).
- * - sendProductEvent: conta demo_created / demo_shared na nossa API (sem id de projeto nem slug).
+ * - sendProductEvent: conta landing_view, editor_started, demo_created e demo_shared na nossa API (sem id de projeto nem slug).
  * - syncAccountAttribution: grava a primeira origem na conta logada (uma vez por e-mail neste navegador).
  * why: LGPD. Nada de terceiros nem cookie; com "Não rastrear" (DNT) ou GPC, nada é guardado nem enviado.
  */
@@ -14,12 +14,24 @@ export const ATTRIBUTION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 export const PRODUCT_EVENTS_PATH = "/api/product-events";
 export const ACCOUNT_ATTRIBUTION_PATH = "/account/attribution";
 export const UTM_KEYS = Object.freeze(["utm_source", "utm_medium", "utm_campaign", "utm_content"]);
+/** Eventos que o navegador pode enviar. landing_view e editor_started: uma vez por sessão. */
+export const CLIENT_PRODUCT_EVENTS = Object.freeze(["landing_view", "editor_started", "demo_created", "demo_shared"]);
+export const SESSION_EVENTS_KEY = "gf-pe-session-v1";
 const MAX_CREATED_IDS = 300;
 
 function safeStorage(storage) {
   if (storage) return storage;
   try {
     return typeof localStorage !== "undefined" ? localStorage : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeSessionStorage(storage) {
+  if (storage) return storage;
+  try {
+    return typeof sessionStorage !== "undefined" ? sessionStorage : null;
   } catch {
     return null;
   }
@@ -135,14 +147,58 @@ export function markCreatedOnce(id, { storage } = {}) {
 }
 
 /**
- * Envia um evento do editor. Nunca lança; sem Cloud ou com DNT/GPC não faz nada.
- * @param {"demo_created"|"demo_shared"} event
+ * POST do navegador para a API de medição (landing ou editor). Nunca lança.
+ * @param {string} path
+ * @param {RequestInit} opts
+ * @param {{ fetchImpl?: typeof fetch, cloudBase?: string }} [extra]
+ */
+export function landingFetchCloud(path, opts = {}, { fetchImpl, cloudBase } = {}) {
+  const base = String(
+    cloudBase ?? (typeof window !== "undefined" ? window.__GUIAFLOW_CLOUD__ : "") ?? "",
+  ).trim().replace(/\/+$/, "");
+  if (!base) return Promise.resolve(null);
+  const fetchFn = typeof fetchImpl === "function" ? fetchImpl : typeof fetch === "function" ? fetch : null;
+  if (!fetchFn) return Promise.resolve(null);
+  return fetchFn(`${base}${path}`, {
+    method: opts.method || "GET",
+    headers: { "content-type": "application/json", accept: "application/json", ...(opts.headers || {}) },
+    body: opts.body,
+    keepalive: opts.keepalive,
+    credentials: "omit",
+  });
+}
+
+/** true na primeira vez que este evento aparece nesta sessão do navegador (sessionStorage). */
+export function markSessionEventOnce(event, { session } = {}) {
+  const store = safeSessionStorage(session);
+  if (!store || !event) return false;
+  let ids = [];
+  try {
+    ids = JSON.parse(store.getItem(SESSION_EVENTS_KEY) || "[]");
+    if (!Array.isArray(ids)) ids = [];
+  } catch {
+    ids = [];
+  }
+  const key = String(event);
+  if (ids.includes(key)) return false;
+  ids.push(key);
+  try {
+    store.setItem(SESSION_EVENTS_KEY, JSON.stringify(ids));
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Envia um evento da landing ou do editor. Nunca lança; sem Cloud ou com DNT/GPC não faz nada.
+ * @param {"landing_view"|"editor_started"|"demo_created"|"demo_shared"} event
  * @param {{ mode?: string, vertical?: string }} props
  * @param {{ fetchCloud: Function, storage?: Storage, privacy?: boolean }} deps fetchCloud = cloudFetch
  */
 export async function sendProductEvent(event, props = {}, { fetchCloud, storage, privacy = browserPrivacySignal() } = {}) {
   if (privacy || typeof fetchCloud !== "function") return false;
-  if (event !== "demo_created" && event !== "demo_shared") return false;
+  if (!CLIENT_PRODUCT_EVENTS.includes(event)) return false;
   const body = { event };
   if (props.mode) body.mode = props.mode;
   if (props.vertical) body.vertical = props.vertical;
@@ -163,6 +219,25 @@ export function noteDemoSaved(project, deps = {}) {
   if (!markCreatedOnce(project.id, deps)) return false;
   void sendProductEvent("demo_created", { mode: projectMode(project) }, deps);
   return true;
+}
+
+function noteOncePerSession(event, deps = {}) {
+  if (!CLIENT_PRODUCT_EVENTS.includes(event)) return false;
+  if (deps.privacy ?? browserPrivacySignal()) return false;
+  if (!markSessionEventOnce(event, deps)) return false;
+  const fetchCloud = typeof deps.fetchCloud === "function" ? deps.fetchCloud : (path, opts) => landingFetchCloud(path, opts, deps);
+  void sendProductEvent(event, {}, { ...deps, fetchCloud });
+  return true;
+}
+
+/** Visita à landing (pt/en/es), uma vez por sessão do navegador. */
+export function noteLandingView(deps = {}) {
+  return noteOncePerSession("landing_view", deps);
+}
+
+/** Carregamento do editor, uma vez por sessão; distinto de demo_created. */
+export function noteEditorStarted(deps = {}) {
+  return noteOncePerSession("editor_started", deps);
 }
 
 /**
