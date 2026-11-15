@@ -1,4 +1,21 @@
+# GuiaFlow robots.txt
+# Search and AI assistants are welcome to read public pages.
+
 User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /electron/
+Disallow: /extension/
+Disallow: /view
+
+# Explicit permission for search and AI crawlers (same rules as above)
+User-agent: OAI-SearchBot
+User-agent: GPTBot
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Bingbot
+User-agent: ClaudeBot
 Allow: /
 Disallow: /api/
 Disallow: /auth/

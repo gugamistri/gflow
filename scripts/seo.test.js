@@ -21,13 +21,36 @@ test("robots permite o site, bloqueia rotas internas e aponta o sitemap", () => 
   assert.equal(/nuvem/i.test(text), false);
 });
 
+test("robots libera explicitamente os crawlers de busca e de IA, com os mesmos Disallow", () => {
+  const text = read("robots.txt");
+  for (const agent of [
+    "OAI-SearchBot",
+    "GPTBot",
+    "PerplexityBot",
+    "Google-Extended",
+    "Bingbot",
+    "ClaudeBot",
+  ]) {
+    assert.match(text, new RegExp(`^User-agent: ${agent}$`, "m"));
+  }
+  // why: um grupo nomeado ignora o grupo *; os Disallow precisam se repetir
+  const namedGroup = text.split(/User-agent: OAI-SearchBot/)[1];
+  assert.match(namedGroup, /^User-agent: GPTBot$/m);
+  assert.match(namedGroup, /^Allow: \/$/m);
+  assert.match(namedGroup, /^Disallow: \/api\/$/m);
+  assert.match(namedGroup, /^Disallow: \/auth\/$/m);
+  assert.match(namedGroup, /^Disallow: \/electron\/$/m);
+  assert.match(namedGroup, /^Disallow: \/extension\/$/m);
+  assert.match(namedGroup, /^Disallow: \/view$/m);
+});
+
 test("sitemap lista só as páginas públicas estáticas", () => {
   const text = read("sitemap.xml");
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/ajuda<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/privacidade<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/termos<\/loc>/);
-  assert.match(text, /<loc>https:\/\/guiaflow\.pro\/cortesia<\/loc>/);
+  assert.equal(text.includes("/cortesia"), false);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/integracoes\/leadpronto<\/loc>/);
   assert.match(text, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   assert.equal(text.includes(".html"), false);
@@ -64,6 +87,26 @@ test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {
     assert.notEqual(rule.source, "/robots.txt");
     assert.notEqual(rule.source, "/sitemap.xml");
     assert.equal(rule.source === "/:path*" || rule.source === "/(.*)", false);
+  }
+});
+
+test("/cortesia redireciona em 301 para a seção de preços da landing", () => {
+  const config = JSON.parse(read("vercel.json"));
+  const rule = (config.redirects || []).find((entry) => entry.source === "/cortesia");
+  assert.equal(rule?.destination, "/#precos");
+  assert.equal(rule?.permanent, true);
+});
+
+test("README, docs e LICENSE servidos no site levam X-Robots-Tag noindex", () => {
+  const config = JSON.parse(read("vercel.json"));
+  const headers = config.headers || [];
+  for (const source of ["/README.md", "/README.pt-BR.md", "/LICENSE", "/docs/(.*)"]) {
+    const entry = headers.find((item) => item.source === source);
+    assert.equal(
+      entry?.headers?.find((item) => item.key === "X-Robots-Tag")?.value,
+      "noindex",
+      source
+    );
   }
 });
 
@@ -154,6 +197,19 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(llms, /open source \(MIT\)/);
   assert.match(llms, /no account/);
   assert.match(llms, /Pro plan/);
+  assert.match(llms, /GuiaFlow \(guiaflow\.pro\) is not Guideflow \(guideflow\.com\)\./);
+  assert.match(llms, /https:\/\/guiaflow\.pro\/exemplos\/guia/);
+  assert.match(llms, /https:\/\/guiaflow\.pro\/exemplos\/galeria/);
+  const opening = llms.split("## ")[0];
+  assert.equal(/real estate|imobili|cons[oó]rcio/i.test(opening), false);
+  // "Client ID Metadata" no bloco Connect é credencial OAuth, não o recurso Clientes
+  assert.equal(/\bClientes\b/.test(llms), false);
+  assert.equal(/"Clients" area|Clients area to organize/i.test(llms), false);
+  assert.match(llms, /temporary links \(\/v\/\.\.\.\) that last 7 days/);
+  assert.match(llms, /permanent links \(\/p\/\.\.\.\) with cover image that never expire/);
+  assert.match(llms, /the video and the player carry the GuiaFlow mark/);
+  assert.match(llms, /no blurring of sensitive data, no branching/);
+  assert.equal(/smithery/i.test(llms), false);
 });
 
 test("/.well-known/integrations.json declara o MCP e a API do plano Pro", () => {
