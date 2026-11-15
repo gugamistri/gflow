@@ -415,7 +415,7 @@ export function renderLocale(srcHtml, page, loc, read = defaultRead) {
   html = withAlternates(html, page, loc);
   if (loc === "en" || loc === "es") {
     html = html.replace(
-      /(href=")(https:\/\/guiaflow\.pro\/p\/[A-Za-z0-9][A-Za-z0-9_-]*)(?:\?[^"]*)?(" data-gallery-example)/g,
+      /(href=")(\/exemplos\/[A-Za-z0-9][A-Za-z0-9_-]*)(?:\?[^"]*)?(")/g,
       `$1$2?lang=${loc}$3`
     );
   }

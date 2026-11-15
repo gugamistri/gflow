@@ -96,6 +96,18 @@
       "destination": "/auth/callback.html"
     },
     {
+      "source": "/exemplos/:id",
+      "destination": "/view"
+    },
+    {
+      "source": "/en/exemplos/:id",
+      "destination": "/view"
+    },
+    {
+      "source": "/es/exemplos/:id",
+      "destination": "/view"
+    },
+    {
       "source": "/v/:id",
       "destination": "/api/v/:id"
     },
