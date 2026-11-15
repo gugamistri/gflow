@@ -119,6 +119,7 @@ export const PAGES = [
  */
 export const EXTRA_PAGES = [
   { path: "/integracoes/leadpronto", lastmod: "2026-10-26" },
+  { path: "/alternativa-getdemo", lastmod: "2026-11-15" },
 ];
 
 /** Caminho público (forma canônica: sem barra final; a raiz PT é "/"). */
@@ -359,6 +360,8 @@ function withLandingJsonLd(html, page, loc) {
 /** Página PT → variante en/es. */
 export function renderLocale(srcHtml, page, loc, read = defaultRead) {
   let html = srcHtml;
+  // why: blocos data-pt-only (ex.: Comparações no rodapé da home) existem só na página PT
+  html = html.replace(/\s*<nav\b[^>]*\bdata-pt-only\b[^>]*>[\s\S]*?<\/nav>/g, "");
   if (page.docSrc) {
     // why: um idioma por URL (um H1 por página) — o texto en/es fica em locale-src/, fora do deploy
     const open = html.match(/<div class="api-doc" data-doc-locale="pt">/);
