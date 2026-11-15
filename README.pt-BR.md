@@ -2,7 +2,7 @@
 
 [English](README.md) | **Português**
 
-[![smithery badge](https://img.shields.io/badge/Smithery-guiaflow-FF5601)](https://smithery.ai/servers/gmistrinelli/guiaflow)
+[![mcptry](https://img.shields.io/badge/mcptry-guiaflow-4F46E5)](https://mcptry.com/servers/pro.guiaflow/guiaflow)
 
 **Transforme telas e fotos em apresentações que seus clientes podem explorar: guias interativos e galerias de fotos. Gratuito e open source — alternativa ao Arcade, Supademo e Storylane.**
 
@@ -20,7 +20,7 @@ A interface está em português, espanhol e inglês. O idioma segue o do navegad
 
 ## GuiaFlow Pro
 
-**GuiaFlow Pro** é o plano pago opcional: links permanentes, texto e narração (TTS) com IA hospedada, analytics, captura de leads, vídeo sem marca d'água e servidor MCP em `https://app.guiaflow.pro/mcp`. Planos em [guiaflow.pro](https://guiaflow.pro).
+**GuiaFlow Pro** é o plano pago opcional: links permanentes, texto e narração (TTS) com IA hospedada, analytics, captura de leads, vídeo sem marca d'água e servidor MCP em `https://app.guiaflow.pro/mcp` — agentes de IA criam e publicam tours guiados interativos e demos de produto, para agências de marketing, consultorias de implementação e times de software pequeno. Planos em [guiaflow.pro](https://guiaflow.pro). Listagens: [mcptry](https://mcptry.com/servers/pro.guiaflow/guiaflow), [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=guiaflow), [Glama](https://glama.ai/mcp/connectors/pro.guiaflow/guiaflow).
 
 ## Começar no navegador
 

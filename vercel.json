@@ -190,6 +190,15 @@
       ]
     },
     {
+      "source": "/.well-known/mcp-registry-auth",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
+      ]
+    },
+    {
       "source": "/sitemap.xml",
       "headers": [
         {
