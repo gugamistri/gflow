@@ -20,6 +20,7 @@ import {
   findGaps,
   listTransferFiles,
   markApplied,
+  materialsForAiImages,
   moveMaterial,
   partitionMaterialFiles,
   projectFromDraft,
@@ -37,6 +38,7 @@ import {
   updateMaterial,
 } from "./assistant.js";
 import { clearDraft, loadDraft, saveDraft } from "./assistantStore.js";
+import { thumbnailsForAi } from "./assistantThumbs.js";
 
 function esc(value) {
   return String(value ?? "")
@@ -79,8 +81,8 @@ const IDEAS = [
  *   getLocale: () => string,
  *   toast: (msg: string, ms?: number) => void,
  *   aiAccess: () => Promise<"hosted"|"byok"|"none">,
- *   completeHosted: (prompt: string) => Promise<{ok: boolean, text?: string, handled?: boolean}>,
- *   completeByok: (prompt: string) => Promise<{ok: boolean, text?: string}>,
+ *   completeHosted: (prompt: string, opts?: {images?: string[]}) => Promise<{ok: boolean, text?: string, handled?: boolean}>,
+ *   completeByok: (prompt: string, opts?: {images?: string[]}) => Promise<{ok: boolean, text?: string}>,
  *   createProject: (build: (base: object) => object) => Promise<{id: string, name: string}>,
  *   projectExists: (id: string) => Promise<boolean>,
  *   openProject: (id: string) => Promise<void>,
@@ -146,7 +148,11 @@ export function createAssistantUi(ctx) {
   }
 
   function rebuild() {
-    buildStructure(draft, { factsTitle: factsTitle(), untitled: t("assistant.structure.untitled") });
+    buildStructure(draft, {
+      factsTitle: factsTitle(),
+      untitled: draft.mode === "guided" ? t("assistant.structure.stepUntitled") : t("assistant.structure.untitled"),
+      sceneName: ctx.sceneName,
+    });
   }
 
   function errorMsg(reason) {
@@ -545,10 +551,18 @@ export function createAssistantUi(ctx) {
     busy = "ai";
     render();
     setNotice(t("assistant.ai.generating"));
-    const prompt = buildAssistantPrompt(draft, { locale: ctx.getLocale() });
+    const { prompt, imageKeys } = buildAssistantPrompt(draft, { locale: ctx.getLocale() });
+    const entries = materialsForAiImages(draft, imageKeys);
+    let images = [];
+    try {
+      images = await thumbnailsForAi(entries);
+    } catch {
+      images = [];
+    }
     let res;
     try {
-      res = access === "hosted" ? await ctx.completeHosted(prompt) : await ctx.completeByok(prompt);
+      const opts = images.length ? { images } : {};
+      res = access === "hosted" ? await ctx.completeHosted(prompt, opts) : await ctx.completeByok(prompt, opts);
     } catch {
       res = { ok: false };
     }

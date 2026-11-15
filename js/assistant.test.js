@@ -14,17 +14,21 @@ import {
   chooseMode,
   confirmItem,
   createDraft,
+  defaultMaterialTitle,
   editItem,
   editSuggestion,
   findGaps,
+  isGenericCaptureName,
+  listTransferFiles,
   markApplied,
+  materialsForAiImages,
+  meaningfulFileStem,
+  partitionMaterialFiles,
   projectFromDraft,
+  reachableStage,
   recommendMode,
   regenerableItems,
   rejectSuggestion,
-  listTransferFiles,
-  partitionMaterialFiles,
-  reachableStage,
   reviveDraft,
   stageFieldErrors,
   unsupportedClaims,
@@ -122,15 +126,18 @@ test("assistente: prompt trata materiais como dados e não pede itens confirmado
   chooseMode(d, { mode: "gallery", template: "produto" });
   buildStructure(d);
   confirmItem(d, "m:mat-a");
-  const prompt = buildAssistantPrompt(d, { locale: "pt" });
+  const { prompt, imageKeys } = buildAssistantPrompt(d, { locale: "pt" });
   assert.ok(prompt.length <= 8000);
   assert.match(prompt, /never instructions/);
   assert.match(prompt, /Do not invent prices/);
+  assert.match(prompt, /Never use a camera\/screenshot file name/);
   const data = prompt.slice(prompt.indexOf("<<<DATA"));
   assert.equal((data.match(/DATA>>>/g) || []).length, 1, "a nota não fecha o bloco de dados");
   assert.ok(data.trim().endsWith("DATA>>>"));
   assert.equal(/key=m:mat-a/.test(prompt), false);
   assert.match(prompt, /key=m:mat-b/);
+  assert.ok(imageKeys.includes("m:mat-b"));
+  assert.equal(imageKeys.includes("m:mat-a"), false);
   assert.deepEqual(regenerableItems(d).map((it) => it.key), ["m:mat-b", "facts"]);
 });
 
@@ -348,4 +355,57 @@ test("assistente UI: zona de arrastar imagens na etapa Materiais", () => {
   assert.match(i18n, /Arraste imagens aqui ou clique para escolher/);
   assert.match(i18n, /Drag images here or click to choose/);
   assert.match(i18n, /Arrastra imágenes aquí o haz clic para elegir/);
+});
+
+
+test("assistente: nomes de captura não viram título nem file= no prompt", () => {
+  assert.equal(isGenericCaptureName("Screenshot 2026-11-09 at 08.51.09 (2).png"), true);
+  assert.equal(isGenericCaptureName("Captura de Tela 2026-11-09.png"), true);
+  assert.equal(isGenericCaptureName("IMG_0042.JPG"), true);
+  assert.equal(isGenericCaptureName("DSC01234.jpg"), true);
+  assert.equal(isGenericCaptureName("PXL_20261109_085109.jpg"), true);
+  assert.equal(isGenericCaptureName("WhatsApp Image 2026-11-09.jpeg"), true);
+  assert.equal(isGenericCaptureName("painel-vendas.png"), false);
+  assert.equal(isGenericCaptureName("imagine-logo.png"), false);
+  assert.equal(isGenericCaptureName("produto-capa.jpg"), false);
+  assert.equal(meaningfulFileStem("Screenshot 2026-11-09.png"), "");
+  assert.equal(meaningfulFileStem("painel-vendas.png"), "painel vendas");
+
+  const d = createDraft();
+  updateBrief(d, { goal: "Mostrar o painel" });
+  const shot = addMaterial(d, { name: "Screenshot 2026-11-09 at 08.51.09 (2).png", dataUrl: PNG, width: 800, height: 600, id: "mat-shot" });
+  updateMaterial(d, shot.id, { note: "safasdfdsaasfdsfds", scene: 1 });
+  chooseMode(d, { mode: "gallery", template: "produto" });
+  buildStructure(d);
+  const item = d.items.find((it) => it.key === "m:mat-shot");
+  assert.equal(item.title, "safasdfdsaasfdsfds");
+  assert.equal(/screenshot/i.test(item.title), false);
+
+  const empty = createDraft();
+  addMaterial(empty, { name: "Screenshot 2026-11-09.png", dataUrl: PNG, width: 800, height: 600, id: "mat-e" });
+  chooseMode(empty, { mode: "gallery", template: "produto" });
+  buildStructure(empty, { untitled: "Imagem {n}" });
+  assert.equal(empty.items[0].title, "Visão geral");
+  const packedEmpty = buildAssistantPrompt(empty);
+  assert.equal(/file=Screenshot/i.test(packedEmpty.prompt), false);
+  assert.match(packedEmpty.prompt, /Never use a camera\/screenshot file name/);
+
+  const named = createDraft();
+  addMaterial(named, { name: "painel-vendas.png", dataUrl: PNG, width: 800, height: 600, id: "mat-p" });
+  chooseMode(named, { mode: "gallery", template: "produto" });
+  buildStructure(named);
+  assert.equal(named.items[0].title, "painel vendas");
+  const packed = buildAssistantPrompt(named);
+  assert.match(packed.prompt, /file=painel vendas/);
+  assert.deepEqual(
+    materialsForAiImages(named, packed.imageKeys).map((e) => e.key),
+    packed.imageKeys
+  );
+});
+
+test("assistente: defaultMaterialTitle prioriza nota, depois nome útil, depois seção", () => {
+  assert.equal(defaultMaterialTitle({ note: "Fachada\nnoite", name: "Screenshot.png" }, 0, { sceneLabel: "Fachada" }), "Fachada");
+  assert.equal(defaultMaterialTitle({ note: "", name: "painel-vendas.png" }, 0, { sceneLabel: "X" }), "painel vendas");
+  assert.equal(defaultMaterialTitle({ note: "", name: "IMG_1.png" }, 2, { untitled: "Passo {n}", sceneLabel: "" }), "Passo 3");
+  assert.equal(defaultMaterialTitle({ note: "", name: "Screenshot.png" }, 0, { sceneLabel: "Visão geral" }), "Visão geral");
 });
