@@ -55,16 +55,16 @@
   <link rel="stylesheet" href="/a/207/css/ajuda.css" />
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
   <style>
-    .page { max-width: 880px; }
+    .page { max-width: 880px; min-width: 0; width: 100%; overflow-wrap: anywhere; }
     .page .crumbs { margin: 0 0 10px; color: var(--ns-muted); font-size: 0.85rem; }
     .page .crumbs a { color: inherit; }
     .page .lead { margin-bottom: 10px; }
     .page .note { color: var(--ns-muted); font-size: 0.88rem; }
     .page .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 4px; }
     .page .cta-row .btn { white-space: normal; text-align: center; }
-    .page .table-wrap { overflow-x: auto; margin: 8px 0 0; }
+    .page .table-wrap { overflow-x: auto; margin: 8px 0 0; min-width: 0; max-width: 100%; -webkit-overflow-scrolling: touch; }
     .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
-    .page th, .page td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--ns-border); }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--ns-border); overflow-wrap: anywhere; }
     .page thead th { color: var(--ns-muted); font-weight: 600; }
     .page tbody th { font-weight: 600; width: 18%; }
     .page .example-frame {
@@ -81,6 +81,31 @@
     .page .example-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
     .page .sources { font-size: 0.88rem; }
     .page .sources li { overflow-wrap: anywhere; }
+    @media (max-width: 640px) {
+      .page .table-wrap { overflow-x: visible; }
+      .page table, .page tbody, .page tr, .page th, .page td { display: block; width: 100%; }
+      .page thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .page tbody tr {
+        margin: 0;
+        padding: 10px 0 12px;
+        border-bottom: 1px solid var(--ns-border);
+      }
+      .page tbody tr:last-child { border-bottom: 0; padding-bottom: 0; }
+      .page tbody th, .page tbody td { border-top: 0; padding: 3px 0; width: auto; }
+      .page tbody th { padding-top: 0; }
+      .page td:nth-child(2)::before { content: "GuiaFlow: "; font-weight: 600; }
+      .page td:nth-child(3)::before { content: "Getdemo: "; font-weight: 600; }
+    }
   </style>
   <script type="application/ld+json">
 {

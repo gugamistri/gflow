@@ -86,6 +86,21 @@ test("promo Black November está marcada para remoção depois de 30/11/2026", (
   assert.match(start[2], /linkedin\.com\/posts\/getdemo_blacknovember/);
 });
 
+test("/alternativa-getdemo cabe na largura do mobile (CSS da página)", () => {
+  const html = read("alternativa-getdemo.html");
+  const match = html.match(/<style>([\s\S]*?)<\/style>/);
+  assert.ok(match, "sem style da página");
+  const style = match[1];
+  assert.match(style, /\.page\s*\{[^}]*min-width:\s*0/);
+  assert.match(style, /\.page\s*\{[^}]*width:\s*100%/);
+  assert.match(style, /\.page\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  assert.match(style, /\.page\s+\.table-wrap\s*\{[^}]*overflow-x:\s*auto/);
+  assert.match(style, /\.page\s+\.table-wrap\s*\{[^}]*min-width:\s*0/);
+  assert.match(style, /@media \(max-width:\s*640px\)/);
+  assert.match(style, /\.page table, \.page tbody, \.page tr, \.page th, \.page td \{ display: block;/);
+  assert.equal((html.match(/<!-- promo-black-november:start -->/g) || []).length, 2);
+});
+
 test("rodapé PT da home aponta para /alternativa-getdemo no bloco Comparações", () => {
   const html = read("index.html");
   assert.match(html, /<nav aria-label="Comparações"[^>]*>/);
