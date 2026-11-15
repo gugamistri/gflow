@@ -9,10 +9,14 @@ import {
   getAttribution,
   isCreatedDemo,
   markCreatedOnce,
+  markSessionEventOnce,
   noteDemoSaved,
+  noteEditorStarted,
+  noteLandingView,
   projectMode,
   readUtm,
   sendProductEvent,
+  SESSION_EVENTS_KEY,
   syncAccountAttribution,
 } from "./attribution.js";
 
@@ -89,15 +93,38 @@ test("noteDemoSaved: envia demo_created uma vez, com modo e UTM, sem id do proje
   assert.ok(!JSON.stringify(fetchCloud.calls[0].body).includes("proj-123"));
 });
 
-test("sendProductEvent: só eventos do editor; DNT/GPC não envia", async () => {
+test("sendProductEvent: só eventos do cliente; DNT/GPC não envia", async () => {
   const storage = memoryStorage();
   const fetchCloud = fakeCloud();
   assert.equal(await sendProductEvent("demo_shared", { mode: "guia" }, { fetchCloud, storage, privacy: false }), true);
   assert.deepEqual(fetchCloud.calls[0].body, { event: "demo_shared", mode: "guia" });
+  assert.equal(await sendProductEvent("landing_view", {}, { fetchCloud, storage, privacy: false }), true);
+  assert.equal(await sendProductEvent("editor_started", {}, { fetchCloud, storage, privacy: false }), true);
   assert.equal(await sendProductEvent("upgrade_completed", {}, { fetchCloud, storage, privacy: false }), false);
   assert.equal(await sendProductEvent("demo_shared", {}, { fetchCloud, storage, privacy: true }), false);
-  assert.equal(fetchCloud.calls.length, 1);
+  assert.equal(fetchCloud.calls.length, 3);
   assert.equal(await sendProductEvent("demo_shared", {}, { fetchCloud: async () => { throw new Error("x"); }, storage, privacy: false }), false);
+});
+
+test("landing_view e editor_started: uma vez por sessão, distintos, nada com DNT/GPC", async () => {
+  const storage = memoryStorage();
+  const session = memoryStorage();
+  const fetchCloud = fakeCloud();
+  captureAttribution({ search: "?utm_source=badge&utm_medium=viewer", storage, now: Date.now(), privacy: false });
+  assert.equal(noteLandingView({ fetchCloud, storage, session, privacy: false }), true);
+  assert.equal(noteLandingView({ fetchCloud, storage, session, privacy: false }), false);
+  assert.equal(noteEditorStarted({ fetchCloud, storage, session, privacy: false }), true);
+  assert.equal(noteEditorStarted({ fetchCloud, storage, session, privacy: false }), false);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(fetchCloud.calls.length, 2);
+  assert.deepEqual(fetchCloud.calls[0].body, { event: "landing_view", utm: { utm_source: "badge", utm_medium: "viewer" } });
+  assert.deepEqual(fetchCloud.calls[1].body, { event: "editor_started", utm: { utm_source: "badge", utm_medium: "viewer" } });
+  assert.ok(!JSON.stringify(fetchCloud.calls).includes("session"));
+  const blocked = memoryStorage();
+  assert.equal(noteLandingView({ fetchCloud, storage, session: blocked, privacy: true }), false);
+  assert.equal(blocked.map.size, 0);
+  assert.equal(session.getItem(SESSION_EVENTS_KEY).includes("landing_view"), true);
+  assert.equal(markSessionEventOnce("landing_view", { session }), false);
 });
 
 test("syncAccountAttribution: manda a origem uma vez por conta, sem guardar o e-mail", async () => {
