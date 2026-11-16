@@ -13,6 +13,7 @@ import { createViewTracker, ctaFromAction, defaultSender, deviceKind, leadAttrib
 import { consumeEntryToken, entryResult, markNoticeSeen, noticeAlreadySeen, privacyNoticeUrl } from "./identifiedEntry.js";
 import { resolveShareMedia } from "./shareMedia.js";
 import { packagedExampleUrl } from "./exampleTours.js";
+import { createPlayerPosthog } from "./posthogPlayer.js";
 import {
   brandBadge,
   brandBadgeHref,
@@ -110,6 +111,11 @@ async function loadPermanent(slug) {
   }
   shareFeatures = parsed.features;
   shareServerBranding = parsed.branding;
+  // funil PostHog: ids opacos do link (slug) e da conta dona; nunca dados de pessoa
+  shareAnalytics = {
+    tourId: typeof data?.analytics?.tourId === "string" ? data.analytics.tourId : slug,
+    workspaceId: typeof data?.analytics?.workspaceId === "string" ? data.analytics.workspaceId : null,
+  };
   sharePublicTitle = parsed.title || "";
   // why: /p v2 — áudio dos idiomas-alvo por referência; o navegador só baixa o que tocar
   return resolveShareMedia(parsed.tour, endpoint);
@@ -222,6 +228,10 @@ let shareServerBranding = null;
 /** Título do link permanente no Cloud (pode diferir do nome do projeto). */
 let sharePublicTitle = "";
 let shareSlug = "";
+/** Ids do funil PostHog do link permanente ({ tourId, workspaceId }). */
+let shareAnalytics = null;
+/** PostHog do player (null sem config, com DNT/GPC ou no ?preview=1). */
+let posthog = null;
 // why: o shell do /p já vem com ou sem a classe conforme o plano do dono (meta do Cloud)
 let branding = document.documentElement.classList.contains("is-unbranded") ? "none" : "full";
 
@@ -478,6 +488,28 @@ function startTracking(route) {
   return t;
 }
 
+/** PostHog do funil: só /p (e embed), com a config que o shell da Vercel injeta. */
+function startPosthog(route) {
+  if (route?.kind !== "permanent" || !shareSlug) return null;
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  let storage = null;
+  try {
+    storage = window.sessionStorage;
+  } catch {
+    storage = null;
+  }
+  return createPlayerPosthog({
+    config: bootMeta()?.posthog,
+    storage,
+    privacy: { dnt: nav.doNotTrack, windowDnt: window.doNotTrack, msDnt: nav.msDoNotTrack, gpc: nav.globalPrivacyControl },
+    search: location.search,
+    currentUrl: `${location.origin}${location.pathname}`,
+    embed: isEmbed,
+    referrer: document.referrer,
+    ancestorOrigins: location.ancestorOrigins,
+  });
+}
+
 /** Valida o `?lp=` na Cloud e prende a sessão do analytics à pessoa. Falha = tour normal. */
 async function resolveEntry(route) {
   if (!entryToken || route?.kind !== "permanent" || !shareSlug) return null;
@@ -538,8 +570,22 @@ function showStartStep(next) {
     phoneCountry: leadPhoneCountry(),
     onSubmit: async (value) => {
       // RF30: o servidor grava o consentimento no idioma que o visitante viu
-      const res = await postShare("leads", leadBody(value));
+      // funil: gf_lead_ref novo a cada envio; gf_session_id só quando o PostHog está ligado
+      const gfLeadRef = uuidV4();
+      const res = await postShare("leads", {
+        ...leadBody(value),
+        gf_lead_ref: gfLeadRef,
+        ...(posthog ? { gf_session_id: posthog.sessionId } : {}),
+      });
       if (res.ok) {
+        if (res.data?.leadId) {
+          posthog?.leadCaptured({
+            tourId: shareAnalytics?.tourId || shareSlug,
+            workspaceId: shareAnalytics?.workspaceId,
+            gfLeadRef: typeof res.data?.gfLeadRef === "string" ? res.data.gfLeadRef : gfLeadRef,
+            destination: res.data?.destination,
+          });
+        }
         // why: o id do lead só existe com consentimento (obrigatório no envio) — o analytics pode usá-lo
         const lead = { leadId: String(res.data?.leadId || ""), name: value.name || "", email: value.email || "", phone: value.phone || "" };
         fixedState.lead = lead;
@@ -903,6 +949,8 @@ async function boot() {
     entryState = null;
   }
   tracker = startTracking(route);
+  posthog = startPosthog(route);
+  posthog?.tourViewed({ tourId: shareAnalytics?.tourId || shareSlug, workspaceId: shareAnalytics?.workspaceId });
   showEntryNotice();
 
   replayTour = () => {

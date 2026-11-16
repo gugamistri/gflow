@@ -1,3 +1,4 @@
+import { createEditorPosthog } from "./posthogEditor.js";
 import { THEME_FONTS, getThemeFont, themeFontFaceCss } from "./tour-schema/fonts.js";
 import { safeCssColor } from "./htmlText.js";
 import {
@@ -1891,6 +1892,18 @@ function bindClientsUi() {
   });
 }
 
+/** PostHog do editor (null até o boot; sem config ou com DNT/GPC não carrega nada). */
+let editorPosthog = null;
+
+function startEditorPosthog() {
+  if (editorPosthog) return editorPosthog;
+  const nav = typeof navigator !== "undefined" ? navigator : {};
+  editorPosthog = createEditorPosthog({
+    privacy: { dnt: nav.doNotTrack, windowDnt: window.doNotTrack, msDnt: nav.msDoNotTrack, gpc: nav.globalPrivacyControl },
+  });
+  return editorPosthog;
+}
+
 function resetBillingView() {
   billingTicket += 1;
   billingView = { status: "idle" };
@@ -1915,6 +1928,10 @@ async function refreshEntitlement(sessionId = "") {
       result?.ok ? result.entitlement : null,
       profile?.ok ? profile.profile : null
     );
+    // why: identify só com o id interno; o plano vem do acesso já resolvido acima
+    if (profile?.analytics) {
+      editorPosthog?.identify({ ...profile.analytics, plan: billingEntitlement.plan === "pro" ? (billingEntitlement.tier === "team" ? "team" : "pro") : "none" });
+    }
   } else {
     billingView = { status: "hidden" };
     billingEntitlement = emptyEntitlement();
@@ -4682,6 +4699,7 @@ function bindChrome() {
     openMcpAfterLogin = false;
     closeAccountMenus();
     resetBillingView();
+    editorPosthog?.reset();
     await collab?.endSessionQuietly?.();
     await endCloudSession();
     sharedCache = [];
@@ -5200,6 +5218,8 @@ async function boot() {
   } catch {
     /* why: falha no retorno do login não pode impedir o editor de abrir */
   }
+  // PostHog depois do retorno do login (o ?code= já saiu da barra)
+  startEditorPosthog();
   bindExtensionBanner();
   bindReleaseNotes();
   // why: o href fica limpo ("/", sem ?landing=1 para o Google seguir); o clique abre a landing forçada

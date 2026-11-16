@@ -1,0 +1,2 @@
+posthog-js 1.450.0 (npm), dist/module.no-external.js, MIT. Sem source map.
+Atualizar: npm pack posthog-js@<versão> e copiar dist/module.no-external.js + LICENSE.

@@ -52,6 +52,7 @@ Assets e cópias. Lógica nova não mora aqui.
 | App desktop | `electron/main.js` | — |
 | Casca do editor | `editor.html`, `js/app.js`, `js/editor.js`, `css/app.css` | — |
 | Landing e páginas legais | `index.html`, `js/landing.js`, `locale-src/` | `apps/web` é só status + confirmar e-mail |
+| PostHog (funil, projeto único com o LeadPronto) | `js/posthogConfig.js` (contrato, PII), `js/posthogPlayer.js` (/p: tour_viewed, tour_lead_captured), `js/posthogEditor.js` (editor: pageview, identify/grupo), `api/analytics-config.js`, `api/lib/posthog-env.cjs`, `vendor/posthog/` | `apps/api/src/lib/posthog.js` (tour_lead_captured do servidor, pageview do /auth/verify), `apps/api/src/lib/lead-webhooks.js` (`gf_*` no payload) |
 | Embed e oEmbed | `js/embedSnippet.js`, `api/oembed.js` | — |
 
 `js/app.js` é o índice de imports do editor. Se a linha acima não cobre o assunto, leia o import correspondente nesse arquivo e pare.
