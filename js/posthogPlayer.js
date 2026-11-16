@@ -1,12 +1,14 @@
 /**
- * PostHog no player público (/p e /p?embed=1): só tour_viewed e tour_lead_captured.
+ * PostHog no player público (/p e /p?embed=1): só tour_viewed.
+ * O tour_lead_captured sai só do servidor (guiaflow-cloud), com o gf_lead_ref que o player
+ * gera aqui (newLeadRef) e manda no POST do lead.
  *
  * why: o player roda no site de clientes; não carrega o SDK (nem autocapture, nem replay, nem
  * pesquisas). Um POST direto para /i/v0/e/ com:
  *  - distinct_id = gf_session_id (UUID aleatório por sessão do navegador, em sessionStorage);
  *  - sem identify, sem cookie, sem localStorage, sem perfil ($process_person_profile: false);
  *  - $ip vazio e $geoip_disable (o PostHog não grava o IP do visitante);
- *  - nenhum dado do formulário (nome, e-mail, telefone, mensagem) e URL sem query.
+ *  - URL sem query.
  * Sem config válida, com DNT/GPC ou na pré-visualização do autor (?preview=1), nada é criado.
  */
 import { captureBody, cleanUrl, POSTHOG_CAPTURE_PATH, readPosthogConfig } from "./posthogConfig.js";
@@ -82,7 +84,7 @@ export function defaultPosthogSender(url) {
 /**
  * opts: { config, storage (sessionStorage), privacy: { dnt, windowDnt, msDnt, gpc }, search,
  *         currentUrl, embed, referrer, ancestorOrigins, send, random, now }
- * → null (nada a medir) ou { sessionId, tourViewed({ tourId, workspaceId }), leadCaptured({...}), newLeadRef() }
+ * → null (nada a medir) ou { sessionId, tourViewed({ tourId, workspaceId }), newLeadRef() }
  */
 export function createPlayerPosthog(opts = {}) {
   const config = readPosthogConfig(opts.config);
@@ -125,17 +127,6 @@ export function createPlayerPosthog(opts = {}) {
       if (safeGet(storage, VIEWED_KEY(tourId))) return false;
       safeSet(storage, VIEWED_KEY(tourId), "1");
       capture("tour_viewed", base(tourId, workspaceId));
-      return true;
-    },
-    /** No envio aceito do passo inicial. Só ids: nunca o que a pessoa digitou. */
-    leadCaptured({ tourId, workspaceId, gfLeadRef, destination } = {}) {
-      if (!tourId || !gfLeadRef || !UUID_RE.test(String(gfLeadRef))) return false;
-      capture("tour_lead_captured", {
-        ...base(tourId, workspaceId),
-        gf_lead_ref: String(gfLeadRef).toLowerCase(),
-        destination: destination === "leadpronto" ? "leadpronto" : "outro",
-        capture_source: "player",
-      });
       return true;
     },
     newLeadRef() {

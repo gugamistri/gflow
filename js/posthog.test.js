@@ -3,6 +3,7 @@ import test from "node:test";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import {
+  PLAYER_EVENTS,
   captureBody,
   cleanUrl,
   editorInitOptions,
@@ -146,22 +147,19 @@ test("player: tour_viewed uma vez por sessão, gf_session_id em sessionStorage, 
   assertNoPii(body, "tour_viewed");
 });
 
-test("player: tour_lead_captured só com ids; nunca o conteúdo do formulário", () => {
+test("player: não manda tour_lead_captured (só o servidor); só gera o gf_lead_ref do POST do lead", () => {
   const sent = [];
   const ph = createPlayerPosthog({ config: CONFIG, storage: memoryStorage(), send: (b) => sent.push(b) });
-  assert.equal(ph.leadCaptured({ tourId: "meu-tour", gfLeadRef: "ana@example.com" }), false);
-  assert.equal(ph.leadCaptured({ tourId: "meu-tour", workspaceId: "usr_1", gfLeadRef: LEAD_REF, destination: "leadpronto", name: "Ana Silva", email: "ana@example.com" }), true);
-  assert.equal(ph.leadCaptured({ tourId: "meu-tour", gfLeadRef: LEAD_REF, destination: "hubspot" }), true);
-  assert.equal(sent.length, 2);
-  const [a, b] = sent;
-  assert.equal(a.event, "tour_lead_captured");
-  assert.equal(a.properties.gf_lead_ref, LEAD_REF);
-  assert.equal(a.properties.destination, "leadpronto");
-  assert.equal(a.properties.capture_source, "player");
-  assert.equal("embed_host" in a.properties, false);
-  assert.equal(b.properties.destination, "outro");
-  for (const body of sent) assertNoPii(body, "tour_lead_captured");
+  assert.equal("leadCaptured" in ph, false);
   assert.match(ph.newLeadRef(), UUID_RE);
+  assert.notEqual(ph.newLeadRef(), ph.newLeadRef());
+  assert.equal(sent.length, 0);
+  assert.deepEqual(PLAYER_EVENTS, ["tour_viewed"]);
+  const view = readFileSync(new URL("./viewApp.js", import.meta.url), "utf8");
+  assert.equal(/leadCaptured|capture\(\s*"tour_lead_captured"/.test(view), false);
+  // o POST do lead leva os ids do funil (o servidor usa no evento e no webhook)
+  assert.match(view, /gf_lead_ref: gfLeadRef/);
+  assert.match(view, /gf_session_id: posthog\.sessionId/);
 });
 
 test("player: embed_host só no embed e só o host", () => {
@@ -206,7 +204,7 @@ test("editor: sem config (ou DNT/GPC) o SDK nem carrega", async () => {
   assert.equal(loads, 0);
 });
 
-test("editor: init sem replay/pesquisas, autocapture mascarado; identify só com user_id e grupo workspace", async () => {
+test("editor: init sem autocapture, replay nem pesquisas; identify só com user_id e grupo workspace", async () => {
   const { sdk, calls } = fakeSdk();
   const ph = createEditorPosthog({ fetchConfig: async () => CONFIG, loadSdk: async () => ({ default: sdk }) });
   // identify antes do SDK pronto fica na fila
@@ -221,7 +219,9 @@ test("editor: init sem replay/pesquisas, autocapture mascarado; identify só com
   assert.equal(options.disable_surveys, true);
   assert.equal(options.disable_external_dependency_loading, true);
   assert.equal(options.advanced_disable_flags, true);
-  assert.equal(options.autocapture, true);
+  assert.equal(options.autocapture, false);
+  assert.equal(options.capture_dead_clicks, false);
+  assert.equal(options.rageclick, false);
   assert.equal(options.mask_all_text, true);
   assert.equal(options.mask_all_element_attributes, true);
   assert.equal(options.person_profiles, "identified_only");
@@ -260,8 +260,10 @@ test("editor before_send: só eventos liberados, sem PII em propriedades, $set o
   const group = editorBeforeSend({ event: "$groupidentify", properties: { $group_type: "workspace", $group_key: "usr_1", $group_set: { plan: "pro", is_demo: false, email: "ana@example.com" } } });
   assert.deepEqual(group.properties.$group_set, { plan: "pro", is_demo: false });
   assertNoPii(group, "$groupidentify");
-  const auto = editorBeforeSend({ event: "$autocapture", properties: { $el_text: "ana@example.com", $elements: [{ tag_name: "a", attr__href: "mailto:ana@example.com" }] } });
-  assertNoPii(auto, "$autocapture");
+  // autocapture desligado: mesmo que o SDK gere um clique, o before_send descarta
+  assert.equal(editorBeforeSend({ event: "$autocapture", properties: { $el_text: "Salvar" } }), null);
+  assert.equal(editorBeforeSend({ event: "$rageclick", properties: {} }), null);
+  assert.equal(editorBeforeSend({ event: "tour_lead_captured", properties: {} }), null);
   assert.deepEqual(EDITOR_SDK_EVENTS.includes("tour_viewed"), false);
   const opts = editorInitOptions(CONFIG);
   assert.equal(opts.disable_session_recording, true);

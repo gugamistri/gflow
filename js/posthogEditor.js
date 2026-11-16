@@ -1,6 +1,6 @@
 /**
- * PostHog no editor (guiaflow.pro/editor): $pageview, autocapture mascarado, identify só com o
- * user_id interno e grupo «workspace» (plan, is_demo). Sem replay, pesquisas, flags nem script externo.
+ * PostHog no editor (guiaflow.pro/editor): $pageview/$pageleave, identify só com o
+ * user_id interno e grupo «workspace» (plan, is_demo). Sem autocapture, replay, pesquisas, flags nem script externo.
  *
  * - A config vem de GET /api/analytics-config (env da Vercel). Sem config válida → nada carrega.
  * - DNT/GPC → nada carrega.
@@ -11,7 +11,7 @@ import { editorInitOptions, looksLikePii, POSTHOG_CONFIG_PATH, POSTHOG_PRODUCT, 
 import { privacySignal } from "./viewAnalytics.js";
 
 /** O SDK do editor só manda estes. Eventos de produto (funil) ficam no player e na nuvem. */
-export const EDITOR_SDK_EVENTS = Object.freeze(["$pageview", "$pageleave", "$autocapture", "$identify", "$groupidentify"]);
+export const EDITOR_SDK_EVENTS = Object.freeze(["$pageview", "$pageleave", "$identify", "$groupidentify"]);
 
 export const WORKSPACE_GROUP = "workspace";
 

@@ -147,8 +147,8 @@ Projeto único do PostHog para GuiaFlow e LeadPronto. A chave pública `phc_` e 
 
 | Onde | O que sai | Privacidade |
 | --- | --- | --- |
-| Editor (`/editor`) | `$pageview`, `$pageleave`, `$autocapture` mascarado, `identify(user_id)`, grupo `workspace` (`plan`, `is_demo`) | SDK `vendor/posthog/module.no-external.js` (sem script externo), sem replay, pesquisas nem flags, `persistence: localStorage` (sem cookie), URL sem query, `before_send` tira PII. DNT/GPC: não carrega. |
-| Player `/p` (e `?embed=1`) | `tour_viewed` (1× por sessão), `tour_lead_captured` (`capture_source: player`) | Sem SDK: POST direto em `/i/v0/e/`. `distinct_id = gf_session_id` (sessionStorage), sem identify, `$ip` vazio, `$geoip_disable`, `$process_person_profile: false`. DNT/GPC ou `?preview=1`: nada. |
-| Nuvem | `tour_lead_captured` (`capture_source: server`) e `$pageview` anônimo do `/auth/verify` | Ver `../guiaflow-cloud/apps/api/README.md`. |
+| Editor (`/editor`) | `$pageview`, `$pageleave` (sem autocapture), `identify(user_id)`, grupo `workspace` (`plan`, `is_demo`) | SDK `vendor/posthog/module.no-external.js` (sem script externo), sem replay, pesquisas nem flags, `persistence: localStorage` (sem cookie), URL sem query, `before_send` tira PII. DNT/GPC: não carrega. |
+| Player `/p` (e `?embed=1`) | `tour_viewed` (1× por sessão). O `tour_lead_captured` não sai do navegador: o player só gera o `gf_lead_ref` e o manda no POST do lead | Sem SDK: POST direto em `/i/v0/e/`. `distinct_id = gf_session_id` (sessionStorage), sem identify, `$ip` vazio, `$geoip_disable`, `$process_person_profile: false`. DNT/GPC ou `?preview=1`: nada. |
+| Nuvem | `tour_lead_captured` (único emissor, `capture_source: server`) e `$pageview` anônimo do `/auth/verify` | Ver `../guiaflow-cloud/apps/api/README.md`. |
 
 Todo evento leva `product=guiaflow`. O `POST /api/shares/:slug/leads` leva `gf_lead_ref` (UUID novo a cada envio) e `gf_session_id`; o webhook `lead.*` (genérico e LeadPronto) leva `gf_lead_ref`, `gf_tour_id` (slug) e `gf_session_id` no topo do payload.

@@ -13,8 +13,9 @@ export const POSTHOG_PRODUCT = "guiaflow";
 export const POSTHOG_CAPTURE_PATH = "/i/v0/e/";
 export const POSTHOG_CONFIG_PATH = "/api/analytics-config";
 
-/** Eventos de produto liberados agora (o resto do SDK só manda $pageview/$autocapture do editor). */
+/** Eventos do funil. tour_viewed sai do player; tour_lead_captured só do servidor (guiaflow-cloud). */
 export const FUNNEL_EVENTS = Object.freeze(["tour_viewed", "tour_lead_captured"]);
+export const PLAYER_EVENTS = Object.freeze(["tour_viewed"]);
 
 const KEY_RE = /^phc_[A-Za-z0-9_-]{10,}$/;
 
@@ -106,14 +107,15 @@ export function sanitizeProperties(props) {
   return out;
 }
 
-/** Opções do posthog-js no editor (guiaflow.pro/editor). Replay, pesquisas e flags desligados. */
+/** Opções do posthog-js no editor (guiaflow.pro/editor). Só pageviews; autocapture, replay, pesquisas e flags desligados. */
 export function editorInitOptions(config, { beforeSend } = {}) {
   return {
     api_host: config.host,
     // why: sem script externo (gravação, pesquisas, toolbar); a lib vem de vendor/posthog
     disable_external_dependency_loading: true,
-    autocapture: true,
-    // why: autocapture só liga porque o texto e os atributos dos elementos saem mascarados
+    // why: decisão do Gustavo (16/11): só pageviews no editor, sem cliques
+    autocapture: false,
+    // defesa extra caso o autocapture seja ligado no futuro
     mask_all_text: true,
     mask_all_element_attributes: true,
     capture_pageview: "history_change",

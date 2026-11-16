@@ -570,22 +570,15 @@ function showStartStep(next) {
     phoneCountry: leadPhoneCountry(),
     onSubmit: async (value) => {
       // RF30: o servidor grava o consentimento no idioma que o visitante viu
-      // funil: gf_lead_ref novo a cada envio; gf_session_id só quando o PostHog está ligado
-      const gfLeadRef = uuidV4();
+      // funil: gf_lead_ref novo a cada envio; gf_session_id só quando o PostHog está ligado.
+      // why: o tour_lead_captured sai só do servidor (que confirma o lead e sabe o destino)
+      const gfLeadRef = posthog ? posthog.newLeadRef() : uuidV4();
       const res = await postShare("leads", {
         ...leadBody(value),
         gf_lead_ref: gfLeadRef,
         ...(posthog ? { gf_session_id: posthog.sessionId } : {}),
       });
       if (res.ok) {
-        if (res.data?.leadId) {
-          posthog?.leadCaptured({
-            tourId: shareAnalytics?.tourId || shareSlug,
-            workspaceId: shareAnalytics?.workspaceId,
-            gfLeadRef: typeof res.data?.gfLeadRef === "string" ? res.data.gfLeadRef : gfLeadRef,
-            destination: res.data?.destination,
-          });
-        }
         // why: o id do lead só existe com consentimento (obrigatório no envio) — o analytics pode usá-lo
         const lead = { leadId: String(res.data?.leadId || ""), name: value.name || "", email: value.email || "", phone: value.phone || "" };
         fixedState.lead = lead;
