@@ -215,7 +215,9 @@ export function createLandingPosthog(opts = {}) {
       const sdk = mod?.default || mod?.posthog || mod;
       if (!sdk || typeof sdk.init !== "function") return false;
       sdk.init(config.key, landingInitOptions(config, { beforeSend: landingBeforeSend }));
-      sdk.register({ product: POSTHOG_PRODUCT, surface: LANDING_SURFACE });
+      // why: só product vira super property. surface=landing entra no before_send: o register grava no
+      // localStorage, que o editor (mesma origem) também lê, e o $pageview do /editor sairia como landing.
+      sdk.register({ product: POSTHOG_PRODUCT });
       ph = sdk;
       for (const [event, props] of queue.splice(0)) ph.capture(event, props);
       return true;

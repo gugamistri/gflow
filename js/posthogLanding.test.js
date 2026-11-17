@@ -72,7 +72,7 @@ test("landing: nada carrega no /editor nem no /p (o SDK nem é baixado)", async 
   assert.equal(loads, 0);
 });
 
-test("landing: init com as opções da especificação e register product/surface", async () => {
+test("landing: init com as opções da especificação e register só de product", async () => {
   const calls = [];
   const sdk = { init: (...a) => calls.push(["init", ...a]), register: (p) => calls.push(["register", p]), capture: (...a) => calls.push(["capture", ...a]) };
   const ph = createLandingPosthog({ pathname: "/", fetchConfig: async () => CONFIG, loadSdk: async () => ({ default: sdk }) });
@@ -91,7 +91,8 @@ test("landing: init com as opções da especificação e register product/surfac
   assert.equal(o.disable_session_recording, true);
   assert.equal(o.disable_external_dependency_loading, true);
   assert.equal(o.before_send, landingBeforeSend);
-  assert.deepEqual(calls[1], ["register", { product: "guiaflow", surface: "landing" }]);
+  // surface fica fora do register (persistido e lido pelo editor na mesma origem); entra pelo before_send
+  assert.deepEqual(calls[1], ["register", { product: "guiaflow" }]);
   assert.deepEqual(calls[2], ["capture", "cta_click", { cta_id: "hero_start" }]);
   // eventos fora da lista não saem nem pela API do módulo
   ph.capture("landing_view", {});
