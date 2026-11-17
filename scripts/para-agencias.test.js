@@ -67,3 +67,19 @@ test("/para-agencias está no sitemap (sem hreflang) e no llms.txt", () => {
   assert.equal(block.includes("hreflang"), false);
   assert.match(read("llms.txt"), /https:\/\/guiaflow\.pro\/para-agencias/);
 });
+
+test("home PT aponta para /para-agencias no H3 Agências e no rodapé Comparações; /en e /es não", () => {
+  const pt = read("index.html");
+  assert.match(pt, /<h3 data-i18n="lp\.aud\.agency\.title"><a href="\/para-agencias"[^>]*>Agências de marketing<\/a><\/h3>/);
+  assert.match(pt, /<nav aria-label="Comparações"[^>]*>[\s\S]*href="\/para-agencias">Para agências</);
+  assert.equal(read("en.html").includes("/para-agencias"), false);
+  assert.equal(read("es.html").includes("/para-agencias"), false);
+});
+
+test("build de locales não leva o link /para-agencias para /en nem /es", async () => {
+  const { buildAll } = await import("./build-locale-pages.mjs");
+  const files = buildAll();
+  assert.match(files["index.html"], /href="\/para-agencias"/);
+  assert.equal(files["en.html"].includes("/para-agencias"), false);
+  assert.equal(files["es.html"].includes("/para-agencias"), false);
+});
