@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo interativa: o que é e como criar grátis, sem cadastro | GuiaFlow</title>
+  <meta name="description" content="Uma demo interativa deixa a pessoa clicar pelo produto no próprio ritmo. Veja como criar uma com prints, em minutos, no editor gratuito do GuiaFlow, sem conta e sem cartão." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/demo-interativa" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/demo-interativa" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/demo-interativa" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Demo interativa: o que é e como criar grátis, sem cadastro | GuiaFlow" />
+  <meta property="og:description" content="Uma demo interativa deixa a pessoa clicar pelo produto no próprio ritmo. Veja como criar uma com prints, em minutos, no editor gratuito do GuiaFlow, sem conta e sem cartão." />
+  <meta property="og:url" content="https://guiaflow.pro/demo-interativa" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-landing-v3.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Demo interativa: o que é e como criar grátis, sem cadastro | GuiaFlow" />
+  <meta name="twitter:description" content="Uma demo interativa deixa a pessoa clicar pelo produto no próprio ritmo. Veja como criar uma com prints, em minutos, no editor gratuito do GuiaFlow, sem conta e sem cartão." />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing-v3.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (metaTheme) metaTheme.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/211/css/theme.css" />
+  <link rel="stylesheet" href="/a/211/css/shell.css" />
+  <link rel="stylesheet" href="/a/211/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+    .page { max-width: 880px; min-width: 0; width: 100%; overflow-wrap: anywhere; }
+    .page .crumbs { margin: 0 0 10px; color: var(--ns-muted); font-size: 0.85rem; }
+    .page .crumbs a { color: inherit; }
+    .page .lead { margin-bottom: 10px; }
+    .page .note { color: var(--ns-muted); font-size: 0.88rem; }
+    .page .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 4px; }
+    .page .cta-row .btn { white-space: normal; text-align: center; }
+    .page .card a.btn { color: var(--ns-ink); }
+    .page .card a.btn-primary { color: var(--ns-button-text); }
+    .page .table-wrap { overflow-x: auto; margin: 8px 0 0; min-width: 0; max-width: 100%; -webkit-overflow-scrolling: touch; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--ns-border); overflow-wrap: anywhere; }
+    .page thead th { color: var(--ns-muted); font-weight: 600; }
+    .page tbody th { font-weight: 600; width: 16%; }
+    .page .example-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.83 / 1;
+      min-height: 280px;
+      margin: 14px 0 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--ns-border);
+      background: var(--ns-input-bg);
+    }
+    .page .example-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .page .sources { font-size: 0.88rem; }
+    .page .sources li { overflow-wrap: anywhere; }
+    @media (max-width: 640px) {
+      .page .table-wrap { overflow-x: visible; }
+      .page table, .page tbody, .page tr, .page th, .page td { display: block; width: 100%; }
+      .page thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .page tbody tr {
+        margin: 0;
+        padding: 10px 0 12px;
+        border-bottom: 1px solid var(--ns-border);
+      }
+      .page tbody tr:last-child { border-bottom: 0; padding-bottom: 0; }
+      .page tbody th, .page tbody td { border-top: 0; padding: 3px 0; width: auto; }
+      .page tbody th { padding-top: 0; }
+      .page td:nth-child(2)::before { content: "Demo interativa: "; font-weight: 600; }
+      .page td:nth-child(3)::before { content: "Vídeo: "; font-weight: 600; }
+      .page td:nth-child(4)::before { content: "Trial: "; font-weight: 600; }
+      .page td:nth-child(5)::before { content: "Reunião: "; font-weight: 600; }
+    }
+  </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://guiaflow.pro/demo-interativa#webpage",
+      "url": "https://guiaflow.pro/demo-interativa",
+      "name": "Demo interativa: o que é e como criar grátis, sem cadastro | GuiaFlow",
+      "description": "Uma demo interativa deixa a pessoa clicar pelo produto no próprio ritmo. Veja como criar uma com prints, em minutos, no editor gratuito do GuiaFlow, sem conta e sem cartão.",
+      "inLanguage": "pt-BR",
+      "isPartOf": {
+        "@id": "https://guiaflow.pro/#website"
+      },
+      "about": {
+        "@id": "https://guiaflow.pro/#software"
+      },
+      "publisher": {
+        "@id": "https://guiaflow.pro/#organization"
+      },
+      "datePublished": "2026-11-17",
+      "dateModified": "2026-11-17",
+      "breadcrumb": {
+        "@id": "https://guiaflow.pro/demo-interativa#breadcrumb"
+      },
+      "mainEntity": {
+        "@id": "https://guiaflow.pro/demo-interativa#faq"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://guiaflow.pro/demo-interativa#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Início",
+          "item": "https://guiaflow.pro/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Demo interativa",
+          "item": "https://guiaflow.pro/demo-interativa"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://guiaflow.pro/demo-interativa#faq",
+      "inLanguage": "pt-BR",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "O que é uma demo interativa?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Demo interativa é uma apresentação clicável do produto, feita a partir de telas ou fotos, que a pessoa percorre no próprio ritmo, sem reunião e sem instalar nada. No GuiaFlow, cada print vira um passo com destaque, clique e texto, e o resultado vira um link ou um embed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Qual a diferença para um vídeo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Quem vê clica e avança no próprio ritmo; mudou o produto, troca a tela sem regravar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Dá para criar de graça?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim: editor gratuito, sem conta e sem cartão, sem limite de projetos; link temporário de 7 dias e exportação em HTML ou MP4 (com a marca GuiaFlow; sem marca no Pro)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Preciso saber programar?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Não."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quem recebe precisa instalar algo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Não; abre no navegador do celular ou do computador."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Posso usar IA para escrever os passos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim: com a sua chave de IA no Grátis ou inclusa no Pro. Sem IA, você escreve à mão."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Funciona em português, inglês e espanhol?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A interface do editor sim (PT, ES, EN)."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://guiaflow.pro/demo-interativa#como-criar",
+      "name": "Como criar uma demo interativa no GuiaFlow",
+      "inLanguage": "pt-BR",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Abra o editor",
+          "text": "Abra o editor gratuito, sem conta e sem cartão."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Escolha o formato",
+          "text": "Escolha guia ou galeria, ou use o assistente Criar com ajuda."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Capture ou envie as telas",
+          "text": "Capture com a extensão do Chrome ou suba os prints e as fotos."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "Escreva os textos e a narração",
+          "text": "Escreva à mão ou use a sua chave de IA no Grátis; no Pro, a IA está inclusa."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 5,
+          "name": "Compartilhe",
+          "text": "No Grátis, publique um link temporário de 7 dias ou exporte em HTML ou MP4. No Pro, use o link permanente, que não expira, e a incorporação no site."
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/211/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/211/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title"><span>Demo interativa</span></span>
+    </div>
+  </header>
+
+  <main class="page">
+    <p class="crumbs"><a href="/">Início</a> › Demo interativa</p>
+    <h1>Demo interativa: o que é e como criar a sua hoje</h1>
+    <p class="lead">Demo interativa é uma apresentação clicável do produto, feita a partir de telas ou fotos, que a pessoa percorre no próprio ritmo, sem reunião e sem instalar nada. No GuiaFlow, cada print vira um passo com destaque, clique e texto, e o resultado vira um link ou um embed.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/editor">Abrir o editor grátis</a>
+      <a class="btn" href="https://guiaflow.pro/editor?pro=1">Assinar o Pro — R$ 36/mês ou R$ 359/ano</a>
+    </div>
+
+    <section class="card" id="comparativo">
+      <h2>Demo interativa, vídeo, trial e reunião</h2>
+      <p>Cada formato serve a um momento. A demo interativa entra quando você quer que a pessoa clique pelo produto agora, sem marcar horário e sem instalar nada.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Critério</th>
+              <th scope="col">Demo interativa</th>
+              <th scope="col">Vídeo</th>
+              <th scope="col">Trial</th>
+              <th scope="col">Reunião</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Ritmo</th>
+              <td>Quem vê clica e avança no próprio ritmo</td>
+              <td>Corre sozinho, no tempo da gravação</td>
+              <td>A pessoa se vira no produto, sem um roteiro</td>
+              <td>Depende de combinar um horário</td>
+            </tr>
+            <tr>
+              <th scope="row">Quando o produto muda</th>
+              <td>Troca a tela, sem regravar</td>
+              <td>Regrava o trecho ou o vídeo inteiro</td>
+              <td>O trial já está no produto novo</td>
+              <td>Nova conversa</td>
+            </tr>
+            <tr>
+              <th scope="row">O que quem recebe precisa</th>
+              <td>Abrir o link no navegador, no celular ou no computador</td>
+              <td>Assistir, sem clicar no produto</td>
+              <td>Em geral, criar conta ou instalar</td>
+              <td>Comparecer à call</td>
+            </tr>
+            <tr>
+              <th scope="row">Melhor uso</th>
+              <td>Antes da call, no site, na proposta ou no treinamento</td>
+              <td>Contar uma história linear</td>
+              <td>Deixar a pessoa explorar o produto de verdade</td>
+              <td>Tirar dúvidas ao vivo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="formatos">
+      <h2>Dois formatos: guia e galeria</h2>
+      <p><strong>Guia passo a passo:</strong> para software e processos. Cada print vira um passo com destaque, clique simulado e texto (e, se quiser, narração).</p>
+      <p><strong>Galeria:</strong> para produto, catálogo ou veículo. Fotos por seções, com zoom e miniaturas; quem vê navega livremente, sem balões.</p>
+    </section>
+
+    <section class="card" id="como-criar">
+      <h2>Como criar em 5 passos</h2>
+      <ol>
+        <li><strong>Abra o editor.</strong> É gratuito, sem conta e sem cartão. Comece em <a href="/editor">guiaflow.pro/editor</a>.</li>
+        <li><strong>Escolha o formato.</strong> Guia ou galeria, ou use o assistente &quot;Criar com ajuda&quot; (grátis; a IA é opcional).</li>
+        <li><strong>Capture ou envie as telas.</strong> Use a <a href="https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd" target="_blank" rel="noopener">extensão do Chrome</a> ou suba os prints e as fotos.</li>
+        <li><strong>Escreva os textos e a narração.</strong> À mão, ou com a sua chave de IA no Grátis; no Pro, a IA está inclusa.</li>
+        <li><strong>Compartilhe.</strong> No Grátis, o link temporário dura 7 dias e a exportação sai em HTML ou MP4 (com a marca GuiaFlow). No Pro, o link permanente não expira e dá para <a href="/ajuda">incorporar no site</a>.</li>
+      </ol>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/editor">Abrir o editor grátis</a>
+      </div>
+    </section>
+
+    <section class="card" id="praticas">
+      <h2>Boas práticas</h2>
+      <ul>
+        <li>Fique em 5 a 10 passos: o suficiente para um caminho claro, sem alongar.</li>
+        <li>Um objetivo por demo — uma tarefa, um fluxo, um produto.</li>
+        <li>Texto orientado a resultado: o que a pessoa consegue fazer naquele passo.</li>
+        <li>No final, um próximo passo: botão para o WhatsApp ou um link.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="onde-usar">
+      <h2>Onde usar</h2>
+      <ul>
+        <li><strong>Site e lançamento:</strong> no Pro, um trecho de código coloca o guia ou a galeria na página.</li>
+        <li><strong>Antes da call:</strong> mande o link para a pessoa clicar no produto no próprio ritmo.</li>
+        <li><strong>Proposta:</strong> anexe o link à proposta, para o cliente ver o que será entregue.</li>
+        <li><strong>Treinamento:</strong> um guia com os passos do sistema, reutilizável quando alguém novo chega.</li>
+        <li><strong>WhatsApp:</strong> o botão final para o WhatsApp está no Grátis; no Pro, o link permanente leva capa no preview.</li>
+      </ul>
+      <p>Agências que montam um link por cliente encontram o detalhe em <a href="/para-agencias">GuiaFlow para agências</a>.</p>
+    </section>
+
+    <section class="card" id="preco">
+      <h2>Quanto custa</h2>
+      <p>O editor é grátis, sem conta e sem cartão, e não há limite de projetos em nenhum plano. No Grátis, os projetos ficam neste navegador; o link temporário dura 7 dias; o HTML e o MP4 saem com a marca GuiaFlow; a IA e a narração usam a sua chave.</p>
+      <p>O Pro custa R$ 36/mês ou R$ 359/ano (fora do Brasil, US$ 7/mês ou US$ 69/ano), com assinatura direta pelo Stripe e cancelamento quando quiser. Inclui link permanente que não expira, incorporação no site, análise de quem abriu e onde as pessoas param, captura de contatos com consentimento LGPD, IA inclusa, projetos na sua conta e player e MP4 sem a marca GuiaFlow. Quem assiste não paga e não precisa de conta. Veja os <a href="/#precos">planos</a>.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://guiaflow.pro/editor?pro=1">Assinar o Pro — R$ 36/mês ou R$ 359/ano</a>
+      </div>
+    </section>
+
+    <section class="card" id="nao-faz">
+      <h2>O que o GuiaFlow não faz</h2>
+      <ul>
+        <li><strong>Não desfoca dados sensíveis:</strong> capture as telas com dados fictícios.</li>
+        <li><strong>Não tem ramificação:</strong> os guias são lineares (a galeria permite navegar livremente, o que não é ramificação).</li>
+        <li><strong>Não instala tour dentro do app</strong> e não clona o HTML da interface.</li>
+        <li><strong>Não é white-label:</strong> no Pro, o player e o vídeo saem sem a marca GuiaFlow, mas o endereço continua guiaflow.pro e o player não mostra logo próprio.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="comparado">
+      <h2>Comparado com Supademo, Storylane e dplooy Demo Maker</h2>
+      <p class="note">Fatos das páginas públicas de cada ferramenta, verificados em 17/11/2026 (fontes no fim da página).</p>
+      <h3>Supademo</h3>
+      <p>O plano Free é US$ 0 para 1 criador, com 5 demos guiadas, e permite compartilhar em link, embed, vídeo e PDF. <strong>Onde faz mais:</strong> ramificação condicional, variáveis e smart blur a partir do Scale (US$ 50/mês, ou US$ 38/mês no anual, por criador). <strong>GuiaFlow:</strong> editor grátis sem conta e sem limite de projetos, guia e galeria, Pro a R$ 36/mês (US$ 7/mês fora do Brasil); não tem ramificação nem desfoque; o MP4 do Grátis sai com a marca GuiaFlow.</p>
+      <h3>Storylane</h3>
+      <p>O plano Free é US$ 0, com 1 assento e 1 demo interativa publicada por vez. O Starter custa US$ 50/mês (US$ 40/mês no anual), com 1 assento e US$ 40 por assento adicional, e demos publicadas ilimitadas. <strong>Onde faz mais:</strong> mais assentos e demos publicadas nos planos pagos. <strong>GuiaFlow:</strong> grátis sem conta e sem limite de projetos; o Pro é US$ 7/mês.</p>
+      <h3>dplooy Demo Maker</h3>
+      <p>É grátis, sem cadastro, sem marca d&apos;água e sem limite de número de demos (até 40 passos por demo). Exporta um ZIP para hospedar, também gera um link no próprio dplooy e permite embed. Não tem plano pago nem análise. <strong>Onde faz mais:</strong> desfoque no próprio navegador, arquivo ZIP para hospedar em qualquer lugar e nenhum selo no resultado. <strong>GuiaFlow:</strong> também é grátis sem conta, com guia e galeria e um Pro com link permanente e análise; não desfoca e o MP4 do Grátis leva a marca.</p>
+    </section>
+
+    <section class="card" id="exemplos">
+      <h2>Exemplo navegável</h2>
+      <p>Clique para avançar, como faria quem recebe o seu link: <a href="https://guiaflow.pro/exemplos/guia">guia de software de exemplo</a> · <a href="https://guiaflow.pro/exemplos/galeria">galeria de produto de exemplo</a>.</p>
+      <div class="example-frame">
+        <iframe src="/exemplos/guia?embed=1" title="Exemplo de guia de software no GuiaFlow" loading="lazy" allow="autoplay; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <p class="note">Outras comparações: <a href="/alternativa-getdemo">GuiaFlow vs Getdemo</a>. Como incorporar no site: <a href="/ajuda">ajuda</a>.</p>
+    </section>
+
+    <section class="card" id="faq">
+      <h2>Perguntas frequentes</h2>
+      <h3>O que é uma demo interativa?</h3>
+      <p>Demo interativa é uma apresentação clicável do produto, feita a partir de telas ou fotos, que a pessoa percorre no próprio ritmo, sem reunião e sem instalar nada. No GuiaFlow, cada print vira um passo com destaque, clique e texto, e o resultado vira um link ou um embed.</p>
+      <h3>Qual a diferença para um vídeo?</h3>
+      <p>Quem vê clica e avança no próprio ritmo; mudou o produto, troca a tela sem regravar.</p>
+      <h3>Dá para criar de graça?</h3>
+      <p>Sim: editor gratuito, sem conta e sem cartão, sem limite de projetos; link temporário de 7 dias e exportação em HTML ou MP4 (com a marca GuiaFlow; sem marca no Pro).</p>
+      <h3>Preciso saber programar?</h3>
+      <p>Não.</p>
+      <h3>Quem recebe precisa instalar algo?</h3>
+      <p>Não; abre no navegador do celular ou do computador.</p>
+      <h3>Posso usar IA para escrever os passos?</h3>
+      <p>Sim: com a sua chave de IA no Grátis ou inclusa no Pro. Sem IA, você escreve à mão.</p>
+      <h3>Funciona em português, inglês e espanhol?</h3>
+      <p>A interface do editor sim (PT, ES, EN).</p>
+    </section>
+
+    <section class="card" id="comecar">
+      <p><strong>Comece agora, grátis e sem cadastro.</strong> Abra o editor ou, quando quiser link permanente e análise, assine o Pro direto no site.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/editor">Abrir o editor grátis</a>
+        <a class="btn" href="https://guiaflow.pro/editor?pro=1">Assinar o Pro — R$ 36/mês ou R$ 359/ano</a>
+      </div>
+    </section>
+
+    <section class="card sources" id="fontes">
+      <h2>Fontes</h2>
+      <p>Páginas públicas consultadas em 17/11/2026:</p>
+      <ul>
+        <li>Supademo, preços: <a href="https://supademo.com/pricing" rel="nofollow noopener" target="_blank">https://supademo.com/pricing</a></li>
+        <li>Storylane, preços: <a href="https://www.storylane.io/pricing" rel="nofollow noopener" target="_blank">https://www.storylane.io/pricing</a></li>
+        <li>dplooy Demo Maker: <a href="https://demo-maker.dplooy.com/" rel="nofollow noopener" target="_blank">https://demo-maker.dplooy.com/</a></li>
+      </ul>
+      <p>GuiaFlow, consultado na mesma data: <a href="https://guiaflow.pro/">https://guiaflow.pro/</a> · <a href="https://guiaflow.pro/termos">https://guiaflow.pro/termos</a> · <a href="https://guiaflow.pro/#precos">https://guiaflow.pro/#precos</a> · <a href="https://guiaflow.pro/llms.txt">https://guiaflow.pro/llms.txt</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/#precos">Preços</a>
+      <a href="/ajuda">Ajuda</a>
+      <a href="/para-agencias">Para agências</a>
+      <a href="/alternativa-getdemo">Alternativa à Getdemo</a>
+      <a href="/integracoes">Integrações</a>
+      <a href="/privacidade">Privacidade</a>
+      <a href="/termos">Termos</a>
+      <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module" src="/a/211/js/landingAnalytics.js"></script>
+</body>
+</html>

@@ -122,6 +122,7 @@ export const EXTRA_PAGES = [
   { path: "/integracoes/leadpronto", lastmod: "2026-10-26" },
   { path: "/alternativa-getdemo", lastmod: "2026-11-15" },
   { path: "/para-agencias", lastmod: "2026-11-17" },
+  { path: "/demo-interativa", lastmod: "2026-11-17" },
 ];
 
 /**
