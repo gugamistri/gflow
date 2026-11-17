@@ -20,7 +20,7 @@ GuiaFlow (guiaflow.pro) is not Guideflow (guideflow.com); they are different pro
 - Editor (free, no account): https://guiaflow.pro/editor
 - Help: https://guiaflow.pro/en/help (pt: /ajuda, es: /es/ayuda)
 - Examples: interactive software guide https://guiaflow.pro/exemplos/guia (en: https://guiaflow.pro/exemplos/guia?lang=en, es: https://guiaflow.pro/exemplos/guia?lang=es) and product gallery https://guiaflow.pro/exemplos/galeria (en: https://guiaflow.pro/exemplos/galeria?lang=en, es: https://guiaflow.pro/exemplos/galeria?lang=es)
-- GuiaFlow vs Getdemo (pt): https://guiaflow.pro/alternativa-getdemo
+- For marketing agencies (pt): https://guiaflow.pro/para-agencias · GuiaFlow vs Getdemo (pt): https://guiaflow.pro/alternativa-getdemo
 - Source code (MIT): https://github.com/gugamistri/gflow
 - Chrome extension: https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd
 
