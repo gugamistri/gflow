@@ -226,14 +226,17 @@ test("/ajuda/api e llms.txt documentam o MCP com caminhos absolutos", () => {
   assert.match(llms, /open source \(MIT\)/);
   assert.match(llms, /no account/);
   assert.match(llms, /Pro plan/);
-  assert.match(llms, /GuiaFlow \(guiaflow\.pro\) is not Guideflow \(guideflow\.com\)\./);
+  assert.match(llms, /GuiaFlow \(guiaflow\.pro\) is not Guideflow \(guideflow\.com\); they are different products\./);
   assert.match(llms, /https:\/\/guiaflow\.pro\/exemplos\/guia/);
   assert.match(llms, /https:\/\/guiaflow\.pro\/exemplos\/galeria/);
   const opening = llms.split("## ")[0];
   assert.equal(/real estate|imobili|cons[oó]rcio/i.test(opening), false);
-  // "Client ID Metadata" no bloco Connect é credencial OAuth, não o recurso Clientes
+  // why: "Clients" liberado para anúncio (2ª rodada, 15/11), sempre com a ressalva de que não é white-label
+  assert.match(llms, /"Clients" area to organize projects by client \(name and logo\) inside the editor \(not white-label/);
   assert.equal(/\bClientes\b/.test(llms), false);
-  assert.equal(/"Clients" area|Clients area to organize/i.test(llms), false);
+  assert.match(llms, /they are different products/);
+  assert.match(llms, /https:\/\/guiaflow\.pro\/editor\?pro=1/);
+  assert.match(llms, /https:\/\/guiaflow\.pro\/alternativa-getdemo/);
   assert.match(llms, /temporary links \(\/v\/\.\.\.\) that last 7 days/);
   assert.match(llms, /permanent links \(\/p\/\.\.\.\) with cover image that never expire/);
   assert.match(llms, /the video and the player carry the GuiaFlow mark/);

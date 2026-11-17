@@ -2,13 +2,13 @@
 
 > GuiaFlow (guiaflow.pro) is an open source (MIT) editor that turns screenshots and photos into presentations people explore at their own pace: step-by-step interactive guides (product demos, product tours, software training) and photo galleries (products, catalogs, vehicles). The editor runs in the browser for free, with no account and no credit card. Free use includes the "Create with help" assistant, AI text and narration with your own AI key, 7-day temporary links, HTML/video export and a WhatsApp or link button at the end, with no project limit. GuiaFlow Pro (the paid Pro plan; subscribe directly: US$ 7/month or US$ 69/year; R$ 36/month or R$ 359/year in Brazil) adds permanent links that never expire, embeds, lead capture, analytics, hosted AI and narration, watermark-free video and an MCP server / REST API for AI agents. Interface in Portuguese, English and Spanish.
 
-GuiaFlow (guiaflow.pro) is not Guideflow (guideflow.com).
+GuiaFlow (guiaflow.pro) is not Guideflow (guideflow.com); they are different products.
 
 ## Plans
 
 - Free (no account): full editor in the browser; no project limit, projects stored only in this browser; temporary links (/v/...) that last 7 days; HTML and MP4 export (the video and the player carry the GuiaFlow mark); WhatsApp or link at the end; AI and narration with your own key (OpenRouter, OpenAI or compatible for text; Cartesia for voice); "Create with help" assistant (works without AI, too).
-- Pro plan (subscribe directly on the site, billed via Stripe, cancel anytime; no sales call): everything in Free + permanent links (/p/...) with cover image that never expire, projects synced to the cloud, contact capture and contact form (optional, with consent), embed on websites, analytics (opens, completions, end-button clicks, drop-off by step), hosted AI and narration (100 texts and 30 audio minutes per month), player and video without the GuiaFlow mark, MCP server and REST API. Temporary 7-day links are also available on Pro. Not white-label: links stay on guiaflow.pro and the player shows no custom logo.
-- Prices: https://guiaflow.pro/en#precos · Terms: https://guiaflow.pro/en/terms
+- Pro plan (subscribe directly on the site, billed via Stripe, cancel anytime; no sales call): everything in Free + permanent links (/p/...) with cover image that never expire, projects synced to the cloud, contact capture and contact form (optional, with consent), embed on websites, analytics (opens, completions, end-button clicks, drop-off by step), hosted AI and narration (100 texts and 30 audio minutes per month), player and video without the GuiaFlow mark, a "Clients" area to organize projects by client (name and logo) inside the editor (not white-label: the client logo does not appear in the player), MCP server and REST API. Temporary 7-day links are also available on Pro. Not white-label: links stay on guiaflow.pro and the player shows no custom logo.
+- Subscribe to Pro: https://guiaflow.pro/editor?pro=1 · Prices: https://guiaflow.pro/en#precos · Terms: https://guiaflow.pro/en/terms
 
 ## What GuiaFlow does not do
 
@@ -20,6 +20,7 @@ GuiaFlow (guiaflow.pro) is not Guideflow (guideflow.com).
 - Editor (free, no account): https://guiaflow.pro/editor
 - Help: https://guiaflow.pro/en/help (pt: /ajuda, es: /es/ayuda)
 - Examples: interactive software guide https://guiaflow.pro/exemplos/guia (en: https://guiaflow.pro/exemplos/guia?lang=en, es: https://guiaflow.pro/exemplos/guia?lang=es) and product gallery https://guiaflow.pro/exemplos/galeria (en: https://guiaflow.pro/exemplos/galeria?lang=en, es: https://guiaflow.pro/exemplos/galeria?lang=es)
+- GuiaFlow vs Getdemo (pt): https://guiaflow.pro/alternativa-getdemo
 - Source code (MIT): https://github.com/gugamistri/gflow
 - Chrome extension: https://chromewebstore.google.com/detail/guiaflow-%E2%80%94-captura/bogjjfmcceccnepkpijiohglllbgbofd
 
