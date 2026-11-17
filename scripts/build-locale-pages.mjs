@@ -115,9 +115,10 @@ export const PAGES = [
 
 /**
  * Páginas públicas PT sem par EN/ES: não passam pelo gerador de locales, mas
- * entram no sitemap. `/cortesia` redireciona para /#precos e não entra no sitemap.
+ * entram no sitemap.
  */
 export const EXTRA_PAGES = [
+  { path: "/cortesia", lastmod: "2026-11-16" },
   { path: "/integracoes/leadpronto", lastmod: "2026-10-26" },
   { path: "/alternativa-getdemo", lastmod: "2026-11-15" },
 ];
