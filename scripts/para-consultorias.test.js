@@ -27,7 +27,7 @@ test("/para-consultorias: só pt-BR, canonical próprio, assets versionados, CTA
   assert.match(html, /href="\/demo-interativa"/);
   assert.match(html, /href="\/para-agencias"/);
   assert.match(html, /href="\/ajuda"/);
-  assert.equal(html.includes("/modelos"), false, "sem link para /modelos");
+  assert.match(html, /href="\/modelos"/);
   assert.match(read("para-agencias.html"), /href="\/para-consultorias"/);
   assert.match(read("demo-interativa.html"), /href="\/para-consultorias"/);
   assert.match(read("alternativa-getdemo.html"), /href="\/para-consultorias"/);

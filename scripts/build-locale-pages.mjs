@@ -124,6 +124,7 @@ export const EXTRA_PAGES = [
   { path: "/para-agencias", lastmod: "2026-11-17" },
   { path: "/demo-interativa", lastmod: "2026-11-17" },
   { path: "/para-consultorias", lastmod: "2026-11-17" },
+  { path: "/modelos", lastmod: "2026-11-17" },
 ];
 
 /**
