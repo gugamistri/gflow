@@ -50,7 +50,7 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/ajuda<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/privacidade<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/termos<\/loc>/);
-  assert.equal(text.includes("/cortesia"), false);
+  assert.match(text, /<loc>https:\/\/guiaflow\.pro\/cortesia<\/loc>/);
   assert.match(text, /<loc>https:\/\/guiaflow\.pro\/integracoes\/leadpronto<\/loc>/);
   assert.match(text, /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   assert.equal(text.includes(".html"), false);
@@ -115,11 +115,15 @@ test("a Vercel entrega robots e sitemap com o tipo certo e sem rewrite", () => {
   }
 });
 
-test("/cortesia redireciona em 301 para a seção de preços da landing", () => {
+test("/cortesia é página pública, sem redirect e sem noindex", () => {
   const config = JSON.parse(read("vercel.json"));
   const rule = (config.redirects || []).find((entry) => entry.source === "/cortesia");
-  assert.equal(rule?.destination, "/#precos");
-  assert.equal(rule?.permanent, true);
+  assert.equal(rule, undefined);
+  const html = read("cortesia.html");
+  assert.match(html, /<link rel="canonical" href="https:\/\/guiaflow\.pro\/cortesia"/);
+  assert.equal(/noindex/i.test(html), false);
+  assert.match(html, /id="courtesy-form"/);
+  assert.match(html, /\/api\/courtesy-requests/);
 });
 
 test("README, docs e LICENSE servidos no site levam X-Robots-Tag noindex", () => {
