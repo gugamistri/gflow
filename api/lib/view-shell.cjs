@@ -111,7 +111,8 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
         var q = new URLSearchParams(location.search).get("lang") || "";
         var pick = String(q).toLowerCase().split("-")[0];
         if (pick !== "pt" && pick !== "es" && pick !== "en") {
-          var path = String(location.pathname || "").match(/^\/(en|es)(?:\/|$)/);
+          // why: dentro do template literal, "\/" vira "/"; as barras dobradas saem como "\/" no HTML
+          var path = String(location.pathname || "").match(/^\\/(en|es)(?:\\/|$)/);
           if (path) pick = path[1];
         }
         if (pick !== "pt" && pick !== "es" && pick !== "en") {

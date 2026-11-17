@@ -26,11 +26,6 @@
       "permanent": true
     },
     {
-      "source": "/cortesia",
-      "destination": "/#precos",
-      "permanent": true
-    },
-    {
       "source": "/en/ajuda",
       "destination": "/en/help",
       "permanent": true
