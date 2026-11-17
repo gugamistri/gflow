@@ -5,6 +5,7 @@
  */
 const { renderViewPage } = require("../lib/view-shell.cjs");
 const { fetchPermanentShare, isPermanentSlug } = require("../lib/permanent-share.cjs");
+const { readPosthogEnv } = require("../lib/posthog-env.cjs");
 
 function requestOrigin(req) {
   const proto = (req.headers["x-forwarded-proto"] || "https").split(",")[0].trim();
@@ -64,6 +65,7 @@ module.exports = async function handler(req, res) {
       stepCount: share.stepCount,
       ratio: share.ratio,
       branding: share.branding,
+      posthog: readPosthogEnv(process.env),
     }),
     200
   );

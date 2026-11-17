@@ -4,6 +4,7 @@
  * hazard: o URL de checkout/portal vem da resposta; só seguimos http(s).
  */
 
+import { analyticsAccountFromMe } from "./posthogEditor.js";
 import { cloudFetch } from "./cloudConfig.js";
 import { browserPrivacySignal, getAttribution } from "./attribution.js";
 import { buildCheckoutBody, formatPaywallAmount, paywallCurrency, readBillingReturn, stripBillingReturn } from "./paywall.js";
@@ -271,7 +272,14 @@ export function accountRoleFromMe(data) {
 export async function fetchAccountProfile(env) {
   const result = await cloudFetch(AUTH_ME_PATH, { method: "GET" }, env);
   if (!result.ok) return { ...result, profile: null, role: null };
-  return { ok: true, status: result.status, profile: parseEntitlement(result.data), role: accountRoleFromMe(result.data) };
+  return {
+    ok: true,
+    status: result.status,
+    profile: parseEntitlement(result.data),
+    role: accountRoleFromMe(result.data),
+    // PostHog: só ids opacos e o plano (analyticsAccountFromMe nunca lê e-mail)
+    analytics: analyticsAccountFromMe(result.data),
+  };
 }
 
 export function mergeAccountAccess(entitlement, profile) {

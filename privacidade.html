@@ -49,14 +49,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/207/css/theme.css" />
-  <link rel="stylesheet" href="a/207/css/shell.css" />
-  <link rel="stylesheet" href="a/207/css/ajuda.css" />
+  <link rel="stylesheet" href="a/208/css/theme.css" />
+  <link rel="stylesheet" href="a/208/css/shell.css" />
+  <link rel="stylesheet" href="a/208/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/207/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/207/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/208/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/208/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -186,7 +186,7 @@
         <li data-i18n="privacy.analytics.li3">um identificador de visita aleatório, que vive só na memória da página e some ao fechá-la;</li>
         <li data-i18n="privacy.analytics.li4">um código para estimar visitantes únicos, calculado no servidor a partir do IP, do navegador e do link com um valor aleatório que muda todo dia e é apagado. O IP e o navegador não são gravados, e depois que o valor do dia é apagado o código não permite saber quem foi o visitante.</li>
       </ul>
-      <p data-i18n="privacy.analytics.p3">Não usamos cookies nem guardamos nada no navegador do visitante para isso. Se o navegador enviar o sinal “Não rastrear” (DNT) ou o Global Privacy Control (GPC), o player não envia nenhum dado (a exceção são os links identificados de treinamento, descritos abaixo). As visitas do próprio autor abertas pelo editor como pré-visualização também não contam.</p>
+      <p data-i18n="privacy.analytics.p3">Não usamos cookies para isso. A única coisa guardada no navegador do visitante é um identificador aleatório da sessão (no armazenamento da sessão, sessionStorage, que some ao fechar a aba), usado na medição do PostHog descrita abaixo. Se o navegador enviar o sinal “Não rastrear” (DNT) ou o Global Privacy Control (GPC), o player não envia nenhum dado (a exceção são os links identificados de treinamento, descritos abaixo). As visitas do próprio autor abertas pelo editor como pré-visualização também não contam.</p>
       <p data-i18n="privacy.analytics.p4">Se o visitante preencher o passo inicial do tour e marcar a caixa de consentimento, a visita fica ligada a esse contato, e a análise mostra ao autor quantas visitas vieram de pessoas que deixaram o contato. Sem esse consentimento, a visita não é ligada a ninguém.</p>
       <p data-i18n-html="privacy.analytics.p5">Aqui também <strong>o autor do tour é o controlador</strong> e <strong>o GuiaFlow é o operador</strong>, que trata esses dados só para gerar a análise do autor. A base legal é o legítimo interesse do autor em entender o uso do próprio tour (art. 7º, IX, da LGPD), com o mínimo de dados; o vínculo com um contato depende do consentimento dado no passo inicial (art. 7º, I). Os dados de cada visita ficam guardados por 90 dias; os totais por dia (no horário de Brasília), por 25 meses. Tudo é apagado antes se o autor apagar o link. Para exercer seus direitos, fale com o autor do tour ou escreva para <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
     </section>
@@ -205,13 +205,23 @@
     </section>
     <section class="card" id="medicao-guiaflow">
       <h2 data-i18n="privacy.gtm.title">Medição de campanhas e uso do GuiaFlow</h2>
-      <p data-i18n="privacy.gtm.p1">Para saber quais canais trazem pessoas ao GuiaFlow e como o produto é usado, fazemos uma medição própria, enviada só para os nossos servidores, sem ferramentas de terceiros, sem cookies e sem pixels.</p>
+      <p data-i18n="privacy.gtm.p1">Para saber quais canais trazem pessoas ao GuiaFlow e como o produto é usado, fazemos uma medição própria, enviada para os nossos servidores, sem cookies e sem pixels. A medição de funil feita com o PostHog está descrita na seção seguinte.</p>
       <ul>
         <li data-i18n="privacy.gtm.li1">Origem da campanha no navegador: quando você chega ao site por um link com parâmetros UTM (utm_source, utm_medium, utm_campaign e utm_content), o navegador guarda esses valores no armazenamento local por até 90 dias. Valores que pareçam e-mail ou telefone são descartados. Se o navegador enviar “Não rastrear” (DNT) ou o Global Privacy Control (GPC), nada é guardado nem enviado.</li>
         <li data-i18n="privacy.gtm.li2">Origem da conta: se você entrar numa conta com uma origem guardada no navegador, ela é registrada uma única vez na conta (a primeira origem) e não é substituída depois. Ela também vai junto do pagamento, para sabermos qual campanha trouxe a assinatura, e é apagada se a conta for excluída.</li>
         <li data-i18n="privacy.gtm.li3">Contagens de uso: contamos por dia quantas visitas houve à página inicial, quantas vezes o editor foi aberto, quantas demos foram criadas, publicadas, compartilhadas e visitadas, quantos cliques houve no botão do WhatsApp, quantos contatos foram captados e quantos pagamentos foram iniciados e concluídos, separados por modo (guia ou galeria) e pela origem da campanha. São só totais por dia, sem dados pessoais: não guardam quem fez, o IP, o navegador, o link do tour nem os dados do contato. Contas de teste e robôs ficam de fora.</li>
       </ul>
       <p data-i18n-html="privacy.gtm.p2">A base legal é o nosso legítimo interesse em entender e melhorar a divulgação e o produto (art. 7º, IX, da LGPD), com o mínimo de dados. Para apagar a origem guardada no navegador, limpe os dados do site guiaflow.pro no navegador. Para apagar a origem registrada na conta, escreva para <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+    <section class="card" id="posthog">
+      <h2 data-i18n="privacy.posthog.title">Medição de uso com o PostHog</h2>
+      <p data-i18n="privacy.posthog.p1">Usamos o PostHog (PostHog Inc., servidores nos Estados Unidos) para entender como o GuiaFlow é usado e quantos tours vistos viram contatos. Se o navegador enviar “Não rastrear” (DNT) ou o Global Privacy Control (GPC), nada é enviado ao PostHog.</p>
+      <ul>
+        <li data-i18n="privacy.posthog.li1">No editor (guiaflow.pro/editor): registramos só as páginas abertas; cliques e o que está escrito na tela não são enviados. Quem tem conta é associado ao código interno da conta e ao plano, nunca ao e-mail ou ao nome. O PostHog guarda um identificador no armazenamento local do navegador (localStorage), sem cookies. Não há gravação de sessão.</li>
+        <li data-i18n="privacy.posthog.li2">Nos tours publicados em link permanente (inclusive incorporados): o player envia só o evento “tour visto”, com o código do tour, o código da conta do autor, o domínio do site onde o tour está incorporado e um identificador aleatório da sessão. Quando alguém deixa o contato, é o nosso servidor (não o navegador) que registra “contato captado”, só com esses códigos, um identificador aleatório do contato e o tipo de destino. O IP do visitante não é gravado, a localização não é calculada e não é criado perfil de pessoa. O nome, o e-mail, o telefone e o que for digitado no formulário nunca são enviados.</li>
+        <li data-i18n="privacy.posthog.li3">Na página de entrada (app.guiaflow.pro): só a visita à página, sem o endereço completo, sem cookies e sem identificar você.</li>
+      </ul>
+      <p data-i18n="privacy.posthog.p2">O identificador aleatório do contato também vai, junto com o contato, para o destino que o autor configurou (por exemplo, o LeadPronto), para ligar o contato à visita. A base legal é o nosso legítimo interesse em entender e melhorar o produto (art. 7º, IX, da LGPD), com o mínimo de dados. Os eventos ficam guardados no PostHog pelo prazo de retenção do nosso plano, ou até pedirmos a exclusão. Para pedir a exclusão, escreva para contato@guiaflow.pro.</p>
     </section>
     <section class="card" id="cookies">
       <h2 data-i18n="privacy.cookies.title">Cookies e medição de uso</h2>
@@ -225,7 +235,7 @@
         <li data-i18n="privacy.cookies.li6">Ao conectar um app de IA pelo OAuth, a página de autorização usa um cookie de sessão de 1 hora, só para essa tela.</li>
         <li data-i18n="privacy.cookies.li7">Os vídeos do YouTube ou do Vimeo que o autor incluir num tour carregam quando você chega ao passo com o vídeo; a partir daí, esses serviços podem usar cookies próprios.</li>
       </ul>
-      <p data-i18n="privacy.cookies.p2">O próprio GuiaFlow não usa cookies de publicidade nem de rastreamento. No navegador, guarda só o necessário para o serviço que você pede e a origem da campanha descrita acima, que não identifica você e não é guardada com “Não rastrear” ou GPC; por isso não mostramos um banner de consentimento de cookies. O editor carrega o script do widget do Tally (tally.so) ao abrir, então o seu navegador se conecta ao Tally (que recebe o seu IP); o formulário em si só carrega quando você clica em “Feedback”. Nos nossos testes, nem o script nem o formulário gravam cookies; o script pode guardar no navegador se você já abriu ou enviou o formulário.</p>
+      <p data-i18n="privacy.cookies.p2">O próprio GuiaFlow não usa cookies de publicidade nem de rastreamento. A medição com o PostHog, descrita acima, também não grava cookies. No navegador, guarda só o necessário para o serviço que você pede e a origem da campanha descrita acima, que não identifica você e não é guardada com “Não rastrear” ou GPC; por isso não mostramos um banner de consentimento de cookies. O editor carrega o script do widget do Tally (tally.so) ao abrir, então o seu navegador se conecta ao Tally (que recebe o seu IP); o formulário em si só carrega quando você clica em “Feedback”. Nos nossos testes, nem o script nem o formulário gravam cookies; o script pode guardar no navegador se você já abriu ou enviou o formulário.</p>
     </section>
     <section class="card" id="bases">
       <h2 data-i18n="privacy.bases.title">Para que usamos e com qual base legal</h2>
@@ -358,8 +368,8 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/207/js/i18n.js";
-    import "./a/207/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/208/js/i18n.js";
+    import "./a/208/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
