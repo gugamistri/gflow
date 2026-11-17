@@ -5,6 +5,7 @@
  * - A config vem de GET /api/analytics-config (env da Vercel). Sem config válida → nada carrega.
  * - DNT/GPC → nada carrega.
  * - before_send: só os eventos liberados e propriedades sem PII (sanitizeProperties).
+ * - before_send: todo evento leva $geoip_disable (sem país, cidade nem coordenadas), como o player /p.
  * - identify nunca leva e-mail ou nome (nem como distinct_id, nem em $set).
  */
 import { editorInitOptions, looksLikePii, POSTHOG_CONFIG_PATH, POSTHOG_PRODUCT, readPosthogConfig, sanitizeProperties } from "./posthogConfig.js";
@@ -21,6 +22,8 @@ export function editorBeforeSend(event) {
   if (!EDITOR_SDK_EVENTS.includes(event.event)) return null;
   const out = { ...event, properties: sanitizeProperties(event.properties) };
   if (out.properties.product !== POSTHOG_PRODUCT) out.properties.product = POSTHOG_PRODUCT;
+  // why: sem localização aproximada (país/coordenadas) a partir do IP, igual ao player /p
+  out.properties.$geoip_disable = true;
   if (event.$set) out.$set = sanitizeProperties(event.$set);
   if (event.$set_once) out.$set_once = sanitizeProperties(event.$set_once);
   if (looksLikePii(String(out.properties.distinct_id || ""))) return null;

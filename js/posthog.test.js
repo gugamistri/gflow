@@ -269,6 +269,16 @@ test("editor before_send: só eventos liberados, sem PII em propriedades, $set o
   assert.equal(opts.disable_session_recording, true);
 });
 
+test("editor before_send: todo evento sai sem localização (\$geoip_disable), como o player /p", () => {
+  for (const event of EDITOR_SDK_EVENTS) {
+    const out = editorBeforeSend({ event, properties: { distinct_id: "usr_1", $current_url: "https://guiaflow.pro/editor" } });
+    assert.equal(out.properties.$geoip_disable, true, event);
+  }
+  // mesmo que algo tente religar, o before_send força o descarte da localização
+  const forced = editorBeforeSend({ event: "$pageview", properties: { $geoip_disable: false } });
+  assert.equal(forced.properties.$geoip_disable, true);
+});
+
 test("editor: analyticsAccountFromMe só lê ids e plano", () => {
   const me = { user: { id: "usr_9", email: "ana@example.com", plan: "pro" }, analytics: { userId: "usr_9", workspaceId: "usr_9", isDemo: true }, entitlements: { plan: "pro" } };
   const a = analyticsAccountFromMe(me);
