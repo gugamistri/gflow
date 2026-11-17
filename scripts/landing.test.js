@@ -125,6 +125,25 @@ test("landing: posicionamento galeria + guia e o assistente nas três línguas",
   }
 });
 
+test("landing: FAQ com resposta direta (grátis, limite de projetos) e a linha neutra GuiaFlow ≠ Guideflow, nas três línguas", () => {
+  const guideflow = {
+    pt: "Não. GuiaFlow (guiaflow.pro) e Guideflow (guideflow.com) são produtos diferentes.",
+    en: "No. GuiaFlow (guiaflow.pro) and Guideflow (guideflow.com) are different products.",
+    es: "No. GuiaFlow (guiaflow.pro) y Guideflow (guideflow.com) son productos diferentes.",
+  };
+  const price = { pt: /R\$ 36\/mês ou R\$ 359\/ano/, en: /US\$ 7\/month or US\$ 69\/year/, es: /US\$ 7 al mes o US\$ 69 al año/ };
+  const pages = { pt: landing, en: read("en.html"), es: read("es.html") };
+  for (const [loc, html] of Object.entries(pages)) {
+    for (const n of [14, 15, 16]) assert.match(html, new RegExp(`data-i18n="lp\\.faq\\.q${n}"`), `${loc}: FAQ ${n}`);
+    const a14 = html.match(/data-i18n="lp\.faq\.a14">([^<]*)</)?.[1] || "";
+    assert.match(a14, price[loc], `${loc}: preço na resposta direta`);
+    assert.ok(html.includes(guideflow[loc]), `${loc}: linha Guideflow visível`);
+    const ld = JSON.parse(html.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/)[1]);
+    const faq = ld["@graph"].find((n) => n["@type"] === "FAQPage");
+    assert.ok(faq.mainEntity.some((q) => q.acceptedAnswer.text === guideflow[loc]), `${loc}: Guideflow no JSON-LD`);
+  }
+});
+
 test("landing: assistente grátis; IA com a chave do usuário ou a IA do GuiaFlow no Pro, nas três línguas", () => {
   const body = { pt: /grátis[^<]*própria chave[^<]*Pro/i, en: /free[^<]*own key[^<]*Pro/i, es: /gratis[^<]*propia clave[^<]*Pro/i };
   const pages = { pt: landing, en: read("en.html"), es: read("es.html") };

@@ -181,6 +181,19 @@
       ]
     },
     {
+      "source": "/1b2482937f25957c629417c219ce63ab.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
       "source": "/.well-known/mcptry-verify.txt",
       "headers": [
         {

@@ -50,6 +50,8 @@ Cada publicação mexe num host só.
 
 `vercel.json` marca `/a/:n/*` como `immutable` por um ano. Se o diff mexe em `css/`, `js/`, `brand/`, `fonts/` ou `vendor/`, suba o prefixo (`a/138` → `a/139` na próxima) em todo HTML e em `api/lib/view-shell.cjs` no mesmo commit, antes do deploy. Sem isso o navegador continua com o CSS e o JS antigos. Confira `https://guiaflow.pro/editor` e a URL `a/<n>/` nova depois de publicar.
 
+Depois do deploy em produção, avise o IndexNow (Bing e outros) das URLs que mudaram: `npm run indexnow -- /caminho /outro` (sem argumentos manda todo o `sitemap.xml`). A chave é pública e fica em `/<chave>.txt` na raiz (`scripts/indexnow.mjs`).
+
 **API (`guiaflow-cloud`).** Merge em `main` publica no Coolify sozinho. Base `/apps/api`, porta `4000`, comando `node src/index.js`. Produção fica com `DATABASE_URL` Postgres e sem `GUIAFLOW_DEV_TOKEN`. `COLLAB_ENABLED` é variável do host. Um commit só de editor não entra nesse repo e não pede deploy da API.
 
 Antes de publicar a API, o diff tem de ser só de `guiaflow-cloud`. Antes de publicar o editor, o diff tem de ser só de `gflow`. `.env` não entra em nenhum dos dois.

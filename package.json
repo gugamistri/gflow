@@ -11,7 +11,8 @@
     "test": "node --test extension/lib/*.test.js scripts/*.test.js js/*.test.js js/tour-schema/*.test.js electron/cartesia.test.js",
     "desktop": "electron .",
     "dist:desktop": "electron-builder --dir",
-    "build:locales": "node scripts/build-locale-pages.mjs"
+    "build:locales": "node scripts/build-locale-pages.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "devDependencies": {
     "electron": "^36.4.0",
