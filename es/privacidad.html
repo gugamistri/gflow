@@ -49,14 +49,14 @@
   <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/a/209/css/theme.css" />
-  <link rel="stylesheet" href="/a/209/css/shell.css" />
-  <link rel="stylesheet" href="/a/209/css/ajuda.css" />
+  <link rel="stylesheet" href="/a/210/css/theme.css" />
+  <link rel="stylesheet" href="/a/210/css/shell.css" />
+  <link rel="stylesheet" href="/a/210/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/209/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/209/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/es" aria-label="GuiaFlow"><img class="logo-full" src="/a/210/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/210/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidad</span>
     </div>
     <div class="topbar-appearance">
@@ -217,6 +217,7 @@
       <h2 data-i18n="privacy.posthog.title">Medición de uso con PostHog</h2>
       <p data-i18n="privacy.posthog.p1">Usamos PostHog (PostHog Inc., servidores en Estados Unidos) para entender cómo se usa GuiaFlow y cuántos tours vistos se convierten en contactos. Si el navegador envía “No rastrear” (DNT) o Global Privacy Control (GPC), no se envía nada a PostHog.</p>
       <ul>
+        <li data-i18n="privacy.posthog.li0">En las páginas del sitio (guiaflow.pro: página de inicio, precios, ayuda, integraciones y las demás páginas informativas): registramos las páginas visitadas, los clics en botones y enlaces (sin el texto de la pantalla y sin nada de lo que escribes en los formularios), cuándo la sección de precios aparece en la pantalla y cuándo se usa la demostración de la página de inicio. No te identificamos y no enviamos tu ubicación. PostHog guarda un identificador en el almacenamiento local del navegador (localStorage), sin cookies; es el mismo del editor, para saber si la visita al sitio llevó al editor. No hay grabación de sesión.</li>
         <li data-i18n="privacy.posthog.li1">En el editor (guiaflow.pro/editor): registramos solo las páginas abiertas; los clics y lo que está escrito en la pantalla no se envían. Quien tiene cuenta queda asociado al código interno de la cuenta y al plan, nunca al correo ni al nombre. PostHog guarda un identificador en el almacenamiento local del navegador (localStorage), sin cookies. No hay grabación de sesión.</li>
         <li data-i18n="privacy.posthog.li2">En los tours publicados en enlace permanente (también incrustados): el reproductor envía solo el evento “tour visto”, con el código del tour, el código de la cuenta del autor, el dominio del sitio donde está incrustado el tour y un identificador aleatorio de la sesión. Cuando alguien deja su contacto, es nuestro servidor (no el navegador) el que registra “contacto captado”, solo con esos códigos, un identificador aleatorio del contacto y el tipo de destino. La IP del visitante no se guarda, no se calcula la ubicación y no se crea un perfil de persona. El nombre, el correo, el teléfono y lo que se escriba en el formulario nunca se envían.</li>
         <li data-i18n="privacy.posthog.li3">En la página de acceso (app.guiaflow.pro): solo la visita a la página, sin la dirección completa, sin cookies y sin identificarte.</li>
@@ -368,11 +369,12 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "/a/209/js/i18n.js";
-    import "./a/209/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "/a/210/js/i18n.js";
+    import "./a/210/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
   </script>
+  <script type="module" src="/a/210/js/landingAnalytics.js"></script>
 </body>
 </html>

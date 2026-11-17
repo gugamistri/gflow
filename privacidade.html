@@ -49,14 +49,14 @@
   <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16" />
   <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="a/209/css/theme.css" />
-  <link rel="stylesheet" href="a/209/css/shell.css" />
-  <link rel="stylesheet" href="a/209/css/ajuda.css" />
+  <link rel="stylesheet" href="a/210/css/theme.css" />
+  <link rel="stylesheet" href="a/210/css/shell.css" />
+  <link rel="stylesheet" href="a/210/css/ajuda.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-brand">
-      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/209/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/209/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="a/210/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="a/210/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
       <span class="topbar-title" data-i18n="legal.privacy">Privacidade</span>
     </div>
     <div class="topbar-appearance">
@@ -217,6 +217,7 @@
       <h2 data-i18n="privacy.posthog.title">Medição de uso com o PostHog</h2>
       <p data-i18n="privacy.posthog.p1">Usamos o PostHog (PostHog Inc., servidores nos Estados Unidos) para entender como o GuiaFlow é usado e quantos tours vistos viram contatos. Se o navegador enviar “Não rastrear” (DNT) ou o Global Privacy Control (GPC), nada é enviado ao PostHog.</p>
       <ul>
+        <li data-i18n="privacy.posthog.li0">Nas páginas do site (guiaflow.pro: página inicial, preços, ajuda, integrações e as demais páginas informativas): registramos as páginas visitadas, os cliques em botões e links (sem o texto da tela e sem nada do que você digita nos formulários), quando a seção de preços aparece na tela e quando a demonstração da página inicial é usada. Não identificamos você e não enviamos a sua localização. O PostHog guarda um identificador no armazenamento local do navegador (localStorage), sem cookies; é o mesmo do editor, para sabermos se a visita ao site levou ao editor. Não há gravação de sessão.</li>
         <li data-i18n="privacy.posthog.li1">No editor (guiaflow.pro/editor): registramos só as páginas abertas; cliques e o que está escrito na tela não são enviados. Quem tem conta é associado ao código interno da conta e ao plano, nunca ao e-mail ou ao nome. O PostHog guarda um identificador no armazenamento local do navegador (localStorage), sem cookies. Não há gravação de sessão.</li>
         <li data-i18n="privacy.posthog.li2">Nos tours publicados em link permanente (inclusive incorporados): o player envia só o evento “tour visto”, com o código do tour, o código da conta do autor, o domínio do site onde o tour está incorporado e um identificador aleatório da sessão. Quando alguém deixa o contato, é o nosso servidor (não o navegador) que registra “contato captado”, só com esses códigos, um identificador aleatório do contato e o tipo de destino. O IP do visitante não é gravado, a localização não é calculada e não é criado perfil de pessoa. O nome, o e-mail, o telefone e o que for digitado no formulário nunca são enviados.</li>
         <li data-i18n="privacy.posthog.li3">Na página de entrada (app.guiaflow.pro): só a visita à página, sem o endereço completo, sem cookies e sem identificar você.</li>
@@ -368,11 +369,12 @@
     <p>© 2026 GuiaFlow</p>
   </footer>
   <script type="module">
-    import { initLocale, applyI18n, bindLocaleSelect } from "./a/209/js/i18n.js";
-    import "./a/209/js/legal-i18n.js";
+    import { initLocale, applyI18n, bindLocaleSelect } from "./a/210/js/i18n.js";
+    import "./a/210/js/legal-i18n.js";
     initLocale();
     applyI18n(document);
     bindLocaleSelect(document.getElementById("locale-select"));
   </script>
+  <script type="module" src="/a/210/js/landingAnalytics.js"></script>
 </body>
 </html>
