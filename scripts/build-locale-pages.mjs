@@ -126,6 +126,7 @@ export const EXTRA_PAGES = [
   { path: "/para-consultorias", lastmod: "2026-11-17" },
   { path: "/modelos", lastmod: "2026-11-17" },
   { path: "/tour-de-produto", lastmod: "2026-11-17" },
+  { path: "/alternativa-fluidz-demos", lastmod: "2026-11-17" },
 ];
 
 /**
