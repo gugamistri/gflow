@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alternativa ao Tipflow: GuiaFlow para tour por link, sem script no app</title>
+  <meta name="description" content="O Tipflow faz walkthroughs dentro do seu app. O GuiaFlow cria guias e galerias com prints, para enviar por link, com editor grátis e preço público." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/alternativa-tipflow" />
+  <link rel="alternate" hreflang="pt-BR" href="https://guiaflow.pro/alternativa-tipflow" />
+  <link rel="alternate" hreflang="x-default" href="https://guiaflow.pro/alternativa-tipflow" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Alternativa ao Tipflow: GuiaFlow para tour por link, sem script no app" />
+  <meta property="og:description" content="O Tipflow faz walkthroughs dentro do seu app. O GuiaFlow cria guias e galerias com prints, para enviar por link, com editor grátis e preço público." />
+  <meta property="og:url" content="https://guiaflow.pro/alternativa-tipflow" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-landing-v3.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Alternativa ao Tipflow: GuiaFlow para tour por link, sem script no app" />
+  <meta name="twitter:description" content="O Tipflow faz walkthroughs dentro do seu app. O GuiaFlow cria guias e galerias com prints, para enviar por link, com editor grátis e preço público." />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing-v3.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (metaTheme) metaTheme.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/216/css/theme.css" />
+  <link rel="stylesheet" href="/a/216/css/shell.css" />
+  <link rel="stylesheet" href="/a/216/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+
+
+    .page { max-width: 880px; min-width: 0; width: 100%; overflow-wrap: anywhere; }
+    .page .crumbs { margin: 0 0 10px; color: var(--ns-muted); font-size: 0.85rem; }
+    .page .crumbs a { color: inherit; }
+    .page .lead { margin-bottom: 10px; }
+    .page .note { color: var(--ns-muted); font-size: 0.88rem; }
+    .page .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 4px; }
+    .page .cta-row .btn { white-space: normal; text-align: center; }
+    .page .card a.btn { color: var(--ns-ink); }
+    .page .card a.btn-primary { color: var(--ns-button-text); }
+    .page .table-wrap { overflow-x: auto; margin: 8px 0 0; min-width: 0; max-width: 100%; -webkit-overflow-scrolling: touch; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--ns-border); overflow-wrap: anywhere; }
+    .page thead th { color: var(--ns-muted); font-weight: 600; }
+    .page tbody th { font-weight: 600; width: 18%; }
+    .page .example-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.83 / 1;
+      min-height: 280px;
+      margin: 14px 0 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--ns-border);
+      background: var(--ns-input-bg);
+    }
+    .page .example-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .page .sources { font-size: 0.88rem; }
+    .page .sources li { overflow-wrap: anywhere; }
+    @media (max-width: 640px) {
+      .page .table-wrap { overflow-x: visible; }
+      .page table, .page tbody, .page tr, .page th, .page td { display: block; width: 100%; }
+      .page thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .page tbody tr {
+        margin: 0;
+        padding: 10px 0 12px;
+        border-bottom: 1px solid var(--ns-border);
+      }
+      .page tbody tr:last-child { border-bottom: 0; padding-bottom: 0; }
+      .page tbody th, .page tbody td { border-top: 0; padding: 3px 0; width: auto; }
+      .page tbody th { padding-top: 0; }
+      .page td:nth-child(2)::before { content: "GuiaFlow: "; font-weight: 600; }
+      .page td:nth-child(3)::before { content: "Getdemo: "; font-weight: 600; }
+    }
+  
+  
+  </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://guiaflow.pro/alternativa-tipflow#webpage",
+      "url": "https://guiaflow.pro/alternativa-tipflow",
+      "name": "Alternativa ao Tipflow: GuiaFlow para tour por link, sem script no app",
+      "description": "O Tipflow faz walkthroughs dentro do seu app. O GuiaFlow cria guias e galerias com prints, para enviar por link, com editor grátis e preço público.",
+      "inLanguage": "pt-BR",
+      "isPartOf": {
+        "@id": "https://guiaflow.pro/#website"
+      },
+      "about": {
+        "@id": "https://guiaflow.pro/#software"
+      },
+      "publisher": {
+        "@id": "https://guiaflow.pro/#organization"
+      },
+      "datePublished": "2026-11-17",
+      "dateModified": "2026-11-17",
+      "breadcrumb": {
+        "@id": "https://guiaflow.pro/alternativa-tipflow#breadcrumb"
+      },
+      "mainEntity": {
+        "@id": "https://guiaflow.pro/alternativa-tipflow#faq"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://guiaflow.pro/alternativa-tipflow#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Início",
+          "item": "https://guiaflow.pro/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Alternativa ao Tipflow",
+          "item": "https://guiaflow.pro/alternativa-tipflow"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://guiaflow.pro/alternativa-tipflow#faq",
+      "inLanguage": "pt-BR",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "O Tipflow e o GuiaFlow fazem a mesma coisa?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Não. O Tipflow publica walkthroughs, avisos e checklists dentro do seu app, com um script. O GuiaFlow cria guias e galerias a partir de prints, para a pessoa abrir por link ou incorporação, sem instalar script no seu produto. Se você precisa de tooltips no app, o Tipflow cobre essa categoria; o GuiaFlow não faz onboarding dentro do app."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "O Tipflow é brasileiro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim. Os termos de uso identificam a TIPFLOW LTDA., CNPJ 68.146.063/0001-94, com sede em Toledo/PR, Brasil."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "O Tipflow tem trial ou plano grátis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Há 14 dias grátis no nível Pro, sem cartão. A página de preços avisa que as vagas de teste são limitadas e, quando o lote está cheio, há lista de espera. O GuiaFlow tem editor gratuito, sem conta, sem cartão e sem prazo de trial para criar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quanto custa o Tipflow?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nas páginas públicas em reais, em 17/11/2026: Starter R$ 149/mês (500 MTU e 2.000 gravações), Pro R$ 349/mês (1.500 MTU e 5.000 gravações) e Enterprise R$ 599/mês (2.500 MTU e 10.000 gravações), com 15% de desconto no anual. O GuiaFlow Pro é R$ 36/mês ou R$ 359/ano, assinado direto no site."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "O GuiaFlow substitui o Tipflow?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Não, se você precisa de tour, aviso ou checklist dentro do produto para quem já está logado. O GuiaFlow substitui o Tipflow só no recorte de um guia ou uma galeria enviados por link ou incorporados no site."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Preciso falar com vendas para usar o GuiaFlow?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Não. Abra o editor e comece. O Pro é assinado pelo Stripe, sem conversa com vendas, e pode ser cancelado quando você quiser."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Dá para mandar o guia pelo WhatsApp?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No GuiaFlow, sim: o botão final para o WhatsApp está no Grátis, e o link temporário dura 7 dias. Link permanente, captura de contatos e incorporação no site são do Pro."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "O GuiaFlow é open source?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim. O editor e o player têm licença MIT e o código está em github.com/gugamistri/gflow."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Agência consegue usar com vários clientes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim. Para entregar ao cliente (link permanente, incorporação, captura de contatos e player sem a marca GuiaFlow), o Pro é o piso. No Pro, a área Clientes organiza os projetos por cliente dentro do editor. Não é white-label: o logo do cliente não aparece no player. Quem assiste não paga nem cria conta."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/" aria-label="GuiaFlow"><img class="logo-full" src="/a/216/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/216/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title"><span>Alternativa ao Tipflow</span></span>
+    </div>
+  </header>
+
+  <main class="page">
+    <p class="crumbs"><a href="/">Início</a> › Alternativa ao Tipflow</p>
+    <h1>Alternativa ao Tipflow: tour por link no GuiaFlow, tour dentro do app no Tipflow</h1>
+    <p class="lead">O Tipflow, da TIPFLOW LTDA. (Toledo/PR, Brasil), instala um script no seu app e publica walkthroughs, avisos e checklists para quem já entrou no produto. O GuiaFlow não faz onboarding dentro do app: cria guias e galerias com prints, para enviar por link ou incorporar no site, com editor gratuito sem conta e Pro por R$ 36/mês ou R$ 359/ano.</p>
+    <p class="note">Informações do Tipflow verificadas em 17/11/2026 nas páginas públicas de tipflow.com.br (fontes no fim da página).</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/editor">Abrir o editor grátis</a>
+      <a class="btn" href="https://guiaflow.pro/editor?pro=1">Assinar o Pro — R$ 36/mês ou R$ 359/ano</a>
+    </div>
+
+    <section class="card" id="para-quem">
+      <h2>Para quem é cada uma</h2>
+      <p><strong>Tipflow</strong> — times de produto que querem walkthroughs, avisos e checklists dentro do próprio app, com segmentação, funil de adoção e gravações de sessão. É um produto da TIPFLOW LTDA., de Toledo/PR.</p>
+      <p><strong>GuiaFlow</strong> — quem quer um <a href="/tour-de-produto">tour de produto</a> ou uma <a href="/demo-interativa">demo interativa</a> para o site, o lançamento ou o envio por link, sem instalar script no app. Você monta um guia sobre prints ou uma <a href="/modelos">galeria de fotos</a>. Comparações com outras ferramentas brasileiras de demo interativa: <a href="/alternativa-getdemo">GuiaFlow vs Getdemo</a> e <a href="/alternativa-fluidz-demos">GuiaFlow vs Fluidz Demos</a>.</p>
+    </section>
+
+    <section class="card" id="comparacao">
+      <h2>GuiaFlow vs Tipflow: a comparação</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Critério</th><th scope="col">GuiaFlow</th><th scope="col">Tipflow</th></tr>
+          </thead>
+          <tbody>
+          <tr><th scope="row">Origem</th><td>Brasil (código aberto, MIT)</td><td>Brasil: TIPFLOW LTDA., CNPJ 68.146.063/0001-94, sede em Toledo/PR</td></tr>
+          <tr><th scope="row">O que faz</th><td>Guias e galerias a partir de prints, enviados por link ou incorporação</td><td>Walkthroughs, hints, avisos e checklists dentro do app, para quem já entrou no produto</td></tr>
+          <tr><th scope="row">Instalação no seu app</th><td>Não instala script no seu produto</td><td>Um script (embed.js) no app</td></tr>
+          <tr><th scope="row">Uso grátis ou trial</th><td>Editor gratuito, sem conta e sem cartão, sem prazo de trial para criar</td><td>14 dias grátis no Pro, sem cartão; a página de preços avisa que as vagas de teste podem entrar em lista de espera</td></tr>
+          <tr><th scope="row">Preço</th><td>Público: Pro R$ 36/mês ou R$ 359/ano</td><td>Público, em reais em 17/11/2026: Starter R$ 149/mês, Pro R$ 349/mês, Enterprise R$ 599/mês, com 15% de desconto no anual</td></tr>
+          <tr><th scope="row">Como contratar</th><td>Assinatura direta pelo Stripe; cancela quando quiser</td><td>Cartão via Stripe, mensal ou anual, sem fidelidade; a página de preços cita nota fiscal na cobrança em reais</td></tr>
+          <tr><th scope="row">Código aberto</th><td>Editor e player com licença MIT</td><td>Não informado nas páginas públicas consultadas</td></tr>
+          <tr><th scope="row">Como criar</th><td>Extensão do Chrome, app desktop ou envio de prints e fotos</td><td>Construtor no próprio app: o time clica nos elementos e publica, sem sprint de engenharia, segundo as páginas de produto</td></tr>
+          <tr><th scope="row">Galeria de fotos (produto, veículo, imóvel)</th><td>Sim, modo galeria</td><td>Não é o recorte do produto, segundo as páginas públicas consultadas</td></tr>
+          <tr><th scope="row">Caminhos alternativos</th><td>Não: guias lineares (a galeria permite navegar livremente)</td><td>Não informado como ramificação nas páginas públicas consultadas; há segmentação de público</td></tr>
+          <tr><th scope="row">Segmentação</th><td>Não faz segmentação dentro do app do destinatário</td><td>Sim: por plano, cargo, data de cadastro ou atributos do usuário, segundo as páginas de produto e de walkthroughs</td></tr>
+          <tr><th scope="row">Análise</th><td>Pro: quem abriu, quem chegou ao fim, quem clicou no botão final e em que passo as pessoas param</td><td>Coleta de eventos, funil de adoção, gravações de sessão e mapa de calor, com volumes por plano (por exemplo, 2.000 gravações/mês no Starter)</td></tr>
+          <tr><th scope="row">Compartilhar</th><td>Link temporário de 7 dias em qualquer plano; HTML e MP4. Pro: link permanente que não expira e incorporação no site</td><td>O conteúdo roda dentro do app de quem já é usuário; a página de walkthroughs também cita disparo por elemento com atributo data-tf-start</td></tr>
+          <tr><th scope="row">WhatsApp</th><td>Botão final para o WhatsApp no Grátis</td><td>Não descrito como CTA de WhatsApp nas páginas públicas consultadas</td></tr>
+          <tr><th scope="row">Integrações e agentes</th><td>Pro: LeadPronto, RD Station Marketing, HubSpot e webhook; API REST e MCP (Cursor, Claude, ChatGPT, VS Code e Codex)</td><td>A página de preços inclui MCP para conectar Claude, ChatGPT e outros agentes já no Starter; API de traits a partir do Pro, segundo a página de walkthroughs</td></tr>
+          <tr><th scope="row">SSO</th><td>Não</td><td>SSO SAML no Enterprise, segundo a página de preços</td></tr>
+          <tr><th scope="row">Onboarding dentro do produto</th><td>Não faz</td><td>Sim: essa é a categoria do produto</td></tr>
+          <tr><th scope="row">Marca no player</th><td>Grátis com a marca GuiaFlow; Pro sem a marca; não é white-label</td><td>Não se aplica da mesma forma: o conteúdo aparece no app do cliente</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Tipflow: dados das páginas públicas em 17/11/2026 (horário de Brasília). Se algo mudou, avise: <a href="mailto:contato@guiaflow.pro">contato@guiaflow.pro</a>.</p>
+    </section>
+
+    <section class="card" id="preco">
+      <h2>Como contratar e quanto custa</h2>
+      <p><strong>Tipflow.</strong> 14 dias grátis no Pro, sem cartão (vagas de teste limitadas, com lista de espera quando o lote está cheio). Depois, na visualização em reais da página de preços em 17/11/2026: Starter R$ 149/mês, Pro R$ 349/mês e Enterprise R$ 599/mês, com 15% de desconto no anual. A cobrança é por MTU (pessoa que gera eventos no mês). Sem fidelidade; cancelamento no portal de assinatura, com acesso até o fim do ciclo já pago.</p>
+      <p><strong>GuiaFlow.</strong> O editor é gratuito, sem conta e sem cartão. O Pro custa R$ 36/mês ou R$ 359/ano (fora do Brasil, US$ 7/mês ou US$ 69/ano), com assinatura direta pelo Stripe e cancelamento quando quiser. Veja os <a href="/#precos">planos</a>.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/editor">Abrir o editor grátis</a>
+        <a class="btn" href="https://guiaflow.pro/editor?pro=1">Assinar o Pro — R$ 36/mês ou R$ 359/ano</a>
+      </div>
+    </section>
+
+    <section class="card" id="exemplos">
+      <h2>Exemplo navegável</h2>
+      <p>Clique para avançar, como faria quem recebe o seu link — este é um guia por link, não um tour dentro de um app: <a href="https://guiaflow.pro/exemplos/guia">guia de software de exemplo</a> · <a href="https://guiaflow.pro/exemplos/galeria">galeria de produto de exemplo</a> · <a href="/modelos">os dois exemplos juntos</a></p>
+      <div class="example-frame">
+        <iframe src="/exemplos/guia?embed=1" title="Exemplo de guia de software no GuiaFlow" loading="lazy" allow="autoplay; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <p class="note">A diferença entre tour no site e tour dentro do app está em <a href="/tour-de-produto">tour de produto</a>.</p>
+    </section>
+
+    <section class="card" id="faq">
+      <h2>Perguntas frequentes</h2>
+      <h3>O Tipflow e o GuiaFlow fazem a mesma coisa?</h3>
+      <p>Não. O Tipflow publica walkthroughs, avisos e checklists dentro do seu app, com um script. O GuiaFlow cria guias e galerias a partir de prints, para a pessoa abrir por link ou incorporação, sem instalar script no seu produto. Se você precisa de tooltips no app, o Tipflow cobre essa categoria; o GuiaFlow não faz onboarding dentro do app.</p>
+      <h3>O Tipflow é brasileiro?</h3>
+      <p>Sim. Os termos de uso identificam a TIPFLOW LTDA., CNPJ 68.146.063/0001-94, com sede em Toledo/PR, Brasil.</p>
+      <h3>O Tipflow tem trial ou plano grátis?</h3>
+      <p>Há 14 dias grátis no nível Pro, sem cartão. A página de preços avisa que as vagas de teste são limitadas e, quando o lote está cheio, há lista de espera. O GuiaFlow tem editor gratuito, sem conta, sem cartão e sem prazo de trial para criar.</p>
+      <h3>Quanto custa o Tipflow?</h3>
+      <p>Nas páginas públicas em reais, em 17/11/2026: Starter R$ 149/mês (500 MTU e 2.000 gravações), Pro R$ 349/mês (1.500 MTU e 5.000 gravações) e Enterprise R$ 599/mês (2.500 MTU e 10.000 gravações), com 15% de desconto no anual. O GuiaFlow Pro é R$ 36/mês ou R$ 359/ano, assinado direto no site.</p>
+      <h3>O GuiaFlow substitui o Tipflow?</h3>
+      <p>Não, se você precisa de tour, aviso ou checklist dentro do produto para quem já está logado. O GuiaFlow substitui o Tipflow só no recorte de um guia ou uma galeria enviados por link ou incorporados no site.</p>
+      <h3>Preciso falar com vendas para usar o GuiaFlow?</h3>
+      <p>Não. Abra o editor e comece. O Pro é assinado pelo Stripe, sem conversa com vendas, e pode ser cancelado quando você quiser.</p>
+      <h3>Dá para mandar o guia pelo WhatsApp?</h3>
+      <p>No GuiaFlow, sim: o botão final para o WhatsApp está no Grátis, e o link temporário dura 7 dias. Link permanente, captura de contatos e incorporação no site são do Pro.</p>
+      <h3>O GuiaFlow é open source?</h3>
+      <p>Sim. O editor e o player têm licença MIT e o código está em github.com/gugamistri/gflow.</p>
+      <h3>Agência consegue usar com vários clientes?</h3>
+      <p>Sim. Para entregar ao cliente (link permanente, incorporação, captura de contatos e player sem a marca GuiaFlow), o Pro é o piso. No Pro, a área Clientes organiza os projetos por cliente dentro do editor. Não é white-label: o logo do cliente não aparece no player. Quem assiste não paga nem cria conta.</p>
+    </section>
+
+    <section class="card sources" id="fontes">
+      <h2>Fontes</h2>
+      <p>Páginas públicas do Tipflow consultadas em 17/11/2026:</p>
+      <ul>
+        <li>Home: <a href="https://tipflow.com.br/pt-br" rel="nofollow noopener" target="_blank">https://tipflow.com.br/pt-br</a></li>
+        <li>Preços: <a href="https://tipflow.com.br/pt-br/precos" rel="nofollow noopener" target="_blank">https://tipflow.com.br/pt-br/precos</a></li>
+        <li>Walkthroughs: <a href="https://tipflow.com.br/pt-br/produto/walkthroughs" rel="nofollow noopener" target="_blank">https://tipflow.com.br/pt-br/produto/walkthroughs</a></li>
+        <li>Termos de uso: <a href="https://tipflow.com.br/pt-br/termos" rel="nofollow noopener" target="_blank">https://tipflow.com.br/pt-br/termos</a></li>
+      </ul>
+      <p>GuiaFlow, consultado na mesma data: <a href="https://guiaflow.pro/">https://guiaflow.pro/</a> · <a href="https://guiaflow.pro/termos">https://guiaflow.pro/termos</a> · <a href="https://guiaflow.pro/#precos">https://guiaflow.pro/#precos</a> · <a href="https://guiaflow.pro/tour-de-produto">https://guiaflow.pro/tour-de-produto</a> · <a href="https://guiaflow.pro/llms.txt">https://guiaflow.pro/llms.txt</a> · <a href="https://github.com/gugamistri/gflow" rel="noopener" target="_blank">https://github.com/gugamistri/gflow</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="Links do rodapé">
+      <a href="/editor">Editor</a>
+      <a href="/#precos">Preços</a>
+      <a href="/ajuda">Ajuda</a>
+      <a href="/modelos">Exemplos</a>
+      <a href="/tour-de-produto">Tour de produto</a>
+      <a href="/alternativa-getdemo">Alternativa à Getdemo</a>
+      <a href="/alternativa-fluidz-demos">Alternativa à Fluidz Demos</a>
+      <a href="/integracoes">Integrações</a>
+      <a href="/privacidade">Privacidade</a>
+      <a href="/termos">Termos</a>
+      <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module" src="/a/216/js/landingAnalytics.js"></script>
+</body>
+</html>
