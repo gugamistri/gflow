@@ -51,7 +51,7 @@ function el(tag, { attrs = {}, className = "", id = "", text = "", parent = null
 }
 
 test("landing: só nas páginas do site; editor, player e exemplos ficam de fora", () => {
-  for (const p of ["/", "/en", "/es", "/ajuda", "/en/help", "/integracoes/leads", "/cortesia", "/privacidade", "/alternativa-getdemo", "/alternativa-fluidz-demos", "/alternativa-tipflow", "/para-agencias", "/demo-interativa", "/para-consultorias", "/modelos", "/tour-de-produto"]) {
+  for (const p of ["/", "/en", "/es", "/ajuda", "/en/help", "/integracoes/leads", "/cortesia", "/privacidade", "/alternativa-getdemo", "/alternativa-fluidz-demos", "/alternativa-tipflow", "/para-agencias", "/demo-interativa", "/para-consultorias", "/para-times-de-produto", "/modelos", "/tour-de-produto"]) {
     assert.equal(isLandingPath(p), true, p);
   }
   for (const p of ["/editor", "/editor.html", "/p/abc-123", "/v/xyz", "/exemplos/guia", "/en/exemplos/galeria", "/auth/callback", "/view"]) {
@@ -198,7 +198,7 @@ test("landing: o script entra nas páginas do site e nunca no editor ou no playe
   const TAG = /<script type="module" src="\/a\/\d+\/js\/landingAnalytics\.js"><\/script>/;
   const site = [
     "index.html", "en.html", "es.html", "ajuda.html", "ajuda/api.html", "integracoes.html", "integracoes/leads.html",
-    "integracoes/leadpronto.html", "privacidade.html", "termos.html", "cortesia.html", "alternativa-getdemo.html", "alternativa-fluidz-demos.html", "alternativa-tipflow.html", "para-agencias.html", "demo-interativa.html", "para-consultorias.html", "modelos.html", "tour-de-produto.html",
+    "integracoes/leadpronto.html", "privacidade.html", "termos.html", "cortesia.html", "alternativa-getdemo.html", "alternativa-fluidz-demos.html", "alternativa-tipflow.html", "para-agencias.html", "demo-interativa.html", "para-consultorias.html", "para-times-de-produto.html", "modelos.html", "tour-de-produto.html",
     "en/help.html", "en/integrations.html", "en/privacy.html", "en/terms.html", "es/ayuda.html", "es/privacidad.html", "es/terminos.html",
   ];
   for (const f of site) assert.match(read(f), TAG, f);

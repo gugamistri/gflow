@@ -31,7 +31,7 @@ test("/para-consultorias: só pt-BR, canonical próprio, assets versionados, CTA
   assert.match(read("para-agencias.html"), /href="\/para-consultorias"/);
   assert.match(read("demo-interativa.html"), /href="\/para-consultorias"/);
   assert.match(read("alternativa-getdemo.html"), /href="\/para-consultorias"/);
-  assert.equal(read("index.html").includes("/para-consultorias"), false);
+  assert.match(read("index.html"), /<h3 data-i18n="lp\.aud\.consulting\.title"><a href="\/para-consultorias"[^>]*>Consultorias e implementação<\/a><\/h3>/);
   assert.equal(read("en.html").includes("/para-consultorias"), false);
   assert.equal(read("es.html").includes("/para-consultorias"), false);
 });
