@@ -83,3 +83,27 @@ test("/para-consultorias está no sitemap (sem hreflang) e no llms.txt", () => {
   assert.equal(block.includes("hreflang"), false);
   assert.match(read("llms.txt"), /https:\/\/guiaflow\.pro\/para-consultorias/);
 });
+
+test("/para-consultorias: bloco WhatsApp discreto logo após o primeiro Assinar o Pro", () => {
+  const html = read("para-consultorias.html");
+  const needle = 'href="https://guiaflow.pro/editor?pro=1">Assinar o Pro — R$ 36/mês ou R$ 359/ano';
+  const firstPro = html.indexOf(needle);
+  assert.ok(firstPro >= 0);
+  const after = html.slice(firstPro);
+  const afterRow = after.slice(after.indexOf("</div>") + 6).trimStart();
+  assert.ok(afterRow.startsWith('<section class="card card-contato" id="contato-whatsapp">'), "bloco deve vir logo abaixo do primeiro Assinar o Pro");
+  const blockAt = after.indexOf('id="contato-whatsapp"');
+  const href = "https://wa.me/551151985193?text=" + encodeURIComponent("Oi, sou de uma consultoria e quero entender o GuiaFlow para meus clientes.");
+  const block = after.slice(blockAt, after.indexOf("</section>", blockAt));
+  assert.match(block, /<h2>Atende vários clientes\?<\/h2>/);
+  assert.match(block, /Conte quantos projetos de implantação você entrega por mês, e a gente vê com você o melhor jeito de usar o GuiaFlow na consultoria\./);
+  assert.ok(block.includes(`href="${href}"`), href);
+  assert.match(block, /target="_blank"/);
+  assert.match(block, /rel="noopener"/);
+  assert.match(block, /data-cta-id="whatsapp_contato"/);
+  assert.match(block, />Falar no WhatsApp</);
+  assert.equal((html.match(/wa\.me\/551151985193/g) || []).length, 1);
+  assert.equal(/\bligue\b/i.test(html), false);
+  assert.equal(read("en.html").includes("whatsapp_contato"), false);
+  assert.equal(read("es.html").includes("whatsapp_contato"), false);
+});
