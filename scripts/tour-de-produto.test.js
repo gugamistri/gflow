@@ -56,6 +56,14 @@ test("/tour-de-produto: copy sem vocabulário vetado, onboarding qualificado, co
   ]) {
     assert.ok(html.includes(`<a href="${u}" rel="nofollow noopener" target="_blank">`), u);
   }
+  assert.match(html, /Dados de concorrentes conferidos em 17\/11\/2026/);
+  assert.equal(/<h2>Fontes<\/h2>|GuiaFlow, consultado na mesma data/.test(html), false);
+  const fontes = html.match(/<p class="sources" id="fontes">[\s\S]*?<\/p>/)[0];
+  assert.ok(fontes);
+  assert.equal(/guiaflow\.pro|github\.com\/gugamistri/i.test(fontes), false);
+  for (const m of fontes.matchAll(/<a\b[^>]*>/g)) {
+    assert.match(m[0], /\brel="nofollow noopener"/);
+  }
 });
 
 test("/tour-de-produto: JSON-LD WebPage + BreadcrumbList + FAQPage, FAQ igual à visível", () => {

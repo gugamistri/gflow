@@ -77,6 +77,30 @@ test("/alternativa-getdemo: JSON-LD WebPage, BreadcrumbList e FAQPage válido, c
   assert.equal(/"@type":"Review"/.test(dump), false);
 });
 
+test("/alternativa-getdemo: fontes discretas só de concorrentes, com data e nofollow", () => {
+  const html = read("alternativa-getdemo.html");
+  assert.match(html, /Dados de concorrentes conferidos em 15\/11\/2026/);
+  assert.equal(/<h2>Fontes<\/h2>|GuiaFlow, consultado na mesma data/.test(html), false);
+  const fontes = html.match(/<p class="sources" id="fontes">[\s\S]*?<\/p>/)[0];
+  assert.ok(fontes);
+  assert.equal(/guiaflow\.pro|github\.com\/gugamistri/i.test(fontes), false);
+  for (const u of [
+    "https://www.getdemo.com.br/planos",
+    "https://www.getdemo.com.br/solucoes/demos-interativas",
+    "https://www.getdemo.com.br/solucoes/onboarding-guiado",
+    "https://www.getdemo.com.br/solucoes/saas-copilot",
+    "https://www.getdemo.com.br/solucoes/demoagent",
+    "https://www.getdemo.com.br/integracoes",
+    "https://www.getdemo.com.br/terms-of-service",
+    "https://pt.linkedin.com/posts/getdemo_blacknovember-blackfriday-saas-activity-7524569218781130752-5zQk",
+  ]) {
+    assert.ok(html.includes(`<a href="${u}" rel="nofollow noopener" target="_blank">`), u);
+  }
+  for (const m of fontes.matchAll(/<a\b[^>]*>/g)) {
+    assert.match(m[0], /\brel="nofollow noopener"/);
+  }
+});
+
 test("promo Black November está marcada para remoção depois de 30/11/2026", () => {
   const html = read("alternativa-getdemo.html");
   const start = html.split("<!-- promo-black-november:start -->");
