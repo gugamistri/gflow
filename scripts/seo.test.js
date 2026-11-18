@@ -59,9 +59,9 @@ test("sitemap lista só as páginas públicas estáticas", () => {
   assert.equal(/nuvem/i.test(text), false);
 });
 
-test("sitemap inclui /exemplos/guia e /exemplos/galeria com hreflang em ?lang=", () => {
+test("sitemap inclui /exemplos/guia, /exemplos/galeria e /exemplos/processo com hreflang em ?lang=", () => {
   const text = read("sitemap.xml");
-  for (const id of ["guia", "galeria"]) {
+  for (const id of ["guia", "galeria", "processo"]) {
     const pt = `https://guiaflow.pro/exemplos/${id}`;
     assert.ok(text.includes(`<loc>${pt}</loc>`), pt);
     assert.ok(text.includes(`<loc>${pt}?lang=en</loc>`), `${pt}?lang=en`);

@@ -15,11 +15,12 @@ test("exemplo intocado fica só no navegador; editado (ou renomeado) sincroniza"
   assert.equal(isUntouchedStockDemo(null), false);
   assert.equal(isStockDemoName("Como usar o Guia"), true);
   assert.equal(isStockDemoName("Luminária Arco Liana"), true);
+  assert.equal(isStockDemoName("Como solicitar um reembolso"), true);
   assert.equal(isStockDemoName("Meu tour"), false);
 });
 
-test("os dois exemplos empacotados existem no repositório", () => {
-  assert.equal(STOCK_DEMOS.length, 2);
+test("os exemplos empacotados existem no repositório", () => {
+  assert.equal(STOCK_DEMOS.length, 3);
   for (const stock of STOCK_DEMOS) {
     assert.equal(existsSync(join(root, stock.url)), true, stock.url);
   }

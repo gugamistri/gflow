@@ -2,7 +2,7 @@
  * Exemplos empacotados no front (landing + biblioteca do editor + player em /exemplos/:id).
  * why: não dependem de um tour publicado em /p ou /v; o JSON e as imagens vão no repositório.
  */
-export const PACKAGED_EXAMPLE_IDS = Object.freeze(["guia", "galeria"]);
+export const PACKAGED_EXAMPLE_IDS = Object.freeze(["guia", "galeria", "processo"]);
 
 export const PACKAGED_EXAMPLES = Object.freeze({
   guia: Object.freeze({
@@ -16,6 +16,12 @@ export const PACKAGED_EXAMPLES = Object.freeze({
     file: "/data/examples/galeria-produto.json",
     mode: "gallery",
     stockName: "Luminária Arco Liana",
+  }),
+  processo: Object.freeze({
+    id: "processo",
+    file: "/data/examples/guia-processo.json",
+    mode: "guided",
+    stockName: "Como solicitar um reembolso",
   }),
 });
 
