@@ -6,8 +6,8 @@ import { ASSET_PREFIX_RE } from "./asset-version.mjs";
 const root = new URL("../", import.meta.url);
 const read = (name) => readFileSync(new URL(name, root), "utf8");
 
-const TITLE = "Exemplos de guia e galeria de produto (grátis) | GuiaFlow";
-const H1 = "Exemplos de guia e galeria para começar no editor";
+const TITLE = "Exemplos de guia, galeria e processo (grátis) | GuiaFlow";
+const H1 = "Exemplos de guia, galeria e processo para começar no editor";
 const CANONICAL = "https://guiaflow.pro/modelos";
 const unesc = (s) => s.replaceAll("&quot;", '"').replaceAll("&#x27;", "'").replaceAll("&amp;", "&");
 
@@ -24,12 +24,16 @@ test("/modelos: só pt-BR, canonical próprio, assets versionados, exemplos reai
   assert.match(html, /href="https:\/\/guiaflow\.pro\/editor\?pro=1">Assinar o Pro — R\$ 36\/mês ou R\$ 359\/ano</);
   assert.match(html, /href="https:\/\/guiaflow\.pro\/exemplos\/guia"/);
   assert.match(html, /href="https:\/\/guiaflow\.pro\/exemplos\/galeria"/);
+  assert.match(html, /href="https:\/\/guiaflow\.pro\/exemplos\/processo"/);
   assert.match(html, /src="\/exemplos\/guia\?embed=1"/);
   assert.match(html, /src="\/exemplos\/galeria\?embed=1"/);
+  assert.match(html, /src="\/exemplos\/processo\?embed=1"/);
   assert.match(html, /href="\/editor\?novo=guia"/);
   assert.match(html, /href="\/editor\?novo=galeria"/);
   assert.match(html, /Como usar o Guia/);
   assert.match(html, /Luminária Arco Liana/);
+  assert.match(html, /Como solicitar um reembolso/);
+  assert.match(html, /Portal Alva/);
   assert.match(html, /O exemplo não é copiado para o seu projeto/);
   assert.equal(/Usar este modelo/i.test(html), false);
   assert.equal(/empreendimento|Galeria: imóvel|galeria de imóvel/i.test(html), false);
@@ -53,7 +57,8 @@ test("/modelos: copy sem vocabulário vetado, sem clientes nem números inventad
   assert.equal(/nstech|Plano&amp;Plano|Plano&Plano/i.test(html), false);
   assert.equal(html.includes("área Clientes"), false);
   assert.match(html, /Não é white-label/);
-  assert.match(html, /dois exemplos públicos/);
+  assert.match(html, /três exemplos públicos/);
+  assert.equal(/dois exemplos/.test(html), false);
 });
 
 test("/modelos: JSON-LD CollectionPage + ItemList + BreadcrumbList + FAQPage, FAQ igual à visível", () => {
@@ -63,9 +68,10 @@ test("/modelos: JSON-LD CollectionPage + ItemList + BreadcrumbList + FAQPage, FA
   assert.equal(data["@graph"][0].name, TITLE);
   assert.equal(data["@graph"][0].url, CANONICAL);
   const items = data["@graph"][1].itemListElement;
-  assert.equal(items.length, 2);
+  assert.equal(items.length, 3);
   assert.equal(items[0].item.url, "https://guiaflow.pro/exemplos/guia");
-  assert.equal(items[1].item.url, "https://guiaflow.pro/exemplos/galeria");
+  assert.equal(items[1].item.url, "https://guiaflow.pro/exemplos/processo");
+  assert.equal(items[2].item.url, "https://guiaflow.pro/exemplos/galeria");
   const visible = unesc(html);
   const faq = data["@graph"][3].mainEntity;
   assert.equal(faq.length, 6);

@@ -35,6 +35,7 @@ const SEED_REVISION = 5;
 export const STOCK_DEMOS = Object.freeze([
   Object.freeze({ name: "Como usar o Guia", url: "data/demo.json" }),
   Object.freeze({ name: "Luminária Arco Liana", url: "data/examples/galeria-produto.json" }),
+  Object.freeze({ name: "Como solicitar um reembolso", url: "data/examples/guia-processo.json" }),
 ]);
 export const STOCK_DEMO_NAME = STOCK_DEMOS[0].name;
 const STOCK_DEMO_NAMES = new Set(STOCK_DEMOS.map((d) => d.name));

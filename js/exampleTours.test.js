@@ -38,10 +38,11 @@ test("landingExampleHref: ?lang= segue o locale da página; ids inválidos ficam
   assert.equal(landingExampleHref("nao-existe"), "");
 });
 
-test("os dois exemplos têm conteúdo em pt, en e es, e o player segue ?lang=", () => {
+test("os exemplos empacotados têm conteúdo em pt, en e es, e o player segue ?lang=", () => {
   assert.equal(PACKAGED_EXAMPLES.guia.mode, "guided");
   assert.equal(PACKAGED_EXAMPLES.galeria.mode, "gallery");
-  for (const id of ["guia", "galeria"]) {
+  assert.equal(PACKAGED_EXAMPLES.processo.mode, "guided");
+  for (const id of Object.keys(PACKAGED_EXAMPLES)) {
     const project = loadExample(id);
     assert.ok(project.steps?.length, `${id}: passos`);
     assert.equal(project.i18n?.defaultLang, "pt-BR", id);
@@ -73,6 +74,13 @@ test("os dois exemplos têm conteúdo em pt, en e es, e o player segue ?lang=", 
   assert.equal(en.name, "Arco Liana table lamp");
   assert.equal(en.sceneLabels["1"], "Overview");
   for (const step of gallery.steps) {
+    const file = join(root, String(step.image).replace(/^\//, ""));
+    assert.equal(existsSync(file), true, step.image);
+  }
+  const processo = loadExample("processo");
+  assert.equal(processo.steps.length, 6);
+  assert.equal(resolveContent(processo, "en").name, "How to request a reimbursement");
+  for (const step of processo.steps) {
     const file = join(root, String(step.image).replace(/^\//, ""));
     assert.equal(existsSync(file), true, step.image);
   }

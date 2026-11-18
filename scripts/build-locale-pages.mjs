@@ -139,6 +139,7 @@ export const EXTRA_PAGES = [
 export const EXAMPLE_PAGES = [
   { path: "/exemplos/guia", lastmod: "2026-11-15" },
   { path: "/exemplos/galeria", lastmod: "2026-11-15" },
+  { path: "/exemplos/processo", lastmod: "2026-11-17" },
 ];
 
 /** Caminho público do exemplo: PT canônico sem query; en/es com ?lang=. */

@@ -1,0 +1,328 @@
+{
+  "name": "Como solicitar um reembolso",
+  "theme": {
+    "accent": "#2f5d50",
+    "accentDark": "#1f3d34",
+    "overlay": "#1c241f",
+    "popoverBg": "#fffcf7",
+    "title": "#1c241f",
+    "text": "#4a3b32",
+    "button": "#1f3d34",
+    "hotspot": "#2f5d50"
+  },
+  "customImages": {},
+  "steps": [
+    {
+      "id": "step-alva-1",
+      "scene": 1,
+      "label": "A lista de reembolsos",
+      "type": "screen",
+      "image": "/data/examples/portal-alva/01-lista.webp",
+      "hotspot": {
+        "x": 23.2,
+        "y": 29.5,
+        "w": 74.4,
+        "h": 29.0
+      },
+      "clickPoint": {
+        "x": 60.4,
+        "y": 44.0
+      },
+      "popover": {
+        "title": "Um guia de processo, com dados fictícios",
+        "description": "Este é o Portal Alva, um escritório inventado só para o exemplo. Helena Costa acompanha os reembolsos da equipe. Nenhum dado é de um cliente real.",
+        "side": "top",
+        "align": "center"
+      },
+      "caption": "Este guia mostra um processo interno fictício no Portal Alva: como pedir um reembolso. Os nomes, valores e arquivos foram inventados para o exemplo.",
+      "simulateClick": false,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "holdSeconds": 8,
+      "i18n": {
+        "en": {
+          "label": "The reimbursement list",
+          "title": "A process guide, with fictional data",
+          "description": "This is Portal Alva, an office invented only for this example. Helena Costa tracks the team's reimbursements. None of the data belongs to a real customer.",
+          "caption": "This guide shows a fictional internal process in Portal Alva: how to request a reimbursement. Names, amounts and files were invented for the example."
+        },
+        "es": {
+          "label": "La lista de reembolsos",
+          "title": "Una guía de proceso, con datos de ficción",
+          "description": "Este es Portal Alva, una oficina inventada solo para el ejemplo. Helena Costa sigue los reembolsos del equipo. Ningún dato es de un cliente real.",
+          "caption": "Esta guía muestra un proceso interno de ficción en Portal Alva: cómo pedir un reembolso. Los nombres, importes y archivos se inventaron para el ejemplo."
+        }
+      }
+    },
+    {
+      "id": "step-alva-2",
+      "scene": 1,
+      "label": "Nova solicitação",
+      "type": "screen",
+      "image": "/data/examples/portal-alva/01-lista.webp",
+      "hotspot": {
+        "x": 84.31,
+        "y": 8.76,
+        "w": 13.41,
+        "h": 5.63
+      },
+      "clickPoint": {
+        "x": 91.02,
+        "y": 11.57
+      },
+      "popover": {
+        "title": "Abra uma nova solicitação",
+        "description": "O processo começa neste botão, no alto da lista.",
+        "side": "bottom",
+        "align": "end"
+      },
+      "caption": "Clique em Nova solicitação para começar o pedido de reembolso.",
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": true,
+      "showCaption": false,
+      "holdSeconds": 6,
+      "i18n": {
+        "en": {
+          "label": "New request",
+          "title": "Open a new request",
+          "description": "The process starts with this button, at the top of the list.",
+          "caption": "Click New request to start the reimbursement."
+        },
+        "es": {
+          "label": "Nueva solicitud",
+          "title": "Abra una nueva solicitud",
+          "description": "El proceso empieza en este botón, arriba de la lista.",
+          "caption": "Haga clic en Nueva solicitud para empezar el reembolso."
+        }
+      }
+    },
+    {
+      "id": "step-alva-3",
+      "scene": 2,
+      "label": "Dados do pedido",
+      "type": "screen",
+      "image": "/data/examples/portal-alva/02-formulario.webp",
+      "hotspot": {
+        "x": 23.2,
+        "y": 18.6,
+        "w": 66.8,
+        "h": 46.0
+      },
+      "clickPoint": {
+        "x": 83.07,
+        "y": 59.25
+      },
+      "popover": {
+        "title": "Preencha os dados do pedido",
+        "description": "Tipo, data, descrição, valor e centro de custo. Neste exemplo: livros da Livraria do Cais, R$ 186,40, em 03/11/2026.",
+        "side": "right",
+        "align": "center"
+      },
+      "caption": "Confira os campos e avance em Continuar. No seu guia, esta é a tela em que a pessoa preenche o processo.",
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "holdSeconds": 8,
+      "i18n": {
+        "en": {
+          "label": "Request details",
+          "title": "Fill in the request",
+          "description": "Type, date, description, amount and cost center. In this example: books from Livraria do Cais, R$ 186.40, on 3 Nov 2026.",
+          "caption": "Check the fields and continue. In your guide, this is the screen where someone fills in the process."
+        },
+        "es": {
+          "label": "Datos de la solicitud",
+          "title": "Complete los datos de la solicitud",
+          "description": "Tipo, fecha, descripción, importe y centro de coste. En este ejemplo: libros de Livraria do Cais, R$ 186,40, el 3/11/2026.",
+          "caption": "Revise los campos y continúe. En su guía, esta es la pantalla en la que la persona completa el proceso."
+        }
+      }
+    },
+    {
+      "id": "step-alva-4",
+      "scene": 3,
+      "label": "Comprovante",
+      "type": "screen",
+      "image": "/data/examples/portal-alva/03-comprovante.webp",
+      "hotspot": {
+        "x": 23.2,
+        "y": 18.6,
+        "w": 66.8,
+        "h": 32.7
+      },
+      "clickPoint": {
+        "x": 81.68,
+        "y": 45.95
+      },
+      "popover": {
+        "title": "Anexe o comprovante",
+        "description": "O recibo fictício “recibo-livraria-do-cais.pdf” já está ligado ao pedido. No seu guia, esta seria a tela de anexo do processo.",
+        "side": "right",
+        "align": "center"
+      },
+      "caption": "O comprovante de exemplo já foi anexado. Clique em Revisar pedido para ver o resumo.",
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "holdSeconds": 7,
+      "i18n": {
+        "en": {
+          "label": "Receipt",
+          "title": "Attach the receipt",
+          "description": "The fictional file “recibo-livraria-do-cais.pdf” is already linked to the request. In your guide, this would be the attachment screen.",
+          "caption": "The sample receipt is already attached. Click Review request to see the summary."
+        },
+        "es": {
+          "label": "Comprobante",
+          "title": "Adjunte el comprobante",
+          "description": "El recibo de ficción “recibo-livraria-do-cais.pdf” ya está ligado a la solicitud. En su guía, esta sería la pantalla para adjuntar archivos.",
+          "caption": "El comprobante de ejemplo ya está adjunto. Haga clic en Revisar pedido para ver el resumen."
+        }
+      }
+    },
+    {
+      "id": "step-alva-5",
+      "scene": 4,
+      "label": "Revisar e enviar",
+      "type": "screen",
+      "image": "/data/examples/portal-alva/04-revisao.webp",
+      "hotspot": {
+        "x": 23.2,
+        "y": 18.6,
+        "w": 66.8,
+        "h": 49.8
+      },
+      "clickPoint": {
+        "x": 80.9,
+        "y": 63.07
+      },
+      "popover": {
+        "title": "Revise e envie",
+        "description": "O resumo junta os dados e o arquivo. O botão Enviar solicitação conclui o pedido.",
+        "side": "right",
+        "align": "center"
+      },
+      "caption": "Confira o resumo e clique em Enviar solicitação.",
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "holdSeconds": 7,
+      "i18n": {
+        "en": {
+          "label": "Review and submit",
+          "title": "Review and submit",
+          "description": "The summary brings together the details and the file. The Submit request button finishes the process.",
+          "caption": "Check the summary and click Submit request."
+        },
+        "es": {
+          "label": "Revisar y enviar",
+          "title": "Revise y envíe",
+          "description": "El resumen reúne los datos y el archivo. El botón Enviar solicitud termina el pedido.",
+          "caption": "Revise el resumen y haga clic en Enviar solicitud."
+        }
+      }
+    },
+    {
+      "id": "step-alva-6",
+      "scene": 5,
+      "label": "Protocolo AL-1042",
+      "type": "screen",
+      "image": "/data/examples/portal-alva/05-enviado.webp",
+      "hotspot": {
+        "x": 32.23,
+        "y": 14.43,
+        "w": 56.38,
+        "h": 44.29
+      },
+      "clickPoint": {
+        "x": 60.41,
+        "y": 51.27
+      },
+      "popover": {
+        "title": "O pedido ganha um protocolo",
+        "description": "A confirmação mostra o protocolo AL-1042. No seu processo, este é o passo em que a pessoa sabe que terminou.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "caption": "Solicitação enviada, com o protocolo fictício AL-1042. Este é o fim do processo de exemplo.",
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "holdSeconds": 8,
+      "i18n": {
+        "en": {
+          "label": "Protocol AL-1042",
+          "title": "The request gets a protocol number",
+          "description": "The confirmation shows protocol AL-1042. In your process, this is the step where the person knows they are done.",
+          "caption": "Request submitted, with the fictional protocol AL-1042. This is the end of the sample process."
+        },
+        "es": {
+          "label": "Protocolo AL-1042",
+          "title": "La solicitud recibe un protocolo",
+          "description": "La confirmación muestra el protocolo AL-1042. En su proceso, este es el paso en el que la persona sabe que terminó.",
+          "caption": "Solicitud enviada, con el protocolo de ficción AL-1042. Este es el final del proceso de ejemplo."
+        }
+      }
+    }
+  ],
+  "sceneLabels": {
+    "1": "Lista",
+    "2": "Pedido",
+    "3": "Comprovante",
+    "4": "Revisão",
+    "5": "Enviado"
+  },
+  "playback": {
+    "defaultHoldSeconds": 6
+  },
+  "narration": {
+    "enabled": false,
+    "voiceURI": "",
+    "rate": 1,
+    "background": null
+  },
+  "i18n": {
+    "v": 1,
+    "defaultLang": "pt-BR",
+    "langs": [
+      {
+        "lang": "en",
+        "locale": "en",
+        "enabled": true
+      },
+      {
+        "lang": "es",
+        "locale": "es",
+        "enabled": true
+      }
+    ]
+  },
+  "i18nProject": {
+    "en": {
+      "name": "How to request a reimbursement",
+      "sceneLabels": {
+        "1": "List",
+        "2": "Request",
+        "3": "Receipt",
+        "4": "Review",
+        "5": "Submitted"
+      }
+    },
+    "es": {
+      "name": "Cómo solicitar un reembolso",
+      "sceneLabels": {
+        "1": "Lista",
+        "2": "Solicitud",
+        "3": "Comprobante",
+        "4": "Revisión",
+        "5": "Enviado"
+      }
+    }
+  }
+}
