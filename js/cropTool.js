@@ -235,7 +235,9 @@ export function createCropTool({ getDemo, currentStep, projectId, onCommit, t, t
     let next = null;
     if (meta && cropMatchesStep(step)) {
       const saved = await getCropOriginal(meta.id).catch(() => null);
-      if (saved?.bytes) next = { stepId: step.id, id: meta.id, key: meta.key, source: bytesToDataUrl(saved.bytes, saved.mime), prev: meta.rect, rect: { ...meta.rect }, stored: true };
+      // why: passo duplicado depois do recorte divide a mesma imagem; mexer num não pode mudar o outro
+      const key = customImageUsers(demo, meta.key) > 1 ? randomId("img-crop-") : meta.key;
+      if (saved?.bytes) next = { stepId: step.id, id: meta.id, key, source: bytesToDataUrl(saved.bytes, saved.mime), prev: meta.rect, rect: { ...meta.rect }, stored: true };
     }
     if (!next) {
       // sem o print inteiro aqui (outro aparelho, imagem trocada): a imagem atual vira a "tela inteira"
