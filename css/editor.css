@@ -8143,6 +8143,8 @@ body.has-mobile-bar .filmstrip {
     overscroll-behavior-x: contain;
   
 }
+/* why: max-height 120px deixava «Cena 1 · Cena 1» mais alto que os cartões e
+   esticava a faixa. 85px acompanha o cartão compacto (miniatura 56px + rótulo). */
 body.has-mobile-bar .film-scene {
     flex: none;
     writing-mode: vertical-rl;
@@ -8150,13 +8152,57 @@ body.has-mobile-bar .film-scene {
     align-self: stretch;
     padding: 4px 2px;
     margin: 0;
-    max-height: 120px;
+    max-height: 85px;
     overflow: hidden;
   
 }
 body.has-mobile-bar .film-scene-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
 }
-body.has-mobile-bar .film-fixed { flex: none; width: 88px; min-height: 64px; scroll-snap-align: start; 
+/* why: o cartão Início/Fim era 88×64, mais baixo e com texto (Início + Desligado)
+   ao lado do ícone, enquanto os passos têm 104px e a miniatura em cima. No celular o
+   cartão fica do mesmo tamanho; o estado Ligado/Desligado vai no recorte visual
+   (is-on) e no aria-label, e o nome (Início/Start/Inicio) cabe com reticências. */
+body.has-mobile-bar .film-fixed {
+    flex: none;
+    box-sizing: border-box;
+    width: 104px;
+    max-width: 104px;
+    min-height: 0;
+    margin: 0;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow: hidden;
+    scroll-snap-align: start;
+  
+}
+body.has-mobile-bar .film-fixed-icon {
+    width: 100%;
+    height: 56px;
+    border-radius: 5px;
+    font-size: 1rem;
+  
+}
+body.has-mobile-bar .film-fixed-text { min-width: 0; gap: 0; 
+}
+body.has-mobile-bar .film-fixed-text strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-wrap: nowrap;
+  
+}
+body.has-mobile-bar .film-fixed-text strong .pro-badge { display: none; 
+}
+body.has-mobile-bar .film-fixed-text small { display: none; 
+}
+body.has-mobile-bar .film-fixed-pin { top: 2px; right: 2px; font-size: 0.65rem; 
 }
 body.has-mobile-bar .film-item {
     flex: none;
@@ -8359,7 +8405,7 @@ body.has-mobile-bar .filmstrip {
 body.has-mobile-bar .film-scene { writing-mode: horizontal-tb; transform: none; max-height: none; align-self: stretch; 
 }
 body.has-mobile-bar .film-item,
-  body.has-mobile-bar .film-fixed { width: 100%; 
+  body.has-mobile-bar .film-fixed { width: 100%; max-width: none; 
 }
 /* Deitado a faixa é uma coluna: o marcador de "solta aqui" volta a ser uma barra deitada. */
 body.has-mobile-bar .film-item.drop-before::before,

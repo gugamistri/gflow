@@ -39,6 +39,7 @@ import {
   edgeScrollSpeed,
   insertBeforeFor,
 } from "./filmDrag.js";
+import { filmSceneHeaderText } from "./filmSceneHeader.js";
 import {
   isPropsPanelShortcut,
   planToolbarOverflow,
@@ -637,10 +638,10 @@ export function createEditor(ctx) {
       if (step.scene !== lastScene) {
         lastScene = step.scene;
         const label = sceneLabel(demo, step.scene);
-        const sceneText = `${t("filmstrip.scene", { n: step.scene })}${label ? ` · ${label}` : ""}`;
+        const sceneText = filmSceneHeaderText(label, step.scene, t);
         html += `<div class="film-scene" data-scene="${Number(step.scene) || 1}" draggable="true" title="${escapeAttr(sceneText)}">
           <span class="film-grip" aria-hidden="true">⋮⋮</span>
-          <span class="film-scene-label" data-action="rename-scene-inline" data-scene="${Number(step.scene) || 1}" title="${escapeAttr(`${sceneText} — ${t("filmstrip.sceneRename")}`)}">${escapeHtml(t("filmstrip.scene", { n: step.scene }))}${label ? ` · ${escapeHtml(label)}` : ""}</span>
+          <span class="film-scene-label" data-action="rename-scene-inline" data-scene="${Number(step.scene) || 1}" title="${escapeAttr(`${sceneText} — ${t("filmstrip.sceneRename")}`)}">${escapeHtml(sceneText)}</span>
         </div>`;
       }
       const src = resolveImageSrc(demo, step.image);
