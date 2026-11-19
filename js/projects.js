@@ -3,6 +3,7 @@
  */
 
 import { deleteCropOriginalsForProject } from "./cropStore.js";
+import { deleteBlurOriginalsForProject } from "./blurStore.js";
 import {
   cloneTheme,
   defaultTheme,
@@ -594,6 +595,8 @@ export async function deleteProject(id, { silent = false } = {}) {
   scheduleMediaGarbage();
   // why: os prints inteiros dos passos enquadrados (só neste navegador) somem com o projeto
   deleteCropOriginalsForProject(id).catch(() => {});
+  // why: os originais dos prints desfocados (só neste navegador) somem com o projeto
+  deleteBlurOriginalsForProject(id).catch(() => {});
 }
 
 export async function setActiveProjectId(id) {

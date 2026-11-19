@@ -9388,3 +9388,133 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   cursor: progress;
   opacity: 0.7;
 }
+/* Desfocar área: retângulos sobre o print. O desfoque em si é gravado nos pixels (js/blurArea.js). */
+.blur-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 9;
+  cursor: crosshair;
+  touch-action: none;
+  outline: 2px dashed color-mix(in srgb, var(--ns-accent, #2a9d8f) 70%, transparent);
+  outline-offset: -2px;
+}
+.blur-layer[hidden],
+.blur-hint[hidden],
+body.is-presenting .blur-layer,
+body.is-presenting .blur-hint,
+.is-presenting .blur-layer,
+.is-presenting .blur-hint {
+  display: none !important;
+}
+.blur-layer.is-baking {
+  cursor: progress;
+}
+.canvas-frame.is-blurring .hotspot,
+.canvas-frame.is-blurring .click-point,
+.canvas-frame.is-blurring .editor-popover,
+.canvas-frame.is-blurring .alt-chip {
+  visibility: hidden;
+}
+.blur-rect {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px dashed #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+  cursor: move;
+  background: rgba(255, 255, 255, 0.06);
+}
+.blur-rect.is-drawing {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.blur-rect.is-selected {
+  border-style: solid;
+  border-color: var(--ns-accent, #2a9d8f);
+}
+.blur-rect-remove {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #1f2933;
+  color: #fff;
+  font: 600 15px/22px system-ui, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.blur-rect-remove:hover,
+.blur-rect-remove:focus-visible {
+  background: #c0392b;
+}
+.blur-rect-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  cursor: nwse-resize;
+}
+.blur-hint {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  z-index: 10;
+  margin: 0;
+  max-width: calc(100% - 16px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.85);
+  color: #fff;
+  font: 500 12px/1.35 system-ui, sans-serif;
+  pointer-events: none;
+  text-align: center;
+}
+
+/* aviso: link publicado ainda sem o desfoque (não bloqueia) */
+.blur-share-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 24px 0;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid #f0c36d;
+  border-radius: 10px;
+  background: #fff8e6;
+  color: #5b4300;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+.blur-share-notice[hidden],
+.is-presenting .blur-share-notice {
+  display: none !important;
+}
+.blur-share-notice-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.blur-share-notice-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.blur-share-notice-close:hover,
+.blur-share-notice-close:focus-visible {
+  background: rgba(91, 67, 0, 0.1);
+}

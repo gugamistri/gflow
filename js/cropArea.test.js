@@ -131,3 +131,19 @@ test("textos (pt/en/es) sem palavras proibidas", () => {
   assert.equal(lines.length, 27);
   for (const l of lines) assert.ok(!/plataforma|intelig[eê]ncia|ecossistema|potencializar|platform|intelligence|ecosystem|empower/i.test(l), l);
 });
+
+test("desfoque + enquadramento juntos: o snapshot publicado não leva nenhuma das fichas", async () => {
+  const step = {
+    id: "s1",
+    type: "screen",
+    image: "custom:k",
+    crop: { id: "crp0001", key: "k", rect: { x: 10, y: 10, w: 50, h: 50 } },
+    blur: { id: "blr0001", key: "k", rects: [{ x: 1, y: 1, w: 10, h: 10 }] },
+  };
+  for (const mode of [undefined, "gallery"]) {
+    const out = await embedImagesInDemo(prepareSharePayload(project([structuredClone(step)], { k: { name: "a", dataUrl: "data:image/png;base64,QkxVUg==" } }, mode)));
+    assert.equal(out.steps[0].image, "data:image/png;base64,QkxVUg==");
+    assert.equal(out.steps[0].crop, undefined);
+    assert.equal(out.steps[0].blur, undefined);
+  }
+});

@@ -801,6 +801,7 @@
             <button type="button" class="stb-btn stb-screen-only" id="stb-image" title="Trocar imagem" aria-label="Trocar imagem" data-i18n-title="canvas.changeImage" data-i18n-aria="canvas.changeImage"><svg aria-hidden="true"><use href="#i-image-swap"></use></svg></button>
             <button type="button" class="stb-btn stb-screen-only" id="stb-video" title="Vídeo do YouTube ou Vimeo" aria-label="Vídeo do YouTube ou Vimeo" data-i18n-title="video.toolbar" data-i18n-aria="video.toolbar" aria-pressed="false"><svg aria-hidden="true"><use href="#i-play"></use></svg></button>
             <button type="button" class="stb-btn stb-screen-only" id="stb-crop" title="Enquadrar" aria-label="Enquadrar" data-i18n-title="crop.tool" data-i18n-aria="crop.tool" aria-pressed="false"><svg aria-hidden="true"><use href="#i-crop"></use></svg></button>
+            <button type="button" class="stb-btn stb-screen-only" id="stb-blur" title="Desfocar área" aria-label="Desfocar área" data-i18n-title="blur.tool" data-i18n-aria="blur.tool" aria-pressed="false"><svg aria-hidden="true"><use href="#i-blur"></use></svg></button>
           </div>
           <span class="stb-sep" aria-hidden="true"></span>
           <div class="stb-group" data-stb-group="position" data-stb-keep="1" role="group" aria-label="Posição do balão" data-i18n-aria="stb.groupBalloon">
@@ -863,6 +864,11 @@
       </div>
       <p class="rotate-hint" id="rotate-hint" hidden data-i18n="present.rotateHint">Gire o celular para ver a tela inteira</p>
       <input type="file" id="images-file" accept="image/*" multiple hidden />
+      <div class="blur-share-notice" id="blur-share-notice" role="status" hidden>
+        <span class="blur-share-notice-text" id="blur-share-notice-text" data-i18n="blur.shareStale">O link publicado ainda mostra a versão sem desfoque.</span>
+        <button type="button" class="btn btn-sm btn-primary" id="blur-share-republish" data-i18n="blur.shareRepublish">Republicar agora</button>
+        <button type="button" class="blur-share-notice-close" id="blur-share-dismiss" aria-label="Fechar aviso" data-i18n-aria="blur.shareDismiss">×</button>
+      </div>
       <div class="canvas-stage" id="canvas-stage">
         <div class="canvas-empty" id="canvas-empty" hidden>
           <h2 data-i18n="canvas.emptyTitle">Projeto vazio</h2>
@@ -2719,6 +2725,9 @@
     </symbol>
     <symbol id="i-crop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>
+    </symbol>
+    <symbol id="i-blur" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3"/><circle cx="9" cy="10" r="1.6" fill="currentColor" stroke="none"/><circle cx="14" cy="10" r="1.6" fill="currentColor" stroke="none" opacity=".6"/><circle cx="11.5" cy="14.5" r="1.6" fill="currentColor" stroke="none" opacity=".35"/>
     </symbol>
     <symbol id="i-image-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m17 12-3-3-8 8"/><path d="M21 9v10a2 2 0 0 1-2 2H9"/>
