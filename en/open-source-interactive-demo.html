@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open-source interactive demo software (MIT, no sign-up) | GuiaFlow</title>
+  <meta name="description" content="GuiaFlow is an MIT-licensed editor and player for click-through demos from screenshots. Use it free in the browser with no account, or run it locally. An alternative to Arcade, Supademo and Storylane. Export HTML and host it yourself. Pro adds hosting and analytics." />
+  <!-- i18n-alternates -->
+  <link rel="canonical" href="https://guiaflow.pro/en/open-source-interactive-demo" />
+  <link rel="alternate" hreflang="en" href="https://guiaflow.pro/en/open-source-interactive-demo" />
+  <!-- /i18n-alternates -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="GuiaFlow" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="Open-source interactive demo software (MIT, no sign-up) | GuiaFlow" />
+  <meta property="og:description" content="GuiaFlow is an MIT-licensed editor and player for click-through demos from screenshots. Use it free in the browser with no account, or run it locally. An alternative to Arcade, Supademo and Storylane. Export HTML and host it yourself. Pro adds hosting and analytics." />
+  <meta property="og:url" content="https://guiaflow.pro/en/open-source-interactive-demo" />
+  <meta property="og:image" content="https://guiaflow.pro/brand/og-landing-en-v3.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="GuiaFlow" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Open-source interactive demo software (MIT, no sign-up) | GuiaFlow" />
+  <meta name="twitter:description" content="GuiaFlow is an MIT-licensed editor and player for click-through demos from screenshots. Use it free in the browser with no account, or run it locally. An alternative to Arcade, Supademo and Storylane. Export HTML and host it yourself. Pro adds hosting and analytics." />
+  <meta name="twitter:image" content="https://guiaflow.pro/brand/og-landing-en-v3.png" />
+  <meta name="theme-color" content="#1A4D6D" />
+  <script>
+    (function () {
+      try {
+        var pref = localStorage.getItem("ns-appearance") || "system";
+        var mode = pref;
+        if (pref !== "documento" && pref !== "social") {
+          mode = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "social"
+            : "documento";
+        }
+        if (window.parent !== window || new URLSearchParams(location.search).has("embed")) {
+          document.documentElement.classList.add("is-embedded");
+        }
+        document.documentElement.setAttribute("data-appearance", mode);
+        var metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (metaTheme) metaTheme.content = mode === "social" ? "#101010" : "#1A4D6D";
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/a/221/css/theme.css" />
+  <link rel="stylesheet" href="/a/221/css/shell.css" />
+  <link rel="stylesheet" href="/a/221/css/ajuda.css" />
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+  <style>
+    .page { max-width: 880px; min-width: 0; width: 100%; overflow-wrap: anywhere; }
+    .page .crumbs { margin: 0 0 10px; color: var(--ns-muted); font-size: 0.85rem; }
+    .page .crumbs a { color: inherit; }
+    .page .lead { margin-bottom: 10px; }
+    .page .note { color: var(--ns-muted); font-size: 0.88rem; }
+    .page .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 4px; }
+    .page .cta-row .btn { white-space: normal; text-align: center; }
+    .page .card a.btn { color: var(--ns-ink); }
+    .page .card a.btn-primary { color: var(--ns-button-text); }
+    .page pre, .page code { overflow-wrap: anywhere; }
+    .page pre {
+      margin: 8px 0 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--ns-border);
+      background: var(--ns-input-bg);
+      font-size: 0.88rem;
+    }
+    .page .table-wrap { overflow-x: auto; margin: 8px 0 0; min-width: 0; max-width: 100%; -webkit-overflow-scrolling: touch; }
+    .page table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .page th, .page td { text-align: left; vertical-align: top; padding: 7px 8px; border-top: 1px solid var(--ns-border); overflow-wrap: anywhere; }
+    .page thead th { color: var(--ns-muted); font-weight: 600; }
+    .page tbody th { font-weight: 600; width: 28%; }
+    .page .example-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1.83 / 1;
+      min-height: 280px;
+      margin: 14px 0 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--ns-border);
+      background: var(--ns-input-bg);
+    }
+    .page .example-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .page .sources { margin: 20px 0 0; color: var(--ns-muted); font-size: 0.8rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .page .sources a { color: inherit; }
+    @media (max-width: 640px) {
+      .page .table-wrap { overflow-x: visible; }
+      .page table, .page tbody, .page tr, .page th, .page td { display: block; width: 100%; }
+      .page thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .page tbody tr {
+        margin: 0;
+        padding: 10px 0 12px;
+        border-bottom: 1px solid var(--ns-border);
+      }
+      .page tbody tr:last-child { border-bottom: 0; padding-bottom: 0; }
+      .page tbody th, .page tbody td { border-top: 0; padding: 3px 0; width: auto; }
+      .page tbody th { padding-top: 0; }
+      .page td:nth-child(2)::before { content: "Free (MIT, no account): "; font-weight: 600; }
+      .page td:nth-child(3)::before { content: "Pro: "; font-weight: 600; }
+    }
+  </style>
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://guiaflow.pro/en/open-source-interactive-demo#webpage",
+      "url": "https://guiaflow.pro/en/open-source-interactive-demo",
+      "name": "Open-source interactive demo software (MIT, no sign-up) | GuiaFlow",
+      "description": "GuiaFlow is an MIT-licensed editor and player for click-through demos from screenshots. Use it free in the browser with no account, or run it locally. An alternative to Arcade, Supademo and Storylane. Export HTML and host it yourself. Pro adds hosting and analytics.",
+      "inLanguage": "en",
+      "isPartOf": {
+        "@id": "https://guiaflow.pro/#website"
+      },
+      "about": {
+        "@id": "https://guiaflow.pro/#software"
+      },
+      "publisher": {
+        "@id": "https://guiaflow.pro/#organization"
+      },
+      "datePublished": "2026-11-19",
+      "dateModified": "2026-11-19",
+      "breadcrumb": {
+        "@id": "https://guiaflow.pro/en/open-source-interactive-demo#breadcrumb"
+      },
+      "mainEntity": {
+        "@id": "https://guiaflow.pro/en/open-source-interactive-demo#faq"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://guiaflow.pro/en/open-source-interactive-demo#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://guiaflow.pro/en"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Open-source interactive demos",
+          "item": "https://guiaflow.pro/en/open-source-interactive-demo"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://guiaflow.pro/en/open-source-interactive-demo#faq",
+      "inLanguage": "en",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is GuiaFlow really open source?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The editor and player are MIT-licensed, and the source code is at github.com/gugamistri/gflow."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need an account?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not for the free editor. You can open it in the browser with no account and no card."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I run GuiaFlow on my computer, or host the demo myself?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The editor and player run in the browser, including locally from the GitHub repository (npm start). You can export a single HTML file and host it on any static hosting. GuiaFlow Pro hosting is separate code; there is no Docker package for running the full Pro product on your own server."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the free player branded?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, and so is the free MP4. Pro removes the GuiaFlow mark from the player and the video."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does it support branching?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, tours are linear. Gallery mode lets viewers browse freely, which is not branching."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is GuiaFlow the same as Guideflow?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. GuiaFlow (guiaflow.pro) and Guideflow (guideflow.com) are different products."
+          }
+        }
+      ]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://guiaflow.pro/en/open-source-interactive-demo#source",
+      "name": "GuiaFlow",
+      "codeRepository": "https://github.com/gugamistri/gflow",
+      "license": "https://opensource.org/licenses/MIT",
+      "programmingLanguage": "JavaScript",
+      "isPartOf": {
+        "@id": "https://guiaflow.pro/#software"
+      }
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <a class="logo logo-brand logo-link" href="/en" aria-label="GuiaFlow"><img class="logo-full" src="/a/221/brand/logo-dark.svg" alt="GuiaFlow" width="128" height="26" /><img class="logo-mark" src="/a/221/brand/symbol-simple.svg" alt="GuiaFlow" width="28" height="28" /></a>
+      <span class="topbar-title"><span>Open-source interactive demos</span></span>
+    </div>
+  </header>
+
+  <main class="page">
+    <p class="crumbs"><a href="/en">Home</a> › Open-source interactive demos</p>
+    <h1>Open-source interactive demos, free in your browser</h1>
+    <p class="lead">GuiaFlow is an open-source (MIT) editor and player for click-through demos and photo galleries. Open the editor in your browser with no account and no card, or run it locally from GitHub. It is an alternative to Arcade, Supademo and Storylane. You can export a single HTML file and host it yourself. GuiaFlow Pro (US$ 7/month) adds permanent links, embeds, analytics, lead capture, hosted AI and an MCP server.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/editor">Open the editor</a>
+      <a class="btn" href="https://guiaflow.pro/editor?pro=1">Subscribe to Pro — US$ 7/month or US$ 69/year</a>
+      <a class="btn" href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">Star on GitHub</a>
+    </div>
+
+    <section class="card" id="open-and-paid">
+      <h2>What is open and what is paid</h2>
+      <p>The editor and player in this repository stay MIT-licensed. GuiaFlow Pro is optional, in separate code, and you subscribe directly on the site.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Feature</th>
+              <th scope="col">Free (MIT, no account)</th>
+              <th scope="col">Pro</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Editor and player</th>
+              <td>Yes, in the browser or locally from GitHub</td>
+              <td>The same editor, with projects synced to your account</td>
+            </tr>
+            <tr>
+              <th scope="row">Chrome extension capture</th>
+              <td>Yes</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <th scope="row">Project limit</th>
+              <td>None; projects stay in this browser</td>
+              <td>None; projects sync to the cloud</td>
+            </tr>
+            <tr>
+              <th scope="row">Sharing</th>
+              <td>7-day temporary link</td>
+              <td>Permanent links that never expire, plus embeds</td>
+            </tr>
+            <tr>
+              <th scope="row">Export</th>
+              <td>HTML (one file you can host yourself) and MP4 with the GuiaFlow mark</td>
+              <td>The same HTML export, plus player and MP4 without the mark</td>
+            </tr>
+            <tr>
+              <th scope="row">AI text and narration</th>
+              <td>With your own key (OpenRouter or OpenAI-compatible for text; Cartesia for voice)</td>
+              <td>Hosted AI and narration included (100 texts and 30 audio minutes per month), or your own key</td>
+            </tr>
+            <tr>
+              <th scope="row">Analytics, leads, MCP and API</th>
+              <td>Not included</td>
+              <td>Analytics, lead capture, MCP server and REST API</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="run-locally">
+      <h2>Run it locally, or use it in the browser</h2>
+      <p>To run the editor and player on your computer, clone <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">gugamistri/gflow</a> and start it from the README:</p>
+      <pre><code>npm start</code></pre>
+      <p>That opens the landing at <code>http://localhost:4173</code> and the editor at <code>http://localhost:4173/editor</code>. You can also use the hosted editor at <a href="https://guiaflow.pro/editor">guiaflow.pro/editor</a>, free, with no account. After you export a single HTML file, you can publish that file on any static hosting you already use.</p>
+    </section>
+
+    <section class="card" id="mcp">
+      <h2>Build tours with your AI agent</h2>
+      <p>On Pro, the MCP server lets Claude, Cursor, Codex, ChatGPT and VS Code create and publish a tour from screenshots. Setup is in <a href="/en/integrations">Integrations</a> and in the <a href="/en/help/api">API and MCP guide</a>.</p>
+    </section>
+
+    <section class="card" id="compared">
+      <h2>How it compares with Arcade, Supademo, Storylane and dplooy Demo Maker</h2>
+      <p class="note">Figures from each product&apos;s public pricing or product page, checked on 19/11/2026 (sources at the end of this page).</p>
+      <h3>Arcade</h3>
+      <p>The Free plan is US$ 0, with 1 seat and 1 published demo. Growth is US$ 50 per seat per month, or US$ 42.50 per seat per month with yearly billing, and includes demo branching, CTAs and forms, and MP4 and GIF exports. <strong>Where it does more:</strong> branching, forms and paid exports start on Growth. <strong>GuiaFlow:</strong> MIT source, no account, no project limit, guide and gallery, Pro at US$ 7/month; no branching; the free MP4 carries the GuiaFlow mark; you can export HTML and host it yourself.</p>
+      <h3>Supademo</h3>
+      <p>The Free plan is US$ 0 for 1 creator, with 5 guided interactive demos, and lets you share as a link, embed, video or PDF. Scale is US$ 50/month, or US$ 38/month billed annually, per creator. <strong>Where it does more:</strong> branching and variables start on Scale. <strong>GuiaFlow:</strong> free editor with no account and no project limit; Pro is US$ 7/month; no branching; the free MP4 carries the GuiaFlow mark.</p>
+      <h3>Storylane</h3>
+      <p>The Free plan is US$ 0, with 1 creator seat and 1 interactive demo published at a time. Starter is US$ 50/month, or US$ 40/month billed annually, with 1 creator seat and US$ 40 per additional seat, and unlimited published demos. <strong>Where it does more:</strong> more seats and published demos on paid plans. <strong>GuiaFlow:</strong> no account and no project limit on the free editor; Pro is US$ 7/month.</p>
+      <h3>dplooy Demo Maker</h3>
+      <p>It is free, with no sign-up, no watermark and no limit on the number of demos (up to 40 steps per demo). You export a ZIP you can host anywhere; it also offers a link and an embed. There is no paid plan and no analytics. <strong>Where it does more:</strong> blur in the browser, a ZIP you can host anywhere, and no mark on the result. <strong>GuiaFlow:</strong> also free with no account, with guide and gallery and a Pro plan for a permanent link and analytics; it does not blur, and the free MP4 carries the GuiaFlow mark.</p>
+    </section>
+
+    <section class="card" id="examples">
+      <h2>Examples</h2>
+      <p>A <a href="https://guiaflow.pro/exemplos/guia?lang=en">sample software guide</a> and a <a href="https://guiaflow.pro/exemplos/galeria?lang=en">sample product gallery</a>.</p>
+      <div class="example-frame">
+        <iframe src="/exemplos/guia?lang=en&amp;embed=1" title="Sample software guide in GuiaFlow" loading="lazy" allow="autoplay; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+    </section>
+
+    <section class="card" id="faq">
+      <h2>FAQ</h2>
+      <h3>Is GuiaFlow really open source?</h3>
+      <p>Yes. The editor and player are MIT-licensed, and the source code is at github.com/gugamistri/gflow.</p>
+      <h3>Do I need an account?</h3>
+      <p>Not for the free editor. You can open it in the browser with no account and no card.</p>
+      <h3>Can I run GuiaFlow on my computer, or host the demo myself?</h3>
+      <p>The editor and player run in the browser, including locally from the GitHub repository (npm start). You can export a single HTML file and host it on any static hosting. GuiaFlow Pro hosting is separate code; there is no Docker package for running the full Pro product on your own server.</p>
+      <h3>Is the free player branded?</h3>
+      <p>Yes, and so is the free MP4. Pro removes the GuiaFlow mark from the player and the video.</p>
+      <h3>Does it support branching?</h3>
+      <p>No, tours are linear. Gallery mode lets viewers browse freely, which is not branching.</p>
+      <h3>Is GuiaFlow the same as Guideflow?</h3>
+      <p>No. GuiaFlow (guiaflow.pro) and Guideflow (guideflow.com) are different products.</p>
+    </section>
+
+    <section class="card" id="start">
+      <p><strong>Start free, with no account.</strong> Open the editor, star the repository, or subscribe to Pro when you want a permanent link and analytics.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/editor">Open the editor</a>
+        <a class="btn" href="https://guiaflow.pro/editor?pro=1">Subscribe to Pro — US$ 7/month or US$ 69/year</a>
+        <a class="btn" href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">Star on GitHub</a>
+      </div>
+    </section>
+
+    <p class="sources" id="sources">Competitor figures checked on 19/11/2026: <a href="https://www.arcade.software/pricing-interactive-demos" rel="nofollow noopener" target="_blank">Arcade, pricing</a> · <a href="https://supademo.com/pricing" rel="nofollow noopener" target="_blank">Supademo, pricing</a> · <a href="https://www.storylane.io/pricing" rel="nofollow noopener" target="_blank">Storylane, pricing</a> · <a href="https://demo-maker.dplooy.com/" rel="nofollow noopener" target="_blank">dplooy Demo Maker</a></p>
+  </main>
+
+  <footer class="site-footer">
+    <nav aria-label="Footer links">
+      <a href="/editor">Editor</a>
+      <a href="/en#precos">Pricing</a>
+      <a href="/en/help">Help</a>
+      <a href="/en/integrations">Integrations</a>
+      <a href="/en/help/api">API and MCP</a>
+      <a href="/en/open-source-interactive-demo">Open source (MIT)</a>
+      <a href="/en/privacy">Privacy</a>
+      <a href="/en/terms">Terms</a>
+      <a href="https://github.com/gugamistri/gflow" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <p>© 2026 GuiaFlow</p>
+  </footer>
+  <script type="module" src="/a/221/js/landingAnalytics.js"></script>
+</body>
+</html>
