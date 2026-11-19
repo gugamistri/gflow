@@ -46,7 +46,7 @@ function buildEmbedSnippet({ url, title = "", ratio = DEFAULT_EMBED_RATIO, autop
   const html = [
     `<div style="position:relative;width:100%;aspect-ratio:${safeRatio};min-height:420px;max-width:1200px;margin:0 auto">`,
     `  <iframe src="${escapeAttr(src)}" title="${escapeAttr(frameTitle)}"`,
-    `    loading="lazy" allow="autoplay; fullscreen; clipboard-write" allowfullscreen`,
+    `    loading="lazy" allow="autoplay; fullscreen; clipboard-write; screen-wake-lock" allowfullscreen`,
     `    style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px"></iframe>`,
     `</div>`,
   ].join("\n");

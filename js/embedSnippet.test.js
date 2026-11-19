@@ -38,7 +38,7 @@ test("snippet responsivo com iframe lazy, fullscreen e título acessível", () =
   assert.match(html, /aspect-ratio:8\/5/);
   assert.match(html, /src="https:\/\/guiaflow\.pro\/p\/abc\?embed=1"/);
   assert.match(html, /loading="lazy"/);
-  assert.match(html, /allow="autoplay; fullscreen; clipboard-write" allowfullscreen/);
+  assert.match(html, /allow="autoplay; fullscreen; clipboard-write; screen-wake-lock" allowfullscreen/);
   assert.match(html, /title="Tour interativo: Meu tour"/);
   assert.match(html, /min-height:420px/);
   assert.doesNotMatch(html, /wp:html/);
