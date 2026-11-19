@@ -285,7 +285,9 @@ export function createBlurTool({ frame, image, getDemo, currentStep, projectId, 
     if (meta && blurMatchesStep(step)) {
       const saved = await getBlurOriginal(meta.id).catch(() => null);
       if (saved?.bytes) {
-        next = { stepId: step.id, id: meta.id, key: meta.key, rects: meta.rects, original: bytesToDataUrl(saved.bytes, saved.mime), stored: true, inherited: false };
+        // why: passo duplicado depois do desfoque divide a mesma imagem; mexer num não pode mudar o outro
+        const key = customImageUsers(demo, meta.key) > 1 ? randomId("img-blur-") : meta.key;
+        next = { stepId: step.id, id: meta.id, key, rects: meta.rects, original: bytesToDataUrl(saved.bytes, saved.mime), stored: true, inherited: false };
       }
     }
     if (!next) {
