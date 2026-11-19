@@ -37,8 +37,8 @@ export const PAGES = [
     meta: {
       en: {
         ogImage: "/brand/og-landing-en-v3.png",
-        title: "Deliver a demo, not another meeting. — GuiaFlow",
-        description: "Build a guide or a product gallery — for your software or for your client. Start now: free, no sign-up and no sales call. Pro is US$ 7/month, or R$ 36/month in Brazil.",
+        title: "GuiaFlow — open-source (MIT) interactive demos, an alternative to Arcade, Supademo and Storylane",
+        description: "Open-source (MIT) editor for guides and product galleries from screenshots. Free in the browser, no sign-up. An alternative to Arcade, Supademo and Storylane. Pro is US$ 7/month, or R$ 36/month in Brazil.",
       },
       es: {
         ogImage: "/brand/og-landing-es-v3.png",
