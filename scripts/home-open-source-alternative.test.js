@@ -5,7 +5,7 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const read = (name) => readFileSync(new URL(name, root), "utf8");
 
-const PT_TITLE = "GuiaFlow — demos interativas de código aberto (MIT), alternativa ao Arcade, ao Supademo e ao Storylane";
+const PT_TITLE = "GuiaFlow: demos interativas de código aberto, alternativa ao Arcade";
 const PT_DESC = "Editor de código aberto (MIT) para guias e galerias a partir de capturas de tela. Grátis no navegador, sem cadastro. Uma alternativa ao Arcade, ao Supademo e ao Storylane. O Pro custa R$ 36/mês.";
 const PT_SUB = "Código aberto (MIT). Grátis no navegador, sem cadastro. Uma alternativa ao Arcade, ao Supademo e ao Storylane. Monte um guia ou uma galeria de produto — para o seu software ou para o cliente da agência. O Pro custa R$ 36/mês.";
 const EN_TITLE = "GuiaFlow — open-source (MIT) interactive demos, an alternative to Arcade, Supademo and Storylane";
