@@ -5,9 +5,9 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const read = (name) => readFileSync(new URL(name, root), "utf8");
 
-const PT_TITLE = "GuiaFlow: demos interativas de código aberto, alternativa ao Arcade";
-const PT_DESC = "Editor de código aberto (MIT) para guias e galerias a partir de capturas de tela. Grátis no navegador, sem cadastro. Uma alternativa ao Arcade, ao Supademo e ao Storylane. O Pro custa R$ 36/mês.";
-const PT_SUB = "Código aberto (MIT). Grátis no navegador, sem cadastro. Uma alternativa ao Arcade, ao Supademo e ao Storylane. Monte um guia ou uma galeria de produto — para o seu software ou para o cliente da agência. O Pro custa R$ 36/mês.";
+const PT_TITLE = "GuiaFlow: demos interativas de código aberto, alternativa ao Getdemo";
+const PT_DESC = "Editor de código aberto (MIT) para guias e galerias a partir de capturas de tela. Grátis no navegador, sem cadastro. Uma alternativa ao Getdemo, ao Arcade, ao Supademo e ao Storylane. O Pro custa R$ 36/mês.";
+const PT_SUB = "Código aberto (MIT). Grátis no navegador, sem cadastro. Uma alternativa ao Getdemo, ao Arcade, ao Supademo e ao Storylane. Monte um guia ou uma galeria de produto — para o seu software ou para o cliente da agência. O Pro custa R$ 36/mês.";
 const EN_TITLE = "GuiaFlow — open-source (MIT) interactive demos, an alternative to Arcade, Supademo and Storylane";
 const EN_DESC = "Open-source (MIT) editor for guides and product galleries from screenshots. Free in the browser, no sign-up. An alternative to Arcade, Supademo and Storylane. Pro is US$ 7/month, or R$ 36/month in Brazil.";
 const EN_SUB = "Open source (MIT). Free in the browser, no sign-up. An alternative to Arcade, Supademo and Storylane. Build a guide or a product gallery — for your software or for your client. Pro is US$ 7/month, or R$ 36/month in Brazil.";
@@ -35,7 +35,7 @@ function assertHomeCopy(file, { title, desc, sub, h1 }) {
   assert.equal(/plataforma|intelig[eê]ncia|ecossistema|potencializ|platform|intelligence|ecosystem|empower|leverage/i.test(title + desc + sub), false);
 }
 
-test("home PT: código aberto (MIT) e alternativa ao Arcade, ao Supademo e ao Storylane no title, meta e subtítulo; H1 intacto", () => {
+test("home PT: código aberto e alternativa ao Getdemo no title; Getdemo, Arcade, Supademo e Storylane na meta e no subtítulo; H1 intacto", () => {
   assertHomeCopy("index.html", {
     title: PT_TITLE,
     desc: PT_DESC,
