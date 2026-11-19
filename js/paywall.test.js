@@ -279,5 +279,12 @@ test("assinatura Team: tela mostra convidados extras e setTeamSeats valida o ped
   assert.equal(teamSeatsErrorKey({ error: "seats_in_use" }), "billing.seats.inUse");
   assert.equal(teamSeatsErrorKey({ error: "stripe_error" }), "billing.seats.fail");
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
+  const catalogs = readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
   assert.match(html, /id="subscription-seats"[\s\S]*id="subscription-seats-input"[\s\S]*id="btn-subscription-seats"/);
+  assert.match(html, /id="subscription-upgrade"[\s\S]*id="btn-subscription-upgrade"/);
+  assert.match(html, /id="subscription-downgrade"[\s\S]*id="subscription-downgrade-status"[\s\S]*id="btn-subscription-downgrade"/);
+  assert.match(html, /id="subscription-interval"[\s\S]*id="btn-subscription-interval"/);
+  assert.equal(/pool de IA|áudio do time|audio del equipo|shared AI/i.test(catalogs), false);
+  assert.match(readFileSync(new URL("./billing.js", import.meta.url), "utf8"), /BILLING_INTERVAL_PATH = "\/billing\/interval"/);
+  assert.equal(/openBillingPortal\(\)/.test(readFileSync(new URL("./app.js", import.meta.url), "utf8").match(/btn-subscription-interval[\s\S]{0,180}/)?.[0] || ""), false);
 });
