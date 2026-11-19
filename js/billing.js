@@ -595,7 +595,8 @@ export function teamPlanErrorCopy(result) {
   const code = String(result?.error || "");
   const guests = Number(data.guests);
   if (code === "guests_active") {
-    return Number.isInteger(guests) && guests > 0
+    if (guests === 1) return { key: "billing.downgrade.guestsOne", vars: { n: 1 } };
+    return Number.isInteger(guests) && guests > 1
       ? { key: "billing.downgrade.guests", vars: { n: guests } }
       : { key: "billing.downgrade.guestsUnknown", vars: {} };
   }
@@ -605,7 +606,13 @@ export function teamPlanErrorCopy(result) {
   if (code === "subscription_inactive") return { key: "billing.planChange.inactive", vars: {} };
   if (code === "invalid_extra_guests") return { key: "billing.seats.invalid", vars: {} };
   if (code === "invalid_interval") return { key: "billing.invalidInterval", vars: {} };
-  if (code === "active_subscription") return { key: "billing.activeSubscription", vars: {} };
+  if (code === "active_subscription") {
+    return data.loginRequired === true
+      ? { key: "billing.activeSubscriptionLogin", vars: {} }
+      : { key: "billing.activeSubscription", vars: {} };
+  }
+  // 402: a cobrança da diferença (Pro→Team, mensal→anual, mais assentos) falhou; o plano não mudou
+  if (code === "payment_failed") return { key: "billing.paymentFailed", vars: {} };
   if (code === "network") return { key: "share.cloud.network", vars: {} };
   if (result?.status === 503 || code === "config_missing") return { key: "billing.unconfigured", vars: {} };
   if (result?.status === 502 || code === "stripe_error") return { key: "billing.tryAgain", vars: {} };

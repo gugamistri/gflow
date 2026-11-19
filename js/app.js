@@ -2612,7 +2612,15 @@ function paintSubscriptionSeats(screen) {
   if (!box) return;
   const on = Boolean(screen?.team) && collabFlagOn();
   box.hidden = !on;
-  if (!on) return;
+  const line = document.getElementById("settings-seat-line");
+  // why: depois do Team→Pro a linha de vagas ficava com o último valor do Team
+  if (!on) {
+    if (line) {
+      line.hidden = true;
+      line.textContent = "";
+    }
+    return;
+  }
   const extra = screen.extraGuests || 0;
   const locale = getLocale();
   const currency = screen.currency || paywallCurrency(locale);
@@ -2626,10 +2634,9 @@ function paintSubscriptionSeats(screen) {
   if (note) note.textContent = t(yearly ? "billing.seats.noteYear" : "billing.seats.noteMonth", { price: formatPaywallAmount(yearly ? seat.year : seat.month, currency, locale) });
   const btn = document.getElementById("btn-subscription-seats");
   if (btn) btn.disabled = subscriptionBusy;
-  const line = document.getElementById("settings-seat-line");
   if (line) {
-    line.hidden = !on;
-    line.textContent = on ? t("settings.seatLine", { total: 5 + extra, extra }) : "";
+    line.hidden = false;
+    line.textContent = t("settings.seatLine", { total: 5 + extra, extra });
   }
 }
 
@@ -3015,6 +3022,16 @@ async function submitUpgrade(interval) {
     }
     if (result?.error === "active_subscription") {
       const data = result.data && typeof result.data === "object" ? result.data : {};
+      // sem login: o e-mail já paga. Um 2º Checkout criaria outra assinatura; pede para entrar.
+      if (data.loginRequired === true) {
+        closeUpgradeDialog();
+        showAccountDialog();
+        const emailInput = document.getElementById("cloud-email");
+        const typed = upgradeEmail || "";
+        if (emailInput && typed && !emailInput.value) emailInput.value = typed;
+        setCloudLoginStatus(t("billing.activeSubscriptionLogin"), "error");
+        return;
+      }
       const apiTeam = data.tier === "team";
       const wantYear = interval === "year" || interval === "annual" || interval === "yearly";
       if (wantsTeam && !apiTeam) {
