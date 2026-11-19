@@ -1,3 +1,4 @@
+import { stripBlurMeta } from "./blurArea.js";
 import { resolveVideoQuality, avcCodecCandidates, LOGICAL_HEIGHT } from "./videoQuality.js";
 import { getThemeFont } from "./tour-schema/fonts.js";
 import { stripRichText } from "./tour-schema/richText.js";
@@ -142,6 +143,8 @@ export async function embedImagesInDemo(demo, onProgress) {
     }
   }
   next.customImages = {};
+  // why: a ficha do desfoque (retângulos) não sai do editor; a imagem já vem borrada nos pixels
+  stripBlurMeta(next);
   return next;
 }
 

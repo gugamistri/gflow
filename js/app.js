@@ -88,6 +88,7 @@ import {
   shareBaselineHash,
   shareRecordIsStale,
 } from "./shareLink.js";
+import { blurNoticeTextKey, createBlurNoticeState, staleLinkKinds } from "./blurShareNotice.js";
 import { permanentShareEndpoint } from "./viewShare.js";
 import { buildEmbedSnippet, embedRatio, isLinkEmbedFlavor, normalizeEmbedFlavor } from "./embedSnippet.js";
 import {
@@ -589,6 +590,7 @@ function paintProjectSize() {
 }
 
 const editor = createEditor({
+  onBlurCommitted: (info) => onBlurCommitted(info),
   onRefresh: () => paintEditLang(),
   onMediaAdded: (sources) => void optimizeIncomingMedia(new Set(sources)),
   getDemo,
@@ -1249,6 +1251,87 @@ function paintCollabShare() {
   if (seats) seats.hidden = !(owner && signed);
 }
 
+// --- aviso do desfoque: link publicado ainda sem o desfoque (ver blurShareNotice.js) ---
+const blurNotice = createBlurNoticeState();
+let blurNoticeProjectId = "";
+/** Preenchido onde runCloudPublish/runSharePublish existem. */
+let republishStaleLinks = null;
+
+function canPublishHere() {
+  const btn = document.getElementById("btn-share-permanent-republish") || document.getElementById("btn-share-republish");
+  return !btn?.hasAttribute("data-collab-hidden");
+}
+
+/** Link sem hash guardado (antigo): sem como comparar, conta como desatualizado depois de um desfoque. */
+function linkStale(record) {
+  if (!record || !project) return false;
+  return !record.payloadHash || shareRecordIsStale(record, project);
+}
+
+function currentStaleLinkKinds() {
+  const perm = permanentShareRecord();
+  const temp = tempShareRecord();
+  return staleLinkKinds({
+    permanent: Boolean(perm),
+    permanentStale: linkStale(perm),
+    permanentEnabled: cloudShareEnabled(),
+    temporary: Boolean(temp),
+    temporaryStale: linkStale(temp),
+    canPublish: canPublishHere(),
+  });
+}
+
+function paintBlurNotice(kinds) {
+  const box = document.getElementById("blur-share-notice");
+  if (!box) return;
+  const show = blurNotice.visible && blurNoticeProjectId === String(project?.id || "");
+  box.hidden = !show;
+  if (!show) return;
+  const text = document.getElementById("blur-share-notice-text");
+  if (text) {
+    const key = blurNoticeTextKey(kinds);
+    text.dataset.i18n = key;
+    text.textContent = t(key);
+  }
+}
+
+function onBlurCommitted(info = {}) {
+  if (!project) return;
+  const kinds = currentStaleLinkKinds();
+  if (blurNotice.onBlur(info.session ?? 0, kinds)) blurNoticeProjectId = String(project.id || "");
+  paintBlurNotice(kinds);
+}
+
+function syncBlurNotice() {
+  if (!blurNotice.visible) return;
+  if (blurNoticeProjectId !== String(project?.id || "")) blurNotice.republished();
+  const kinds = currentStaleLinkKinds();
+  blurNotice.sync(kinds);
+  paintBlurNotice(kinds);
+}
+
+document.getElementById("blur-share-dismiss")?.addEventListener("click", () => {
+  blurNotice.dismiss();
+  paintBlurNotice([]);
+});
+document.getElementById("blur-share-republish")?.addEventListener("click", async () => {
+  const kinds = currentStaleLinkKinds();
+  if (!kinds.length || !republishStaleLinks) {
+    syncBlurNotice();
+    return;
+  }
+  const btn = document.getElementById("blur-share-republish");
+  if (btn) btn.disabled = true;
+  try {
+    await republishStaleLinks(kinds);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (!currentStaleLinkKinds().length) blurNotice.republished();
+    syncBlurNotice();
+    paintBlurNotice(currentStaleLinkKinds());
+  }
+});
+
 function paintShareMenu() {
   paintCollabShare();
   const pro = viewerIsPro();
@@ -1289,6 +1372,7 @@ function paintShareMenu() {
   if (staleBadge) staleBadge.hidden = !tempStale;
   if (extra) extra.hidden = !tempStale && !temp;
   const stale = permStale || tempStale;
+  syncBlurNotice();
   if (dot) {
     dot.hidden = !stale;
     dot.title = t("share.staleDot");
@@ -4233,6 +4317,14 @@ function bindChrome() {
   document.getElementById("btn-share-publish")?.addEventListener("click", () => {
     void runSharePublish({ update: false });
   });
+  // why: o aviso do desfoque republica pelos mesmos caminhos do menu (permanente e/ou temporário)
+  republishStaleLinks = async (kinds) => {
+    if (kinds.includes("permanent")) {
+      clearCloudPublishIntent();
+      await runCloudPublish();
+    }
+    if (kinds.includes("temporary")) await runSharePublish({ update: true });
+  };
   document.getElementById("btn-share-republish")?.addEventListener("click", () => {
     void runSharePublish({ update: true });
   });
