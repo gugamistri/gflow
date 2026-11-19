@@ -37,8 +37,8 @@ export const PAGES = [
     meta: {
       en: {
         ogImage: "/brand/og-landing-en-v3.png",
-        title: "Deliver a demo, not another meeting. — GuiaFlow",
-        description: "Build a guide or a product gallery — for your software or for your client. Start now: free, no sign-up and no sales call. Pro is US$ 7/month, or R$ 36/month in Brazil.",
+        title: "GuiaFlow — open-source (MIT) interactive demos, an alternative to Arcade, Supademo and Storylane",
+        description: "Open-source (MIT) editor for guides and product galleries from screenshots. Free in the browser, no sign-up. An alternative to Arcade, Supademo and Storylane. Pro is US$ 7/month, or R$ 36/month in Brazil.",
       },
       es: {
         ogImage: "/brand/og-landing-es-v3.png",
@@ -129,6 +129,7 @@ export const EXTRA_PAGES = [
   { path: "/alternativa-fluidz-demos", lastmod: "2026-11-17" },
   { path: "/alternativa-tipflow", lastmod: "2026-11-17" },
   { path: "/para-times-de-produto", lastmod: "2026-11-17" },
+  { path: "/en/open-source-interactive-demo", lastmod: "2026-11-19" },
 ];
 
 /**
@@ -383,7 +384,25 @@ function withLandingJsonLd(html, page, loc) {
   return html.replace(re, () => block);
 }
 
-/** Página PT → variante en/es. */
+
+const EN_OPEN_SOURCE_HREF = "/en/open-source-interactive-demo";
+const EN_OPEN_SOURCE_LABEL = "Open source (MIT)";
+
+/** Link da página EN de open source no rodapé das páginas /en (não entra em PT nem ES). */
+export function withEnOpenSourceFooter(html) {
+  if (html.includes(`href="${EN_OPEN_SOURCE_HREF}"`)) return html;
+  const link = `<a href="${EN_OPEN_SOURCE_HREF}">${EN_OPEN_SOURCE_LABEL}</a>`;
+  const withGithub = html.replace(
+    /(<footer class="site-footer">[\s\S]*?<nav\b[^>]*>[\s\S]*?)(\n[ \t]*)(<a href="https:\/\/github.com\/gugamistri\/gflow")/,
+    `$1$2${link}$2$3`
+  );
+  if (withGithub !== html) return withGithub;
+  return html.replace(
+    /(<footer class="site-footer">[\s\S]*?<nav\b[^>]*>[\s\S]*?)(\n[ \t]*)(<a href="[^"]+"[^>]*>[\s\S]*?<\/a>)(\n[ \t]*)(<\/nav>)/,
+    `$1$2$3$2${link}$4$5`
+  );
+}
+
 export function renderLocale(srcHtml, page, loc, read = defaultRead) {
   let html = srcHtml;
   // why: blocos data-pt-only (ex.: Comparações no rodapé da home) existem só na página PT
@@ -449,6 +468,7 @@ export function renderLocale(srcHtml, page, loc, read = defaultRead) {
       `$1$2?lang=${loc}$3`
     );
   }
+  if (loc === "en") html = withEnOpenSourceFooter(html);
   return html;
 }
 
