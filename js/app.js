@@ -148,9 +148,14 @@ import {
   mergeAccountAccess,
   hostedQuotaCopy,
   hostedUsageMeters,
+  changeBillingInterval,
+  downgradeTeamPlan,
   resumeSubscription,
+  resolvePaidPlanAction,
   setTeamSeats,
+  teamPlanErrorCopy,
   teamSeatsErrorKey,
+  upgradeTeamPlan,
   shouldShowByokSettings,
   readBillingReturn,
   shouldShowProBadge,
@@ -2103,13 +2108,42 @@ function paintUpgradeCopy() {
   const saveTip = t("billing.savePercent", { percent: offer.percent });
   if (yearCard) yearCard.title = saveTip;
   const annual = document.querySelector('#upgrade-form input[name="billing-interval"]:checked')?.value === "year";
+  const decision = upgradeDecision();
+  const intervals = document.querySelector("#upgrade-form .upgrade-intervals");
+  if (intervals) intervals.hidden = decision.action === "upgrade";
+  const prorate = document.getElementById("paywall-prorate-note");
+  if (prorate) {
+    prorate.hidden = decision.action !== "upgrade";
+    prorate.textContent = decision.action === "upgrade" ? t("billing.prorateNote") : "";
+  }
   const subscribe = document.getElementById("btn-upgrade-subscribe");
   if (subscribe) {
-    const key = team
-      ? (annual ? "billing.subscribeTeamAnnual" : "billing.subscribeTeamMonthly")
-      : (annual ? "billing.subscribeAnnual" : "billing.subscribeMonthly");
+    const key =
+      decision.action === "upgrade"
+        ? "billing.upgradeTeam"
+        : decision.action === "interval"
+          ? annual
+            ? "billing.intervalChange.toYear"
+            : "billing.intervalChange.toMonth"
+          : decision.action === "downgrade"
+            ? "billing.downgrade.cta"
+            : decision.action === "already"
+              ? "billing.currentPlan"
+              : team
+                ? annual
+                  ? "billing.subscribeTeamAnnual"
+                  : "billing.subscribeTeamMonthly"
+                : annual
+                  ? "billing.subscribeAnnual"
+                  : "billing.subscribeMonthly";
     subscribe.dataset.i18n = key;
     subscribe.textContent = t(key);
+    subscribe.disabled = decision.action === "already";
+  }
+  if (decision.action === "already") setUpgradeStatus(t("billing.currentPlanHint"));
+  else {
+    const status = document.getElementById("upgrade-status");
+    if (status && !status.classList.contains("is-error")) setUpgradeStatus("");
   }
   const payNote = document.getElementById("paywall-pay-note");
   if (payNote) {
@@ -2295,10 +2329,8 @@ function showUpgradeDialog({ message = "", feature = "", email = "", emailNote =
     const radio = document.querySelector('#upgrade-form input[name="billing-tier"][value="team"]');
     if (radio) radio.checked = true;
   }
-  paintUpgradeCopy();
   setUpgradeStatus("");
-  const button = document.getElementById("btn-upgrade-subscribe");
-  if (button) button.disabled = false;
+  paintUpgradeCopy();
   if (!dialog.open) dialog.showModal();
 }
 
@@ -2564,6 +2596,7 @@ function paintSubscription() {
   const portal = document.getElementById("btn-subscription-portal");
   if (portal) portal.hidden = !screen?.showPortal;
   paintSubscriptionSeats(screen);
+  paintPlanSwitch(screen);
   const confirmCopy = document.getElementById("subscription-confirm-copy");
   if (confirmCopy) {
     confirmCopy.textContent = screen?.whenDate
@@ -2601,6 +2634,172 @@ function paintSubscriptionSeats(screen) {
 }
 
 let seatsDirty = false;
+let upgradeArmed = false;
+let downgradeArmed = false;
+let downgradeNotice = "";
+
+function upgradeDecision() {
+  const tiersOn = collabFlagOn();
+  const wantsTeam = tiersOn && document.querySelector('#upgrade-form input[name="billing-tier"]:checked')?.value === "team";
+  const annual = document.querySelector('#upgrade-form input[name="billing-interval"]:checked')?.value === "year";
+  return resolvePaidPlanAction({
+    entitlement: billingView.status === "ready" ? billingEntitlement : null,
+    wantsTeam,
+    interval: annual ? "annual" : "monthly",
+  });
+}
+
+function paintPlanSwitch(screen) {
+  const showUp = Boolean(screen?.canUpgradeTeam) && collabFlagOn();
+  const upgrade = document.getElementById("subscription-upgrade");
+  if (upgrade) upgrade.hidden = !showUp;
+  if (!showUp) upgradeArmed = false;
+  const upBtn = document.getElementById("btn-subscription-upgrade");
+  if (upBtn) {
+    const key = upgradeArmed ? "billing.upgrade.confirm" : "billing.upgradeTeam";
+    upBtn.dataset.i18n = key;
+    upBtn.textContent = t(key);
+    upBtn.disabled = subscriptionBusy;
+  }
+  const showDown = Boolean(screen?.team);
+  const down = document.getElementById("subscription-downgrade");
+  if (down) down.hidden = !showDown;
+  if (!showDown) {
+    downgradeArmed = false;
+    downgradeNotice = "";
+  }
+  const downBtn = document.getElementById("btn-subscription-downgrade");
+  if (downBtn) {
+    const key = downgradeArmed ? "billing.downgrade.confirm" : "billing.downgrade.cta";
+    downBtn.dataset.i18n = key;
+    downBtn.textContent = t(key);
+    downBtn.disabled = subscriptionBusy;
+  }
+  const note = document.getElementById("subscription-downgrade-status");
+  if (note) {
+    note.hidden = !downgradeNotice;
+    note.textContent = downgradeNotice;
+  }
+  const yearly = subscriptionRecord?.interval === "year";
+  const monthly = subscriptionRecord?.interval === "month";
+  const interval = document.getElementById("subscription-interval");
+  if (interval) interval.hidden = !screen?.showPortal || (!yearly && !monthly);
+  const intervalBtn = document.getElementById("btn-subscription-interval");
+  if (intervalBtn) {
+    const key = yearly ? "billing.intervalChange.toMonth" : "billing.intervalChange.toYear";
+    intervalBtn.dataset.i18n = key;
+    intervalBtn.textContent = t(key);
+    intervalBtn.disabled = subscriptionBusy;
+  }
+}
+
+function sessionExpiredDuringBilling() {
+  closeSubscriptionDialog();
+  return endCloudSession().then(() => {
+    resetBillingView();
+    paintCloudShare();
+    showAccountDialog();
+    setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+  });
+}
+
+function rememberPaidSubscription(sub) {
+  if (!sub) return;
+  billingEntitlement = {
+    ...billingEntitlement,
+    active: sub.status !== "past_due" && sub.plan === "pro",
+    plan: "pro",
+    tier: sub.tier === "team" ? "team" : "pro",
+    planSource: sub.planSource || billingEntitlement.planSource || "stripe",
+    status: sub.status || "active",
+    interval: sub.interval === "year" ? "annual" : sub.interval === "month" ? "monthly" : billingEntitlement.interval,
+  };
+  billingView = { status: "ready" };
+  paintAccount();
+}
+
+function applyTeamPlanResult(result, doneKey) {
+  if (result?.subscription) subscriptionRecord = result.subscription;
+  subscriptionPhase = "ready";
+  upgradeArmed = false;
+  downgradeArmed = false;
+  downgradeNotice = "";
+  paintSubscription();
+  toast(t(doneKey));
+  void refreshEntitlement();
+}
+
+async function applyTeamUpgrade() {
+  if (subscriptionBusy) return;
+  if (!upgradeArmed) {
+    upgradeArmed = true;
+    paintSubscription();
+    return;
+  }
+  subscriptionBusy = true;
+  paintSubscription();
+  const result = await upgradeTeamPlan();
+  subscriptionBusy = false;
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    await sessionExpiredDuringBilling();
+    return;
+  }
+  if (!result?.ok) {
+    upgradeArmed = false;
+    const copy = teamPlanErrorCopy(result);
+    toast(t(copy.key, copy.vars));
+    paintSubscription();
+    return;
+  }
+  applyTeamPlanResult(result, "billing.upgrade.done");
+}
+
+async function applyBillingInterval(interval) {
+  if (subscriptionBusy) return;
+  subscriptionBusy = true;
+  paintSubscription();
+  const result = await changeBillingInterval(interval);
+  subscriptionBusy = false;
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    await sessionExpiredDuringBilling();
+    return;
+  }
+  if (!result?.ok) {
+    const copy = teamPlanErrorCopy(result);
+    toast(t(copy.key, copy.vars));
+    paintSubscription();
+    return;
+  }
+  rememberPaidSubscription(result.subscription);
+  applyTeamPlanResult(result, result.unchanged ? "billing.intervalChange.same" : "billing.intervalChange.done");
+}
+
+async function applyTeamDowngrade() {
+  if (subscriptionBusy) return;
+  if (!downgradeArmed) {
+    downgradeArmed = true;
+    paintSubscription();
+    return;
+  }
+  subscriptionBusy = true;
+  paintSubscription();
+  const result = await downgradeTeamPlan();
+  subscriptionBusy = false;
+  if (result?.status === 401 || result?.error === "unauthorized") {
+    await sessionExpiredDuringBilling();
+    return;
+  }
+  if (!result?.ok) {
+    downgradeArmed = false;
+    const copy = teamPlanErrorCopy(result);
+    let text = t(copy.key, copy.vars);
+    if (result?.error === "guests_active") text = `${text} ${t("billing.downgrade.guestsHint")}`;
+    downgradeNotice = text;
+    paintSubscription();
+    return;
+  }
+  applyTeamPlanResult(result, "billing.downgrade.done");
+}
 
 async function applyTeamSeats() {
   if (subscriptionBusy) return;
@@ -2734,6 +2933,72 @@ async function submitUpgrade(interval) {
   if (button) button.disabled = true;
   setUpgradeStatus("");
   try {
+    if (getCloudAccount().signedIn && billingView.status !== "ready" && billingView.status !== "hidden") {
+      await refreshEntitlement();
+    }
+    const decided = resolvePaidPlanAction({
+      entitlement: billingView.status === "ready" ? billingEntitlement : null,
+      wantsTeam,
+      interval,
+    });
+    if (decided.action === "already") {
+      setUpgradeStatus(t("billing.currentPlanHint"));
+      return;
+    }
+    if (decided.action === "interval") {
+      const changed = await changeBillingInterval(interval);
+      if (changed?.status === 401 || changed?.error === "unauthorized") {
+        closeUpgradeDialog();
+        await endCloudSession();
+        resetBillingView();
+        paintCloudShare();
+        showAccountDialog();
+        setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+        return;
+      }
+      if (changed?.ok) {
+        rememberPaidSubscription(changed.subscription);
+        closeUpgradeDialog();
+        toast(t(changed.unchanged ? "billing.intervalChange.same" : "billing.intervalChange.done"));
+        void refreshEntitlement();
+        return;
+      }
+      if (changed?.error !== "stripe_subscription_required") {
+        const copy = teamPlanErrorCopy(changed);
+        setUpgradeStatus(t(copy.key, copy.vars), "error");
+        return;
+      }
+    }
+    if (decided.action === "downgrade") {
+      closeUpgradeDialog();
+      await openSubscriptionDialog();
+      return;
+    }
+    if (decided.action === "upgrade") {
+      const upgraded = await upgradeTeamPlan();
+      if (upgraded?.status === 401 || upgraded?.error === "unauthorized") {
+        closeUpgradeDialog();
+        await endCloudSession();
+        resetBillingView();
+        paintCloudShare();
+        showAccountDialog();
+        setCloudLoginStatus(t("share.cloud.unauthorized"), "error");
+        return;
+      }
+      if (upgraded?.ok) {
+        rememberPaidSubscription(upgraded.subscription);
+        closeUpgradeDialog();
+        toast(t("billing.upgrade.done"));
+        void refreshEntitlement();
+        return;
+      }
+      // Sem assinatura Stripe para ratear: o primeiro pagamento continua no Checkout.
+      if (upgraded?.error !== "stripe_subscription_required") {
+        const copy = teamPlanErrorCopy(upgraded);
+        setUpgradeStatus(t(copy.key, copy.vars), "error");
+        return;
+      }
+    }
     const result = await startBillingCheckout({
       interval,
       currency: paywallCurrency(getLocale()),
@@ -2746,6 +3011,39 @@ async function submitUpgrade(interval) {
         result.error === "invalid_currency" ? t("billing.invalidCurrency") : t("billing.invalidInterval"),
         "error"
       );
+      return;
+    }
+    if (result?.error === "active_subscription") {
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const apiTeam = data.tier === "team";
+      const wantYear = interval === "year" || interval === "annual" || interval === "yearly";
+      if (wantsTeam && !apiTeam) {
+        const upgraded = await upgradeTeamPlan();
+        if (upgraded?.ok) {
+          rememberPaidSubscription(upgraded.subscription);
+          closeUpgradeDialog();
+          toast(t("billing.upgrade.done"));
+          void refreshEntitlement();
+          return;
+        }
+      } else if (!wantsTeam && apiTeam) {
+        closeUpgradeDialog();
+        await openSubscriptionDialog();
+        return;
+      } else if (data.interval === "year" || data.interval === "month") {
+        const same = (data.interval === "year") === wantYear;
+        if (!same) {
+          const changed = await changeBillingInterval(wantYear ? "year" : "month");
+          if (changed?.ok) {
+            rememberPaidSubscription(changed.subscription);
+            closeUpgradeDialog();
+            toast(t(changed.unchanged ? "billing.intervalChange.same" : "billing.intervalChange.done"));
+            void refreshEntitlement();
+            return;
+          }
+        }
+      }
+      setUpgradeStatus(t("billing.activeSubscription"), "error");
       return;
     }
     if (result?.status === 401 || result?.error === "unauthorized") {
@@ -2769,6 +3067,7 @@ async function submitUpgrade(interval) {
     setUpgradeStatus(t("billing.unavailable"), "error");
   } finally {
     if (button) button.disabled = false;
+    paintUpgradeCopy();
   }
 }
 
@@ -4681,6 +4980,16 @@ function bindChrome() {
   });
   document.getElementById("btn-subscription-portal")?.addEventListener("click", () => {
     void openBillingPortal();
+  });
+  document.getElementById("btn-subscription-interval")?.addEventListener("click", () => {
+    const next = subscriptionRecord?.interval === "year" ? "month" : "year";
+    void applyBillingInterval(next);
+  });
+  document.getElementById("btn-subscription-upgrade")?.addEventListener("click", () => {
+    void applyTeamUpgrade();
+  });
+  document.getElementById("btn-subscription-downgrade")?.addEventListener("click", () => {
+    void applyTeamDowngrade();
   });
   document.getElementById("btn-subscription-upsell")?.addEventListener("click", () => {
     closeSubscriptionDialog();

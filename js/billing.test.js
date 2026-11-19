@@ -14,11 +14,16 @@ import {
   readBillingReturn,
   resumeSubscription,
   startAdminHandoff,
+  changeBillingInterval,
+  downgradeTeamPlan,
+  resolvePaidPlanAction,
   startBillingCheckout,
   startBillingPortal,
   stripBillingReturn,
   subscriptionConflictKey,
   subscriptionScreen,
+  teamPlanErrorCopy,
+  upgradeTeamPlan,
 } from "./billing.js";
 
 const env = { baseUrl: "https://app.guiaflow.pro", accessToken: "jwt-session" };
@@ -354,6 +359,8 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(monthly.canCancel, true);
   assert.equal(monthly.canResume, false);
   assert.equal(monthly.showPortal, true);
+  assert.equal(monthly.canUpgradeTeam, true);
+  assert.equal(monthly.team, false);
 
   const annual = subscriptionScreen({ ...MONTHLY, interval: "year", amount: 359 }, "pt");
   assert.equal(annual.planKey, "billing.subPlanAnnual");
@@ -429,6 +436,13 @@ test("a tela da assinatura formata preço, data e os estados", () => {
   assert.equal(teamComp.showPortal, false);
   assert.equal(teamComp.canCancel, false);
   assert.equal(teamComp.extraGuests, 0);
+  assert.equal(teamComp.canUpgradeTeam, false);
+
+  const teamPaid = subscriptionScreen({ ...MONTHLY, tier: "team", amount: 99 }, "pt");
+  assert.equal(teamPaid.planKey, "billing.subPlanTeamMonthly");
+  assert.equal(teamPaid.team, true);
+  assert.equal(teamPaid.canUpgradeTeam, false);
+  assert.equal(subscriptionScreen({ ...MONTHLY, tier: "team", interval: "year", amount: 990 }, "pt").planKey, "billing.subPlanTeamAnnual");
 
   assert.equal(subscriptionScreen({ plan: "none", planSource: null }, "pt").kind, "none");
   assert.equal(parseSubscription({ subscription: MONTHLY }).amount, 36);
@@ -540,4 +554,68 @@ test("volta do pagamento sem sessão: aviso de e-mail em pt/es/en e o app não d
   assert.match(src, /if \(!getCloudAccount\(\)\.signedIn\) \{\s*toast\(t\("billing\.toastPaidCheckEmail"\)/);
   // sem code o retorno continua sendo lido como "welcome" (a API não envia mais ?code= no pagamento)
   assert.deepEqual(readBillingReturn("https://guiaflow.pro/editor?welcome=pro&plan=pro"), { kind: "welcome", sessionId: "", code: "" });
+});
+
+test("assinatura ativa troca plano e período sem outro checkout", async () => {
+  const pro = { active: true, planSource: "stripe", tier: "pro", interval: "monthly", status: "active" };
+  assert.equal(resolvePaidPlanAction({ entitlement: pro, wantsTeam: true, interval: "annual" }).action, "upgrade");
+  assert.equal(resolvePaidPlanAction({ entitlement: pro, wantsTeam: false, interval: "annual" }).action, "interval");
+  assert.equal(resolvePaidPlanAction({ entitlement: pro, wantsTeam: false, interval: "monthly" }).action, "already");
+  assert.equal(resolvePaidPlanAction({ entitlement: { ...pro, tier: "team" }, wantsTeam: false, interval: "month" }).action, "downgrade");
+  assert.equal(resolvePaidPlanAction({ entitlement: { active: false, planSource: "stripe", status: "past_due", tier: "pro", interval: "monthly" }, wantsTeam: true, interval: "month" }).action, "checkout");
+  assert.equal(resolvePaidPlanAction({ entitlement: { active: true, planSource: "comp", tier: "pro", interval: "monthly" }, wantsTeam: true, interval: "month" }).action, "checkout");
+
+  const seen = [];
+  await withFetch(async (url, init) => {
+    seen.push({ url: String(url), method: init?.method, body: init?.body, auth: new Headers(init?.headers).get("authorization") });
+    const href = String(url);
+    if (href.endsWith("/billing/team/upgrade")) {
+      return { ok: true, status: 200, json: async () => ({ ok: true, plan: "pro", tier: "team", status: "active", interval: "month", planSource: "stripe", extraGuests: 0 }) };
+    }
+    if (href.endsWith("/billing/team/downgrade")) {
+      return { ok: false, status: 409, json: async () => ({ ok: false, error: "guests_active", guests: 2, message: "Remova os convidados antes de voltar para o Pro." }) };
+    }
+    if (href.endsWith("/billing/interval")) {
+      const body = JSON.parse(init.body);
+      if (body.interval === "year") {
+        return { ok: true, status: 200, json: async () => ({ ok: true, plan: "pro", tier: "pro", status: "active", interval: "year", unchanged: false }) };
+      }
+      return { ok: true, status: 200, json: async () => ({ ok: true, plan: "pro", tier: "pro", status: "active", interval: "month", unchanged: true }) };
+    }
+    return { ok: false, status: 500, json: async () => ({}) };
+  }, async () => {
+    const up = await upgradeTeamPlan(env);
+    assert.equal(up.ok, true);
+    assert.equal(up.subscription.tier, "team");
+    assert.equal(seen[0].method, "POST");
+    assert.equal(seen[0].body, "{}");
+    assert.equal(seen[0].auth, "Bearer jwt-session");
+    assert.match(seen[0].url, /\/billing\/team\/upgrade$/);
+
+    const down = await downgradeTeamPlan(env);
+    assert.equal(down.ok, false);
+    assert.equal(down.error, "guests_active");
+    assert.equal(teamPlanErrorCopy(down).key, "billing.downgrade.guests");
+    assert.equal(teamPlanErrorCopy(down).vars.n, 2);
+    assert.equal(seen[1].body, "{}");
+
+    const year = await changeBillingInterval("annual", env);
+    assert.equal(year.ok, true);
+    assert.equal(year.unchanged, false);
+    assert.equal(year.subscription.interval, "year");
+    assert.equal(seen[2].body, JSON.stringify({ interval: "year" }));
+    assert.match(seen[2].url, /\/billing\/interval$/);
+
+    const same = await changeBillingInterval("month", env);
+    assert.equal(same.unchanged, true);
+    assert.equal(same.subscription.interval, "month");
+
+    const bad = await changeBillingInterval("weekly", env);
+    assert.equal(bad.ok, false);
+    assert.equal(bad.error, "invalid_interval");
+    assert.equal(seen.length, 4);
+  });
+  assert.equal(teamPlanErrorCopy({ error: "guests_active", data: {} }).key, "billing.downgrade.guestsUnknown");
+  assert.equal(teamPlanErrorCopy({ error: "active_subscription" }).key, "billing.activeSubscription");
+  assert.equal(teamPlanErrorCopy({ error: "subscription_inactive" }).key, "billing.planChange.inactive");
 });

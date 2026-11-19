@@ -7,7 +7,7 @@
 import { analyticsAccountFromMe } from "./posthogEditor.js";
 import { cloudFetch } from "./cloudConfig.js";
 import { browserPrivacySignal, getAttribution } from "./attribution.js";
-import { buildCheckoutBody, formatPaywallAmount, paywallCurrency, readBillingReturn, stripBillingReturn } from "./paywall.js";
+import { buildCheckoutBody, checkoutApiInterval, formatPaywallAmount, paywallCurrency, readBillingReturn, stripBillingReturn } from "./paywall.js";
 
 export const BILLING_CHECKOUT_PATH = "/billing/checkout";
 export const BILLING_PORTAL_PATH = "/billing/portal";
@@ -15,6 +15,9 @@ export const BILLING_SUBSCRIPTION_PATH = "/billing/subscription";
 export const BILLING_CANCEL_PATH = "/billing/cancel";
 export const BILLING_RESUME_PATH = "/billing/resume";
 export const BILLING_TEAM_SEATS_PATH = "/billing/team/seats";
+export const BILLING_TEAM_UPGRADE_PATH = "/billing/team/upgrade";
+export const BILLING_TEAM_DOWNGRADE_PATH = "/billing/team/downgrade";
+export const BILLING_INTERVAL_PATH = "/billing/interval";
 export const BILLING_ENTITLEMENT_PATH = "/billing/entitlement";
 export const AUTH_ME_PATH = "/auth/me";
 export const AUTH_HANDOFF_PATH = "/auth/handoff";
@@ -350,6 +353,11 @@ export async function startBillingCheckout(input, env) {
   return { ok: true, status: result.status, url, unavailable: false };
 }
 
+/**
+ * Portal só para método de pagamento e faturas.
+ * Mensal ↔ anual é POST /billing/interval, na mesma assinatura.
+ * A sessão não pede subscription_update: o Portal não troca plano nem período.
+ */
 export async function startBillingPortal(env) {
   const result = await cloudFetch(BILLING_PORTAL_PATH, { method: "POST" }, env);
   if (!result.ok) return { ...result, unavailable: unavailableResult(result), url: "" };
@@ -430,6 +438,7 @@ const EMPTY_SUBSCRIPTION_SCREEN = {
   canResume: false,
   showPortal: false,
   team: false,
+  canUpgradeTeam: false,
   extraGuests: 0,
   currency: "",
 };
@@ -458,8 +467,18 @@ export function subscriptionScreen(data, locale = "pt") {
     price = formatPaywallAmount(sub.amount, currency, locale);
     priceKey = sub.interval === "year" ? "billing.yearAmount" : "billing.monthEquiv";
   }
-  const planKey =
-    sub.interval === "year" ? "billing.subPlanAnnual" : sub.interval === "month" ? "billing.subPlanMonthly" : "billing.planCloud";
+  const teamPaid = sub.tier === "team";
+  const planKey = teamPaid
+    ? sub.interval === "year"
+      ? "billing.subPlanTeamAnnual"
+      : sub.interval === "month"
+        ? "billing.subPlanTeamMonthly"
+        : "billing.teamTitle"
+    : sub.interval === "year"
+      ? "billing.subPlanAnnual"
+      : sub.interval === "month"
+        ? "billing.subPlanMonthly"
+        : "billing.planCloud";
   let statusKey = "billing.subStatusActive";
   if (scheduled) statusKey = "billing.subStatusScheduled";
   else if (sub.status === "past_due") statusKey = "billing.pastDue";
@@ -474,7 +493,8 @@ export function subscriptionScreen(data, locale = "pt") {
     canCancel: sub.canCancel,
     canResume: sub.canResume,
     showPortal: true,
-    team: sub.tier === "team" && !scheduled && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due"),
+    team: teamPaid && !scheduled && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due"),
+    canUpgradeTeam: !teamPaid && !scheduled && (sub.status === "active" || sub.status === "trialing"),
     extraGuests: sub.extraGuests,
     currency,
   };
@@ -510,6 +530,86 @@ export function teamSeatsErrorKey(result) {
   if (result?.error === "invalid_extra_guests") return "billing.seats.invalid";
   if (result?.error === "network") return "share.cloud.network";
   return "billing.seats.fail";
+}
+
+function courtesyPlan(source) {
+  return source === "comp" || source === "superadmin";
+}
+
+/**
+ * Assinatura ativa não abre outro Checkout.
+ * Pro → Team: POST /billing/team/upgrade. Team → Pro: POST /billing/team/downgrade.
+ * Mensal ↔ anual: POST /billing/interval. past_due segue para o Checkout (recuperação).
+ */
+export function resolvePaidPlanAction({ entitlement, wantsTeam = false, interval = "" } = {}) {
+  const ent = entitlement && typeof entitlement === "object" ? entitlement : null;
+  if (!ent?.active || courtesyPlan(ent.planSource)) return { action: "checkout" };
+  const onTeam = ent.tier === "team";
+  if (wantsTeam && !onTeam) return { action: "upgrade" };
+  if (!wantsTeam && onTeam) return { action: "downgrade" };
+  const current = ent.interval === "annual" || ent.interval === "monthly" ? ent.interval : "";
+  const apiInterval = checkoutApiInterval(interval);
+  const next = apiInterval === "year" ? "annual" : apiInterval === "month" ? "monthly" : "";
+  if (current && next && current !== next) return { action: "interval" };
+  return { action: "already" };
+}
+
+async function teamPlanResult(path, body, env) {
+  const result = await cloudFetch(path, { method: "POST", body: JSON.stringify(body || {}) }, env);
+  if (!result.ok) return { ...result, subscription: null };
+  return { ok: true, status: result.status, subscription: parseSubscription(result.data) };
+}
+
+/** Pro com assinatura Stripe → Team, na mesma assinatura. */
+export function upgradeTeamPlan(env) {
+  return teamPlanResult(BILLING_TEAM_UPGRADE_PATH, {}, env);
+}
+
+/** Team → Pro. A API recusa com guests_active enquanto houver convidados. */
+export function downgradeTeamPlan(env) {
+  return teamPlanResult(BILLING_TEAM_DOWNGRADE_PATH, {}, env);
+}
+
+/** Mensal ↔ anual na assinatura atual. 200 com unchanged quando o intervalo já é esse. */
+export async function changeBillingInterval(interval, env) {
+  const apiInterval = checkoutApiInterval(interval);
+  if (!apiInterval) return { ok: false, error: "invalid_interval", subscription: null, unchanged: false };
+  const result = await cloudFetch(
+    BILLING_INTERVAL_PATH,
+    { method: "POST", body: JSON.stringify({ interval: apiInterval }) },
+    env
+  );
+  if (!result.ok) return { ...result, subscription: null, unchanged: false };
+  const data = result.data && typeof result.data === "object" ? result.data : {};
+  return {
+    ok: true,
+    status: result.status,
+    unchanged: data.unchanged === true,
+    subscription: parseSubscription(data),
+  };
+}
+
+/** Texto do erro de upgrade/downgrade. guests vem do corpo da API. */
+export function teamPlanErrorCopy(result) {
+  const data = result?.data && typeof result.data === "object" ? result.data : {};
+  const code = String(result?.error || "");
+  const guests = Number(data.guests);
+  if (code === "guests_active") {
+    return Number.isInteger(guests) && guests > 0
+      ? { key: "billing.downgrade.guests", vars: { n: guests } }
+      : { key: "billing.downgrade.guestsUnknown", vars: {} };
+  }
+  if (code === "already_team") return { key: "billing.upgrade.alreadyTeam", vars: {} };
+  if (code === "team_required") return { key: "billing.downgrade.notTeam", vars: {} };
+  if (code === "stripe_subscription_required") return { key: "billing.planChange.needStripe", vars: {} };
+  if (code === "subscription_inactive") return { key: "billing.planChange.inactive", vars: {} };
+  if (code === "invalid_extra_guests") return { key: "billing.seats.invalid", vars: {} };
+  if (code === "invalid_interval") return { key: "billing.invalidInterval", vars: {} };
+  if (code === "active_subscription") return { key: "billing.activeSubscription", vars: {} };
+  if (code === "network") return { key: "share.cloud.network", vars: {} };
+  if (result?.status === 503 || code === "config_missing") return { key: "billing.unconfigured", vars: {} };
+  if (result?.status === 502 || code === "stripe_error") return { key: "billing.tryAgain", vars: {} };
+  return { key: "billing.unavailable", vars: {} };
 }
 
 export function resumeSubscription(env) {

@@ -10,7 +10,7 @@ export const PAYWALL_PRICES = {
   brl: { month: 36, year: 359 },
 };
 
-/** Team (convidados e pool de IA/áudio do time) e o convidado extra, que é `quantity` na assinatura. */
+/** Team (convidados) e o convidado extra, que é `quantity` na assinatura. A cota de texto e áudio não é um pool compartilhado. */
 export const PAYWALL_TEAM_PRICES = {
   usd: { month: 19, year: 190 },
   brl: { month: 99, year: 990 },
