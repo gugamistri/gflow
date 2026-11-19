@@ -52,7 +52,7 @@ function mountDemo() {
   iframe.title = t("lp.demo.frameTitle");
   iframe.setAttribute("data-i18n-title", "lp.demo.frameTitle");
   iframe.loading = "lazy";
-  iframe.allow = "autoplay; fullscreen";
+  iframe.allow = "autoplay; fullscreen; screen-wake-lock";
   iframe.referrerPolicy = "strict-origin-when-cross-origin";
   frame.replaceChildren(iframe);
 }

@@ -51,6 +51,7 @@ import { isCompactTouch } from "./compact.js";
 import { resolvePlayPlaylist } from "./stepSelection.js";
 import { createPresentProgress } from "./presentProgress.js";
 import { createTourLifecycle } from "./tourLifecycle.js";
+import { createTourWakeLock } from "./wakeLock.js";
 import { pauseAudio, resumeAudio, setAudioMuted, VIDEO_END_ADVANCE_MS, videoStepAdvance } from "./playback.js";
 import { createPlayerControls, createLiveAnnouncer, playerShortcut } from "./playerControls.js";
 import { stepImageAlt } from "./a11y.js";
@@ -68,11 +69,42 @@ export function createPlayer(ctx) {
   const { getDemo, toast, getSelectedIndex, setSelectedIndex, onRequestExit, presentHintKey } = ctx;
   const presentProgress = createPresentProgress();
   // why: onStep/onComplete/onExit servem a tela final e o analytics; o editor não os passa
-  const lifecycle = createTourLifecycle({
+  const life = createTourLifecycle({
     onStep: ctx.onStep,
     onComplete: ctx.onComplete,
     onExit: ctx.onExit,
   });
+  // why: tela acesa no celular enquanto o tour (e a prévia) está visível e em uso
+  const wakeLock = createTourWakeLock();
+  const lifecycle = {
+    start() {
+      life.start();
+      wakeLock.start();
+    },
+    step(payload) {
+      life.step(payload);
+      wakeLock.ping();
+    },
+    complete() {
+      const ok = life.complete();
+      if (ok) wakeLock.stop();
+      return ok;
+    },
+    exit(reason) {
+      const ok = life.exit(reason);
+      if (ok) wakeLock.stop();
+      return ok;
+    },
+    get completed() {
+      return life.completed;
+    },
+    get active() {
+      return life.active;
+    },
+    get index() {
+      return life.index;
+    },
+  };
   let pendingExitReason = "";
   const announce = createLiveAnnouncer();
   // why: WCAG 2.2.2 / 1.4.2 — pausar vira modo manual (Anterior/Próximo); silenciar corta fala e trilha
@@ -1765,6 +1797,7 @@ export function createPlayer(ctx) {
       return buildAndDrive(from, opts);
     },
     stop: (opts) => {
+      wakeLock.stop();
       gallery.stop();
       return stop(opts);
     },
