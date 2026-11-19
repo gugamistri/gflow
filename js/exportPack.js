@@ -1,3 +1,4 @@
+import { stripCropMeta } from "./cropArea.js";
 import { stripBlurMeta } from "./blurArea.js";
 import { resolveVideoQuality, avcCodecCandidates, LOGICAL_HEIGHT } from "./videoQuality.js";
 import { getThemeFont } from "./tour-schema/fonts.js";
@@ -143,6 +144,8 @@ export async function embedImagesInDemo(demo, onProgress) {
     }
   }
   next.customImages = {};
+  // why: a ficha do enquadramento não sai do editor; a imagem já é o recorte
+  stripCropMeta(next);
   // why: a ficha do desfoque (retângulos) não sai do editor; a imagem já vem borrada nos pixels
   stripBlurMeta(next);
   return next;

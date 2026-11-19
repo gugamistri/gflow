@@ -19,6 +19,7 @@ import {
 import { stepImageAlt } from "./a11y.js";
 import { createVideoStage } from "./videoStage.js";
 import { createStepVideoEditor } from "./stepVideoEditor.js";
+import { createCropTool } from "./cropTool.js";
 import { createBlurTool } from "./blurTool.js";
 import { stepVideo } from "./tour-schema/video.js";
 import { createClickFxController } from "./clickFx.js";
@@ -300,6 +301,27 @@ export function createEditor(ctx) {
     return canvasVideo;
   }
 
+  // why: enquadrar grava o recorte nos pixels; o print inteiro fica só neste navegador (cropStore.js)
+  let cropTool = null;
+  function ensureCropTool() {
+    cropTool ||= createCropTool({
+      getDemo,
+      currentStep: () => currentStep(),
+      projectId: () => String(getDemo()?.id || ""),
+      t,
+      toast,
+      onCommit: () => {
+        setDemo(getDemo());
+        fillImageSelect();
+        syncForm();
+        renderCanvas();
+        renderFilmstrip();
+        onChange();
+      },
+    });
+    return cropTool;
+  }
+
   // why: desfoque gravado nos pixels; o original fica só neste navegador (blurStore.js)
   let blurTool = null;
   function ensureBlurTool() {
@@ -406,6 +428,7 @@ export function createEditor(ctx) {
     stbSideLabel: document.getElementById("stb-side-label"),
     stbAlign: document.getElementById("stb-align"),
     stbSimulate: document.getElementById("stb-simulate"),
+    stbCrop: document.getElementById("stb-crop"),
     stbBlur: document.getElementById("stb-blur"),
     stbZoom: document.getElementById("stb-zoom"),
     stbHold: document.getElementById("stb-hold"),
@@ -2039,6 +2062,12 @@ export function createEditor(ctx) {
     if (els.stbGenerateCopy) els.stbGenerateCopy.hidden = isVideo;
     if (els.stbSimulate) els.stbSimulate.hidden = isSlide || isVideo;
     if (els.stbZoom) els.stbZoom.hidden = isSlide || isVideo;
+    if (els.stbCrop) {
+      els.stbCrop.hidden = isSlide || isVideo;
+      const cropped = Boolean(step.crop);
+      els.stbCrop.classList.toggle("is-active", cropped);
+      els.stbCrop.setAttribute("aria-pressed", cropped ? "true" : "false");
+    }
     if (els.stbBlur) els.stbBlur.hidden = isSlide || isVideo;
     const sim = step.simulateClick !== false;
     els.stbSimulate?.classList.toggle("is-active", sim);
@@ -2231,6 +2260,17 @@ export function createEditor(ctx) {
       target.click();
     });
     els.stbImage?.addEventListener("click", () => openImageModal("replace"));
+    els.stbCrop?.addEventListener("click", () => {
+      const step = currentStep();
+      if (!step || step.type === "slide" || isVideoMedia(step)) return;
+      // why: desfoque em andamento termina (e grava) antes de abrir o enquadramento
+      void Promise.resolve(blurTool?.isActive() ? blurTool.flush().then(() => blurTool.stop()) : null)
+        .then(() => ensureCropTool().open(step))
+        .catch((err) => {
+          console.warn("crop", err);
+          toast(t("crop.failed"));
+        });
+    });
     els.stbBlur?.addEventListener("click", () => {
       const step = currentStep();
       if (!step || step.type === "slide" || isVideoMedia(step)) return;

@@ -9312,6 +9312,82 @@ body.has-mobile-bar .topbar .export-panel > summary { display: none !important; 
   color: var(--ns-danger, #b42318);
 }
 
+/* Enquadrar: diálogo com o print inteiro. O recorte em si é gravado nos pixels (js/cropArea.js). */
+.crop-dialog {
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  max-width: min(1100px, 94vw);
+  background: var(--ns-surface, #fff);
+  color: inherit;
+}
+.crop-dialog::backdrop {
+  background: rgba(10, 14, 20, 0.6);
+}
+.crop-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+}
+.crop-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.crop-lead {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+.crop-stage {
+  position: relative;
+  justify-self: center;
+  line-height: 0;
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+  border-radius: 6px;
+}
+.crop-img {
+  display: block;
+  max-width: min(1040px, 88vw);
+  max-height: 64vh;
+  pointer-events: none;
+}
+.crop-rect {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  cursor: move;
+}
+.crop-rect[hidden] {
+  display: none;
+}
+.crop-rect i {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.crop-rect i[data-h="nw"] { left: -7px; top: -7px; cursor: nwse-resize; }
+.crop-rect i[data-h="ne"] { right: -7px; top: -7px; cursor: nesw-resize; }
+.crop-rect i[data-h="sw"] { left: -7px; bottom: -7px; cursor: nesw-resize; }
+.crop-rect i[data-h="se"] { right: -7px; bottom: -7px; cursor: nwse-resize; }
+.crop-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.crop-spacer {
+  flex: 1;
+}
+.crop-dialog.is-busy .crop-stage {
+  cursor: progress;
+  opacity: 0.7;
+}
 /* Desfocar área: retângulos sobre o print. O desfoque em si é gravado nos pixels (js/blurArea.js). */
 .blur-layer {
   position: absolute;
