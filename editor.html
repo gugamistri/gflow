@@ -863,6 +863,11 @@
       </div>
       <p class="rotate-hint" id="rotate-hint" hidden data-i18n="present.rotateHint">Gire o celular para ver a tela inteira</p>
       <input type="file" id="images-file" accept="image/*" multiple hidden />
+      <div class="blur-share-notice" id="blur-share-notice" role="status" hidden>
+        <span class="blur-share-notice-text" id="blur-share-notice-text" data-i18n="blur.shareStale">O link publicado ainda mostra a versão sem desfoque.</span>
+        <button type="button" class="btn btn-sm btn-primary" id="blur-share-republish" data-i18n="blur.shareRepublish">Republicar agora</button>
+        <button type="button" class="blur-share-notice-close" id="blur-share-dismiss" aria-label="Fechar aviso" data-i18n-aria="blur.shareDismiss">×</button>
+      </div>
       <div class="canvas-stage" id="canvas-stage">
         <div class="canvas-empty" id="canvas-empty" hidden>
           <h2 data-i18n="canvas.emptyTitle">Projeto vazio</h2>

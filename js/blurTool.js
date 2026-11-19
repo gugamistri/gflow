@@ -83,6 +83,7 @@ export async function bakeBlurredImage(originalDataUrl, rects) {
  */
 export function createBlurTool({ frame, image, getDemo, currentStep, projectId, onCommit, onActiveChange, t, toast }) {
   let session = null;
+  let sessionSeq = 0;
   let queue = Promise.resolve();
   let selected = -1;
   let pending = 0;
@@ -264,7 +265,8 @@ export function createBlurTool({ frame, image, getDemo, currentStep, projectId, 
           step.image = `custom:${s.key}`;
           step.blur = { id: s.id, key: s.key, rects };
         }
-        onCommit();
+        // why: o editor avisa uma vez por sessão do desfoque se há link publicado desatualizado
+        onCommit({ session: s.seq, rects: rects.length });
       })
       .catch((err) => {
         console.warn("blur", err);
@@ -301,6 +303,8 @@ export function createBlurTool({ frame, image, getDemo, currentStep, projectId, 
       next = { stepId: step.id, id: randomId("blr"), key, rects: [], original, stored: false, inherited: Boolean(step.blur) };
     }
     if (currentStep()?.id !== step.id) return false;
+    sessionSeq += 1;
+    next.seq = sessionSeq;
     session = next;
     selected = -1;
     layer.hidden = false;

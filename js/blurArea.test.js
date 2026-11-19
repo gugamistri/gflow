@@ -184,6 +184,6 @@ test("originais ficam no IndexedDB local e somem com o projeto", async () => {
 test("textos da ferramenta (pt/en/es) sem palavras proibidas", () => {
   const src = readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
   const lines = src.split("\n").filter((l) => /"blur\./.test(l));
-  assert.equal(lines.length, 21);
+  assert.equal(lines.length, 33);
   for (const l of lines) assert.ok(!/plataforma|intelig[eê]ncia|ecossistema|potencializar|platform|intelligence|ecosystem|empower/i.test(l), l);
 });

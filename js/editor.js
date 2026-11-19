@@ -315,13 +315,14 @@ export function createEditor(ctx) {
         els.stbBlur?.classList.toggle("is-active", on);
         els.stbBlur?.setAttribute("aria-pressed", on ? "true" : "false");
       },
-      onCommit: () => {
+      onCommit: (info = {}) => {
         setDemo(getDemo());
         fillImageSelect();
         syncForm();
         renderCanvas();
         renderFilmstrip();
         onChange();
+        ctx.onBlurCommitted?.(info);
       },
     });
     return blurTool;

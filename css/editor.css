@@ -9403,3 +9403,42 @@ body.is-presenting .blur-hint,
   pointer-events: none;
   text-align: center;
 }
+
+/* aviso: link publicado ainda sem o desfoque (não bloqueia) */
+.blur-share-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 24px 0;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid #f0c36d;
+  border-radius: 10px;
+  background: #fff8e6;
+  color: #5b4300;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+.blur-share-notice[hidden],
+.is-presenting .blur-share-notice {
+  display: none !important;
+}
+.blur-share-notice-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.blur-share-notice-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.blur-share-notice-close:hover,
+.blur-share-notice-close:focus-visible {
+  background: rgba(91, 67, 0, 0.1);
+}
