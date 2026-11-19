@@ -2,6 +2,7 @@
  * Biblioteca de projetos: IndexedDB + índice em localStorage
  */
 
+import { deleteCropOriginalsForProject } from "./cropStore.js";
 import {
   cloneTheme,
   defaultTheme,
@@ -591,6 +592,8 @@ export async function deleteProject(id, { silent = false } = {}) {
   writeIndex(index);
   if (!silent) emitChange({ type: "delete", id });
   scheduleMediaGarbage();
+  // why: os prints inteiros dos passos enquadrados (só neste navegador) somem com o projeto
+  deleteCropOriginalsForProject(id).catch(() => {});
 }
 
 export async function setActiveProjectId(id) {
