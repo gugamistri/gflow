@@ -1,0 +1,307 @@
+{
+  "name": "qa-transicoes",
+  "theme": {
+    "accent": "#2f5d50",
+    "accentDark": "#1f3d34",
+    "overlay": "#1c241f",
+    "popoverBg": "#fffcf7",
+    "title": "#1c241f",
+    "text": "#4a3b32",
+    "button": "#1f3d34",
+    "hotspot": "#2f5d50"
+  },
+  "customImages": {},
+  "steps": [
+    {
+      "id": "qa-t1",
+      "scene": 1,
+      "label": "Campo vazio",
+      "type": "screen",
+      "image": "/data/examples/qa-transicoes/01-form.webp",
+      "hotspot": {
+        "x": 22.27,
+        "y": 30.14,
+        "w": 44.53,
+        "h": 5.83
+      },
+      "clickPoint": {
+        "x": 44.53,
+        "y": 33.05
+      },
+      "popover": {
+        "title": "Campo vazio",
+        "description": "Tela sintética de QA. Clique no campo Nome.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "i18n": {
+        "en": {
+          "label": "Empty field",
+          "title": "Empty field",
+          "description": "Synthetic QA screen. Click the Name field."
+        },
+        "es": {
+          "label": "Campo vacío",
+          "title": "Campo vacío",
+          "description": "Pantalla sintética de QA. Haz clic en el campo Nombre."
+        }
+      }
+    },
+    {
+      "id": "qa-t2",
+      "scene": 1,
+      "label": "Só o campo muda",
+      "type": "screen",
+      "image": "/data/examples/qa-transicoes/02-form-preenchido.webp",
+      "hotspot": {
+        "x": 22.27,
+        "y": 50.36,
+        "w": 7.17,
+        "h": 6.17
+      },
+      "clickPoint": {
+        "x": 25.86,
+        "y": 53.45
+      },
+      "popover": {
+        "title": "Só o campo muda",
+        "description": "Do passo anterior para este, só o texto do campo faz fade.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "i18n": {
+        "en": {
+          "label": "Only the field changes",
+          "title": "Only the field changes",
+          "description": "From the previous step only the field text fades."
+        },
+        "es": {
+          "label": "Solo cambia el campo",
+          "title": "Solo cambia el campo",
+          "description": "Del paso anterior a este, solo el texto del campo se funde."
+        }
+      }
+    },
+    {
+      "id": "qa-t3",
+      "scene": 1,
+      "label": "Tela diferente",
+      "type": "screen",
+      "image": "/data/examples/qa-transicoes/03-relatorio.webp",
+      "hotspot": {
+        "x": 58.75,
+        "y": 21.17,
+        "w": 17.97,
+        "h": 12.89
+      },
+      "clickPoint": {
+        "x": 67.73,
+        "y": 27.62
+      },
+      "popover": {
+        "title": "Tela diferente",
+        "description": "Mudou quase tudo: entra a revelação a partir do clique.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "i18n": {
+        "en": {
+          "label": "Different screen",
+          "title": "Different screen",
+          "description": "Almost everything changed: the reveal from the click plays."
+        },
+        "es": {
+          "label": "Pantalla distinta",
+          "title": "Pantalla distinta",
+          "description": "Cambió casi todo: entra la revelación desde el clic."
+        }
+      }
+    },
+    {
+      "id": "qa-t4",
+      "scene": 1,
+      "label": "Recorte dos números",
+      "type": "screen",
+      "image": "/data/examples/qa-transicoes/04-recorte-kpi.webp",
+      "hotspot": {
+        "x": 69.58,
+        "y": 26.97,
+        "w": 29.95,
+        "h": 37.91
+      },
+      "clickPoint": {
+        "x": 84.55,
+        "y": 45.92
+      },
+      "popover": {
+        "title": "Recorte dos números",
+        "description": "Recorte do relatório. O print anterior não tem recorte, então é a revelação do clique.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "i18n": {
+        "en": {
+          "label": "Numbers crop",
+          "title": "Numbers crop",
+          "description": "Crop of the report. The previous shot has no crop, so the click reveal plays."
+        },
+        "es": {
+          "label": "Recorte de los números",
+          "title": "Recorte de los números",
+          "description": "Recorte del informe. La captura anterior no tiene recorte, así que entra la revelación del clic."
+        }
+      },
+      "crop": {
+        "group": "112f9e9bbbc7ddbe",
+        "rect": {
+          "x": 17,
+          "y": 12,
+          "w": 60,
+          "h": 34
+        }
+      }
+    },
+    {
+      "id": "qa-t5",
+      "scene": 1,
+      "label": "Câmera para a tabela",
+      "type": "screen",
+      "image": "/data/examples/qa-transicoes/05-recorte-tabela.webp",
+      "hotspot": {
+        "x": 4.35,
+        "y": 28.7,
+        "w": 97.3,
+        "h": 11.66
+      },
+      "clickPoint": {
+        "x": 53,
+        "y": 34.53
+      },
+      "popover": {
+        "title": "Câmera para a tabela",
+        "description": "Mesmo print, outro recorte: a câmera anda dos números até a tabela.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "i18n": {
+        "en": {
+          "label": "Camera to the table",
+          "title": "Camera to the table",
+          "description": "Same shot, another crop: the camera pans from the numbers to the table."
+        },
+        "es": {
+          "label": "Cámara a la tabla",
+          "title": "Cámara a la tabla",
+          "description": "Misma captura, otro recorte: la cámara va de los números a la tabla."
+        }
+      },
+      "crop": {
+        "group": "112f9e9bbbc7ddbe",
+        "rect": {
+          "x": 17,
+          "y": 40,
+          "w": 77,
+          "h": 56
+        }
+      }
+    },
+    {
+      "id": "qa-t6",
+      "scene": 1,
+      "label": "Câmera de volta",
+      "type": "screen",
+      "image": "/data/examples/qa-transicoes/04-recorte-kpi.webp",
+      "hotspot": {
+        "x": 5.52,
+        "y": 26.97,
+        "w": 29.95,
+        "h": 37.91
+      },
+      "clickPoint": {
+        "x": 20.49,
+        "y": 45.92
+      },
+      "popover": {
+        "title": "Câmera de volta",
+        "description": "E volta para os números, ainda no mesmo print.",
+        "side": "bottom",
+        "align": "center"
+      },
+      "simulateClick": true,
+      "onNext": "advance",
+      "zoomHighlight": false,
+      "showCaption": false,
+      "i18n": {
+        "en": {
+          "label": "Camera back",
+          "title": "Camera back",
+          "description": "And back to the numbers, still on the same shot."
+        },
+        "es": {
+          "label": "Cámara de vuelta",
+          "title": "Cámara de vuelta",
+          "description": "Y vuelve a los números, en la misma captura."
+        }
+      },
+      "crop": {
+        "group": "112f9e9bbbc7ddbe",
+        "rect": {
+          "x": 17,
+          "y": 12,
+          "w": 60,
+          "h": 34
+        }
+      }
+    }
+  ],
+  "sceneLabels": {
+    "1": "QA"
+  },
+  "playback": {
+    "defaultHoldSeconds": 4,
+    "autoTransitions": true
+  },
+  "narration": {
+    "enabled": false,
+    "voiceURI": "",
+    "voices": {},
+    "rate": 1,
+    "background": null
+  },
+  "i18n": {
+    "v": 1,
+    "defaultLang": "pt-BR",
+    "langs": [
+      {
+        "lang": "en",
+        "locale": "en",
+        "enabled": true
+      },
+      {
+        "lang": "es",
+        "locale": "es",
+        "enabled": true
+      }
+    ]
+  }
+}

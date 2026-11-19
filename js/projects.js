@@ -9,7 +9,7 @@ import {
   themePreviewDots,
   THEME_PRESETS,
 } from "./themes.js";
-import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback } from "./playback.js";
+import { defaultNarration, defaultPlayback, ensureNarration, ensurePlayback, newProjectPlayback } from "./playback.js";
 import { t } from "./i18n.js";
 import { downscaleImageUrl, isHeavyDataUrl, thumbKey } from "./thumbs.js";
 import { fixedStepsForPayload, normalizeEndStep, normalizeStartStep } from "./fixedSteps.js";
@@ -624,7 +624,7 @@ export function createEmptyProject({ name, theme } = {}) {
     customImages: {},
     steps: [],
     sceneLabels: { "1": "Cena 1" },
-    playback: defaultPlayback(),
+    playback: newProjectPlayback(),
     narration: defaultNarration(),
   };
 }

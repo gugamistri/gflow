@@ -23,6 +23,13 @@ export const PACKAGED_EXAMPLES = Object.freeze({
     mode: "guided",
     stockName: "Como solicitar um reembolso",
   }),
+  // QA das transições automáticas (fora da lista: não aparece na landing nem na biblioteca). why: preview sem /p nem /v.
+  "qa-transicoes": Object.freeze({
+    id: "qa-transicoes",
+    file: "/data/examples/qa-transicoes.json",
+    mode: "guided",
+    stockName: "qa-transicoes",
+  }),
 });
 
 const EXAMPLE_PATH = /^\/(?:(en|es)\/)?exemplos\/([A-Za-z0-9][A-Za-z0-9_-]{0,40})\/?$/;

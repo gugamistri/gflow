@@ -5,6 +5,7 @@
  */
 import {
   cropMatchesStep,
+  cropGroupFor,
   cropOutputSize,
   customImageUsers,
   isFullCrop,
@@ -208,7 +209,8 @@ export function createCropTool({ getDemo, currentStep, projectId, onCommit, t, t
         demo.customImages[s.key] = { ...prevEntry, name, dataUrl, addedAt: prevEntry.addedAt || Date.now() };
         step.image = `custom:${s.key}`;
         remapStepGeometry(step, s.prev, target);
-        step.crop = { id: s.id, key: s.key, rect: target };
+        const group = await cropGroupFor(dataUrlToBytes(s.source).bytes, projectId()).catch(() => "");
+        step.crop = group ? { id: s.id, key: s.key, rect: target, group } : { id: s.id, key: s.key, rect: target };
       }
       // why: um desfoque feito antes já está nos pixels da fonte; a ficha dele não vale mais para esta imagem
       delete step.blur;

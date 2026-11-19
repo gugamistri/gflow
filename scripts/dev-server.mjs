@@ -32,7 +32,7 @@ const server = createServer(async (req, res) => {
   if (/^\/p\/([A-Za-z0-9][A-Za-z0-9_-]{0,80})\/?$/.test(pathname)) {
     pathname = "/view.html";
   }
-  if (/^\/(?:(?:en|es)\/)?exemplos\/(guia|galeria)\/?$/.test(pathname)) {
+  if (/^\/(?:(?:en|es)\/)?exemplos\/[A-Za-z0-9][A-Za-z0-9_-]{0,40}\/?$/.test(pathname)) {
     pathname = "/view.html";
   }
   if (pathname === "/auth/callback" || pathname === "/auth/callback/") {

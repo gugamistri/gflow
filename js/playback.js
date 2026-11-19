@@ -23,6 +23,11 @@ export function defaultPlayback() {
   return { defaultHoldSeconds: DEFAULT_HOLD_SECONDS };
 }
 
+/** Projeto criado agora. why: autoTransitions só nasce aqui; tour antigo continua trocando de tela como sempre. */
+export function newProjectPlayback() {
+  return { ...defaultPlayback(), autoTransitions: true };
+}
+
 export function defaultNarration() {
   return {
     enabled: true,

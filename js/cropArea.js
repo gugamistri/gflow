@@ -131,12 +131,30 @@ export function cropMatchesStep(step) {
   return Boolean(c && step?.image === `custom:${c.key}`);
 }
 
-/** Tira a ficha do recorte do tour que sai do editor (/p, /v, HTML): a imagem já é o recorte. */
+/**
+ * Ficha do recorte no tour que sai do editor (/p, /v, HTML): a imagem já é o recorte.
+ * Fica só { group, rect } — o player usa para a câmera entre recortes do mesmo print.
+ * `group` é um hash do print com o id do projeto (não identifica o arquivo fora daqui); id/key saem.
+ */
 export function stripCropMeta(demo) {
   for (const step of Array.isArray(demo?.steps) ? demo.steps : []) {
-    if (step && typeof step === "object") delete step.crop;
+    if (!step || typeof step !== "object" || !("crop" in step)) continue;
+    const rect = normalizeCropRect(step.crop?.rect);
+    const group = typeof step.crop?.group === "string" && /^[a-z0-9]{8,64}$/.test(step.crop.group) ? step.crop.group : "";
+    if (rect && group) step.crop = { group, rect };
+    else delete step.crop;
   }
   return demo;
+}
+
+/** Grupo da câmera: mesmo print + mesmo projeto → mesmo grupo. */
+export async function cropGroupFor(bytes, projectId) {
+  const salt = new TextEncoder().encode(`gf-crop:${projectId || ""}:`);
+  const buf = new Uint8Array(salt.length + bytes.length);
+  buf.set(salt, 0);
+  buf.set(bytes, salt.length);
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", buf));
+  return Array.from(digest.slice(0, 8), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export function customImageUsers(demo, key) {

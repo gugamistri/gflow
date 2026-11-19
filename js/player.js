@@ -2,6 +2,8 @@ import { t } from "./i18n.js";
 import { resolveImageSrc, ensureClickPoint, bindImage, applyTheme, spotlightVeilPaint } from "./store.js";
 import { createClickFxController } from "./clickFx.js";
 import { clearClickReveals, playClickReveal } from "./clickReveal.js";
+import { autoTransitionsMode, cameraPlan, dissolvePlan } from "./autoTransition.js";
+import { clearAutoTransitions, measureChange, playCamera, playDissolve } from "./autoTransitionDom.js";
 import { clickRevealPlan, previewClickTransitionRequested } from "./tour-schema/clickTransition.js";
 import { popoverIsHidden } from "./tour-schema/popoverVisibility.js";
 import { popoverBodyHtml, popoverTitleHtml } from "./htmlText.js";
@@ -779,6 +781,38 @@ export function createPlayer(ctx) {
     });
   }
 
+  /**
+   * Transição para o próximo passo. Sem transições automáticas (tour antigo, galeria, ?transitions=off):
+   * exatamente o revealPlan de sempre. Com elas: câmera entre recortes do mesmo print → fade só do que
+   * mudou → revelação do clique (fallback). Movimento reduzido: nada.
+   */
+  async function transitionPlan(fromStep, nextStep) {
+    const own = revealPlan(fromStep, nextStep);
+    const demo = getDemo();
+    let search = "";
+    try {
+      search = window.location.search;
+    } catch {
+      search = "";
+    }
+    if (autoTransitionsMode(demo, search) !== "on" || prefersReducedMotion()) return own;
+    const nextIsImage = Boolean(nextStep && nextStep.type !== "slide" && nextStep.image && !stepVideo(nextStep));
+    if (!fromStep || fromStep.type === "slide" || stepVideo(fromStep) || !nextIsImage) return own;
+    const cam = cameraPlan(fromStep, nextStep);
+    if (cam) return cam;
+    const diff = await measureChange(els.image, resolveImageSrc(demo, nextStep.image)).catch(() => null);
+    const plan = dissolvePlan(diff);
+    if (plan?.kind === "same") return own;
+    if (plan) return plan;
+    return own || clickRevealPlan(fromStep, { preview: true, reducedMotion: false, nextIsImage: true });
+  }
+
+  function playReveal(img, src, plan, opts) {
+    if (plan?.kind === "camera") return playCamera(img, src, plan, opts);
+    if (plan?.kind === "dissolve") return playDissolve(img, src, plan, opts);
+    return playClickReveal(img, src, plan, opts);
+  }
+
   async function showStepVisual(step, { speak = false, reveal = null } = {}) {
     return new Promise((resolve) => {
       const demo = getDemo();
@@ -826,7 +860,7 @@ export function createPlayer(ctx) {
       if (reveal && src && !stepVid) {
         const token = driveToken;
         els.hotspot.style.visibility = "hidden";
-        playClickReveal(els.image, src, reveal, { cancelled: () => token !== driveToken }).then((ok) => {
+        playReveal(els.image, src, reveal, { cancelled: () => token !== driveToken }).then((ok) => {
           if (els.hotspot) els.hotspot.style.visibility = "";
           if (token !== driveToken) {
             resolve();
@@ -1100,10 +1134,13 @@ export function createPlayer(ctx) {
             const current = steps[activeIndex];
             const drv = navOpts.driver;
             try {
+              const nextPos = playlistPos + 1;
+              // why: a comparação das imagens corre junto com o clique simulado
+              const planned = nextPos < playOrder.length ? transitionPlan(current, steps[playOrder[nextPos]]).catch(() => null) : null;
               await animateClick(current);
               if (token !== driveToken) return;
-              const nextPos = playlistPos + 1;
-              const reveal = nextPos < playOrder.length ? revealPlan(current, steps[playOrder[nextPos]]) : null;
+              const reveal = planned ? await planned : null;
+              if (token !== driveToken) return;
               if (nextPos >= playOrder.length) {
                 lifecycle.complete();
                 drv.destroy();
@@ -1168,6 +1205,8 @@ export function createPlayer(ctx) {
         setProgress(t("player.stopped"));
         clickFx.reset();
         clearClickReveals();
+    clearAutoTransitions();
+        clearAutoTransitions();
         clearZoom({ animate: false });
         driverObj = null;
         animating = false;
@@ -1219,6 +1258,7 @@ export function createPlayer(ctx) {
     }
     clickFx.reset();
     clearClickReveals();
+    clearAutoTransitions();
     clearZoom({ animate: false });
     restoreCaptionEl();
     animating = false;
