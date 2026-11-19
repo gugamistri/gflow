@@ -44,3 +44,17 @@ test("celular: o menu do cartão vira folha colada na barra de baixo, com alvo d
   assert.match(css, /\.film-context-menu\.is-sheet\s*\{[^}]*max-height:\s*60dvh;/);
   assert.match(css, /\.film-context-menu\.is-sheet button\s*\{\s*min-height:\s*44px;/);
 });
+
+test("celular: o cartão Início/Fim tem a mesma largura dos passos e recorta o texto", () => {
+  assert.match(css, /body\.has-mobile-bar \.film-item\s*\{[^}]*width:\s*104px;/);
+  assert.match(css, /body\.has-mobile-bar \.film-fixed\s*\{[^}]*width:\s*104px;/);
+  assert.match(css, /body\.has-mobile-bar \.film-fixed-icon\s*\{[^}]*height:\s*56px;/);
+  assert.match(css, /body\.has-mobile-bar \.film-item img,\s*body\.has-mobile-bar \.film-item \.film-thumb-slide\s*\{\s*width:\s*100%;\s*height:\s*56px;/);
+  assert.match(css, /body\.has-mobile-bar \.film-fixed-text strong\s*\{[^}]*text-overflow:\s*ellipsis;/);
+  assert.match(css, /body\.has-mobile-bar \.film-fixed-text small\s*\{\s*display:\s*none;/);
+});
+
+test("celular: o rótulo vertical da cena não passa da altura do cartão", () => {
+  assert.match(css, /body\.has-mobile-bar \.film-scene\s*\{[^}]*max-height:\s*85px;/);
+  assert.equal(/body\.has-mobile-bar \.film-scene\s*\{[^}]*max-height:\s*120px;/.test(css), false);
+});
