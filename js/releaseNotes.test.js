@@ -41,7 +41,7 @@ test("não mostra sem versão atual", () => {
 });
 
 test("dispensar a versão anterior ainda mostra esta", () => {
-  assert.equal(RELEASE_NOTES_VERSION, "0.6.0");
+  assert.equal(RELEASE_NOTES_VERSION, "0.7.0");
   assert.equal(
     shouldShowReleaseNotes({
       dismissedVersion: "0.5.0",
@@ -65,6 +65,9 @@ test("o mês da versão segue o idioma", () => {
   assert.equal(releaseNotesMonth("pt", "2026-11-09"), "novembro de 2026");
   assert.equal(releaseNotesMonth("es", "2026-11-09"), "noviembre de 2026");
   assert.equal(releaseNotesMonth("en", "2026-11-09"), "November 2026");
+  assert.equal(releaseNotesMonth("pt", "2026-11-20"), "novembro de 2026");
+  assert.equal(releaseNotesMonth("es", "2026-11-20"), "noviembre de 2026");
+  assert.equal(releaseNotesMonth("en", "2026-11-20"), "November 2026");
 });
 
 test("a versão das novidades espelha o package.json e o título do HTML", () => {
@@ -77,25 +80,26 @@ test("a versão das novidades espelha o package.json e o título do HTML", () =>
   );
 });
 
-test("0.6.0: novidades de 2–9/11 em pt, en e es, citando os rótulos da interface", () => {
+test("0.7.0: novidades de 9–20/11 em pt, en e es, citando os rótulos da interface", () => {
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   const start = html.indexOf('class="release-notes-list"');
   const list = html.slice(start, html.indexOf("</ul>", start));
   const keys = [...list.matchAll(/data-i18n="(releaseNotes\.[a-zA-Z]+)">([^<]+)</g)];
   assert.deepEqual(
     keys.map((m) => m[1]),
-    ["releaseNotes.createHelp", "releaseNotes.agentConnect", "releaseNotes.showBalloon"]
+    ["releaseNotes.areaBlur", "releaseNotes.crop", "releaseNotes.wakeLock", "releaseNotes.planSwitch"]
   );
   for (const [, k, text] of keys) assert.equal(text, catalogs.pt[k], `HTML igual ao catálogo pt: ${k}`);
   for (const loc of SUPPORTED_LOCALES) {
     const c = catalogs[loc];
     for (const [, k] of keys) assert.ok(c[k], `${loc} ${k}`);
-    assert.ok(c["releaseNotes.createHelp"].includes(c["assistant.entry"]), `${loc} rótulo Criar com ajuda`);
-    assert.ok(c["releaseNotes.agentConnect"].includes(c["agentConnect.card"]), `${loc} rótulo agente`);
-    assert.ok(c["releaseNotes.showBalloon"].includes(c["props.showPopover"]), `${loc} rótulo Mostrar balão`);
-    assert.match(c["releaseNotes.createHelp"], /Grátis|Gratis|Free/, `${loc} grátis`);
-    assert.match(c["releaseNotes.agentConnect"], /Claude/, `${loc} Claude`);
-    assert.match(c["releaseNotes.agentConnect"], /Cursor/, `${loc} Cursor`);
+    assert.ok(c["releaseNotes.areaBlur"].includes(c["blur.tool"]), `${loc} rótulo Desfocar área`);
+    assert.ok(c["releaseNotes.crop"].includes(c["crop.tool"]), `${loc} rótulo Enquadrar`);
+    assert.match(c["releaseNotes.areaBlur"], /publicad|published/i, `${loc} imagem publicada`);
+    assert.match(c["releaseNotes.wakeLock"], /celular|teléfono|phone|pantalla|screen|tela/i, `${loc} tela no celular`);
+    assert.match(c["releaseNotes.planSwitch"], /plano|plan/i, `${loc} plano`);
+    assert.match(c["releaseNotes.planSwitch"], /editor/i, `${loc} no editor`);
+    assert.match(c["releaseNotes.planSwitch"], /período de cobrança|período de cobro|billing period/i, `${loc} período`);
   }
 });
 
