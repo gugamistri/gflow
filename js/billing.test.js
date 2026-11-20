@@ -617,5 +617,12 @@ test("assinatura ativa troca plano e período sem outro checkout", async () => {
   });
   assert.equal(teamPlanErrorCopy({ error: "guests_active", data: {} }).key, "billing.downgrade.guestsUnknown");
   assert.equal(teamPlanErrorCopy({ error: "active_subscription" }).key, "billing.activeSubscription");
+  // sem login, o 409 pede para entrar
+  assert.equal(teamPlanErrorCopy({ error: "active_subscription", data: { loginRequired: true } }).key, "billing.activeSubscriptionLogin");
+  // singular com 1 convidado, plural com 2 ou mais
+  assert.equal(teamPlanErrorCopy({ error: "guests_active", data: { guests: 1 } }).key, "billing.downgrade.guestsOne");
+  assert.equal(teamPlanErrorCopy({ error: "guests_active", data: { guests: 3 } }).key, "billing.downgrade.guests");
+  // 402 da cobrança da diferença
+  assert.equal(teamPlanErrorCopy({ error: "payment_failed", status: 402 }).key, "billing.paymentFailed");
   assert.equal(teamPlanErrorCopy({ error: "subscription_inactive" }).key, "billing.planChange.inactive");
 });
