@@ -6,9 +6,10 @@
  *      e o contexto de captura nos Contatos (GUI-25 a GUI-33). Minor porque muda onde as coisas ficam.
  *      0.5.0 (30/10): vídeo nos passos, legenda da narração, slides sem "CENA X", texto com formatação e modo Galeria.
  *      0.6.0 (9/11): Criar com ajuda (grátis), Criar com meu agente de IA e Mostrar balão por passo.
+ *      0.7.0 (20/11): Desfocar área, Enquadrar, tela acesa no celular e troca de plano (Pro↔Team, mensal↔anual).
  */
-export const RELEASE_NOTES_VERSION = "0.6.0";
-export const RELEASE_NOTES_DATE = "2026-11-09";
+export const RELEASE_NOTES_VERSION = "0.7.0";
+export const RELEASE_NOTES_DATE = "2026-11-20";
 export const RELEASE_NOTES_DISMISS_KEY = "ns-release-notes-dismissed";
 
 /** Mês e ano da versão, no idioma da interface. */
@@ -39,6 +40,10 @@ export function shouldShowReleaseNotes({ dismissedVersion, currentVersion } = {}
 export const RELEASE_NOTE_TAGS = Object.freeze(["new", "feature", "fix"]);
 
 export const RELEASE_NOTE_ENTRIES = Object.freeze([
+  { key: "areaBlur", tag: "new", date: "2026-11-19", icon: "gallery", help: "editor", editor: "0.7.0", ext: null },
+  { key: "crop", tag: "new", date: "2026-11-19", icon: "slide", help: "editor", editor: "0.7.0", ext: null },
+  { key: "wakeLock", tag: "feature", date: "2026-11-19", icon: "video", help: "incorporar", editor: "0.7.0", ext: null },
+  { key: "planSwitch", tag: "feature", date: "2026-11-20", icon: "bell", help: "editor", editor: "0.7.0", ext: null },
   { key: "createHelp", tag: "new", date: "2026-11-09", icon: "text", help: "editor", editor: "0.6.0", ext: null },
   { key: "agentConnect", tag: "new", date: "2026-11-09", icon: "bell", help: "editor", editor: "0.6.0", ext: null },
   { key: "showBalloon", tag: "feature", date: "2026-11-09", icon: "caption", help: "editor", editor: "0.6.0", ext: null },
