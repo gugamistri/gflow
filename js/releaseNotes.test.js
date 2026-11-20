@@ -95,12 +95,11 @@ test("0.7.0: novidades de 9–20/11 em pt, en e es, citando os rótulos da inter
     for (const [, k] of keys) assert.ok(c[k], `${loc} ${k}`);
     assert.ok(c["releaseNotes.areaBlur"].includes(c["blur.tool"]), `${loc} rótulo Desfocar área`);
     assert.ok(c["releaseNotes.crop"].includes(c["crop.tool"]), `${loc} rótulo Enquadrar`);
-    assert.ok(c["releaseNotes.planSwitch"].includes(c["billing.badge"]), `${loc} rótulo Pro`);
-    assert.ok(c["releaseNotes.planSwitch"].includes(c["billing.teamBadge"]), `${loc} rótulo Team`);
     assert.match(c["releaseNotes.areaBlur"], /publicad|published/i, `${loc} imagem publicada`);
     assert.match(c["releaseNotes.wakeLock"], /celular|teléfono|phone|pantalla|screen|tela/i, `${loc} tela no celular`);
-    assert.match(c["releaseNotes.planSwitch"], /mensal|mensual|monthly/i, `${loc} mensal`);
-    assert.match(c["releaseNotes.planSwitch"], /anual|annual/i, `${loc} anual`);
+    assert.match(c["releaseNotes.planSwitch"], /plano|plan/i, `${loc} plano`);
+    assert.match(c["releaseNotes.planSwitch"], /editor/i, `${loc} no editor`);
+    assert.match(c["releaseNotes.planSwitch"], /período de cobrança|período de cobro|billing period/i, `${loc} período`);
   }
 });
 
