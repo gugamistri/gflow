@@ -12,6 +12,7 @@
     "desktop": "electron .",
     "dist:desktop": "electron-builder --dir",
     "build:locales": "node scripts/build-locale-pages.mjs",
+    "build:release-notes": "node scripts/build-release-notes-json.mjs",
     "indexnow": "node scripts/indexnow.mjs"
   },
   "devDependencies": {

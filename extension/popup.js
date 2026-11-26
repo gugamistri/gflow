@@ -140,6 +140,11 @@ function newsIcon(name) {
   return svg;
 }
 
+function newsText(entry, locale) {
+  const fromFeed = entry?.text?.[locale] || entry?.text?.en || "";
+  return fromFeed || t(`releaseNotes.${entry.key}`);
+}
+
 function newsItem(entry, locale, index) {
   const li = document.createElement("li");
   li.className = "news-item";
@@ -153,7 +158,7 @@ function newsItem(entry, locale, index) {
   time.dateTime = entry.date;
   time.textContent = releaseNoteDate(locale, entry.date);
   meta.append(tag, time);
-  const { title, desc } = splitReleaseNote(t(`releaseNotes.${entry.key}`));
+  const { title, desc } = splitReleaseNote(newsText(entry, locale));
   const h = document.createElement("h3");
   h.className = "news-item-title";
   const label = document.createElement("span");
@@ -179,8 +184,10 @@ function newsItem(entry, locale, index) {
   return li;
 }
 
-function renderNews() {
-  const entries = popupEntries();
+let newsEntries = popupEntries();
+
+function renderNews(entries = newsEntries) {
+  newsEntries = entries;
   const locale = getLocale();
   newsList.replaceChildren(...entries.map((e, i) => newsItem(e, locale, i)));
   const extra = entries.length - WHATS_NEW_PREVIEW;
@@ -200,6 +207,10 @@ newsToggle.addEventListener("click", () => {
 initLocale();
 applyI18n(document);
 renderNews();
+send({ type: "GET_RELEASE_NOTES", refresh: true }).then((res) => {
+  if (res?.feed?.entries) renderNews(popupEntries(res.feed.entries));
+  return send({ type: "WHATS_NEW_SEEN", notesVersion: res?.feed?.version });
+}).catch(() => send({ type: "WHATS_NEW_SEEN" }));
 bindLocaleSelect(document.getElementById("locale-select"), () => {
   renderNews();
   send({ type: "SET_LOCALE", locale: getLocale() }).then(() => refresh());
@@ -256,5 +267,3 @@ document.getElementById("cancel").addEventListener("click", async () => {
 });
 
 send({ type: "SET_LOCALE", locale: getLocale() }).then(() => refresh());
-// abrir o popup = novidades vistas (apaga o selo NOVO)
-send({ type: "WHATS_NEW_SEEN" });

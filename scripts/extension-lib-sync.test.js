@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { releaseNotesJson } from "./build-release-notes-json.mjs";
 import { EXTENSION_LIB_FILES } from "./sync-extension-lib.mjs";
 
 test("extension/lib tem as mesmas cópias de js/ (rode node scripts/sync-extension-lib.mjs)", () => {
@@ -14,6 +15,12 @@ test("extension/lib tem as mesmas cópias de js/ (rode node scripts/sync-extensi
     const src = readFileSync(new URL(`../js/${f}`, import.meta.url), "utf8");
     for (const m of src.matchAll(/^import [^;]*from "\.\/([^"]+)";/gm)) assert.ok(EXTENSION_LIB_FILES.includes(m[1]), `${f} importa ${m[1]}`);
   }
+});
+
+
+test("release-notes.json é o feed gerado de js/releaseNotes.js + i18n (rode node scripts/sync-extension-lib.mjs)", () => {
+  const committed = readFileSync(new URL("../release-notes.json", import.meta.url), "utf8");
+  assert.equal(committed, releaseNotesJson());
 });
 
 test("pacote da extensão: manifest na raiz, sem testes nem arquivos ocultos", async () => {

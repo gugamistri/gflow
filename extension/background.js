@@ -6,9 +6,21 @@ import {
   resolveEditorOrigin,
   tabMatchesOrigin,
 } from "./lib/editor-origin.js";
-import { setLocale, resolveLocale, getLocale, t } from "./lib/i18n.js";
+import { catalogs, setLocale, resolveLocale, getLocale, t } from "./lib/i18n.js";
 import { fileSchemeAllowed, isRestrictedUrl } from "./lib/tab-access.js";
-import { WHATS_NEW_KEY, badgeFor, stateAfterInstall, stateAfterSeen } from "./lib/whats-new.js";
+import { buildReleaseNotesFeed, parseReleaseNotesFeed } from "./lib/releaseNotes.js";
+import {
+  RELEASE_NOTES_FEED_KEY,
+  WHATS_NEW_KEY,
+  badgeFor,
+  bundledReleaseNotesFeed,
+  feedCacheIsFresh,
+  loadPreferredFeed,
+  preferredFeed,
+  stateAfterFeed,
+  stateAfterInstall,
+  stateAfterSeen,
+} from "./lib/whats-new.js";
 
 const LOCALE_KEY = "guiaLocale";
 
@@ -43,6 +55,7 @@ let lastCaptureAt = 0;
 let handoffTimer = null;
 let fileAccess = false;
 let whatsNew = null;
+let releaseFeed = null;
 
 function extVersion() {
   return chrome.runtime.getManifest().version;
@@ -58,6 +71,38 @@ async function loadWhatsNew() {
 async function saveWhatsNew(next) {
   whatsNew = next;
   await chrome.storage.local.set({ [WHATS_NEW_KEY]: next });
+}
+
+function bundledNewsFeed() {
+  return bundledReleaseNotesFeed(catalogs) || buildReleaseNotesFeed(catalogs);
+}
+
+async function cachedNewsFeed() {
+  if (releaseFeed) return releaseFeed;
+  const stored = await chrome.storage.local.get(RELEASE_NOTES_FEED_KEY);
+  releaseFeed = preferredFeed(bundledNewsFeed(), parseReleaseNotesFeed(stored[RELEASE_NOTES_FEED_KEY]?.feed)) || bundledNewsFeed();
+  return releaseFeed;
+}
+
+/** Lê /release-notes.json no editor (e em guiaflow.pro). No máximo a cada 6 h, salvo force. */
+async function refreshReleaseNotes({ force = false, editorOrigin } = {}) {
+  const bundled = bundledNewsFeed();
+  const stored = await chrome.storage.local.get(RELEASE_NOTES_FEED_KEY);
+  const cached = parseReleaseNotesFeed(stored[RELEASE_NOTES_FEED_KEY]?.feed);
+  if (!force && feedCacheIsFresh(stored[RELEASE_NOTES_FEED_KEY]?.fetchedAt) && cached) {
+    releaseFeed = preferredFeed(bundled, cached) || bundled;
+    return releaseFeed;
+  }
+  const origin = editorOrigin || (await loadSettings())?.editorOrigin;
+  releaseFeed = (await loadPreferredFeed({ bundled, editorOrigin: origin })) || bundled;
+  await chrome.storage.local.set({ [RELEASE_NOTES_FEED_KEY]: { fetchedAt: Date.now(), feed: releaseFeed } });
+  const news = await loadWhatsNew().catch(() => null);
+  const next = stateAfterFeed({ stored: news, current: extVersion(), notesVersion: releaseFeed?.version, entries: releaseFeed?.entries });
+  if (!news || news.pending !== next.pending || news.lastSeenNotes !== next.lastSeenNotes || news.lastSeen !== next.lastSeen) {
+    await saveWhatsNew(next);
+  }
+  await updateBadge().catch(() => {});
+  return releaseFeed;
 }
 
 function emptySession() {
@@ -568,10 +613,16 @@ async function handle(msg, sender) {
       await syncAllTabActions().catch(() => {});
       return state;
     }
-    case "WHATS_NEW_SEEN":
-      await saveWhatsNew(stateAfterSeen(extVersion()));
+    case "GET_RELEASE_NOTES": {
+      const feed = await refreshReleaseNotes({ force: Boolean(msg.refresh), editorOrigin: settings?.editorOrigin });
+      return { ok: true, feed };
+    }
+    case "WHATS_NEW_SEEN": {
+      const feed = releaseFeed || (await cachedNewsFeed());
+      await saveWhatsNew(stateAfterSeen(extVersion(), msg.notesVersion || feed?.version || ""));
       await updateBadge();
       return { ok: true };
+    }
     case "SAVE_SETTINGS":
       await saveSettings({
         editorOrigin: msg.editorOrigin,
@@ -650,8 +701,23 @@ chrome.runtime.onInstalled.addListener((details) => {
   syncAllTabActions().catch(() => {});
   (async () => {
     const stored = await loadWhatsNew();
-    await saveWhatsNew(stateAfterInstall({ reason: details?.reason, previousVersion: details?.previousVersion, current: extVersion(), stored }));
+    const bundled = bundledNewsFeed();
+    await saveWhatsNew(
+      stateAfterInstall({
+        reason: details?.reason,
+        previousVersion: details?.previousVersion,
+        current: extVersion(),
+        notesVersion: bundled?.version || "",
+        stored,
+        entries: bundled?.entries,
+      })
+    );
     session = await loadSession();
+    await refreshReleaseNotes({ force: true });
+    if (details?.reason === "install") {
+      const feed = releaseFeed || bundled;
+      await saveWhatsNew(stateAfterSeen(extVersion(), feed?.version || ""));
+    }
     await updateBadge();
   })().catch(() => {});
 });
@@ -659,8 +725,10 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onStartup.addListener(async () => {
   session = await loadSession();
   settings = await loadSettings();
+  await refreshReleaseNotes().catch(() => {});
   await updateBadge();
   await syncAllTabActions();
 });
 
 syncAllTabActions().catch(() => {});
+refreshReleaseNotes().catch(() => {});

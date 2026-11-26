@@ -33,9 +33,11 @@ export function shouldShowReleaseNotes({ dismissedVersion, currentVersion } = {}
 
 /**
  * Itens de novidade: fonte única do pop-up do editor (itens com `editor` = versão do editor) e do bloco
- * "Novidades" da extensão (itens com `ext` = versão da extensão que traz o selo NOVO).
+ * "Novidades" da extensão (itens com `editor` ou `ext`).
  * Texto em i18n `releaseNotes.<key>`, no formato "Título: descrição" (a extensão separa no primeiro ": ").
- * `help` = âncora da página de ajuda (/ajuda, /en/help, /es/ayuda). Sem rede: tudo vai dentro do pacote.
+ * `help` = âncora da página de ajuda (/ajuda, /en/help, /es/ayuda).
+ * `ext` = versão da extensão que acende o selo NOVO numa atualização da loja.
+ * O site publica o mesmo conteúdo em /release-notes.json; a extensão lê esse arquivo (cópia no pacote se faltar rede).
  */
 export const RELEASE_NOTE_TAGS = Object.freeze(["new", "feature", "fix"]);
 
@@ -54,6 +56,89 @@ export const RELEASE_NOTE_ENTRIES = Object.freeze([
   { key: "richText", tag: "feature", date: "2026-10-30", icon: "text", help: "editor", editor: "0.5.0", ext: "0.3.0" },
   { key: "gallery", tag: "new", date: "2026-10-30", icon: "gallery", help: "editor", editor: "0.5.0", ext: "0.3.0" },
 ].map((e) => Object.freeze(e)));
+
+
+export const RELEASE_NOTES_FEED_PATH = "/release-notes.json";
+const FEED_VERSION_RE = /^\d+\.\d+\.\d+$/;
+const FEED_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const FEED_KEY_RE = /^[a-zA-Z]+$/;
+const FEED_HELP_RE = /^[a-z]+$/;
+const FEED_ICONS = new Set(["bell", "video", "caption", "slide", "text", "gallery"]);
+const FEED_LOCALES = ["pt", "en", "es"];
+const FEED_TEXT_MAX = 500;
+const FEED_ENTRIES_MAX = 50;
+
+/** URL de /release-notes.json numa origem http(s); fora disso, cai em guiaflow.pro. */
+export function releaseNotesFeedUrl(origin = "https://guiaflow.pro") {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return `https://guiaflow.pro${RELEASE_NOTES_FEED_PATH}`;
+    return `${url.origin}${RELEASE_NOTES_FEED_PATH}`;
+  } catch {
+    return `https://guiaflow.pro${RELEASE_NOTES_FEED_PATH}`;
+  }
+}
+
+/**
+ * Valida o JSON público. Qualquer campo estranho ou texto vazio invalida o feed inteiro
+ * (a extensão então usa a cópia do pacote).
+ */
+export function parseReleaseNotesFeed(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  const version = String(data.version ?? "").trim();
+  const date = String(data.date ?? "").trim();
+  if (!FEED_VERSION_RE.test(version) || !FEED_DATE_RE.test(date)) return null;
+  if (!Array.isArray(data.entries) || data.entries.length === 0 || data.entries.length > FEED_ENTRIES_MAX) return null;
+  const entries = [];
+  const seen = new Set();
+  for (const raw of data.entries) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const key = String(raw.key ?? "");
+    const tag = String(raw.tag ?? "");
+    const entryDate = String(raw.date ?? "");
+    if (!FEED_KEY_RE.test(key) || seen.has(key) || !RELEASE_NOTE_TAGS.includes(tag) || !FEED_DATE_RE.test(entryDate)) return null;
+    seen.add(key);
+    const help = raw.help == null || raw.help === "" ? null : String(raw.help);
+    if (help && !FEED_HELP_RE.test(help)) return null;
+    const icon = FEED_ICONS.has(raw.icon) ? raw.icon : "bell";
+    const editor = raw.editor == null || raw.editor === "" ? null : String(raw.editor);
+    const ext = raw.ext == null || raw.ext === "" ? null : String(raw.ext);
+    if (editor && !FEED_VERSION_RE.test(editor)) return null;
+    if (ext && !FEED_VERSION_RE.test(ext)) return null;
+    if (!editor && !ext) return null;
+    const src = raw.text && typeof raw.text === "object" && !Array.isArray(raw.text) ? raw.text : {};
+    const text = {};
+    for (const loc of FEED_LOCALES) {
+      const s = String(src[loc] ?? "").trim();
+      if (!s || s.length > FEED_TEXT_MAX) return null;
+      text[loc] = s;
+    }
+    entries.push(Object.freeze({ key, tag, date: entryDate, icon, help, editor, ext, text: Object.freeze(text) }));
+  }
+  return Object.freeze({ version, date, entries: Object.freeze(entries) });
+}
+
+/** Monta o feed a partir dos itens e dos catálogos i18n (pt/en/es). */
+export function buildReleaseNotesFeed(texts, entries = RELEASE_NOTE_ENTRIES, version = RELEASE_NOTES_VERSION, date = RELEASE_NOTES_DATE) {
+  return parseReleaseNotesFeed({
+    version,
+    date,
+    entries: entries.map((e) => ({
+      key: e.key,
+      tag: e.tag,
+      date: e.date,
+      icon: e.icon,
+      help: e.help,
+      editor: e.editor,
+      ext: e.ext,
+      text: {
+        pt: texts?.pt?.[`releaseNotes.${e.key}`] ?? "",
+        en: texts?.en?.[`releaseNotes.${e.key}`] ?? "",
+        es: texts?.es?.[`releaseNotes.${e.key}`] ?? "",
+      },
+    })),
+  });
+}
 
 /** Itens do pop-up do editor para a versão (na ordem do arquivo). */
 export function editorReleaseNotes(version = RELEASE_NOTES_VERSION, entries = RELEASE_NOTE_ENTRIES) {
