@@ -1,8 +1,10 @@
 /**
- * Copia para extension/lib os módulos que a extensão usa do editor (o Chrome só carrega arquivos do pacote).
+ * Copia para extension/lib os módulos que a extensão usa do editor (o Chrome só carrega arquivos do pacote)
+ * e gera release-notes.json (o arquivo que a extensão lê em guiaflow.pro).
  * why: i18n e novidades têm uma fonte só (js/); o teste extension-lib-sync.test.js confere as cópias.
  */
 import { copyFileSync } from "node:fs";
+import { writeReleaseNotesJson } from "./build-release-notes-json.mjs";
 
 export const EXTENSION_LIB_FILES = [
   "i18n.js",
@@ -17,6 +19,7 @@ export const EXTENSION_LIB_FILES = [
 
 export function syncExtensionLib(root = ".") {
   for (const f of EXTENSION_LIB_FILES) copyFileSync(`${root}/js/${f}`, `${root}/extension/lib/${f}`);
+  writeReleaseNotesJson(root);
   return EXTENSION_LIB_FILES;
 }
 

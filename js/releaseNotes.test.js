@@ -3,7 +3,10 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { catalogs, SUPPORTED_LOCALES } from "./i18n.js";
 import {
+  RELEASE_NOTE_ENTRIES,
   RELEASE_NOTES_VERSION,
+  buildReleaseNotesFeed,
+  releaseNotesFeedUrl,
   releaseNotesMonth,
   shouldShowReleaseNotes,
 } from "./releaseNotes.js";
@@ -114,5 +117,16 @@ test("fonte única: o pop-up do editor lista os itens de RELEASE_NOTE_ENTRIES de
     assert.ok(RELEASE_NOTE_TAGS.includes(e.tag), e.key);
     assert.match(e.date, /^\d{4}-\d{2}-\d{2}$/);
     for (const loc of SUPPORTED_LOCALES) assert.ok(splitReleaseNote(catalogs[loc][`releaseNotes.${e.key}`]).desc, `${loc} ${e.key}`);
+  }
+});
+
+test("o feed público espelha a fonte única e aponta para /release-notes.json", () => {
+  assert.equal(releaseNotesFeedUrl("https://guiaflow.pro"), "https://guiaflow.pro/release-notes.json");
+  const feed = buildReleaseNotesFeed(catalogs);
+  assert.ok(feed);
+  assert.equal(feed.version, RELEASE_NOTES_VERSION);
+  assert.deepEqual(feed.entries.map((e) => e.key), RELEASE_NOTE_ENTRIES.map((e) => e.key));
+  for (const e of feed.entries) {
+    for (const loc of SUPPORTED_LOCALES) assert.ok(e.text[loc], `${loc} ${e.key}`);
   }
 });

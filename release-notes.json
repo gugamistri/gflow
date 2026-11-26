@@ -1,0 +1,188 @@
+{
+  "version": "0.7.0",
+  "date": "2026-11-20",
+  "entries": [
+    {
+      "key": "areaBlur",
+      "tag": "new",
+      "date": "2026-11-19",
+      "icon": "gallery",
+      "help": "editor",
+      "editor": "0.7.0",
+      "ext": null,
+      "text": {
+        "pt": "Desfocar área: arraste sobre o print para esconder dados sensíveis. O desfoque fica gravado na imagem publicada.",
+        "en": "Blur area: drag over the screenshot to hide sensitive data. The blur is saved into the published image.",
+        "es": "Desenfocar área: arrastra sobre la captura para ocultar datos sensibles. El desenfoque queda grabado en la imagen publicada."
+      }
+    },
+    {
+      "key": "crop",
+      "tag": "new",
+      "date": "2026-11-19",
+      "icon": "slide",
+      "help": "editor",
+      "editor": "0.7.0",
+      "ext": null,
+      "text": {
+        "pt": "Enquadrar: escolha a parte do print que o passo mostra. Ela aparece grande no tour; o destaque e o clique acompanham.",
+        "en": "Crop: choose the part of the screenshot this step shows. It appears large in the tour; the highlight and click follow it.",
+        "es": "Encuadrar: elige la parte de la captura que muestra el paso. Aparece grande en el tour; el resaltado y el clic la acompañan."
+      }
+    },
+    {
+      "key": "wakeLock",
+      "tag": "feature",
+      "date": "2026-11-19",
+      "icon": "video",
+      "help": "incorporar",
+      "editor": "0.7.0",
+      "ext": null,
+      "text": {
+        "pt": "Tela acesa no celular: enquanto o visitante vê o tour, a tela permanece ligada.",
+        "en": "Screen stays on: on a phone, the screen stays awake while the visitor watches the tour.",
+        "es": "Pantalla encendida en el celular: mientras el visitante ve el tour, la pantalla permanece encendida."
+      }
+    },
+    {
+      "key": "planSwitch",
+      "tag": "feature",
+      "date": "2026-11-20",
+      "icon": "bell",
+      "help": "editor",
+      "editor": "0.7.0",
+      "ext": null,
+      "text": {
+        "pt": "Troca de plano mais simples: mude de plano ou de período de cobrança direto no editor, sem complicação.",
+        "en": "Easier plan changes: switch your plan or billing period right in the editor, without the hassle.",
+        "es": "Cambio de plan más simple: cambia de plan o de período de cobro directo en el editor, sin complicaciones."
+      }
+    },
+    {
+      "key": "createHelp",
+      "tag": "new",
+      "date": "2026-11-09",
+      "icon": "text",
+      "help": "editor",
+      "editor": "0.6.0",
+      "ext": null,
+      "text": {
+        "pt": "Criar com ajuda: diga o objetivo, arraste ou cole as imagens e revise as sugestões antes de aplicar. Grátis, sem conta.",
+        "en": "Create with help: state the goal, drag or paste images and review the suggestions before applying. Free, no account.",
+        "es": "Crear con ayuda: cuenta el objetivo, arrastra o pega las imágenes y revisa las sugerencias antes de aplicar. Gratis, sin cuenta."
+      }
+    },
+    {
+      "key": "agentConnect",
+      "tag": "new",
+      "date": "2026-11-09",
+      "icon": "bell",
+      "help": "editor",
+      "editor": "0.6.0",
+      "ext": null,
+      "text": {
+        "pt": "Criar com meu agente de IA: conecte Claude, Codex ou Cursor à sua conta Pro; o assistente detecta o app e mostra como ligar.",
+        "en": "Create with my AI agent: connect Claude, Codex or Cursor to your Pro account; the wizard detects the app and shows how to link it.",
+        "es": "Crear con mi agente de IA: conecta Claude, Codex o Cursor a tu cuenta Pro; el asistente detecta la app y muestra cómo enlazarla."
+      }
+    },
+    {
+      "key": "showBalloon",
+      "tag": "feature",
+      "date": "2026-11-09",
+      "icon": "caption",
+      "help": "editor",
+      "editor": "0.6.0",
+      "ext": null,
+      "text": {
+        "pt": "Mostrar balão: em cada passo você liga ou desliga o balão; o destaque e as setas de navegação continuam.",
+        "en": "Show balloon: turn the balloon on or off for each step; the highlight and navigation arrows stay.",
+        "es": "Mostrar el globo: en cada paso puedes activar o desactivar el globo; el resaltado y las flechas de navegación siguen."
+      }
+    },
+    {
+      "key": "extensionNews",
+      "tag": "new",
+      "date": "2026-11-01",
+      "icon": "bell",
+      "help": "gravar",
+      "editor": null,
+      "ext": "0.3.0",
+      "text": {
+        "pt": "Novidades na extensão: quando sai uma versão nova, o ícone da Captura mostra NOVO. Clique para ver o que mudou no editor e na extensão.",
+        "en": "What's new in the extension: when a new version ships, the Capture icon shows NEW. Click it to see what changed in the editor and the extension.",
+        "es": "Novedades en la extensión: cuando sale una versión nueva, el icono de Captura muestra NEW. Haz clic para ver qué cambió en el editor y en la extensión."
+      }
+    },
+    {
+      "key": "stepVideo",
+      "tag": "feature",
+      "date": "2026-10-30",
+      "icon": "video",
+      "help": "editor",
+      "editor": "0.5.0",
+      "ext": "0.3.0",
+      "text": {
+        "pt": "Vídeo nos passos: cole um link do YouTube ou do Vimeo; o vídeo toca sozinho quando o passo abre.",
+        "en": "Video in steps: paste a YouTube or Vimeo link; the video plays on its own when the step opens.",
+        "es": "Video en los pasos: pega un enlace de YouTube o Vimeo; el video se reproduce solo cuando se abre el paso."
+      }
+    },
+    {
+      "key": "narrationCaption",
+      "tag": "fix",
+      "date": "2026-10-30",
+      "icon": "caption",
+      "help": "editor",
+      "editor": "0.5.0",
+      "ext": "0.3.0",
+      "text": {
+        "pt": "Legenda da narração: a opção “Mostrar a narração como legenda” voltou ao painel de Narração.",
+        "en": "Narration captions: the “Show the narration as a caption” option is back in the Narration panel.",
+        "es": "Subtítulo de la narración: la opción “Mostrar la narración como subtítulo” volvió al panel de Narración."
+      }
+    },
+    {
+      "key": "slideTitle",
+      "tag": "fix",
+      "date": "2026-10-30",
+      "icon": "slide",
+      "help": "editor",
+      "editor": "0.5.0",
+      "ext": "0.3.0",
+      "text": {
+        "pt": "Slides sem “CENA X”: quando o slide tem título, só o título aparece.",
+        "en": "Slides without “SCENE X”: when a slide has a title, only the title shows.",
+        "es": "Slides sin “ESCENA X”: cuando el slide tiene título, solo aparece el título."
+      }
+    },
+    {
+      "key": "richText",
+      "tag": "feature",
+      "date": "2026-10-30",
+      "icon": "text",
+      "help": "editor",
+      "editor": "0.5.0",
+      "ext": "0.3.0",
+      "text": {
+        "pt": "Texto com formatação: negrito, itálico, sublinhado e listas nos balões, slides e cartões.",
+        "en": "Formatted text: bold, italic, underline and lists in balloons, slides and cards.",
+        "es": "Texto con formato: negrita, cursiva, subrayado y listas en los globos, slides y tarjetas."
+      }
+    },
+    {
+      "key": "gallery",
+      "tag": "new",
+      "date": "2026-10-30",
+      "icon": "gallery",
+      "help": "editor",
+      "editor": "0.5.0",
+      "ext": "0.3.0",
+      "text": {
+        "pt": "Modo Galeria: fotos em tela cheia com contador, zoom, seções e WhatsApp fixo, para imóveis, veículos, produtos e catálogos. Para ligar: ⚙ → Modo de exibição → Galeria.",
+        "en": "Gallery mode: full-screen photos with a counter, zoom, sections and a sticky WhatsApp button, for real estate, vehicles, products and catalogs. To turn it on: ⚙ → Display mode → Gallery.",
+        "es": "Modo Galería: fotos a pantalla completa con contador, zoom, secciones y WhatsApp fijo, para inmuebles, vehículos, productos y catálogos. Para activarlo: ⚙ → Modo de visualización → Galería."
+      }
+    }
+  ]
+}
