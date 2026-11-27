@@ -7536,7 +7536,8 @@ dialog.api-keys-modal {
 
 /* "criado por agente": discreto, só para saber a origem do tour */
 .topbar-agent-tag,
-.agent-tag {
+.agent-tag,
+.example-tag {
   flex: none;
   align-self: center;
   font-size: 0.66rem;
@@ -7553,7 +7554,8 @@ dialog.api-keys-modal {
   color: var(--ns-topbar-muted);
 }
 
-.agent-tag {
+.agent-tag,
+.example-tag {
   display: inline-block;
   margin-left: 4px;
   line-height: 1.3;
@@ -7561,11 +7563,13 @@ dialog.api-keys-modal {
 }
 
 .topbar-agent-tag[hidden],
-.agent-tag[hidden] {
+.agent-tag[hidden],
+.example-tag[hidden] {
   display: none;
 }
 
-.project-card-dots .agent-tag {
+.project-card-dots .agent-tag,
+.project-card-dots .example-tag {
   line-height: 10px;
   padding: 2px 6px;
   font-size: 0.62rem;
