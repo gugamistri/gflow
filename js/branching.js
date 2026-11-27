@@ -14,6 +14,69 @@ function escapeHtml(text) {
 }
 
 /**
+ * <option> do seletor de cena no painel Caminhos.
+ * O rótulo é o nome da cena (texto do autor) e precisa ir escapado.
+ * @param {Array<{ n: number, label: string }>} items
+ * @param {number|null|undefined} selected
+ * @returns {string}
+ */
+export function sceneChoicesHtml(items, selected) {
+  const list = Array.isArray(items) ? items : [];
+  return list
+    .map(({ n, label }) => {
+      const num = Number(n);
+      const value = Number.isFinite(num) && num > 0 ? String(num) : "";
+      const sel = Number(selected) === num ? " selected" : "";
+      return `<option value="${value}"${sel}>${escapeHtml(label)}</option>`;
+    })
+    .join("");
+}
+
+/**
+ * Linhas de opção do painel Caminhos no editor.
+ * Título, descrição e rótulos entram escapados (value="" e texto).
+ * @param {Array<{ title?: string, description?: string, targetScene?: number|null }>} opts
+ * @param {{
+ *   optionHeading: (n: number) => string,
+ *   optionTitle: string,
+ *   optionDesc: string,
+ *   goToScene: string,
+ *   removeOption: string,
+ *   sceneChoices: (selected: number|null|undefined) => string,
+ * }} labels
+ * @returns {string}
+ */
+export function branchingEditorOptionsHtml(opts, labels) {
+  const list = Array.isArray(opts) ? opts : [];
+  return list
+    .map((opt, idx) => {
+      const canRemove = list.length > 2;
+      const heading = escapeHtml(labels.optionHeading(idx + 1));
+      const sceneChoices = labels.sceneChoices(opt?.targetScene);
+      return `
+        <div class="branching-option-row" data-branch-opt="${idx}">
+          <div class="branching-option-head">
+            <strong>${heading}</strong>
+            ${canRemove ? `<button type="button" class="btn btn-sm branching-opt-remove" data-remove-opt="${idx}" aria-label="${escapeHtml(labels.removeOption)}">×</button>` : ""}
+          </div>
+          <label>
+            <span>${escapeHtml(labels.optionTitle)}</span>
+            <input type="text" data-branch-field="title" value="${escapeHtml(opt?.title || "")}" />
+          </label>
+          <label>
+            <span>${escapeHtml(labels.optionDesc)}</span>
+            <input type="text" data-branch-field="description" value="${escapeHtml(opt?.description || "")}" />
+          </label>
+          <label>
+            <span>${escapeHtml(labels.goToScene)}</span>
+            <select data-branch-field="targetScene">${sceneChoices}</select>
+          </label>
+        </div>`;
+    })
+    .join("");
+}
+
+/**
  * Confere se um passo possui configuração válida de branching.
  * @param {object|null|undefined} step
  * @returns {boolean}
