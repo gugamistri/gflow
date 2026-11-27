@@ -1,11 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import {
+  branchingEditorOptionsHtml,
   isBranchingStep,
   normalizeBranching,
   renderBranchingHtml,
   resolveBranchTarget,
+  sceneChoicesHtml,
 } from "./branching.js";
+
+const read = (f) => readFileSync(new URL(f, import.meta.url), "utf8");
+const SCENE_PAYLOAD = "<img src=x onerror=alert(1)>";
+
+/** Nomes de tags reais no HTML (entidades tipo &lt;img não entram). */
+function tagNames(html) {
+  return [...String(html).matchAll(/<([a-zA-Z][a-zA-Z0-9:-]*)/g)].map((m) => m[1].toLowerCase());
+}
+
+function editorLabels(scenes) {
+  return {
+    optionHeading: (n) => `Opção ${n}`,
+    optionTitle: "Título",
+    optionDesc: "Descrição",
+    goToScene: "Ir para a cena",
+    removeOption: "Remover opção",
+    sceneChoices: (selected) => sceneChoicesHtml(scenes, selected),
+  };
+}
 
 test("isBranchingStep: valida presença de branching com ao menos 2 opções", () => {
   assert.equal(isBranchingStep(null), false);
@@ -90,3 +112,51 @@ test("renderBranchingHtml: escapa HTML e inclui setas com estrutura acessível",
   assert.ok(html.includes('data-branch-idx="0"'));
   assert.ok(html.includes('data-branch-idx="1"'));
 });
+
+test("sceneChoicesHtml: o nome da cena aparece como texto e não vira elemento", () => {
+  const html = sceneChoicesHtml(
+    [
+      { n: 1, label: "Início" },
+      { n: 2, label: SCENE_PAYLOAD },
+    ],
+    2
+  );
+  assert.ok(html.includes("&lt;img src=x onerror=alert(1)&gt;"), "o payload sai escapado");
+  assert.equal(html.includes("<img"), false, "não abre uma tag img");
+  assert.deepEqual(tagNames(html), ["option", "option"]);
+  assert.match(html, /<option value="2" selected>&lt;img src=x onerror=alert\(1\)&gt;<\/option>/);
+  assert.match(html, /<option value="1">Início<\/option>/);
+});
+
+test("branchingEditorOptionsHtml: título e descrição no value saem com escape completo", () => {
+  const scenes = [
+    { n: 1, label: SCENE_PAYLOAD },
+    { n: 2, label: "Lazer" },
+  ];
+  const html = branchingEditorOptionsHtml(
+    [
+      { title: SCENE_PAYLOAD, description: '"><img src=x onerror=alert(1)>', targetScene: 1 },
+      { title: "Ver Lazer", description: 'fotos & "plantas"', targetScene: 2 },
+    ],
+    editorLabels(scenes)
+  );
+  assert.equal(html.includes("<img"), false, "payloads não viram elemento");
+  assert.ok(html.includes('value="&lt;img src=x onerror=alert(1)&gt;"'));
+  assert.ok(html.includes('value="&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"'));
+  assert.ok(html.includes("fotos &amp; &quot;plantas&quot;"));
+  assert.ok(html.includes("&lt;img src=x onerror=alert(1)&gt;</option>"));
+  assert.deepEqual(
+    [...new Set(tagNames(html))].sort(),
+    ["div", "input", "label", "option", "select", "span", "strong"].sort()
+  );
+});
+
+test("editor.js monta o painel Caminhos pelas funções que escapam", () => {
+  const src = read("./editor.js");
+  assert.match(src, /sceneChoicesHtml\(/);
+  assert.match(src, /branchingEditorOptionsHtml\(/);
+  assert.doesNotMatch(src, /\$\{label\}<\/option>/);
+  assert.doesNotMatch(src, /opt\.title \|\| ""\)\.replace\(\/"\/g/);
+  assert.doesNotMatch(src, /opt\.description \|\| ""\)\.replace\(\/"\/g/);
+});
+

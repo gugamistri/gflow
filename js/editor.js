@@ -96,7 +96,7 @@ import {
 import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
 import { insertSceneAfter, moveScene, renumberScenes, sceneBlocks } from "./scenes.js";
 import { isStepZoomEnabled } from "./zoomHighlight.js";
-import { normalizeBranching } from "./branching.js";
+import { branchingEditorOptionsHtml, normalizeBranching, sceneChoicesHtml } from "./branching.js";
 import { getLocale, t } from "./i18n.js";
 import { getTranslation, projectI18n, setTranslation, textHash } from "./tour-schema/i18n.js";
 import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
@@ -2212,13 +2212,10 @@ export function createEditor(ctx) {
     const demo = getDemo();
     const blocks = sceneBlocks(demo?.steps || []);
     const nums = blocks.length ? blocks.map((b) => b.scene) : [1];
-    return nums
-      .map((n) => {
-        const label = sceneLabel(demo, n) || t("filmstrip.scene", { n });
-        const sel = Number(selected) === Number(n) ? " selected" : "";
-        return `<option value="${n}"${sel}>${label}</option>`;
-      })
-      .join("");
+    return sceneChoicesHtml(
+      nums.map((n) => ({ n, label: sceneLabel(demo, n) || t("filmstrip.scene", { n }) })),
+      selected
+    );
   }
 
   function defaultBranchingForStep(step) {
@@ -2245,30 +2242,14 @@ export function createEditor(ctx) {
     while (opts.length < 2) {
       opts.push({ title: t("branching.option", { n: opts.length + 1 }), description: "", targetScene: null });
     }
-    list.innerHTML = opts
-      .map((opt, idx) => {
-        const canRemove = opts.length > 2;
-        return `
-        <div class="branching-option-row" data-branch-opt="${idx}">
-          <div class="branching-option-head">
-            <strong>${t("branching.option", { n: idx + 1 })}</strong>
-            ${canRemove ? `<button type="button" class="btn btn-sm branching-opt-remove" data-remove-opt="${idx}" aria-label="${t("branching.removeOption")}">×</button>` : ""}
-          </div>
-          <label>
-            <span>${t("branching.optionTitle")}</span>
-            <input type="text" data-branch-field="title" value="${String(opt.title || "").replace(/"/g, "&quot;")}" />
-          </label>
-          <label>
-            <span>${t("branching.optionDesc")}</span>
-            <input type="text" data-branch-field="description" value="${String(opt.description || "").replace(/"/g, "&quot;")}" />
-          </label>
-          <label>
-            <span>${t("branching.goToScene")}</span>
-            <select data-branch-field="targetScene">${sceneChoices(opt.targetScene)}</select>
-          </label>
-        </div>`;
-      })
-      .join("");
+    list.innerHTML = branchingEditorOptionsHtml(opts, {
+      optionHeading: (n) => t("branching.option", { n }),
+      optionTitle: t("branching.optionTitle"),
+      optionDesc: t("branching.optionDesc"),
+      goToScene: t("branching.goToScene"),
+      removeOption: t("branching.removeOption"),
+      sceneChoices,
+    });
     if (els.btnAddBranchOpt) els.btnAddBranchOpt.hidden = opts.length >= 3;
   }
 
