@@ -9556,3 +9556,42 @@ body.is-presenting .blur-hint,
 .blur-share-notice-close:focus-visible {
   background: rgba(91, 67, 0, 0.1);
 }
+
+.onboarding-modal {
+  max-width: 460px;
+}
+
+.onboarding-progress {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ns-muted);
+}
+
+.onboarding-lead {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ns-muted);
+}
+
+.onboarding-choices {
+  display: grid;
+  gap: 8px;
+}
+
+.onboarding-choices .btn {
+  justify-content: flex-start;
+  text-align: left;
+  width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 40px;
+  padding: 10px 12px;
+}
+
+.onboarding-actions {
+  margin-top: 4px;
+}
