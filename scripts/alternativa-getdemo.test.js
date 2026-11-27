@@ -26,7 +26,7 @@ test("/alternativa-getdemo existe, com canonical, hreflang só pt-BR e assets ve
   assert.match(html, new RegExp(`${ASSET_PREFIX_RE}css\\/theme\\.css`));
   assert.match(html, new RegExp(`${ASSET_PREFIX_RE}css\\/shell\\.css`));
   assert.match(html, new RegExp(`${ASSET_PREFIX_RE}css\\/ajuda\\.css`));
-  assert.equal(ASSET_PREFIX, "a/232/");
+  assert.equal(ASSET_PREFIX, "a/233/");
   assert.match(html, /href="\/editor"/);
   assert.match(html, /href="https:\/\/guiaflow\.pro\/editor\?pro=1"/);
   assert.match(html, /href="https:\/\/guiaflow\.pro\/exemplos\/guia"/);
