@@ -4,6 +4,23 @@
  * Porcentagens do hotspot são 0–100 sobre a imagem.
  */
 
+/**
+ * Smart default para zoom de destaque:
+ * Se o autor definiu booleano explicitamente, respeita a escolha.
+ * Se não definiu, ativa automaticamente quando o destaque ocupa menos de 15% da área da tela (15% de 100×100 = 1500).
+ * @param {{ type?: string, zoomHighlight?: boolean, hotspot?: { w?: number, h?: number } } | null | undefined} step
+ * @returns {boolean}
+ */
+export function isStepZoomEnabled(step) {
+  if (!step || step.type === "slide") return false;
+  if (typeof step.zoomHighlight === "boolean") return step.zoomHighlight;
+  const hs = step.hotspot;
+  if (!hs) return false;
+  const w = Number(hs.w) || 0;
+  const h = Number(hs.h) || 0;
+  return w > 0 && h > 0 && (w * h) < 1500;
+}
+
 /** Quanto do palco o retângulo do hotspot deve ocupar (mantendo proporção). */
 const TARGET_FILL = 0.55;
 const MAX_SCALE = 3.2;

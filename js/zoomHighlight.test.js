@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeZoomCamera, zoomCameraCss, zoomCameraStyle } from "./zoomHighlight.js";
+import { computeZoomCamera, isStepZoomEnabled, zoomCameraCss, zoomCameraStyle } from "./zoomHighlight.js";
 
 test("sem zoom devolve identidade", () => {
   const cam = computeZoomCamera({ x: 10, y: 10, w: 5, h: 5 }, { w: 800, h: 600 }, { w: 1000, h: 700 }, false);
@@ -44,6 +44,18 @@ test("zoomCameraStyle usa translate + scale com origem no centro", () => {
   const style = zoomCameraStyle({ scale: 2, translateX: 40, translateY: -20 });
   assert.equal(style.transform, "translate(40px, -20px) scale(2)");
   assert.equal(style.transformOrigin, "center center");
+});
+
+test("isStepZoomEnabled: smart default ativa quando hotspot < 15% e respeita boolean explícito", () => {
+  assert.equal(isStepZoomEnabled(null), false);
+  assert.equal(isStepZoomEnabled({ type: "slide" }), false);
+  // boolean explícito vence
+  assert.equal(isStepZoomEnabled({ zoomHighlight: true, hotspot: { w: 90, h: 90 } }), true);
+  assert.equal(isStepZoomEnabled({ zoomHighlight: false, hotspot: { w: 5, h: 5 } }), false);
+  // smart default: < 15% da tela (w*h < 1500)
+  assert.equal(isStepZoomEnabled({ hotspot: { w: 14, h: 8 } }), true); // 112 < 1500
+  assert.equal(isStepZoomEnabled({ hotspot: { w: 30, h: 40 } }), true); // 1200 < 1500
+  assert.equal(isStepZoomEnabled({ hotspot: { w: 50, h: 40 } }), false); // 2000 >= 1500
 });
 
 // ---- câmera com área segura + zoom do visitante ----

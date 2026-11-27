@@ -5289,6 +5289,40 @@ body.is-presenting .editor-popover {
   margin-top: 4px;
 }
 
+.branching-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.branching-option-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--ns-border, rgba(0, 0, 0, 0.1));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ns-surface, #fff) 92%, var(--ns-border, #e5e5e5));
+}
+
+.branching-option-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.branching-option-head strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.branching-opt-remove {
+  min-width: 28px;
+  padding: 0 6px;
+  line-height: 1.2;
+}
+
 .view-editor.is-props-collapsed #props-panel {
   padding: 8px;
   align-items: center;

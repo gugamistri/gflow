@@ -20,7 +20,7 @@ export const TEXT_FIELDS = Object.freeze({
   caption: "caption",
   alt: "alt",
 });
-const PLAIN_FIELDS = ["scene", "type", "layout", "onNext", "holdSeconds", "simulateClick", "showCaption", "zoomHighlight"];
+const PLAIN_FIELDS = ["scene", "type", "layout", "onNext", "holdSeconds", "simulateClick", "showCaption", "zoomHighlight", "branching", "returnToBranch"];
 const I18N_FIELDS = ["title", "description", "caption", "label", "alt"];
 const PROJECT_OBJECTS = ["theme", "playback", "narration"];
 export const MAX_TOMBSTONES = 200;
@@ -103,7 +103,8 @@ export function newStepValue(project, step) {
     clickPoint: step.clickPoint ?? null,
   };
   if (step.alt) v.alt = step.alt;
-  for (const f of ["simulateClick", "showCaption", "zoomHighlight"]) if (typeof step[f] === "boolean") v[f] = step[f];
+  for (const f of ["simulateClick", "showCaption", "zoomHighlight", "returnToBranch"]) if (typeof step[f] === "boolean") v[f] = step[f];
+  if (step.branching && typeof step.branching === "object") v.branching = clone(step.branching);
   if (typeof step.onNext === "string") v.onNext = step.onNext;
   if (Number.isFinite(Number(step.holdSeconds))) v.holdSeconds = Number(step.holdSeconds);
   const img = imageValue(project, step);

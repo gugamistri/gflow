@@ -94,7 +94,9 @@ import {
   tourHoldSeconds,
 } from "./playback.js";
 import { createThumbCache, shouldDownscaleSrc, thumbKey } from "./thumbs.js";
-import { insertSceneAfter, moveScene, renumberScenes } from "./scenes.js";
+import { insertSceneAfter, moveScene, renumberScenes, sceneBlocks } from "./scenes.js";
+import { isStepZoomEnabled } from "./zoomHighlight.js";
+import { normalizeBranching } from "./branching.js";
 import { getLocale, t } from "./i18n.js";
 import { getTranslation, projectI18n, setTranslation, textHash } from "./tour-schema/i18n.js";
 import { completeHostedCopy, synthesizeHostedSpeech } from "./hosted.js";
@@ -397,6 +399,13 @@ export function createEditor(ctx) {
     wrapSimulate: document.getElementById("wrap-simulate"),
     propZoom: document.getElementById("prop-zoom-highlight"),
     wrapZoom: document.getElementById("wrap-zoom"),
+    propEnableBranching: document.getElementById("prop-enable-branching"),
+    branchingFields: document.getElementById("branching-fields"),
+    propBranchTitle: document.getElementById("prop-branch-title"),
+    propBranchSubtitle: document.getElementById("prop-branch-subtitle"),
+    branchingOptionsList: document.getElementById("branching-options-list"),
+    btnAddBranchOpt: document.getElementById("btn-add-branch-opt"),
+    propReturnBranch: document.getElementById("prop-return-branch"),
     wrapImage: document.getElementById("wrap-image"),
     canvasCaption: document.getElementById("canvas-caption"),
     editorPopover: document.getElementById("editor-popover"),
@@ -842,7 +851,9 @@ export function createEditor(ctx) {
     }
     els.propSimulate.checked = step.simulateClick !== false;
     if (els.propShowPopover) els.propShowPopover.checked = step.popover?.hidden !== true;
+    // why: o checkbox guarda só a escolha explícita; o player aplica smart default quando o campo está indefinido
     if (els.propZoom) els.propZoom.checked = step.zoomHighlight === true;
+    syncBranchingForm(step);
     syncSideAlignControls(step);
     syncPropsSections(step);
     syncImageButton();
@@ -2072,7 +2083,7 @@ export function createEditor(ctx) {
     const sim = step.simulateClick !== false;
     els.stbSimulate?.classList.toggle("is-active", sim);
     els.stbSimulate?.setAttribute("aria-pressed", sim ? "true" : "false");
-    const zoom = step.zoomHighlight === true;
+    const zoom = isStepZoomEnabled(step);
     els.stbZoom?.classList.toggle("is-active", zoom);
     els.stbZoom?.setAttribute("aria-pressed", zoom ? "true" : "false");
     syncStepHold();
@@ -2193,6 +2204,138 @@ export function createEditor(ctx) {
     if (posSec) posSec.hidden = video;
     const railPos = els.propsRail?.querySelector('[data-rail="position"]');
     if (railPos) railPos.hidden = video;
+    const branchSec = els.propsPanel?.querySelector('.props-section[data-sec="branching"]');
+    if (branchSec) branchSec.hidden = video;
+  }
+
+  function sceneChoices(selected) {
+    const demo = getDemo();
+    const blocks = sceneBlocks(demo?.steps || []);
+    const nums = blocks.length ? blocks.map((b) => b.scene) : [1];
+    return nums
+      .map((n) => {
+        const label = sceneLabel(demo, n) || t("filmstrip.scene", { n });
+        const sel = Number(selected) === Number(n) ? " selected" : "";
+        return `<option value="${n}"${sel}>${label}</option>`;
+      })
+      .join("");
+  }
+
+  function defaultBranchingForStep(step) {
+    const demo = getDemo();
+    const blocks = sceneBlocks(demo?.steps || []);
+    const scenes = blocks.map((b) => b.scene);
+    const s1 = scenes[0] || 1;
+    const s2 = scenes[1] || s1;
+    return normalizeBranching({
+      title: step?.popover?.title || step?.label || t("branching.defaultTitle"),
+      subtitle: "",
+      options: [
+        { title: t("branching.option", { n: 1 }), targetScene: s1 },
+        { title: t("branching.option", { n: 2 }), targetScene: s2 },
+      ],
+    });
+  }
+
+  function paintBranchingOptions(branching) {
+    const list = els.branchingOptionsList;
+    if (!list) return;
+    const norm = normalizeBranching(branching);
+    const opts = [...norm.options];
+    while (opts.length < 2) {
+      opts.push({ title: t("branching.option", { n: opts.length + 1 }), description: "", targetScene: null });
+    }
+    list.innerHTML = opts
+      .map((opt, idx) => {
+        const canRemove = opts.length > 2;
+        return `
+        <div class="branching-option-row" data-branch-opt="${idx}">
+          <div class="branching-option-head">
+            <strong>${t("branching.option", { n: idx + 1 })}</strong>
+            ${canRemove ? `<button type="button" class="btn btn-sm branching-opt-remove" data-remove-opt="${idx}" aria-label="${t("branching.removeOption")}">×</button>` : ""}
+          </div>
+          <label>
+            <span>${t("branching.optionTitle")}</span>
+            <input type="text" data-branch-field="title" value="${String(opt.title || "").replace(/"/g, "&quot;")}" />
+          </label>
+          <label>
+            <span>${t("branching.optionDesc")}</span>
+            <input type="text" data-branch-field="description" value="${String(opt.description || "").replace(/"/g, "&quot;")}" />
+          </label>
+          <label>
+            <span>${t("branching.goToScene")}</span>
+            <select data-branch-field="targetScene">${sceneChoices(opt.targetScene)}</select>
+          </label>
+        </div>`;
+      })
+      .join("");
+    if (els.btnAddBranchOpt) els.btnAddBranchOpt.hidden = opts.length >= 3;
+  }
+
+  function syncBranchingForm(step) {
+    if (!els.propEnableBranching) return;
+    const isSlide = step?.type === "slide";
+    const enabled = isSlide && Boolean(step?.branching && Array.isArray(step.branching.options) && step.branching.options.length >= 2);
+    const prev = suppressForm;
+    suppressForm = true;
+    els.propEnableBranching.checked = enabled;
+    document.getElementById("wrap-enable-branching")?.toggleAttribute("hidden", !isSlide);
+    if (els.branchingFields) els.branchingFields.hidden = !enabled;
+    if (enabled) {
+      const norm = normalizeBranching(step.branching);
+      if (els.propBranchTitle) els.propBranchTitle.value = norm.title;
+      if (els.propBranchSubtitle) els.propBranchSubtitle.value = norm.subtitle;
+      paintBranchingOptions(norm);
+    } else if (els.branchingOptionsList) {
+      els.branchingOptionsList.innerHTML = "";
+    }
+    const showReturn = Boolean(step) && !enabled && !isVideoMedia(step);
+    document.getElementById("branching-return-field")?.toggleAttribute("hidden", !showReturn);
+    if (els.propReturnBranch) els.propReturnBranch.checked = step?.returnToBranch === true;
+    suppressForm = prev;
+  }
+
+  function readBranchingFromForm(fallback) {
+    const base = normalizeBranching(fallback || {});
+    const title = els.propBranchTitle?.value?.trim() || base.title;
+    const subtitle = els.propBranchSubtitle?.value?.trim() || "";
+    const rows = [...(els.branchingOptionsList?.querySelectorAll("[data-branch-opt]") || [])];
+    const options = rows.slice(0, 3).map((row, idx) => {
+      const titleEl = row.querySelector('[data-branch-field="title"]');
+      const descEl = row.querySelector('[data-branch-field="description"]');
+      const sceneEl = row.querySelector('[data-branch-field="targetScene"]');
+      const sceneNum = Number(sceneEl?.value);
+      return {
+        title: String(titleEl?.value || t("branching.option", { n: idx + 1 })).trim(),
+        description: String(descEl?.value || "").trim(),
+        targetScene: Number.isFinite(sceneNum) && sceneNum > 0 ? sceneNum : null,
+      };
+    });
+    while (options.length < 2) {
+      options.push({ title: t("branching.option", { n: options.length + 1 }), description: "", targetScene: null });
+    }
+    return normalizeBranching({ title, subtitle, options });
+  }
+
+  function applyBranchingFromForm() {
+    if (suppressForm) return;
+    const step = currentStep();
+    if (!step) return;
+    if (step.type === "slide" && els.propEnableBranching?.checked) {
+      step.branching = readBranchingFromForm(step.branching || defaultBranchingForStep(step));
+      delete step.returnToBranch;
+      if (els.propBranchTitle?.value && !(step.popover?.title || step.label)) {
+        step.label = els.propBranchTitle.value;
+        step.popover = { ...(step.popover || {}), title: els.propBranchTitle.value };
+      }
+    } else {
+      delete step.branching;
+      if (els.propReturnBranch?.checked) step.returnToBranch = true;
+      else delete step.returnToBranch;
+    }
+    // why: não repinta o DOM das opções a cada tecla — senão o input perde o foco
+    renderCanvas();
+    onChange();
   }
 
   function panelShortcutLabel() {
@@ -2336,7 +2479,13 @@ export function createEditor(ctx) {
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
     els.stbSimulate?.addEventListener("click", () => toggleCheckbox(els.propSimulate));
-    els.stbZoom?.addEventListener("click", () => toggleCheckbox(els.propZoom));
+    els.stbZoom?.addEventListener("click", () => {
+      const step = currentStep();
+      if (!step || !els.propZoom) return;
+      // why: a barra reflete o zoom efetivo (inclui smart default); o clique grava a escolha explícita
+      els.propZoom.checked = !isStepZoomEnabled(step);
+      applyFormToStep();
+    });
     els.stbShowCaption?.addEventListener("click", () => toggleCheckbox(els.propShowCaption));
     els.stbHold?.addEventListener("input", () => {
       if (!els.propHold) return;
@@ -2480,7 +2629,18 @@ export function createEditor(ctx) {
     if (!wasSimulating && step.simulateClick && hasHotspot(step.hotspot)) {
       step.clickPoint = clickPointFromHotspot(step.hotspot);
     }
-    if (els.propZoom) step.zoomHighlight = els.propZoom.checked;
+    if (els.propZoom) {
+      // why: desmarcar grava false (desliga o smart default); marcar grava true; o player cobre o caso indefinido
+      step.zoomHighlight = els.propZoom.checked;
+    }
+    if (step.type === "slide" && els.propEnableBranching?.checked) {
+      step.branching = readBranchingFromForm(step.branching || defaultBranchingForStep(step));
+      delete step.returnToBranch;
+    } else {
+      delete step.branching;
+      if (els.propReturnBranch?.checked) step.returnToBranch = true;
+      else delete step.returnToBranch;
+    }
     step.caption = els.propCaption?.value || "";
     if (els.propAlt) {
       const alt = els.propAlt.value.slice(0, 300);
@@ -4851,6 +5011,65 @@ export function createEditor(ctx) {
       if (!el) return;
       el.addEventListener("input", applyFormToStep);
       el.addEventListener("change", applyFormToStep);
+    });
+    els.propEnableBranching?.addEventListener("change", () => {
+      const step = currentStep();
+      if (!step) return;
+      if (els.propEnableBranching.checked) {
+        step.type = "slide";
+        setChoice(els.propType, "slide");
+        step.branching = defaultBranchingForStep(step);
+        delete step.returnToBranch;
+      } else {
+        delete step.branching;
+      }
+      syncBranchingForm(step);
+      applyFormToStep();
+    });
+    [els.propBranchTitle, els.propBranchSubtitle].forEach((el) => {
+      el?.addEventListener("input", applyBranchingFromForm);
+      el?.addEventListener("change", applyBranchingFromForm);
+    });
+    els.propReturnBranch?.addEventListener("change", applyBranchingFromForm);
+    els.btnAddBranchOpt?.addEventListener("click", () => {
+      const step = currentStep();
+      if (!step?.branching) return;
+      const norm = readBranchingFromForm(step.branching);
+      if (norm.options.length >= 3) return;
+      const demo = getDemo();
+      const blocks = sceneBlocks(demo?.steps || []);
+      const nextScene = blocks[Math.min(blocks.length - 1, norm.options.length)]?.scene || 1;
+      norm.options.push({
+        title: t("branching.option", { n: norm.options.length + 1 }),
+        description: "",
+        targetScene: nextScene,
+      });
+      step.branching = normalizeBranching(norm);
+      syncBranchingForm(step);
+      onChange();
+      renderCanvas();
+    });
+    els.branchingOptionsList?.addEventListener("input", (e) => {
+      if (!e.target.closest("[data-branch-field]")) return;
+      applyBranchingFromForm();
+    });
+    els.branchingOptionsList?.addEventListener("change", (e) => {
+      if (!e.target.closest("[data-branch-field]")) return;
+      applyBranchingFromForm();
+    });
+    els.branchingOptionsList?.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-remove-opt]");
+      if (!btn) return;
+      const step = currentStep();
+      if (!step?.branching) return;
+      const idx = Number(btn.dataset.removeOpt);
+      const norm = readBranchingFromForm(step.branching);
+      if (norm.options.length <= 2) return;
+      norm.options.splice(idx, 1);
+      step.branching = normalizeBranching(norm);
+      syncBranchingForm(step);
+      onChange();
+      renderCanvas();
     });
     if (els.propHold) {
       els.propHold.addEventListener("input", () => applyFormToStep({ clampHold: false }));

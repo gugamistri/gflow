@@ -16,7 +16,7 @@ export function labelCloseButton(btn, label) {
   btn.title = label;
 }
 
-export function renderDemoPopoverFooter(popover) {
+export function renderDemoPopoverFooter(popover, step = null) {
   const { footer, progress, previousButton, nextButton, footerButtons } = popover;
 
   if (previousButton) {
@@ -26,12 +26,20 @@ export function renderDemoPopoverFooter(popover) {
   }
 
   if (nextButton) {
-    const label = (nextButton.textContent || "").trim() || t("player.next");
-    const isDone = label === t("player.done");
-    nextButton.classList.toggle("is-icon", !isDone);
-    if (!isDone) nextButton.innerHTML = NEXT_ARROW_SVG;
-    nextButton.setAttribute("aria-label", isDone ? label : t("player.next"));
-    nextButton.title = isDone ? label : t("player.next");
+    if (step?.returnToBranch) {
+      const returnLabel = t("player.returnToOptions");
+      nextButton.textContent = returnLabel;
+      nextButton.classList.remove("is-icon");
+      nextButton.setAttribute("aria-label", returnLabel);
+      nextButton.title = returnLabel;
+    } else {
+      const label = (nextButton.textContent || "").trim() || t("player.next");
+      const isDone = label === t("player.done");
+      nextButton.classList.toggle("is-icon", !isDone);
+      if (!isDone) nextButton.innerHTML = NEXT_ARROW_SVG;
+      nextButton.setAttribute("aria-label", isDone ? label : t("player.next"));
+      nextButton.title = isDone ? label : t("player.next");
+    }
   }
 
   if (footer && previousButton && progress && nextButton) {

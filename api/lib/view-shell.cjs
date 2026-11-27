@@ -211,6 +211,7 @@ ${unbranded ? "" : '  <meta property="og:site_name" content="GuiaFlow" />\n'}  <
             <p class="slide-kicker" id="canvas-slide-kicker"></p>
             <h2 id="canvas-slide-title"></h2>
             <div id="canvas-slide-body"></div>
+            <div class="slide-branching" id="canvas-slide-branching" hidden></div>
             <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir" data-i18n-aria="canvas.play">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </button>
