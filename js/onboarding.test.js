@@ -4,8 +4,10 @@ import test from "node:test";
 import {
   ONBOARDING_STORAGE_KEY,
   ONBOARDING_STEPS,
+  canAdvanceOnboarding,
   markOnboardingDone,
   nextOnboardingStep,
+  onboardingAdvanceLabelKey,
   readOnboardingState,
   shouldShowOnboarding,
   writeOnboardingState,
@@ -56,10 +58,20 @@ test("só aparece na primeira visita da lista de projetos", () => {
   assert.equal(shouldShowOnboarding({ ...base, hasNewIntent: true }), false);
 });
 
-test("uma escolha ou Agora não avança; no último passo encerra", () => {
+test("Seguinte só avança com uma escolha; no último passo o rótulo é Concluir", () => {
+  assert.equal(canAdvanceOnboarding({}, 0), false);
+  assert.equal(canAdvanceOnboarding({ role: "" }, 0), false);
+  assert.equal(canAdvanceOnboarding({ role: "skip" }, 0), false);
+  assert.equal(canAdvanceOnboarding({ role: "agency" }, 0), true);
+  assert.equal(canAdvanceOnboarding({ start: "example" }, 1), true);
+  assert.equal(canAdvanceOnboarding({ start: "example" }, 2), false);
+  assert.equal(canAdvanceOnboarding({ assistant: "key" }, 2), true);
   assert.deepEqual(nextOnboardingStep(0), { done: false, stepIndex: 1 });
   assert.deepEqual(nextOnboardingStep(1), { done: false, stepIndex: 2 });
   assert.deepEqual(nextOnboardingStep(2), { done: true, stepIndex: 2 });
+  assert.equal(onboardingAdvanceLabelKey(0), "onboarding.next");
+  assert.equal(onboardingAdvanceLabelKey(1), "onboarding.next");
+  assert.equal(onboardingAdvanceLabelKey(2), "onboarding.done");
 });
 
 test("o estado fica só no localStorage, com done", () => {
@@ -84,7 +96,7 @@ test("writeOnboardingState não quebra se o storage falhar", () => {
   assert.equal(writeOnboardingState({ done: true }, storage).done, true);
 });
 
-test("o editor abre o onboarding só depois do boot da lista, e Conhecer o Pro vai para Entrar", () => {
+test("o rodapé tem Agora não como link e Seguinte/Concluir; a escolha não avança sozinha", () => {
   const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
   assert.match(app, /shouldShowOnboarding/);
   assert.match(app, /createOnboardingDialog/);
@@ -92,6 +104,26 @@ test("o editor abre o onboarding só depois do boot da lista, e Conhecer o Pro v
   assert.match(app, /focus: "llm-key"/);
   assert.equal(/showUpgradeDialog\(\{ feature: "onboarding"/.test(app), false);
   assert.match(app, /data-action="watch-example"|openProject\([^)]*autoPreview: true\)/);
+
   const html = readFileSync(new URL("../editor.html", import.meta.url), "utf8");
   assert.match(html, /id="modal-onboarding"/);
+  assert.match(html, /class="onboarding-skip" id="onboarding-skip"/);
+  assert.match(html, /id="onboarding-next"[^>]*disabled/);
+  assert.match(html, /class="btn btn-primary" id="onboarding-next"/);
+  assert.equal(/id="onboarding-skip"[^>]*class="btn/.test(html), false);
+
+  const js = readFileSync(new URL("./onboarding.js", import.meta.url), "utf8");
+  assert.match(js, /function select\(/);
+  assert.match(js, /function advance\(/);
+  assert.match(js, /next\.disabled = !canAdvanceOnboarding/);
+  assert.match(js, /onboardingAdvanceLabelKey/);
+  assert.equal(/function choose\(/.test(js), false);
+
+  const i18n = readFileSync(new URL("./i18n.js", import.meta.url), "utf8");
+  assert.match(i18n, /"onboarding.next": "Seguinte"/);
+  assert.match(i18n, /"onboarding.done": "Concluir"/);
+  assert.match(i18n, /"onboarding.next": "Siguiente"/);
+  assert.match(i18n, /"onboarding.done": "Terminar"/);
+  assert.match(i18n, /"onboarding.next": "Next"/);
+  assert.match(i18n, /"onboarding.done": "Done"/);
 });
