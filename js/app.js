@@ -52,6 +52,7 @@ import {
 import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
 import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
+import { planEditorBootScreen, shouldOfferExamplePreview } from "./editorBoot.js";
 import { renumberScenes } from "./scenes.js";
 import {
   THEME_PRESETS,
@@ -3500,8 +3501,12 @@ function renderLibraryGrid() {
             <h3 class="project-card-title" data-action="rename-inline" title="${escapeAttr(t("library.renameTitle"))}">${escapeHtml(p.name)}</h3>
             <p>${p.stepCount || 0} passo(s) · ${escapeHtml(formatDate(p.updatedAt))}</p>
             ${clientName(clientOf(p, clients)) ? `<p class="project-card-client">${escapeHtml(clientName(clientOf(p, clients)))}</p>` : ""}
-            <div class="project-card-dots">${dots}${p.agent ? `<span class="agent-tag" title="${escapeAttr(t("agent.tagTitle", { client: p.agentClient ? ` (${p.agentClient})` : "" }))}">${escapeHtml(t("agent.tag"))}</span>` : ""}${p.sizeBytes ? `<span class="project-card-size" title="${escapeAttr(t("file.sizeTitle"))}">${escapeHtml(formatBytes(p.sizeBytes, getLocale()))}</span>` : ""}</div>
+            <div class="project-card-dots">${dots}${p.stock ? `<span class="example-tag">${escapeHtml(t("library.exampleTag"))}</span>` : ""}${p.agent ? `<span class="agent-tag" title="${escapeAttr(t("agent.tagTitle", { client: p.agentClient ? ` (${p.agentClient})` : "" }))}">${escapeHtml(t("agent.tag"))}</span>` : ""}${p.sizeBytes ? `<span class="project-card-size" title="${escapeAttr(t("file.sizeTitle"))}">${escapeHtml(formatBytes(p.sizeBytes, getLocale()))}</span>` : ""}</div>
             <div class="project-card-actions">
+              ${shouldOfferExamplePreview(p) ? `<button type="button" class="btn btn-sm" data-action="watch-example">
+                <svg class="btn-ico" aria-hidden="true"><use href="#i-play"></use></svg>
+                ${escapeHtml(t("library.watchExample"))}
+              </button>` : ""}
               <button type="button" class="btn btn-sm" data-action="export">
                 <svg class="btn-ico" aria-hidden="true"><use href="#i-export"></use></svg>
                 Exportar
@@ -4244,6 +4249,12 @@ function bindChrome() {
         e.preventDefault();
         e.stopPropagation();
         await openMoveClient(id);
+        return;
+      }
+      if (action === "watch-example") {
+        e.preventDefault();
+        e.stopPropagation();
+        await openProject(id, { autoPreview: true });
         return;
       }
       if (action === "duplicate") {
@@ -5622,8 +5633,7 @@ function bindReleaseNotes() {
 }
 
 async function boot() {
-  // link de convite: sem tour automático por cima da tela de convite
-  const joinPending = /^#\/join\//.test(location.hash || "");
+  // why: #/join/ é tratado depois, com a lista já visível — sem tour automático por cima do convite
   initLocale();
   applyI18n(document);
   let authCallback = { ok: false, consumed: false };
@@ -5665,10 +5675,8 @@ async function boot() {
   bindLocaleSelect(document.getElementById("locale-select"), onLocaleChange);
   bindLocaleSelect(document.getElementById("settings-locale"), onLocaleChange);
 
-  let seeded = false;
   try {
-    const migration = await ensureMigrated();
-    seeded = Boolean(migration?.seeded);
+    await ensureMigrated();
   } catch (err) {
     toast(t("toast.migrationFail"));
   }
@@ -5685,29 +5693,26 @@ async function boot() {
   const index = readIndex();
   const bootGeneration = captureGeneration;
   try {
-    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration) && index.activeProjectId) {
-      const loaded = await getProject(index.activeProjectId);
+    const plan = planEditorBootScreen({
+      skipSavedOpen: bootShouldSkipSavedOpen(bootGeneration, captureGeneration),
+      activeProjectId: index.activeProjectId || null,
+    });
+    if (plan.action === "defer") {
+      /* why: a captura da extensão já abriu o projeto; não recoloca a lista por cima */
+    } else if (plan.action === "open") {
+      const loaded = await getProject(plan.projectId);
       if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
-        /* a captura já abriu o projeto enquanto este carregava */
+        /* a captura chegou enquanto este projeto carregava */
       } else if (loaded) {
-        await openProject(loaded.id, { autoPreview: seeded && !joinPending && (loaded.steps || []).length > 0 });
+        await openProject(loaded.id, { autoPreview: false });
         return;
       } else {
         await setActiveProjectId(null);
+        showLibrary();
       }
+    } else if (plan.action === "library") {
+      showLibrary();
     }
-
-    if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) return;
-
-    if (seeded) {
-      const first = (readIndex().projects || [])[0];
-      if (first?.id && !bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
-        await openProject(first.id, { autoPreview: !joinPending });
-        return;
-      }
-    }
-
-    if (!bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) showLibrary();
   } finally {
     if (authCallback.consumed) applyCloudAuthHref(authCallback.href);
     clearBootGate();
