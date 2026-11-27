@@ -28,7 +28,7 @@ A interface está em português, espanhol e inglês. O idioma segue o do navegad
 npm start
 ```
 
-Abre em `http://localhost:4173` (landing) e `http://localhost:4173/editor` (editor). O editor publicado é [https://guiaflow.pro/editor](https://guiaflow.pro/editor); a raiz [https://guiaflow.pro](https://guiaflow.pro) é a landing. Quem já tem projetos neste navegador, tem a extensão de captura ou chega com `?parâmetros`/`#token=` na raiz é levado para `/editor` com a query e o hash; `/?landing=1` sempre mostra a landing. O endereço antigo `https://guiaflow-seven.vercel.app` redireciona para lá, com o mesmo caminho e a mesma query. Na primeira visita o editor abre a lista de projetos. A biblioteca recebe o exemplo **Como usar o Guia** e outros tours de exemplo, que você abre ou assiste quando quiser.
+Abre em `http://localhost:4173` (landing) e `http://localhost:4173/editor` (editor). O editor publicado é [https://guiaflow.pro/editor](https://guiaflow.pro/editor); a raiz [https://guiaflow.pro](https://guiaflow.pro) é a landing. Quem já tem projetos neste navegador, tem a extensão de captura ou chega com `?parâmetros`/`#token=` na raiz é levado para `/editor` com a query e o hash; `/?landing=1` sempre mostra a landing. O endereço antigo `https://guiaflow-seven.vercel.app` redireciona para lá, com o mesmo caminho e a mesma query. Na primeira visita o editor abre a lista de projetos, com o exemplo **Como usar o Guia** e outros tours de exemplo, que você abre ou assiste quando quiser. Quem já usava o editor reabre o último projeto.
 
 ### Extensão de captura
 

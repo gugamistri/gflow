@@ -5690,13 +5690,29 @@ async function boot() {
     try { await refreshSharedProjects(); } catch { /* why: a lista compartilhada falhar não impede o editor de abrir */ }
   }
 
+  const index = readIndex();
   const bootGeneration = captureGeneration;
   try {
     const plan = planEditorBootScreen({
       skipSavedOpen: bootShouldSkipSavedOpen(bootGeneration, captureGeneration),
+      activeProjectId: index.activeProjectId || null,
     });
-    // why: a captura da extensão já abriu o projeto; não recoloca a lista por cima
-    if (plan.action === "library") showLibrary();
+    if (plan.action === "defer") {
+      /* why: a captura da extensão já abriu o projeto; não recoloca a lista por cima */
+    } else if (plan.action === "open") {
+      const loaded = await getProject(plan.projectId);
+      if (bootShouldSkipSavedOpen(bootGeneration, captureGeneration)) {
+        /* a captura chegou enquanto este projeto carregava */
+      } else if (loaded) {
+        await openProject(loaded.id, { autoPreview: false });
+        return;
+      } else {
+        await setActiveProjectId(null);
+        showLibrary();
+      }
+    } else if (plan.action === "library") {
+      showLibrary();
+    }
   } finally {
     if (authCallback.consumed) applyCloudAuthHref(authCallback.href);
     clearBootGate();

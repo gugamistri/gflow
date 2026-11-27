@@ -819,7 +819,7 @@ async function seedDefaultDemoProject({ replaceExisting = false, keepEdited = fa
   }
 
   const nextIndex = readIndex();
-  nextIndex.activeProjectId = nextIndex.activeProjectId || created[0]?.id || null;
+  // why: a primeira visita não marca o exemplo como ativo; a lista abre até o usuário escolher um
   nextIndex.migrated = true;
   nextIndex.seedRevision = SEED_REVISION;
   writeIndex(nextIndex);
