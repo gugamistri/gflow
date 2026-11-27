@@ -906,6 +906,7 @@
               <span class="inline-placeholder" id="ph-slide-body" hidden></span>
               <div id="canvas-slide-body" data-inline="description" data-ph="ph-slide-body" role="textbox" aria-multiline="true"></div>
             </div>
+            <div class="slide-branching" id="canvas-slide-branching" hidden></div>
             <button type="button" class="slide-card-play" id="canvas-slide-play" aria-label="Reproduzir" data-i18n-aria="canvas.play">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
             </button>
@@ -1148,6 +1149,38 @@
           </button>
         </div>
       </div>
+        </div>
+      </details>
+      <details class="props-section" data-sec="branching" open>
+        <summary class="props-section-head">
+          <svg class="btn-ico" aria-hidden="true"><use href="#i-layers"></use></svg>
+          <span data-i18n="panel.branching">Caminhos (Branching)</span>
+        </summary>
+        <div class="props-section-body">
+          <label class="checkbox" id="wrap-enable-branching">
+            <input type="checkbox" id="prop-enable-branching" role="switch" />
+            <span data-i18n="branching.enable">Bifurcar caminhos (Micro-branching)</span>
+          </label>
+          <div id="branching-fields" hidden>
+            <label>
+              <span data-i18n="branching.title">Título da pergunta</span>
+              <input type="text" id="prop-branch-title" placeholder="O que você gostaria de ver primeiro?" />
+            </label>
+            <label>
+              <span data-i18n="branching.subtitle">Subtítulo (opcional)</span>
+              <input type="text" id="prop-branch-subtitle" placeholder="Escolha uma opção abaixo" />
+            </label>
+            <div class="branching-options-list" id="branching-options-list">
+              <!-- Opções 1, 2 e opcional 3 -->
+            </div>
+            <button type="button" class="btn btn-sm" id="btn-add-branch-opt" data-i18n="branching.addOption">+ Adicionar 3ª opção</button>
+          </div>
+          <div id="branching-return-field">
+            <label class="checkbox" id="wrap-return-branch">
+              <input type="checkbox" id="prop-return-branch" role="switch" />
+              <span data-i18n="branching.returnToOptions">Ao concluir o passo, voltar às opções</span>
+            </label>
+          </div>
         </div>
       </details>
       </div>

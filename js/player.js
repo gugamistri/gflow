@@ -19,11 +19,13 @@ import {
   clampPan,
   computeSafeZoomCamera,
   isDoubleTap,
+  isStepZoomEnabled,
   maxUserScale,
   pinchCamera,
   safeAreaRect,
   zoomCameraStyle,
 } from "./zoomHighlight.js";
+import { isBranchingStep, normalizeBranching, renderBranchingHtml, resolveBranchTarget } from "./branching.js";
 import { stickyWhatsAppAction } from "./fixedSteps.js";
 import {
   isPortraitCompact,
@@ -143,6 +145,8 @@ export function createPlayer(ctx) {
     slideKicker: document.getElementById("canvas-slide-kicker"),
     slideTitle: document.getElementById("canvas-slide-title"),
     slideBody: document.getElementById("canvas-slide-body"),
+    slideBranching: document.getElementById("canvas-slide-branching"),
+    slidePlay: document.getElementById("canvas-slide-play"),
     hotspot: document.getElementById("hotspot"),
     clickPoint: document.getElementById("click-point"),
     clickFx: document.getElementById("editor-click-fx"),
@@ -206,6 +210,8 @@ export function createPlayer(ctx) {
 
   let driverObj = null;
   let activeIndex = 0;
+  let playOrder = [];
+  let playlistPos = 0;
   let animating = false;
   let autoplayTimer = null;
   let autoplayEnabled = false;
@@ -697,7 +703,7 @@ export function createPlayer(ctx) {
         finish();
       };
       els.frame.addEventListener("transitionend", onEnd);
-      const timer = setTimeout(finish, 850);
+      const timer = setTimeout(finish, 650);
     });
   }
 
@@ -730,7 +736,7 @@ export function createPlayer(ctx) {
   }
 
   function zoomEnabled(step) {
-    return step?.type !== "slide" && step?.zoomHighlight === true && !stepVideo(step) && els.image && !els.image.hidden;
+    return isStepZoomEnabled(step) && !stepVideo(step) && els.image && !els.image.hidden;
   }
 
   async function applyStepZoom(step) {
@@ -786,7 +792,7 @@ export function createPlayer(ctx) {
     if (!zoomEnabled(step)) return;
     const token = driveToken;
     // why: o driver precisa pintar o recorte em 1× antes da câmera começar a andar
-    await delay(550);
+    await delay(450);
     // why: se o passo mudou durante a espera, o close-up deste passo não pode cair no próximo
     if (token !== driveToken || getDemo()?.steps?.[activeIndex] !== step) return;
     await applyStepZoom(step);
@@ -840,6 +846,30 @@ export function createPlayer(ctx) {
         renderRichText(els.slideBody, step.popover?.description || "");
         applySlideLayout(els.slide, step);
         sizeSlideLikeImage(els.slide, els.stage, demo, step, resolveImageSrc);
+
+        const hasBranching = isBranchingStep(step);
+        els.slide.classList.toggle("has-branching", hasBranching);
+        if (hasBranching) {
+          const norm = normalizeBranching(step.branching);
+          const title = norm.title || step.popover?.title || step.label || "";
+          const subtitle = norm.subtitle || "";
+          els.slideKicker.hidden = true;
+          els.slideTitle.textContent = "";
+          els.slideTitle.hidden = true;
+          renderRichText(els.slideBody, "");
+          els.slideBody.hidden = true;
+          if (els.slideBranching) {
+            els.slideBranching.hidden = false;
+            els.slideBranching.innerHTML = renderBranchingHtml({ ...norm, title, subtitle });
+          }
+        } else if (els.slideBranching) {
+          els.slideBranching.hidden = true;
+          els.slideBranching.innerHTML = "";
+          els.slideTitle.hidden = false;
+          els.slideBody.hidden = false;
+        }
+        if (els.slidePlay) els.slidePlay.hidden = hasBranching;
+
         // why: o editor usa [hidden]; style.display não vence o !important do CSS
         els.hotspot.hidden = true;
         els.hotspot.style.display = "";
@@ -848,6 +878,9 @@ export function createPlayer(ctx) {
       }
 
       els.slide.hidden = true;
+      els.slide.classList.remove("has-branching");
+      if (els.slideBranching) els.slideBranching.hidden = true;
+      if (els.slidePlay) els.slidePlay.hidden = false;
       els.hotspot.hidden = false;
       els.hotspot.style.display = "";
       els.hotspot.classList.add("is-previewing");
@@ -1006,6 +1039,32 @@ export function createPlayer(ctx) {
     }, 60);
   }
 
+  async function jumpToStep(targetIndex) {
+    if (animating || !driverObj) return;
+    const token = driveToken;
+    const targetPos = playOrder.indexOf(targetIndex);
+    if (targetPos < 0) return;
+    animating = true;
+    clearAutoplay();
+    try {
+      playlistPos = targetPos;
+      activeIndex = playOrder[playlistPos];
+      if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
+      const demo = getDemo();
+      const steps = demo?.steps || [];
+      setProgress(t("player.stepOf", { current: playlistPos + 1, total: playOrder.length }));
+      await showStepVisual(steps[activeIndex], { speak: true });
+      if (token !== driveToken) return;
+      reportStep(steps, playlistPos, playOrder.length);
+      await prepareStepCamera(steps[activeIndex]);
+      if (token !== driveToken) return;
+      driverObj.drive(playlistPos);
+      await zoomAfterHighlightVisible(steps[activeIndex]);
+    } finally {
+      animating = false;
+    }
+  }
+
   async function buildAndDrive(startIndex = 0, opts = {}) {
     stop({ silent: true });
     const token = ++driveToken;
@@ -1045,8 +1104,8 @@ export function createPlayer(ctx) {
       from: startIndex,
       indices: opts.indices,
     });
-    const playOrder = playlist.order;
-    let playlistPos = playlist.start;
+    playOrder = playlist.order;
+    playlistPos = playlist.start;
     activeIndex = playOrder[playlistPos] ?? 0;
     if (typeof setSelectedIndex === "function") setSelectedIndex(activeIndex);
     els.hotspot?.classList.add("is-previewing");
@@ -1087,7 +1146,7 @@ export function createPlayer(ctx) {
       doneBtnText: t("player.done"),
       progressText: t("player.progress"),
       onPopoverRender: (popover) => {
-        renderDemoPopoverFooter(popover);
+        renderDemoPopoverFooter(popover, steps[activeIndex]);
         labelCloseButton(popover?.closeButton, t(ctx.closeLabelKey || "player.closeTour"));
         const isSlide = steps[activeIndex]?.type === "slide";
         const isVideo = Boolean(stepVideo(steps[activeIndex]));
@@ -1134,6 +1193,13 @@ export function createPlayer(ctx) {
             try {
               await animateClick(current);
               if (token !== driveToken) return;
+              if (current?.returnToBranch) {
+                const branchStepIdx = steps.findIndex((s) => isBranchingStep(s));
+                if (branchStepIdx >= 0) {
+                  await jumpToStep(branchStepIdx);
+                  return;
+                }
+              }
               const nextPos = playlistPos + 1;
               const reveal = nextPos < playOrder.length ? revealPlan(current, steps[playOrder[nextPos]]) : null;
               if (nextPos >= playOrder.length) {
@@ -1604,6 +1670,23 @@ export function createPlayer(ctx) {
         e.stopPropagation();
         if (!advanceAllowed()) return;
         clickDriverNext();
+      },
+      true
+    );
+
+    document.getElementById("canvas-slide-branching")?.addEventListener(
+      "click",
+      (e) => {
+        const btn = e.target.closest(".gf-branch-btn");
+        if (!btn || !isPresenting() || !driverObj) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const branchIdx = Number(btn.dataset.branchIdx);
+        const step = getDemo()?.steps?.[activeIndex];
+        if (!step?.branching?.options?.[branchIdx]) return;
+        const opt = step.branching.options[branchIdx];
+        const targetStepIndex = resolveBranchTarget(opt, getDemo());
+        jumpToStep(targetStepIndex);
       },
       true
     );
