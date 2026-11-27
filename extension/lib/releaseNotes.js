@@ -7,9 +7,10 @@
  *      0.5.0 (30/10): vídeo nos passos, legenda da narração, slides sem "CENA X", texto com formatação e modo Galeria.
  *      0.6.0 (9/11): Criar com ajuda (grátis), Criar com meu agente de IA e Mostrar balão por passo.
  *      0.7.0 (20/11): Desfocar área, Enquadrar, tela acesa no celular e troca de plano (Pro↔Team, mensal↔anual).
+ *      0.8.0 (27/11): primeiros passos, tela de projetos, Caminhos, Ampliar destaque e novidades atualizadas na extensão.
  */
-export const RELEASE_NOTES_VERSION = "0.7.0";
-export const RELEASE_NOTES_DATE = "2026-11-20";
+export const RELEASE_NOTES_VERSION = "0.8.0";
+export const RELEASE_NOTES_DATE = "2026-11-27";
 export const RELEASE_NOTES_DISMISS_KEY = "ns-release-notes-dismissed";
 
 /** Mês e ano da versão, no idioma da interface. */
@@ -42,6 +43,11 @@ export function shouldShowReleaseNotes({ dismissedVersion, currentVersion } = {}
 export const RELEASE_NOTE_TAGS = Object.freeze(["new", "feature", "fix"]);
 
 export const RELEASE_NOTE_ENTRIES = Object.freeze([
+  { key: "onboarding", tag: "new", date: "2026-11-27", icon: "text", help: "editor", editor: "0.8.0", ext: null },
+  { key: "projectsFirst", tag: "new", date: "2026-11-27", icon: "gallery", help: "editor", editor: "0.8.0", ext: null },
+  { key: "paths", tag: "new", date: "2026-11-27", icon: "slide", help: "editor", editor: "0.8.0", ext: null },
+  { key: "zoomHighlight", tag: "feature", date: "2026-11-27", icon: "video", help: "editor", editor: "0.8.0", ext: null },
+  { key: "extNewsFeed", tag: "feature", date: "2026-11-27", icon: "bell", help: "gravar", editor: "0.8.0", ext: null },
   { key: "areaBlur", tag: "new", date: "2026-11-19", icon: "gallery", help: "editor", editor: "0.7.0", ext: null },
   { key: "crop", tag: "new", date: "2026-11-19", icon: "slide", help: "editor", editor: "0.7.0", ext: null },
   { key: "wakeLock", tag: "feature", date: "2026-11-19", icon: "video", help: "incorporar", editor: "0.7.0", ext: null },

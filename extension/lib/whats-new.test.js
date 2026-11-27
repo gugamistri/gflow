@@ -90,10 +90,10 @@ test("popup: novidades do editor e da extensão, mais novo primeiro, 2 à mostra
   const real = popupEntries();
   assert.deepEqual(
     real.map((e) => e.key),
-    ["planSwitch", "areaBlur", "crop", "wakeLock", "createHelp", "agentConnect", "showBalloon", "extensionNews", "gallery", "stepVideo", "richText", "narrationCaption", "slideTitle"]
+    ["onboarding", "projectsFirst", "paths", "zoomHighlight", "extNewsFeed", "planSwitch", "areaBlur", "crop", "wakeLock", "createHelp", "agentConnect", "showBalloon", "extensionNews", "gallery", "stepVideo", "richText", "narrationCaption", "slideTitle"]
   );
-  assert.ok(real.some((e) => e.editor === "0.7.0") && real.some((e) => e.editor === "0.6.0"));
-  assert.equal(real.filter((e) => e.editor === RELEASE_NOTES_VERSION).length, 4);
+  assert.ok(real.some((e) => e.editor === "0.8.0") && real.some((e) => e.editor === "0.7.0") && real.some((e) => e.editor === "0.6.0"));
+  assert.equal(real.filter((e) => e.editor === RELEASE_NOTES_VERSION).length, 5);
 });
 
 test("itens reais: texto Título: descrição nos 3 idiomas, ajuda em guiaflow.pro", () => {

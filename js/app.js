@@ -53,6 +53,11 @@ import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
 import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
 import { planEditorBootScreen, shouldOfferExamplePreview } from "./editorBoot.js";
+import {
+  createOnboardingDialog,
+  readOnboardingState,
+  shouldShowOnboarding,
+} from "./onboarding.js";
 import { renumberScenes } from "./scenes.js";
 import {
   THEME_PRESETS,
@@ -5632,6 +5637,72 @@ function bindReleaseNotes() {
   sync();
 }
 
+
+let onboardingDialog = null;
+
+function onboardingCompleted() {
+  try {
+    return Boolean(readOnboardingState(localStorage)?.done);
+  } catch {
+    return false;
+  }
+}
+
+function editorHasNewIntent() {
+  try {
+    return new URL(location.href).searchParams.has("novo");
+  } catch {
+    return false;
+  }
+}
+
+async function runOnboardingResult(result) {
+  const assistant = result?.assistant;
+  const start = result?.start;
+  if (assistant === "key") {
+    settingsDialog.open("account", { focus: "llm-key" });
+    return;
+  }
+  if (assistant === "pro") {
+    showAccountDialog();
+    return;
+  }
+  if (start === "capture") {
+    const banner = document.getElementById("ext-banner");
+    if (banner) {
+      banner.hidden = false;
+      banner.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    return;
+  }
+  if (start === "import") {
+    document.getElementById("import-file")?.click();
+    return;
+  }
+  if (start === "assistant") {
+    if (assistantFlagOn()) openAssistant();
+    else openNewProjectDialog();
+    return;
+  }
+  if (start === "example") {
+    const example = (readIndex().projects || []).find((p) => shouldOfferExamplePreview(p));
+    if (example?.id) await openProject(example.id, { autoPreview: true });
+  }
+}
+
+function ensureOnboarding() {
+  if (!onboardingDialog) {
+    onboardingDialog = createOnboardingDialog({
+      t,
+      storage: localStorage,
+      onFinished: (result) => {
+        void runOnboardingResult(result);
+      },
+    });
+  }
+  return onboardingDialog;
+}
+
 async function boot() {
   // why: #/join/ é tratado depois, com a lista já visível — sem tour automático por cima do convite
   initLocale();
@@ -5667,6 +5738,7 @@ async function boot() {
     paintUpgradeCopy();
     paintSubscription();
     paintReleaseNotesTitle();
+    onboardingDialog?.paint?.();
     renderLibrary();
     syncThemeUi();
     editor.refresh?.();
@@ -5692,6 +5764,13 @@ async function boot() {
 
   const index = readIndex();
   const bootGeneration = captureGeneration;
+  const offerOnboarding = shouldShowOnboarding({
+    completed: onboardingCompleted(),
+    skipSavedOpen: bootShouldSkipSavedOpen(bootGeneration, captureGeneration),
+    activeProjectId: index.activeProjectId || null,
+    joinPending: /^#\/join\//.test(location.hash || ""),
+    hasNewIntent: editorHasNewIntent(),
+  });
   try {
     const plan = planEditorBootScreen({
       skipSavedOpen: bootShouldSkipSavedOpen(bootGeneration, captureGeneration),
@@ -5720,6 +5799,14 @@ async function boot() {
     handleJoinHash();
     window.addEventListener("hashchange", handleJoinHash);
     consumeNewProjectIntent();
+    if (
+      offerOnboarding &&
+      !bootShouldSkipSavedOpen(bootGeneration, captureGeneration) &&
+      !project &&
+      chromeView === "library"
+    ) {
+      ensureOnboarding().open();
+    }
     showStashedAuthError();
     if (authCallback.consumed) void finishCloudAuthCallback(authCallback);
     else if (getCloudAccount().signedIn) void resumeCloudPublishAfterLogin({ delay: 800 });

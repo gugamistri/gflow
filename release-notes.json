@@ -1,7 +1,77 @@
 {
-  "version": "0.7.0",
-  "date": "2026-11-20",
+  "version": "0.8.0",
+  "date": "2026-11-27",
   "entries": [
+    {
+      "key": "onboarding",
+      "tag": "new",
+      "date": "2026-11-27",
+      "icon": "text",
+      "help": "editor",
+      "editor": "0.8.0",
+      "ext": null,
+      "text": {
+        "pt": "Primeiros passos: na primeira visita, três perguntas curtas sugerem um caminho — capturar, importar, ver um exemplo ou usar o assistente.",
+        "en": "First steps: on your first visit, three short questions suggest a path — capture, import, view an example, or use the assistant.",
+        "es": "Primeros pasos: en la primera visita, tres preguntas cortas sugieren un camino — capturar, importar, ver un ejemplo o usar el asistente."
+      }
+    },
+    {
+      "key": "projectsFirst",
+      "tag": "new",
+      "date": "2026-11-27",
+      "icon": "gallery",
+      "help": "editor",
+      "editor": "0.8.0",
+      "ext": null,
+      "text": {
+        "pt": "Tela de projetos: ao abrir o editor pela primeira vez, você vê a lista de projetos. Na visita seguinte, o último projeto reabre.",
+        "en": "Projects screen: the first time you open the editor, you see your project list. Next time, the last project reopens.",
+        "es": "Pantalla de proyectos: al abrir el editor por primera vez, ves la lista de proyectos. En la visita siguiente, se reabre el último proyecto."
+      }
+    },
+    {
+      "key": "paths",
+      "tag": "new",
+      "date": "2026-11-27",
+      "icon": "slide",
+      "help": "editor",
+      "editor": "0.8.0",
+      "ext": null,
+      "text": {
+        "pt": "Caminhos: em um passo você coloca 2 ou 3 botões que levam a outras cenas, para o visitante escolher o que ver.",
+        "en": "Branching paths: on a step you can add 2 or 3 buttons that lead to other scenes, so the visitor can choose what to see.",
+        "es": "Caminos: en un paso puedes poner 2 o 3 botones que llevan a otras escenas, para que el visitante elija qué ver."
+      }
+    },
+    {
+      "key": "zoomHighlight",
+      "tag": "feature",
+      "date": "2026-11-27",
+      "icon": "video",
+      "help": "editor",
+      "editor": "0.8.0",
+      "ext": null,
+      "text": {
+        "pt": "Ampliar destaque: quando a área marcada é pequena, o tour aproxima sozinho o que importa, para o visitante ver com clareza.",
+        "en": "Zoom highlight: when the marked area is small, the tour zooms in on what matters, so the visitor can see it clearly.",
+        "es": "Ampliar destacado: cuando el área marcada es pequeña, el tour acerca solo lo importante, para que el visitante lo vea con claridad."
+      }
+    },
+    {
+      "key": "extNewsFeed",
+      "tag": "feature",
+      "date": "2026-11-27",
+      "icon": "bell",
+      "help": "gravar",
+      "editor": "0.8.0",
+      "ext": null,
+      "text": {
+        "pt": "Novidades atualizadas: a extensão Captura mostra as mesmas novidades da tela de projetos e se atualiza quando sai uma versão nova.",
+        "en": "Updated what's new: the Capture extension shows the same news as the projects screen and refreshes when a new version ships.",
+        "es": "Novedades actualizadas: la extensión Captura muestra las mismas novedades de la pantalla de proyectos y se actualiza cuando sale una versión nueva."
+      }
+    },
     {
       "key": "areaBlur",
       "tag": "new",
