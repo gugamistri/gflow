@@ -759,7 +759,8 @@ async function reconcileIndexFromIdb() {
  * why: subir o exemplo intocado criaria a mesma cópia na conta de todo mundo; editado, ele vira do usuário e sincroniza.
  */
 export function isUntouchedStockDemo(project) {
-  return Boolean(project && isStockDemoName(project.name) && !project.stockEdited);
+  // why: exemplo com link permanente já é do usuário; sem projeto na conta o link ficaria órfão
+  return Boolean(project && isStockDemoName(project.name) && !project.stockEdited && !project.cloudShare);
 }
 
 async function fetchStockDemo(url) {
@@ -778,7 +779,7 @@ async function seedOneStockDemo(stock, { replaceExisting = false, keepEdited = f
   const existingSummary = (index.projects || []).find((p) => p.name === stockName || p.name === stock.name);
   const prev = existingSummary && replaceExisting ? await getProjectRecord(existingSummary.id) : null;
   // why: a atualização automática do exemplo não apaga o que o usuário editou nele
-  if (keepEdited && prev?.stockEdited) return prev;
+  if (keepEdited && (prev?.stockEdited || prev?.cloudShare)) return prev;
   if (existingSummary && !replaceExisting) return prev || (await getProjectRecord(existingSummary.id));
 
   const project = demoPayloadToProject(payload, {
