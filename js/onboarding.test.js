@@ -5,11 +5,13 @@ import {
   ONBOARDING_STORAGE_KEY,
   ONBOARDING_STEPS,
   canAdvanceOnboarding,
+  hasUserLocalProjects,
   markOnboardingDone,
   nextOnboardingStep,
   onboardingAdvanceLabelKey,
   readOnboardingState,
   shouldShowOnboarding,
+  skipOnboardingForExistingUser,
   writeOnboardingState,
 } from "./onboarding.js";
 
@@ -49,6 +51,8 @@ test("só aparece na primeira visita da lista de projetos", () => {
     activeProjectId: null,
     joinPending: false,
     hasNewIntent: false,
+    signedIn: false,
+    hasLocalProjects: false,
   };
   assert.equal(shouldShowOnboarding(base), true);
   assert.equal(shouldShowOnboarding({ ...base, completed: true }), false);
@@ -56,6 +60,53 @@ test("só aparece na primeira visita da lista de projetos", () => {
   assert.equal(shouldShowOnboarding({ ...base, skipSavedOpen: true }), false);
   assert.equal(shouldShowOnboarding({ ...base, joinPending: true }), false);
   assert.equal(shouldShowOnboarding({ ...base, hasNewIntent: true }), false);
+});
+
+test("não aparece para quem já tem conta ou projeto próprio", () => {
+  const base = {
+    completed: false,
+    skipSavedOpen: false,
+    activeProjectId: null,
+    joinPending: false,
+    hasNewIntent: false,
+    signedIn: false,
+    hasLocalProjects: false,
+  };
+  assert.equal(shouldShowOnboarding({ ...base, signedIn: true }), false);
+  assert.equal(shouldShowOnboarding({ ...base, signedIn: true, hasLocalProjects: false }), false);
+  assert.equal(shouldShowOnboarding({ ...base, hasLocalProjects: true }), false);
+  // anônimo, só com exemplos intocados (stock), ainda vê os primeiros passos
+  assert.equal(shouldShowOnboarding(base), true);
+});
+
+test("exemplos intocados não contam como projeto próprio", () => {
+  assert.equal(hasUserLocalProjects(undefined), false);
+  assert.equal(hasUserLocalProjects([]), false);
+  assert.equal(hasUserLocalProjects([{ id: "ex", name: "Como usar o Guia", stock: true }]), false);
+  assert.equal(
+    hasUserLocalProjects([
+      { id: "ex", name: "Como usar o Guia", stock: true },
+      { id: "ex2", name: "Luminária Arco Liana", stock: true },
+    ]),
+    false
+  );
+  assert.equal(hasUserLocalProjects([{ id: "mine", name: "Tour do cliente", stock: false }]), true);
+  assert.equal(
+    hasUserLocalProjects([
+      { id: "ex", stock: true },
+      { id: "mine", name: "Meu tour" },
+    ]),
+    true
+  );
+});
+
+test("pular para conta existente marca done neste navegador", () => {
+  const storage = memoryStorage();
+  const saved = skipOnboardingForExistingUser(storage, "signed-in");
+  assert.equal(saved.done, true);
+  assert.equal(saved.skipped, true);
+  assert.equal(saved.skippedBecause, "signed-in");
+  assert.equal(readOnboardingState(storage).done, true);
 });
 
 test("Seguinte só avança com uma escolha; no último passo o rótulo é Concluir", () => {
@@ -100,6 +151,12 @@ test("o rodapé tem Agora não como link e Seguinte/Concluir; a escolha não ava
   const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
   assert.match(app, /shouldShowOnboarding/);
   assert.match(app, /createOnboardingDialog/);
+  assert.match(app, /hasUserLocalProjects/);
+  assert.match(app, /skipOnboardingForExistingUser/);
+  assert.match(app, /dismissOnboardingForExistingUser/);
+  assert.match(app, /signedIn: signedInAtBoot/);
+  assert.match(app, /hasLocalProjects,/);
+  assert.match(app, /afterAccountSignedIn\(\) \{\s*dismissOnboardingForExistingUser\("signed-in"\)/);
   assert.match(app, /showAccountDialog\(\)/);
   assert.match(app, /focus: "llm-key"/);
   assert.equal(/showUpgradeDialog\(\{ feature: "onboarding"/.test(app), false);
