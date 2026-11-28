@@ -56,8 +56,11 @@ import { planEditorBootScreen, shouldOfferExamplePreview } from "./editorBoot.js
 import { LIBRARY_HYDRATE_MAX_MS, isLibrarySyncPending, shouldShowSyncingInLibrary } from "./libraryHydrate.js";
 import {
   createOnboardingDialog,
+  hasUserLocalProjects,
+  markOnboardingDone,
   readOnboardingState,
   shouldShowOnboarding,
+  skipOnboardingForExistingUser,
 } from "./onboarding.js";
 import { renumberScenes } from "./scenes.js";
 import {
@@ -3243,6 +3246,7 @@ async function finishCloudAuthCallback(callback) {
     return;
   }
   closeAccountDialog();
+  dismissOnboardingForExistingUser("signed-in");
   await resumeCloudPublishAfterLogin({ delay: 800 });
 }
 
@@ -5233,6 +5237,7 @@ function bindChrome() {
   }
 
   async function afterAccountSignedIn() {
+    dismissOnboardingForExistingUser("signed-in");
     const publishNow = accountDialogWantsPublish;
     const resume = pendingHostedResume;
     const feature = pendingHostedFeature;
@@ -5279,7 +5284,10 @@ function bindChrome() {
   window.addEventListener("storage", (event) => {
     if (event.key !== CLOUD_SESSION_KEY) return;
     paintCloudShare();
-    if (event.newValue) void resumeCloudPublishAfterLogin({ delay: 0 });
+    if (event.newValue) {
+      dismissOnboardingForExistingUser("signed-in");
+      void resumeCloudPublishAfterLogin({ delay: 0 });
+    }
   });
 
   window.addEventListener("message", (event) => {
@@ -5739,6 +5747,24 @@ function onboardingCompleted() {
   }
 }
 
+function accountSignedIn() {
+  return Boolean(getCloudAccount().signedIn);
+}
+
+/** Fecha o onboarding se estiver aberto e marca como feito, para não voltar depois do login. */
+function dismissOnboardingForExistingUser(reason = "existing-user") {
+  try {
+    skipOnboardingForExistingUser(localStorage, reason);
+  } catch {
+    try {
+      markOnboardingDone({ skipped: true, skippedBecause: reason }, localStorage);
+    } catch {
+      /* storage bloqueado: some só nesta visita */
+    }
+  }
+  onboardingDialog?.dismissExisting?.(reason);
+}
+
 function editorHasNewIntent() {
   try {
     return new URL(location.href).searchParams.has("novo");
@@ -5855,12 +5881,20 @@ async function boot() {
 
   const index = readIndex();
   const bootGeneration = captureGeneration;
+  const signedInAtBoot = accountSignedIn();
+  const hasLocalProjects = hasUserLocalProjects(index.projects);
+  // why: conta ou projeto próprio neste navegador não vê primeiros passos; marca feito já no boot
+  if (!onboardingCompleted() && (signedInAtBoot || hasLocalProjects)) {
+    dismissOnboardingForExistingUser(signedInAtBoot ? "signed-in" : "local-projects");
+  }
   const offerOnboarding = shouldShowOnboarding({
     completed: onboardingCompleted(),
     skipSavedOpen: bootShouldSkipSavedOpen(bootGeneration, captureGeneration),
     activeProjectId: index.activeProjectId || null,
     joinPending: /^#\/join\//.test(location.hash || ""),
     hasNewIntent: editorHasNewIntent(),
+    signedIn: signedInAtBoot,
+    hasLocalProjects,
   });
   try {
     const plan = planEditorBootScreen({
@@ -5890,7 +5924,12 @@ async function boot() {
     handleJoinHash();
     window.addEventListener("hashchange", handleJoinHash);
     consumeNewProjectIntent();
-    if (
+    // why: a sessão pode ter aparecido enquanto o boot abria a lista; confere de novo antes de exibir
+    const signedInNow = accountSignedIn();
+    const hasLocalNow = hasUserLocalProjects(readIndex().projects);
+    if (signedInNow || hasLocalNow) {
+      if (!onboardingCompleted()) dismissOnboardingForExistingUser(signedInNow ? "signed-in" : "local-projects");
+    } else if (
       offerOnboarding &&
       !bootShouldSkipSavedOpen(bootGeneration, captureGeneration) &&
       !project &&
