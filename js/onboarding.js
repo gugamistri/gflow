@@ -69,8 +69,23 @@ export function markOnboardingDone(partial = {}, storage) {
 }
 
 /**
- * Só na primeira visita da lista de projetos.
- * Fora: recorrente com projeto ativo, captura da extensão, convite e ?novo=.
+ * Quem já tem projeto próprio (não o exemplo intocado da biblioteca).
+ */
+export function hasUserLocalProjects(projects) {
+  return (projects || []).some((project) => project && !project.stock);
+}
+
+/**
+ * Encerra o onboarding sem respostas, para não voltar a aparecer neste navegador.
+ */
+export function skipOnboardingForExistingUser(storage, reason = "existing-user") {
+  return markOnboardingDone({ skipped: true, skippedBecause: reason }, storage);
+}
+
+/**
+ * Só na primeira visita anônima da lista de projetos.
+ * Fora: já tem conta, já tem projeto próprio, recorrente com projeto ativo,
+ * captura da extensão, convite e ?novo=.
  */
 export function shouldShowOnboarding({
   completed,
@@ -78,12 +93,16 @@ export function shouldShowOnboarding({
   activeProjectId,
   joinPending,
   hasNewIntent,
+  signedIn,
+  hasLocalProjects,
 } = {}) {
   if (completed) return false;
   if (skipSavedOpen) return false;
   if (activeProjectId) return false;
   if (joinPending) return false;
   if (hasNewIntent) return false;
+  if (signedIn) return false;
+  if (hasLocalProjects) return false;
   return true;
 }
 
@@ -161,10 +180,16 @@ export function createOnboardingDialog({
   function finish(extra = {}) {
     if (finishing) return;
     finishing = true;
-    const result = markOnboardingDone({ ...answers, ...extra }, storage);
+    const { silent, ...rest } = extra || {};
+    const result = markOnboardingDone({ ...answers, ...rest }, storage);
     const el = dialog();
     if (el?.open) el.close();
-    onFinished?.(result);
+    if (!silent) onFinished?.(result);
+    return result;
+  }
+
+  function dismissExisting(reason = "existing-user") {
+    return finish({ skipped: true, skippedBecause: reason, silent: true });
   }
 
   function select(value) {
@@ -224,5 +249,5 @@ export function createOnboardingDialog({
   }
 
   bind();
-  return { open, paint, finish, select, advance, skip };
+  return { open, paint, finish, dismissExisting, select, advance, skip };
 }
