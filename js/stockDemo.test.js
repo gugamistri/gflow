@@ -13,6 +13,8 @@ test("exemplo intocado fica só no navegador; editado (ou renomeado) sincroniza"
   assert.equal(isUntouchedStockDemo({ name: STOCK_DEMO_NAME, steps: [], stockEdited: true }), false);
   assert.equal(isUntouchedStockDemo({ name: "Meu tour", steps: [] }), false);
   assert.equal(isUntouchedStockDemo(null), false);
+  // publicado: o exemplo já é do usuário e precisa existir como projeto na conta
+  assert.equal(isUntouchedStockDemo({ name: STOCK_DEMO_NAME, steps: [], cloudShare: { slug: "x" } }), false);
   assert.equal(isStockDemoName("Como usar o Guia"), true);
   assert.equal(isStockDemoName("Luminária Arco Liana"), true);
   assert.equal(isStockDemoName("Como solicitar um reembolso"), true);

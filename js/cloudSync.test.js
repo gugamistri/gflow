@@ -14,6 +14,7 @@ import {
   syncMetaKey,
   writeMeta,
 } from "./cloudSync.js";
+import { isUntouchedStockDemo } from "./projects.js";
 
 function memoryStorage() {
   const map = new Map();
@@ -543,4 +544,257 @@ test("temas: união por id; a versão local ganha quando foi ela que mudou", () 
   const merged = mergeCustomThemes([{ id: "a", v: 2 }, { id: "c" }], [{ id: "a", v: 1 }, { id: "b" }], { preferLocal: true });
   assert.deepEqual(merged, [{ id: "a", v: 2 }, { id: "b" }, { id: "c" }]);
   assert.deepEqual(mergeCustomThemes([{ id: "a", v: 2 }], [{ id: "a", v: 1 }]), [{ id: "a", v: 1 }]);
+});
+
+
+/* ---------- sync: projeto publicado, fila, mídia e restauração ---------- */
+
+const stockProject = (extra = {}) => ({ id: "stock-1", name: "Como usar o Guia", steps: [{ id: "s1" }], customImages: {}, ...extra });
+
+test("F1: exemplo publicado (com link permanente) sincroniza; exemplo intocado continua só no navegador", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([stockProject()]);
+  const a = engine(cloud, store, memoryStorage(), { skipProject: isUntouchedStockDemo });
+  await a.sync.enable("ana@example.com");
+  assert.equal(cloud.projects.size, 0, "exemplo intocado não sobe");
+  // publicar grava o link permanente no projeto (sem passar pela edição)
+  const stock = await store.getProject("stock-1");
+  stock.cloudShare = { slug: "como-usar-o-guia-x23", url: "https://guiaflow.pro/p/como-usar-o-guia-x23" };
+  await store.putProject(stock);
+  await a.sync.syncNow();
+  assert.equal(cloud.projects.size, 1, "exemplo publicado vira projeto da conta");
+  const remote = [...cloud.projects.values()][0];
+  assert.equal(remote.payload.cloudShare.slug, "como-usar-o-guia-x23");
+  // um navegador limpo recebe o projeto com o link
+  const fresh = fakeStore();
+  const b = engine(cloud, fresh, memoryStorage(), { skipProject: isUntouchedStockDemo });
+  await b.sync.enable("ana@example.com");
+  assert.equal((await fresh.getProject("stock-1")).cloudShare.slug, "como-usar-o-guia-x23");
+});
+
+test("F1: exemplo publicado que já estava no navegador antes do ajuste sobe na próxima ativação", async () => {
+  const cloud = fakeCloud();
+  const storage = memoryStorage();
+  const store = fakeStore([stockProject({ cloudShare: { slug: "antigo-1" } }), { ...stockProject({ id: "stock-2", name: "Luminária Arco Liana" }) }]);
+  const a = engine(cloud, store, storage, { skipProject: isUntouchedStockDemo });
+  await a.sync.enable("ana@example.com");
+  const ids = [...cloud.projects.values()].map((p) => p.clientId);
+  assert.deepEqual(ids, ["stock-1"], "só o publicado sobe; o outro exemplo segue local");
+});
+
+test("F2: projeto salvo antes de o sync ligar sobe na ativação, mesmo com a primeira volta já feita", async () => {
+  const cloud = fakeCloud();
+  const storage = memoryStorage();
+  const first = fakeStore([localProject("antigo", 1)]);
+  const a = engine(cloud, first, storage);
+  await a.sync.enable("ana@example.com");
+  assert.equal(a.sync.getMeta().initialDone, true);
+
+  // "recarregar": página nova, projeto criado (captura/boot/período Free) antes de o plano responder
+  const reloaded = fakeStore([...first.projects.values()]);
+  const b = engine(cloud, reloaded, storage, { skipProject: isUntouchedStockDemo });
+  await reloaded.putProject(localProject("criado-antes", 2));
+  await reloaded.putProject(stockProject());
+  await b.sync.enable("ana@example.com");
+  const clientIds = [...cloud.projects.values()].map((p) => p.clientId).sort();
+  assert.deepEqual(clientIds, ["antigo", "criado-antes"], "o exemplo intocado continua fora");
+});
+
+test("F2: projetos criados com o sync desligado (plano vencido) sobem quando volta", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("p1", 1)]);
+  const a = engine(cloud, store, memoryStorage());
+  await a.sync.enable("ana@example.com");
+  a.sync.disable("inactive");
+  await store.putProject(localProject("p2-free", 2));
+  await a.sync.enable("ana@example.com");
+  assert.ok([...cloud.projects.values()].some((p) => p.clientId === "p2-free"));
+});
+
+test("F3: um projeto com erro não trava a fila, o pull roda e o chip diz qual falhou", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("ruim", 1), localProject("bom", 2)]);
+  let reject = true;
+  const request = async (path, init = {}) => {
+    if (reject && init.method === "POST" && path === "/projects" && JSON.parse(init.body).clientId === "ruim") {
+      return { ok: false, status: 422, error: "local_media_ref", data: { error: "local_media_ref" } };
+    }
+    return cloud.request(path, init);
+  };
+  const a = engine({ ...cloud, request, fetchAsset: cloud.fetchAsset, uploadAsset: cloud.uploadAsset }, store);
+  // projeto remoto de outro navegador que o pull precisa trazer mesmo com o erro acima
+  cloud.projects.set("srv-other", { id: "srv-other", clientId: "outro", name: "Outro", revision: 1, updatedAt: "2026-10-11T11:00:00.000Z", deletedAt: null, payload: { steps: [], customImages: {} } });
+  await a.sync.enable("ana@example.com");
+  assert.ok([...cloud.projects.values()].some((p) => p.clientId === "bom"), "o bom subiu");
+  assert.ok(await store.getProject("outro"), "o pull rodou");
+  const last = a.statuses.at(-1);
+  assert.equal(last.phase, "error");
+  assert.equal(last.error, "projects_failed");
+  assert.deepEqual(last.failed.map((f) => [f.id, f.name, f.error]), [["ruim", "Projeto ruim", "local_media_ref"]]);
+  assert.equal(a.sync.getMeta().dirty.ruim, true, "o ruim segue sujo para a próxima volta");
+  assert.equal(a.sync.getMeta().dirty.bom, undefined);
+  // corrigido o problema, a próxima volta sobe e o aviso some
+  reject = false;
+  await a.sync.syncNow();
+  assert.ok([...cloud.projects.values()].some((p) => p.clientId === "ruim"));
+  assert.equal(a.statuses.at(-1).phase, "synced");
+  assert.deepEqual(a.statuses.at(-1).failed, []);
+});
+
+test("F3: erro da conta toda (402) ainda para a volta; servidor fora em sequência também", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore([localProject("a", 1), localProject("b", 2)]);
+  const gone = async () => ({ ok: false, status: 402, error: "subscription_required", data: {} });
+  const a = engine({ ...cloud, request: gone, fetchAsset: cloud.fetchAsset, uploadAsset: cloud.uploadAsset }, store);
+  await a.sync.enable("ana@example.com");
+  assert.equal(a.statuses.at(-1).phase, "inactive");
+
+  const down = async () => ({ ok: false, status: 503, error: "storage_unavailable", data: {} });
+  const many = fakeStore([1, 2, 3, 4, 5].map((n) => localProject(`p${n}`, n)));
+  const calls = [];
+  const b = engine({ ...cloud, request: async (path, init) => { calls.push(path); return down(); }, fetchAsset: cloud.fetchAsset, uploadAsset: cloud.uploadAsset }, many);
+  await b.sync.enable("bia@example.com");
+  assert.equal(b.statuses.at(-1).phase, "error");
+  assert.ok(calls.length <= 3 + 3, "para depois de 3 falhas seguidas do servidor");
+});
+
+test("F4: mídia fora do ar no pull não grava o projeto sem imagem nem avança; a próxima volta traz completo", async () => {
+  const cloud = fakeCloud();
+  const a = engine(cloud, fakeStore([localProject("p1", 1)]));
+  await a.sync.enable("ana@example.com");
+
+  let down = true;
+  const flaky = {
+    ...cloud,
+    fetchAsset: async (sha) => {
+      if (down) throw new Error("media_http_503");
+      return cloud.fetchAsset(sha);
+    },
+  };
+  const fresh = fakeStore();
+  const b = engine(flaky, fresh);
+  await b.sync.enable("ana@example.com");
+  assert.equal(await fresh.getProject("p1"), null, "sem imagem não entra");
+  assert.equal(b.sync.getMeta().remote.p1, undefined, "revisão não registrada");
+  assert.equal(b.sync.getMeta().cursor, null, "cursor não avança");
+  assert.equal(b.statuses.at(-1).phase, "synced");
+  down = false;
+  await b.sync.syncNow();
+  const got = await fresh.getProject("p1");
+  assert.ok(got);
+  assert.equal(JSON.stringify(got).includes("asset:"), false);
+  assert.match(got.steps[0].image ? JSON.stringify(got.customImages) : "", /data:image\/png/);
+});
+
+test("F4: edição remota com mídia fora do ar mantém a cópia local antiga até a mídia voltar", async () => {
+  const cloud = fakeCloud();
+  const a = engine(cloud, fakeStore([localProject("p1", 1)]));
+  await a.sync.enable("ana@example.com");
+  const fresh = fakeStore();
+  let down = false;
+  const b = engine({ ...cloud, fetchAsset: async (sha) => { if (down) throw new Error("x"); return cloud.fetchAsset(sha); } }, fresh);
+  await b.sync.enable("ana@example.com");
+  const cursor = b.sync.getMeta().cursor;
+  const rev = b.sync.getMeta().remote.p1.rev;
+  // outro navegador troca a imagem (mídia nova)
+  const remote = [...cloud.projects.values()][0];
+  const newImage = bigImage(77);
+  const { payload, assets } = await dehydrate({ ...remote.payload, customImages: { a: { name: "nova.png", dataUrl: newImage } } });
+  for (const [sha, entry] of assets) await cloud.uploadAsset(sha, entry.bytes, entry.mime);
+  cloud.editRemote(remote.id, (p) => Object.assign(p, payload));
+  down = true;
+  await b.sync.syncNow();
+  assert.equal(b.sync.getMeta().remote.p1.rev, rev, "revisão antiga mantida");
+  assert.equal(b.sync.getMeta().cursor, cursor);
+  assert.notEqual((await fresh.getProject("p1")).customImages.a.dataUrl, newImage);
+  down = false;
+  await b.sync.syncNow();
+  assert.equal((await fresh.getProject("p1")).customImages.a.dataUrl, newImage);
+});
+
+test("F4: arquivo que o servidor não tem (404) espera algumas voltas e depois importa o projeto", async () => {
+  const cloud = fakeCloud();
+  const a = engine(cloud, fakeStore([localProject("p1", 1)]));
+  await a.sync.enable("ana@example.com");
+  const fresh = fakeStore();
+  const b = engine({ ...cloud, fetchAsset: async () => "" }, fresh);
+  await b.sync.enable("ana@example.com");
+  assert.equal(await fresh.getProject("p1"), null, "1ª volta: espera");
+  await b.sync.syncNow();
+  assert.equal(await fresh.getProject("p1"), null, "2ª volta: espera");
+  await b.sync.syncNow();
+  assert.ok(await fresh.getProject("p1"), "3ª volta: importa em vez de esconder o projeto para sempre");
+});
+
+function restoreEngine(cloud, store, storage = memoryStorage(), extra = {}) {
+  let n = 0;
+  const calls = { restore: 0 };
+  const e = engine(cloud, store, storage, {
+    restoreLinks: async () => {
+      calls.restore += 1;
+      return restoreFromPublishedLinks({
+        request: cloud.request,
+        store,
+        toProject: (payload, { name }) => ({ id: `proj-rest${++n}`, name, steps: payload.steps, customImages: {} }),
+        slugOf: (r) => r?.slug || "",
+      });
+    },
+    ...extra,
+  });
+  return { ...e, calls };
+}
+
+test("restauração automática: navegador novo, conta sem projetos e com links publicados, traz os projetos uma vez", async () => {
+  const cloud = fakeCloud(); // /shares/mine: tour-a1 (com payload) e tem-projeto (sem)
+  const store = fakeStore([{ id: "seed", name: "Como usar o Guia", steps: [] }]);
+  const storage = memoryStorage();
+  const a = restoreEngine(cloud, store, storage, { skipProject: isUntouchedStockDemo });
+  await a.sync.enable("ana@example.com");
+  assert.equal(a.calls.restore, 1);
+  const restored = [...store.projects.values()].find((p) => p.cloudShare?.slug === "tour-a1");
+  assert.ok(restored, "projeto vindo do link");
+  assert.equal(restored.name, "Tour A");
+  assert.equal(a.sync.getMeta().restoreDone, true);
+  assert.ok([...cloud.projects.values()].some((p) => p.name === "Tour A"), "e já sobe para a conta");
+  assert.equal(a.sync.getMeta().dirty[restored.id], undefined);
+
+  // idempotente: outra ativação (mesmo navegador) não restaura nem duplica
+  await a.sync.syncNow();
+  const b = restoreEngine(cloud, fakeStore([...store.projects.values()]), storage, { skipProject: isUntouchedStockDemo });
+  await b.sync.enable("ana@example.com");
+  assert.equal(b.calls.restore, 0);
+  assert.equal([...cloud.projects.values()].filter((p) => p.name === "Tour A").length, 1);
+});
+
+test("restauração automática: não roda quando a conta já tem projetos, nem em navegador que já sincronizou", async () => {
+  const cloud = fakeCloud();
+  const owner = engine(cloud, fakeStore([localProject("meu", 1)]));
+  await owner.sync.enable("ana@example.com");
+  const fresh = restoreEngine(cloud, fakeStore());
+  await fresh.sync.enable("ana@example.com");
+  assert.equal(fresh.calls.restore, 0, "conta com projetos");
+  assert.equal(fresh.sync.getMeta().restoreDone, true);
+
+  const empty = fakeCloud();
+  const storage = memoryStorage();
+  writeMeta(storage, { ...readMeta(storage, "bia@example.com"), initialDone: true });
+  const returning = restoreEngine(empty, fakeStore(), storage);
+  await returning.sync.enable("bia@example.com");
+  assert.equal(returning.calls.restore, 0, "navegador que já tinha feito a primeira volta");
+});
+
+test("restauração automática: falha sem rede dos links tenta de novo na volta seguinte e não trava o sync", async () => {
+  const cloud = fakeCloud();
+  const store = fakeStore();
+  let fail = true;
+  const request = async (path, init) => (fail && path === "/shares/mine" ? { ok: false, status: 500, error: "boom", data: {} } : cloud.request(path, init));
+  const e = restoreEngine({ ...cloud, request, fetchAsset: cloud.fetchAsset, uploadAsset: cloud.uploadAsset }, store);
+  await e.sync.enable("ana@example.com");
+  assert.equal(e.statuses.at(-1).phase, "synced", "o sync segue");
+  assert.equal(e.sync.getMeta().restoreDone, false);
+  assert.equal(e.sync.getMeta().restorePending, true);
+  fail = false;
+  await e.sync.syncNow();
+  assert.equal(e.sync.getMeta().restoreDone, true);
+  assert.ok([...store.projects.values()].some((p) => p.cloudShare?.slug === "tour-a1"));
 });

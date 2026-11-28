@@ -37,7 +37,7 @@ import {
   isStockDemoName,
   isUntouchedStockDemo,
 } from "./projects.js";
-import { bytesToDataUrl, createCloudSync, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
+import { bytesToDataUrl, createCloudSync, readMeta as readSyncMeta, restoreFromPublishedLinks, syncPayloadToProject } from "./cloudSync.js";
 import { parseCommentLink } from "./comments.js";
 import { createCollabController, noteCollabProject, readCollabMap } from "./collabController.js";
 import { createCollabUi } from "./collabUi.js";
@@ -53,6 +53,7 @@ import { downscaleImageUrl, isHeavyDataUrl } from "./thumbs.js";
 import { appendCaptureToProject } from "./stepClipboard.js";
 import { bootShouldSkipSavedOpen, createCaptureClaim, planCaptureHandoff } from "./captureInbox.js";
 import { planEditorBootScreen, shouldOfferExamplePreview } from "./editorBoot.js";
+import { LIBRARY_HYDRATE_MAX_MS, isLibrarySyncPending, shouldShowSyncingInLibrary } from "./libraryHydrate.js";
 import {
   createOnboardingDialog,
   hasUserLocalProjects,
@@ -1459,12 +1460,15 @@ let syncState = { phase: "off", done: 0, total: 0, error: "" };
 async function fetchSyncAsset(sha) {
   const base = getCloudBaseUrl();
   const token = readCloudSession()?.accessToken || "";
-  if (!base || !token) return "";
+  // why: sem sessão, rede ou servidor a mídia está só indisponível; devolver "" gravaria o projeto sem imagem
+  if (!base || !token) throw new Error("media_unavailable");
   const res = await fetch(`${base}/media/${encodeURIComponent(sha)}`, {
     headers: { Authorization: `Bearer ${token}` },
     credentials: "omit",
   });
-  if (!res.ok) return "";
+  // 404: o servidor não tem esse arquivo (o sync decide depois de algumas voltas); o resto tenta de novo
+  if (res.status === 404) return "";
+  if (!res.ok) throw new Error(`media_http_${res.status}`);
   const mime = (res.headers.get("content-type") || "application/octet-stream").split(";")[0];
   return bytesToDataUrl(new Uint8Array(await res.arrayBuffer()), mime);
 }
@@ -1494,9 +1498,23 @@ const cloudSync = createCloudSync({
   isCollab: (id) => Boolean(readCollabMap(localStorage)[id]),
   isProjectBusy: (id) => Boolean(project && project.id === id && (saveDirty || saveTimer)),
   conflictName: (name) => t("sync.conflictCopy", { name }),
+  restoreLinks: async () => {
+    const result = await runRestoreFromLinks();
+    if (result.restored) {
+      if (chromeView === "library") renderLibrary();
+      toast(t("sync.restored", { n: result.restored }), 4200);
+    }
+    return result;
+  },
   onStatus: (next) => {
     syncState = next;
     paintSyncStatus();
+    // why: a lista passa de "Sincronizando…" para os projetos quando a primeira volta termina
+    const hydrating = libraryHydrating();
+    if (hydrating !== lastLibraryHydrating) {
+      lastLibraryHydrating = hydrating;
+      if (chromeView === "library") renderLibraryGrid();
+    }
   },
   onRemoteChange: (change) => handleRemoteProjectChange(change),
   onCollabActive: ({ localId, remoteId, name }) => {
@@ -1736,12 +1754,67 @@ function reconcileSync() {
   }
 }
 
+function syncFailures() {
+  return Array.isArray(syncState.failed) ? syncState.failed : [];
+}
+
 function syncStatusText() {
   const { phase, done, total, error } = syncState;
   if (phase === "syncing") return total ? t("sync.progress", { done, total }) : t("sync.syncing");
   if (phase === "offline") return t("sync.offline");
-  if (phase === "error") return error === "media_quota_exceeded" ? t("sync.quota") : t("sync.error");
+  if (phase === "error") {
+    const failed = syncFailures();
+    if (error === "projects_failed" && failed.length === 1) {
+      return t("sync.errorProject", { name: failed[0].name || t("default.newProject") });
+    }
+    if (error === "projects_failed" && failed.length > 1) return t("sync.errorProjects", { n: failed.length });
+    return error === "media_quota_exceeded" ? t("sync.quota") : t("sync.error");
+  }
   return t("sync.synced");
+}
+
+/** Dica do chip: quais projetos não subiram e por quê. */
+function syncStatusTip() {
+  const failed = syncFailures();
+  if (syncState.phase !== "error" || !failed.length) return t("sync.tip");
+  const reasonKey = (code) => (["local_media_ref", "payload_too_large", "media_quota_exceeded", "project_limit"].includes(code) ? `sync.reason.${code}` : "sync.reason.other");
+  const list = failed
+    .slice(0, 5)
+    .map((item) => `${item.name || t("default.newProject")} (${t(reasonKey(item.error))})`)
+    .join("; ");
+  return t("sync.failedTip", { list: failed.length > 5 ? `${list}; …` : list });
+}
+
+/**
+ * Navegador sem a primeira volta de sync desta conta: a lista espera os projetos da nuvem
+ * em vez de mostrar só os exemplos por um instante.
+ */
+const libraryHydrateStartedAt = Date.now();
+let lastLibraryHydrating = false;
+// passado o prazo, a lista deixa de esperar o sync mesmo que nenhum status chegue
+setTimeout(() => {
+  if (chromeView === "library") renderLibraryGrid();
+}, LIBRARY_HYDRATE_MAX_MS + 500);
+
+function libraryHydrating() {
+  const account = getCloudAccount();
+  const email = String(account.email || "").trim();
+  let firstSyncDone = false;
+  try {
+    firstSyncDone = Boolean(email.includes("@") && readSyncMeta(localStorage, email).initialDone);
+  } catch {
+    firstSyncDone = false;
+  }
+  return isLibrarySyncPending({
+    cloudEnabled: isCloudEnabled(),
+    signedIn: Boolean(account.signedIn),
+    email,
+    billingStatus: billingView.status,
+    entitlementActive: Boolean(billingEntitlement.active),
+    syncPhase: syncState.phase,
+    firstSyncDone,
+    elapsedMs: Date.now() - libraryHydrateStartedAt,
+  });
 }
 
 function syncChipVisible() {
@@ -1758,21 +1831,25 @@ function paintSyncStatus() {
     const text = el.querySelector("[data-sync-text]");
     if (text) text.textContent = syncStatusText();
     const chip = el.querySelector("[data-sync-now]");
-    if (chip) chip.title = t("sync.tip");
+    if (chip) chip.title = syncStatusTip();
   }
   const restore = document.getElementById("btn-file-restore-links");
   if (restore) restore.hidden = !visible;
 }
 
+function runRestoreFromLinks() {
+  return restoreFromPublishedLinks({
+    request: (path, init) => cloudFetch(path, { timeoutMs: 120 * 1000, ...init }),
+    store: { listAllProjects, putProject },
+    toProject: (payload, opts) => demoPayloadToProject(payload, opts),
+    slugOf: (record) => permanentSlug(record),
+  });
+}
+
 async function restorePublishedLinks() {
   toast(t("sync.restoring"), 3000);
   try {
-    const result = await restoreFromPublishedLinks({
-      request: (path, init) => cloudFetch(path, { timeoutMs: 120 * 1000, ...init }),
-      store: { listAllProjects, putProject },
-      toProject: (payload, opts) => demoPayloadToProject(payload, opts),
-      slugOf: (record) => permanentSlug(record),
-    });
+    const result = await runRestoreFromLinks();
     if (chromeView === "library") renderLibrary();
     toast(result.restored ? t("sync.restored", { n: result.restored }) : t("sync.restoreNone"), 4200);
   } catch (err) {
@@ -2038,6 +2115,8 @@ async function refreshEntitlement(sessionId = "") {
   paintCloudShare();
   editor.paintHostedBadges?.();
   paintExportMark();
+  // why: com o plano conhecido a lista decide entre "Sincronizando…" e os exemplos
+  if (chromeView === "library") renderLibraryGrid();
   return result;
 }
 
@@ -3481,6 +3560,16 @@ function renderLibraryGrid() {
 
   const hint = document.getElementById("library-import-hint");
   const compact = isCompactTouch();
+  // why: conta com sync ainda sem a primeira volta; mostrar só os exemplos por um instante parece biblioteca vazia
+  if (shouldShowSyncingInLibrary(libraryHydrating(), allProjects)) {
+    grid.innerHTML = "";
+    empty.hidden = false;
+    empty.textContent = t("sync.syncing");
+    empty.setAttribute("role", "status");
+    if (hint) hint.hidden = true;
+    return;
+  }
+  empty.removeAttribute("role");
   if (!projects.length) {
     grid.innerHTML = "";
     empty.hidden = compact;
@@ -5347,6 +5436,8 @@ function bindChrome() {
         },
       });
       const previousCover = updating ? project.cloudShare?.coverUrl || "" : "";
+      // why: exemplo publicado vira do usuário; sem isso o sync o pularia e o link ficaria sem projeto na conta
+      if (isStockDemoName(project.name)) project.stockEdited = true;
       project.cloudShare = {
         id: share.slug || share.id,
         slug: share.slug || share.id,

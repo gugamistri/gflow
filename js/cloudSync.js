@@ -5,6 +5,7 @@
  * hazard: mídia (data:) nunca vai dentro do JSON do projeto; sobe como
  *         asset:<sha256> (PUT /media/:sha) e volta como data: ao baixar.
  * Conflito (409): mantém as duas versões — a do servidor vira uma cópia local nova.
+ * Erro num projeto não para a fila: os outros sobem, o pull roda e o projeto com problema fica sujo para a próxima volta.
  */
 
 import { bytesToDataUrl, dataUrlToBytes, sha256Hex } from "./mediaBytes.js";
@@ -21,6 +22,10 @@ export function syncMetaKey(account) {
 }
 const MEDIA_MIN_CHARS = 512;
 const CURSOR_OVERLAP_MS = 60 * 1000;
+/** Mídia que o servidor diz não ter (404): espera algumas voltas antes de importar o projeto assim mesmo. */
+const MISSING_MEDIA_TRIES = 3;
+/** Falhas seguidas do servidor (5xx/429) que contam como "servidor fora", não como problema de um projeto. */
+const SERVER_TROUBLE_LIMIT = 3;
 const DATA_URL_RE = /^data:((?:image|audio|video)\/[a-z0-9.+-]+)(;[^,]*)?,/i;
 
 /* ---------- mídia ---------- */
@@ -156,6 +161,9 @@ export function emptyMeta(account = "") {
     settingsRevision: 0,
     settingsDirty: false,
     media: {},
+    missingMedia: {},
+    restoreDone: false,
+    restorePending: false,
     lastSyncAt: null,
   };
 }
@@ -222,6 +230,8 @@ export function createCloudSync(deps) {
     isCollab = () => false,
     onCollabActive = () => {},
     conflictName = (name) => `${name} (outra versão)`,
+    // navegador novo sem projetos na conta: traz de volta os projetos dos links publicados (uma vez por conta e navegador)
+    restoreLinks = null,
     debounceMs = 2500,
     pollMs = 60 * 1000,
     now = () => Date.now(),
@@ -237,7 +247,8 @@ export function createCloudSync(deps) {
   let lockHeld = false;
   let serverList = null;
   const assetCache = new Map();
-  let state = { phase: "off", done: 0, total: 0, error: "" };
+  let scanUnlinked = false;
+  let state = { phase: "off", done: 0, total: 0, error: "", failed: [] };
 
   function setStatus(next) {
     state = { ...state, ...next };
@@ -603,7 +614,13 @@ export function createCloudSync(deps) {
 
   async function cachedFetchAsset(sha) {
     if (assetCache.has(sha)) return assetCache.get(sha);
-    const url = await fetchAsset(sha);
+    let url = "";
+    try {
+      url = await fetchAsset(sha);
+    } catch (err) {
+      // falha de rede ou do servidor: o projeto espera a próxima volta em vez de entrar sem a imagem
+      throw mediaUnavailable(err);
+    }
     if (url) {
       assetCache.set(sha, url);
       meta.media[sha] = 1;
@@ -623,6 +640,8 @@ export function createCloudSync(deps) {
       if (project?.cloudId && !byCloudId.has(project.cloudId)) byCloudId.set(project.cloudId, project.id);
     }
     let changed = 0;
+    let deferred = 0;
+    const live = items.filter((item) => item && !item.deletedAt).length;
     for (const item of items) {
       const fromCloud = byCloudId.get(item.id);
       let localId = localIdFor(item.id) || null;
@@ -665,7 +684,25 @@ export function createCloudSync(deps) {
         if (full.status === 404) continue;
         throw syncError(full);
       }
-      const payload = await hydrate(full.data.project.payload || {}, cachedFetchAsset);
+      let payload;
+      try {
+        payload = await hydrate(full.data.project.payload || {}, cachedFetchAsset);
+      } catch (err) {
+        if (err?.code !== "media_unavailable") throw err;
+        // mídia fora do ar: não grava o projeto sem imagem nem registra a revisão; tenta na próxima volta
+        deferred += 1;
+        continue;
+      }
+      if (collectAssetRefs(payload).size) {
+        meta.missingMedia = meta.missingMedia || {};
+        const tries = (meta.missingMedia[item.id] || 0) + 1;
+        if (tries < MISSING_MEDIA_TRIES) {
+          meta.missingMedia[item.id] = tries;
+          deferred += 1;
+          continue;
+        }
+      }
+      if (meta.missingMedia) delete meta.missingMedia[item.id];
       // clientId, quando existe, é o id local. Id aleatório só para projeto antigo sem clientId.
       const id = localId || item.clientId || store.createProjectId();
       const project = syncPayloadToProject(payload, {
@@ -681,9 +718,10 @@ export function createCloudSync(deps) {
       changed += 1;
       onRemoteChange({ type: "put", id });
     }
-    if (res.data?.serverTime) meta.cursor = res.data.serverTime;
+    // com projeto adiado o cursor fica onde está: a próxima volta lista de novo e pega só o que falta
+    if (res.data?.serverTime && !deferred) meta.cursor = res.data.serverTime;
     save();
-    return changed;
+    return { changed, live, deferred };
   }
 
   async function syncSettings() {
@@ -708,10 +746,65 @@ export function createCloudSync(deps) {
     save();
   }
 
+  async function failureOf(localId, err) {
+    let name = "";
+    try {
+      name = String((await store.getProject(localId))?.name || "");
+    } catch {
+      /* o nome é só para o aviso */
+    }
+    return { id: localId, name, error: err?.code || (err?.status ? `http_${err.status}` : "sync_failed") };
+  }
+
+  /** Sobe uma lista de projetos; o erro de um não para os outros. Erro da conta toda (sessão, plano, rede) interrompe. */
+  async function pushMany(ids, failed, onEach = () => {}) {
+    let trouble = 0;
+    for (const localId of ids) {
+      if (failed.some((item) => item.id === localId)) continue;
+      try {
+        await pushProject(localId);
+        trouble = 0;
+      } catch (err) {
+        if (isFatalSyncError(err)) throw err;
+        // servidor fora (5xx/429 em sequência) não é culpa de um projeto: para e tenta de novo depois
+        trouble = err?.status >= 500 || err?.status === 429 ? trouble + 1 : 0;
+        if (trouble >= SERVER_TROUBLE_LIMIT) throw err;
+        failed.push(await failureOf(localId, err));
+      }
+      onEach();
+    }
+  }
+
+  /** Navegador novo e conta sem projetos: devolve os projetos dos links publicados (uma vez por conta e navegador). */
+  async function restoreFromLinksOnce({ firstRun, live }) {
+    if (!restoreLinks || meta.restoreDone || !(firstRun || meta.restorePending)) return;
+    let hasOwn = live > 0;
+    if (!hasOwn) hasOwn = (await store.listAllProjects()).some((project) => !skipProject(project));
+    if (hasOwn) {
+      meta.restoreDone = true;
+      meta.restorePending = false;
+      save();
+      return;
+    }
+    try {
+      await restoreLinks();
+      meta.restoreDone = true;
+      meta.restorePending = false;
+    } catch (err) {
+      if (isFatalSyncError(err)) throw err;
+      // sem os links agora: a próxima volta tenta de novo, sem travar o resto
+      meta.restorePending = true;
+    }
+    save();
+  }
+
   async function runOnce() {
     reloadMeta();
     serverList = null;
-    if (!meta.initialDone) {
+    const firstRun = !meta.initialDone;
+    // projeto sem vínculo (criado antes de o sync ligar, na captura, em período Free) sobe em toda ativação, não só na primeira
+    if (firstRun || scanUnlinked) {
+      scanUnlinked = false;
       for (const project of await store.listAllProjects()) {
         if (!meta.remote[project.id] && !skipProject(project)) meta.dirty[project.id] = true;
       }
@@ -724,20 +817,22 @@ export function createCloudSync(deps) {
       save();
     }
     const dirty = Object.keys(meta.dirty);
-    setStatus({ phase: "syncing", done: 0, total: dirty.length, error: "" });
+    const failed = [];
+    setStatus({ phase: "syncing", done: 0, total: dirty.length, error: "", failed: [] });
     let done = 0;
-    for (const localId of dirty) {
-      await pushProject(localId);
+    await pushMany(dirty, failed, () => {
       done += 1;
       setStatus({ phase: "syncing", done, total: dirty.length });
-    }
-    await pull();
-    // cópias criadas por conflito no pull/push sobem já nesta volta
-    for (const localId of Object.keys(meta.dirty)) await pushProject(localId);
+    });
+    const pulled = await pull();
+    await restoreFromLinksOnce({ firstRun, live: pulled.live });
+    // cópias criadas por conflito no pull/push e projetos restaurados sobem já nesta volta
+    await pushMany(Object.keys(meta.dirty), failed);
     await syncSettings();
     meta.initialDone = true;
     meta.lastSyncAt = new Date(now()).toISOString();
     save();
+    return { failed, deferred: pulled.deferred };
   }
 
   async function syncNow() {
@@ -749,14 +844,24 @@ export function createCloudSync(deps) {
     running = (async () => {
       try {
         let ran = false;
+        let outcome = { failed: [], deferred: 0 };
         await withSyncLock(async () => {
           ran = true;
           do {
             again = false;
-            await runOnce();
+            outcome = await runOnce();
           } while (again && enabled);
         });
-        if (ran && enabled) setStatus({ phase: "synced", error: "" });
+        if (ran && enabled) {
+          if (outcome.failed.length) {
+            // o que deu certo já subiu; os projetos com erro seguem sujos e entram na próxima volta
+            setStatus({ phase: "error", error: "projects_failed", failed: outcome.failed });
+            schedule(60 * 1000);
+          } else {
+            setStatus({ phase: "synced", error: "", failed: [] });
+          }
+          if (outcome.deferred) schedule(30 * 1000);
+        }
       } catch (err) {
         if (err?.code === "subscription_required" || err?.status === 402) {
           enabled = false;
@@ -786,6 +891,7 @@ export function createCloudSync(deps) {
     if (enabled && meta?.account === key) return syncNow();
     meta = readMeta(storage, key);
     enabled = true;
+    scanUnlinked = true;
     clearInterval(poll);
     if (pollMs > 0) {
       poll = setInterval(() => {
@@ -814,6 +920,21 @@ export function createCloudSync(deps) {
     getMeta: () => meta,
     remoteSlugs: () => null,
   };
+}
+
+function mediaUnavailable(cause) {
+  const err = new Error("media_unavailable");
+  err.code = "media_unavailable";
+  err.cause = cause;
+  return err;
+}
+
+/** Erro que vale para a conta toda (sessão, plano, rede): para a volta inteira. */
+function isFatalSyncError(err) {
+  if (err?.code === "subscription_required" || err?.status === 402) return true;
+  if (err?.code === "unauthorized" || err?.status === 401) return true;
+  if (err?.code === "network" || err?.code === "timeout") return true;
+  return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
 function syncError(res) {
